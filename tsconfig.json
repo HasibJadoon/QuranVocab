@@ -1,0 +1,5 @@
+{
+  "files": [],
+  "references": [{ "path": "./functions/tsconfig.json" }],
+  "exclude": ["vocab-ui"]
+}
