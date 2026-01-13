@@ -1,3 +1,8 @@
+npx wrangler d1 execute DB \
+  --remote \
+  --file Database/schema2.sql
+
+
 npx wrangler pages deploy quran-ui/dist/coreui-free-angular-admin-template/browser
 
 

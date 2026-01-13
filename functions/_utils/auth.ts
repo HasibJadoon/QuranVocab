@@ -1,5 +1,7 @@
+import { verifyToken } from './jwt';
+
 interface Env {
-  DB: D1Database;
+  JWT_SECRET: string;
 }
 
 export type AuthedUser = {
@@ -7,26 +9,40 @@ export type AuthedUser = {
   role: string;
 };
 
-export async function requireAuth(ctx: { request: Request; env: Env }) {
-  const h = ctx.request.headers.get('authorization') || '';
-  if (!h.startsWith('Bearer ')) return null;
+export async function requireAuth(
+  ctx: { request: Request; env: Env }
+): Promise<AuthedUser | null> {
+  const auth = ctx.request.headers.get('authorization');
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return null;
+  }
 
-  const token = h.slice(7).trim();
-  if (!token) return null;
+  const token = auth.slice(7).trim();
+  if (!token) {
+    return null;
+  }
 
-  const row = await ctx.env.DB
-    .prepare(
-      `SELECT id, role, token_expires_at
-       FROM users
-       WHERE token = ?`
-    )
-    .bind(token)
-    .first<{ id: number; role: string; token_expires_at: string }>();
+  // ✅ Verify JWT signature
+  const payload = await verifyToken(token, ctx.env.JWT_SECRET);
+  if (!payload) {
+    return null;
+  }
 
-  if (!row) return null;
+  // ✅ Validate exp (MUST be number, seconds)
+  if (typeof payload.exp !== 'number') {
+    return null;
+  }
+  if (Date.now() >= payload.exp * 1000) {
+    return null;
+  }
 
-  const exp = Date.parse(row.token_expires_at);
-  if (!Number.isFinite(exp) || Date.now() > exp) return null;
+  // ✅ Validate subject
+  if (typeof payload.sub !== 'number') {
+    return null;
+  }
 
-  return { id: row.id, role: row.role } satisfies AuthedUser;
+  return {
+    id: payload.sub,
+    role: payload.role ?? 'user',
+  };
 }

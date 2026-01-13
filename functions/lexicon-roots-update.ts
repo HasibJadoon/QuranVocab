@@ -1,6 +1,3 @@
-// functions/lexicon_roots_update.ts
-import { requireAuth } from './_utils/auth';
-
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
@@ -13,17 +10,9 @@ type Body = {
 
 export const onRequestPut: PagesFunction<Env> = async (ctx) => {
   try {
-    // ---------------- AUTH ----------------
-    const user = await requireAuth(ctx as any);
-    if (!user) {
-      return Response.json(
-        { ok: false, error: 'Unauthorized or token expired' },
-        { status: 401 }
-      );
-    }
-
-    // ---------------- BODY ----------------
+    // ---- Read raw body safely (prevents "Unexpected end of JSON input") ----
     const raw = await ctx.request.text();
+
     if (!raw || !raw.trim()) {
       return Response.json(
         { ok: false, error: 'Empty request body' },
@@ -41,7 +30,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       );
     }
 
-    const id = Number(body.id);
+    const id = Number(body?.id);
     if (!Number.isFinite(id) || id <= 0) {
       return Response.json(
         { ok: false, error: 'Expected numeric id' },
@@ -49,13 +38,13 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       );
     }
 
-    // ---------------- CARDS ----------------
+    // ---- Normalize cards into a string + validate array ----
     let cardsArray: unknown[];
 
-    if (Array.isArray(body.cards)) {
-      cardsArray = body.cards;
+    if (Array.isArray(body?.cards)) {
+      cardsArray = body!.cards;
     } else {
-      const cardsStr = String(body.cards ?? '').trim();
+      const cardsStr = String(body?.cards ?? '').trim();
       if (!cardsStr) {
         return Response.json(
           { ok: false, error: 'cards is required' },
@@ -83,16 +72,17 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       cardsArray = parsed;
     }
 
+    // Store pretty JSON (optional, but nice)
     const cardsToStore = JSON.stringify(cardsArray, null, 2);
 
-    // ---------------- UPDATE ----------------
+    // ---- Update row ----
     const res = await ctx.env.DB
       .prepare(
         `
         UPDATE roots
         SET
           cards = ?,
-          status = 'Edited',
+          status = 'PENDING',
           update_date = datetime('now')
         WHERE id = ?
       `
@@ -102,6 +92,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
 
     // @ts-ignore
     const changes = Number(res?.meta?.changes ?? 0);
+
     if (changes === 0) {
       return Response.json(
         { ok: false, error: 'Row not found or not changed' },
@@ -109,12 +100,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       );
     }
 
-    // ---------------- SUCCESS ----------------
-    return Response.json({
-      ok: true,
-      message: 'Cards saved successfully',
-      id,
-    });
+    return Response.json({ ok: true });
   } catch (err: any) {
     return Response.json(
       { ok: false, error: err?.message ?? String(err) },

@@ -6,69 +6,71 @@ interface Env {
   JWT_SECRET: string;
 }
 
-type LoginBody = {
-  email: string;
-  password: string;
-};
+type LoginBody = { email: string; password: string };
 
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
-  // ---------- Parse body safely ----------
-  let body: LoginBody;
-
   try {
-    body = (await ctx.request.json()) as LoginBody;
-  } catch {
+    if (!ctx.env.DB) {
+      return Response.json({ error: 'Missing DB binding' }, { status: 500 });
+    }
+    if (!ctx.env.JWT_SECRET) {
+      return Response.json({ error: 'Missing JWT_SECRET' }, { status: 500 });
+    }
+
+    // ---------- parse body ----------
+    let body: LoginBody;
+    try {
+      body = (await ctx.request.json()) as LoginBody;
+    } catch {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const email = typeof body.email === 'string' ? body.email.trim() : '';
+    const password = typeof body.password === 'string' ? body.password : '';
+
+    if (!email || !password) {
+      return Response.json({ error: 'Email and password are required' }, { status: 400 });
+    }
+
+    // ---------- fetch user ----------
+    const user = await ctx.env.DB
+      .prepare(`
+        SELECT id, password, role
+        FROM users
+        WHERE lower(trim(email)) = lower(trim(?1))
+        LIMIT 1
+      `)
+      .bind(email)
+      .first<{ id: number; password: string; role?: string }>();
+
+    if (!user?.password) {
+      return Response.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    // ---------- verify password ----------
+    const ok = await verifyPassword(password, user.password);
+    if (!ok) {
+      return Response.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    // ---------- JWT (STANDARD) ----------
+    const exp = Math.floor(Date.now() / 1000) + 24 * 60 * 60; // seconds
+    const expiresAt = new Date(exp * 1000).toISOString();
+
+    const token = await signToken(
+      {
+        sub: user.id,
+        role: user.role ?? 'user',
+        exp,
+      },
+      ctx.env.JWT_SECRET
+    );
+
+    return Response.json({ ok: true, token, expiresAt });
+  } catch (err: any) {
     return Response.json(
-      { error: 'Invalid JSON body' },
-      { status: 400 }
+      { error: 'SERVER_ERROR', message: err?.message ?? String(err) },
+      { status: 500 }
     );
   }
-
-  const { email, password } = body;
-
-  if (typeof email !== 'string' || typeof password !== 'string') {
-    return Response.json(
-      { error: 'Email and password are required' },
-      { status: 400 }
-    );
-  }
-
-  // ---------- Fetch user ----------
-  const user = await ctx.env.DB
-    .prepare('SELECT id, password_hash FROM users WHERE email = ?')
-    .bind(email)
-    .first<{ id: number; password_hash: string }>();
-
-  if (!user) {
-    return Response.json(
-      { error: 'Invalid credentials' },
-      { status: 401 }
-    );
-  }
-
-  // ---------- Verify password ----------
-  const ok = await verifyPassword(password, user.password_hash);
-  if (!ok) {
-    return Response.json(
-      { error: 'Invalid credentials' },
-      { status: 401 }
-    );
-  }
-
-  // ---------- Create 24h token ----------
-  const expiresAt = new Date(
-    Date.now() + 24 * 60 * 60 * 1000
-  ).toISOString();
-
-  const token = await signToken(
-    { sub: user.id, exp: expiresAt },
-    ctx.env.JWT_SECRET
-  );
-
-  // ---------- Success ----------
-  return Response.json({
-    ok: true,
-    token,
-    expiresAt,
-  });
 };

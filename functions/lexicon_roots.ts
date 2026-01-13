@@ -1,36 +1,45 @@
+import { requireAuth } from './_utils/auth';
+
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
+  JWT_SECRET: string;
 }
 
 const jsonHeaders = {
-  "content-type": "application/json; charset=utf-8",
-  "access-control-allow-origin": "*",
-  "cache-control": "no-store",
+  'content-type': 'application/json; charset=utf-8',
+  'access-control-allow-origin': '*',
+  'cache-control': 'no-store',
 };
 
 function toInt(v: string | null, def: number) {
-  const n = Number.parseInt(String(v ?? ""), 10);
+  const n = Number.parseInt(String(v ?? ''), 10);
   return Number.isFinite(n) ? n : def;
 }
 
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   try {
+    // =====================================================
+    // AUTH (JWT)
+    // =====================================================
+    const user = await requireAuth(ctx);
+    if (!user) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Unauthorized' }),
+        { status: 401, headers: jsonHeaders }
+      );
+    }
+
     const url = new URL(ctx.request.url);
+    const q = (url.searchParams.get('q') ?? '').trim();
 
-    const q = (url.searchParams.get("q") ?? "").trim();
-
-    // Pagination inputs:
-    // Option A: page/pageSize (nice for UI)
-    const page = Math.max(1, toInt(url.searchParams.get("page"), 1));
-    const pageSizeRaw = toInt(url.searchParams.get("pageSize"), 100);
-
-    // clamp pageSize to avoid abuse
+    // ---------------- pagination ----------------
+    const page = Math.max(1, toInt(url.searchParams.get('page'), 1));
+    const pageSizeRaw = toInt(url.searchParams.get('pageSize'), 100);
     const pageSize = Math.min(500, Math.max(1, pageSizeRaw));
 
-    // Option B: offset/limit (works too). If provided, it overrides page/pageSize.
-    const offsetParam = url.searchParams.get("offset");
-    const limitParam = url.searchParams.get("limit");
+    const offsetParam = url.searchParams.get('offset');
+    const limitParam = url.searchParams.get('limit');
 
     let limit = pageSize;
     let offset = (page - 1) * pageSize;
@@ -40,7 +49,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       offset = Math.max(0, toInt(offsetParam, 0));
     }
 
-    // Count query
+    // ---------------- SQL ----------------
     let countStmt;
     let dataStmt;
 
@@ -79,7 +88,9 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         `
       ).bind(like, like, limit, offset);
     } else {
-      countStmt = ctx.env.DB.prepare(`SELECT COUNT(*) AS total FROM roots`);
+      countStmt = ctx.env.DB.prepare(
+        `SELECT COUNT(*) AS total FROM roots`
+      );
 
       dataStmt = ctx.env.DB.prepare(
         `
@@ -99,20 +110,18 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     const nextOffset = offset + returned;
     const hasMore = nextOffset < total;
 
-    // If the caller used offset/limit → return offset/limit metadata.
-    // Otherwise → return page/pageSize metadata.
     const usingOffsetMode = offsetParam !== null || limitParam !== null;
 
     const meta = usingOffsetMode
       ? {
-          mode: "offset",
+          mode: 'offset',
           q,
           limit,
           offset,
           nextOffset: hasMore ? nextOffset : null,
         }
       : {
-          mode: "page",
+          mode: 'page',
           q,
           page,
           pageSize,
