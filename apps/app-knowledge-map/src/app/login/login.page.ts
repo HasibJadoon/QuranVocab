@@ -19,7 +19,7 @@ type LoginResponse = {
   standalone: false,
 })
 export class LoginPage {
-  private readonly apiBase = 'https://api-kmap.com';
+  private readonly apiBase = 'https://api.k-map.com';
   private readonly tokenKey = 'auth_token';
   errorMessage = '';
   loading = false;
