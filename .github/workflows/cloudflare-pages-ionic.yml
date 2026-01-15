@@ -22,7 +22,7 @@ jobs:
 
       - name: Install and build
         run: |
-          npm install --workspace apps/app-knowledge-map
+          npm install --legacy-peer-deps --workspace apps/app-knowledge-map --include-workspace-root=false
           npm run build -w apps/app-knowledge-map
 
       - name: Deploy to Cloudflare Pages
