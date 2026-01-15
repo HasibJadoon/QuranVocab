@@ -26,9 +26,7 @@ jobs:
           npm run build -w apps/knowledge-map-ui
 
       - name: Sync Functions
-        run: |
-          rm -rf functions
-          cp -R api functions
+        run: npm run sync:functions
 
       - name: Deploy to Cloudflare Pages
         run: npx wrangler pages deploy apps/knowledge-map-ui/dist/knowledge-map-ui/browser --project-name knowledge-map --branch main

@@ -4,6 +4,9 @@
   "workspaces": [
     "apps/*"
   ],
+  "scripts": {
+    "sync:functions": "rm -rf functions && cp -R api functions"
+  },
   "dependencies": {
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
