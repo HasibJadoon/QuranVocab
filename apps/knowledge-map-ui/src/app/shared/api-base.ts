@@ -1,1 +1,3 @@
-export const API_BASE = 'https://api.k-map.com';
+import { environment } from '../../environments/environment';
+
+export const API_BASE = environment.apiBase;

@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { isTokenValid } from '../auth/auth.utils';
+import { environment } from '../../environments/environment';
 
 type LoginResponse = {
   ok?: boolean;
@@ -19,7 +20,7 @@ type LoginResponse = {
   standalone: false,
 })
 export class LoginPage {
-  private readonly apiBase = 'https://api.k-map.com';
+  private readonly apiBase = environment.apiBase;
   private readonly tokenKey = 'auth_token';
   errorMessage = '';
   loading = false;
