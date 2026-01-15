@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LocalStorageService } from '@coreui/angular';
+import { API_BASE } from '../app/shared/api-base';
 
 export interface LoginResponse {
   token: string;
@@ -23,7 +24,7 @@ export class AuthService {
   // =====================================================
 
   async login(email: string, password: string): Promise<LoginResponse> {
-    const res = await fetch('/login', {
+    const res = await fetch(`${API_BASE}/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password }),

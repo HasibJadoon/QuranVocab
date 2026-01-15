@@ -1,14 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from '../../../services/AuthService';
+import { API_BASE } from '../api-base';
 
 @Injectable({ providedIn: 'root' })
 export class WorldviewLessonsService {
   private auth = inject(AuthService);
-  private readonly baseUrl = '/worldview_lessons';
+  private readonly baseUrl = `${API_BASE}/worldview_lessons`;
 
   async list(params: Record<string, string> = {}) {
     const query = new URLSearchParams(params).toString();
-    const url = query ? `/worldview_lessons?${query}` : this.baseUrl;
+    const url = query ? `${this.baseUrl}?${query}` : this.baseUrl;
     return this.request(url);
   }
 

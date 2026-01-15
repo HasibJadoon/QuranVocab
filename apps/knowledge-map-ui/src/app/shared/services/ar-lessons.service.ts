@@ -1,19 +1,20 @@
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from '../../../services/AuthService';
+import { API_BASE } from '../api-base';
 
 @Injectable({ providedIn: 'root' })
 export class ArLessonsService {
   private auth = inject(AuthService);
-  private readonly baseUrl = '/ar_lessons';
+  private readonly baseUrl = `${API_BASE}/ar_lessons`;
 
   async list(params: Record<string, string> = {}) {
     const query = new URLSearchParams(params).toString();
-    const url = query ? `/ar_lessons?${query}` : this.baseUrl;
+    const url = query ? `${this.baseUrl}?${query}` : this.baseUrl;
     return this.request(url);
   }
 
   async get(id: number | string) {
-    return this.request(`/ar_lessons/${id}`);
+    return this.request(`${this.baseUrl}/${id}`);
   }
 
   async create(payload: unknown) {
@@ -21,11 +22,11 @@ export class ArLessonsService {
   }
 
   async update(id: number | string, payload: unknown) {
-    return this.request(`/ar_lessons/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+    return this.request(`${this.baseUrl}/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
   }
 
   async remove(id: number | string) {
-    return this.request(`/ar_lessons/${id}`, { method: 'DELETE' });
+    return this.request(`${this.baseUrl}/${id}`, { method: 'DELETE' });
   }
 
   private async request(url: string, init: RequestInit = {}) {

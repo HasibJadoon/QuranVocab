@@ -1,10 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from '../../../services/AuthService';
+import { API_BASE } from '../api-base';
 
 @Injectable({ providedIn: 'root' })
 export class GrammarNotesService {
   private auth = inject(AuthService);
-  private readonly baseUrl = '/grammar_notes';
+  private readonly baseUrl = `${API_BASE}/grammar_notes`;
 
   async list(lessonId: number | string) {
     return this.request(`${this.baseUrl}?lesson_id=${lessonId}`);

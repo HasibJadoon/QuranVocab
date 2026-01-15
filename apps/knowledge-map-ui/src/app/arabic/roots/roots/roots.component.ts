@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CardsComponent, Card } from '../root-cards/cards/cards.component';
 import { AuthService } from '../../../../services/AuthService';
 import { ToastService } from '../../../shared/services/toast.service';
+import { API_BASE } from '../../../shared/api-base';
 
 
 export type RootRow = {
@@ -44,9 +45,9 @@ export class RootsComponent implements OnInit, OnDestroy {
   private abort?: AbortController;
 
   // ---------------- endpoints ----------------
-  private readonly listEndpoint = '/lexicon_roots';
-  private readonly updateEndpoint = '/lexicon_roots_update';
-  private readonly createEndpoint = '/lexicon_roots';
+  private readonly listEndpoint = `${API_BASE}/lexicon_roots`;
+  private readonly updateEndpoint = `${API_BASE}/lexicon_roots_update`;
+  private readonly createEndpoint = `${API_BASE}/lexicon_roots`;
 
   // ---------------- cards modal ----------------
   showCards = false;
