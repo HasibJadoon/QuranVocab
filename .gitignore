@@ -41,5 +41,3 @@ Thumbs.db
 # Logs
 *.log
 logs/
-
-wrangler.toml
