@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "https://api.k-map.com"
+      "url": "https://api.k-maps.com"
     }
   ],
   "paths": {

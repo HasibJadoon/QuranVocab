@@ -8,10 +8,8 @@ interface Env {
 
 const allowedOrigins = new Set([
   'https://k-maps.com',
-  'https://k-map.com',
-  'https://api.k-map.com',
+  'https://api.k-maps.com',
   'https://app.k-maps.com',
-  'https://app.k-map.com',
   'http://localhost:8100',
   'http://localhost:5173',
 ]);
