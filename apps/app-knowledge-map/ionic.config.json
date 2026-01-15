@@ -1,0 +1,7 @@
+{
+  "name": "apps/app-knowledge-map",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

@@ -1,0 +1,35 @@
+name: Deploy Ionic App to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.0"
+          cache: "npm"
+          cache-dependency-path: apps/app-knowledge-map/package-lock.json
+
+      - name: Install and build
+        run: |
+          cd apps/app-knowledge-map
+          npm ci
+          npm run build
+
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy apps/app-knowledge-map/www --project-name app-k-maps --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
