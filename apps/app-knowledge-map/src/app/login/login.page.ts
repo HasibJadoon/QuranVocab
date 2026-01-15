@@ -16,6 +16,7 @@ type LoginResponse = {
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
+  standalone: false,
 })
 export class LoginPage {
   private readonly apiBase = 'https://api-kmap.com';
