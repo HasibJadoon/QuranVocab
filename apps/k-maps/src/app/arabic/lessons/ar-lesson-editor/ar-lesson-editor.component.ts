@@ -28,7 +28,6 @@ type LessonJson = {
 
 type GrammarNoteItem = {
   textType: 'quran' | 'text';
-  textId: string;
   source: string;
   label: string;
   note: string;
@@ -154,7 +153,6 @@ export class ArLessonEditorComponent implements OnInit {
   addGrammarNote() {
     this.grammarNotesItems.push({
       textType: this.lessonJson.text?.mode === 'text' ? 'text' : 'quran',
-      textId: '',
       source: this.source ?? '',
       label: '',
       note: '',
@@ -338,7 +336,6 @@ export class ArLessonEditorComponent implements OnInit {
       const results = Array.isArray((data as any)?.results) ? (data as any).results : [];
       this.grammarNotesItems = results.map((note: any) => ({
         textType: note?.text_type === 'text' ? 'text' : 'quran',
-        textId: note?.text_id ?? '',
         source: note?.source ?? '',
         label: note?.label ?? '',
         note: note?.note ?? '',
@@ -352,7 +349,6 @@ export class ArLessonEditorComponent implements OnInit {
   private async saveGrammarNotes(id: number) {
     const notes = this.grammarNotesItems
       .map((item) => ({
-        text_id: item.textId?.trim() || null,
         text_type: item.textType === 'text' ? 'text' : 'quran',
         source: item.source?.trim() || null,
         label: item.label?.trim() || null,
