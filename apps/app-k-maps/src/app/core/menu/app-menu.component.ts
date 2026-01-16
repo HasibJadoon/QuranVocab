@@ -13,10 +13,15 @@ import { Router, RouterModule } from '@angular/router';
 export class AppMenuComponent {
   private openSections = new Set<string>(['arabic']);
 
-  constructor(private readonly router: Router, private readonly menu: MenuController) {}
+  constructor(
+    private readonly router: Router, 
+    private readonly menu: MenuController
+  ) {}
 
   async go(url: string) {
-    await this.menu.close();
+    // 1. Close menu first to ensure smooth transition
+    await this.menu.close('main-menu');
+    // 2. Then navigate
     await this.router.navigateByUrl(url);
   }
 
@@ -32,4 +37,3 @@ export class AppMenuComponent {
     return this.openSections.has(section);
   }
 }
-

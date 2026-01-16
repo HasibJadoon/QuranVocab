@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { MenuController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   bookOutline,
@@ -20,7 +21,7 @@ import {
   standalone: false,
 })
 export class AppComponent {
-  constructor() {
+  constructor(private readonly menu: MenuController) {
     addIcons({
       homeOutline,
       bookOutline,
@@ -33,6 +34,11 @@ export class AppComponent {
       calendarOutline,
       chevronForward,
     });
+  }
+
+  async onRouteChange() {
+    await this.menu.close('main-menu');
+    await this.menu.close();
   }
 }
 
