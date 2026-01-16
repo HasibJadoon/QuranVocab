@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { CardsComponent, Card } from '../root-cards/cards/cards.component';
-import { AuthService } from '../../../../services/AuthService';
-import { ToastService } from '../../../shared/services/toast.service';
-import { API_BASE } from '../../../shared/api-base';
+import { AuthService } from '../../../../../services/AuthService';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { API_BASE } from '../../../../shared/api-base';
 
 
 export type RootRow = {

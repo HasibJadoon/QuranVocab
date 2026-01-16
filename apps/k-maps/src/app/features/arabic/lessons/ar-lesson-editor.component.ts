@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { ArLessonsService } from '../../shared/services/ar-lessons.service';
+import { ArLessonsService } from '../../../shared/services/ar-lessons.service';
 
 type VocabItem = {
   word: string;

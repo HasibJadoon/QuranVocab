@@ -17,7 +17,7 @@ import {
   RowComponent
 } from '@coreui/angular';
 
-import { AuthService } from '../../services/AuthService';
+import { AuthService } from '../../../../services/AuthService';
 
 type LoginResponse = {
   token: string;

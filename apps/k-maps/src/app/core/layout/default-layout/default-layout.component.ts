@@ -17,7 +17,7 @@ import {
 import { DefaultFooterComponent } from './default-footer/default-footer.component';
 import { DefaultHeaderComponent } from './default-header/default-header.component';
 import { navItems } from './_nav';
-import { ToastHostComponent } from '../../shared/components/toast-host/toast-host.component';
+import { ToastHostComponent } from '../../../shared/components/toast-host/toast-host.component';
 
 function isOverflown(element: HTMLElement) {
   return (

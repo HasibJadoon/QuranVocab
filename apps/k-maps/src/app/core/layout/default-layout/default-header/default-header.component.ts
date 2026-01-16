@@ -20,8 +20,8 @@ import {
 } from '@coreui/angular';
 
 import { IconDirective } from '@coreui/icons-angular';
-import { AuthService } from '../../../../services/AuthService';
-import { HeaderSearchComponent } from '../../../shared/components/header-search/header-search.component';
+import { AuthService } from '../../../../../services/AuthService';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({
   selector: 'app-default-header',
