@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { isTokenValid } from '../auth/auth.utils';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 type LoginResponse = {
   ok?: boolean;
