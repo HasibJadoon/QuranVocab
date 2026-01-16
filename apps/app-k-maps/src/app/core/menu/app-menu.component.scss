@@ -28,23 +28,7 @@ ion-menu ion-item[slot="header"] .menu-icon {
   filter: drop-shadow(0 0 6px rgba(122, 215, 255, 0.75)) drop-shadow(0 0 16px rgba(122, 215, 255, 0.45));
 }
 
-ion-accordion::part(indicator) {
-  color: #7ad7ff;
-  transform: rotate(-90deg);
-  transition: transform 0.2s ease;
-}
 
-ion-accordion[aria-expanded='true']::part(indicator),
-ion-accordion.accordion-expanded::part(indicator),
-ion-accordion.ion-accordion-expanded::part(indicator) {
-  transform: rotate(0deg);
-}
-
-ion-accordion::part(indicator) {
-  opacity: 0 !important;
-  width: 0;
-  display: none;
-}
 
 .accordion-icon {
   color: #7ad7ff;
@@ -57,4 +41,26 @@ ion-accordion[aria-expanded='true'] .accordion-icon,
 ion-accordion.accordion-expanded .accordion-icon,
 ion-accordion.ion-accordion-expanded .accordion-icon {
   transform: rotate(90deg);
+}
+
+
+ion-accordion-toggle::part(icon),
+ion-accordion-toggle::part(indicator),
+ion-accordion::part(indicator) {
+  color: #7ad7ff;
+  transform: rotate(-90deg) !important;
+  transition: transform 0.2s ease;
+  opacity: 1;
+}
+
+ion-accordion[aria-expanded='true'] ion-accordion-toggle::part(icon),
+ion-accordion[aria-expanded='true'] ion-accordion-toggle::part(indicator),
+ion-accordion[aria-expanded='true']::part(indicator),
+ion-accordion.accordion-expanded ion-accordion-toggle::part(icon),
+ion-accordion.accordion-expanded ion-accordion-toggle::part(indicator),
+ion-accordion.accordion-expanded::part(indicator),
+ion-accordion.ion-accordion-expanded ion-accordion-toggle::part(icon),
+ion-accordion.ion-accordion-expanded ion-accordion-toggle::part(indicator),
+ion-accordion.ion-accordion-expanded::part(indicator) {
+  transform: rotate(0deg) !important;
 }

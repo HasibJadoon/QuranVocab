@@ -6,32 +6,31 @@
   </ion-header>
   <ion-content>
     <ion-list>
-      <ion-item routerLink="/dashboard" routerDirection="root">
+      <ion-item routerLink="/dashboard" routerDirection="root" detail="false">
         <ion-icon name="home-outline" slot="start" class="menu-icon"></ion-icon>
       </ion-item>
     </ion-list>
 
     <ion-accordion-group>
       <ion-accordion value="arabic">
-        <ion-item slot="header">
+        <ion-item slot="header" detail="false">
           <ion-icon name="book-outline" slot="start" class="menu-icon"></ion-icon>
           <ion-label>Arabic</ion-label>
-          <ion-icon name="chevron-forward" slot="end" class="accordion-icon"></ion-icon>
         </ion-item>
         <ion-list slot="content">
-          <ion-item routerLink="/arabic/lessons" routerDirection="forward">
+          <ion-item routerLink="/arabic/lessons" routerDirection="forward" detail="false">
             <ion-icon name="book-outline" slot="start" class="menu-icon"></ion-icon>
             Lessons
           </ion-item>
-          <ion-item routerLink="/arabic/roots" routerDirection="forward">
+          <ion-item routerLink="/arabic/roots" routerDirection="forward" detail="false">
             <ion-icon name="leaf-outline" slot="start" class="menu-icon"></ion-icon>
             Roots
           </ion-item>
-          <ion-item routerLink="/arabic/lexicon" routerDirection="forward">
+          <ion-item routerLink="/arabic/lexicon" routerDirection="forward" detail="false">
             <ion-icon name="library-outline" slot="start" class="menu-icon"></ion-icon>
             Lexicon
           </ion-item>
-          <ion-item routerLink="/arabic/memory" routerDirection="forward">
+          <ion-item routerLink="/arabic/memory" routerDirection="forward" detail="false">
             <ion-icon name="sparkles-outline" slot="start" class="menu-icon"></ion-icon>
             Memory
           </ion-item>
@@ -39,13 +38,12 @@
       </ion-accordion>
 
       <ion-accordion value="worldview">
-        <ion-item slot="header">
+        <ion-item slot="header" detail="false">
           <ion-icon name="globe-outline" slot="start" class="menu-icon"></ion-icon>
           <ion-label>Worldview</ion-label>
-          <ion-icon name="chevron-forward" slot="end" class="accordion-icon"></ion-icon>
         </ion-item>
         <ion-list slot="content">
-          <ion-item routerLink="/worldview/lessons" routerDirection="forward">
+          <ion-item routerLink="/worldview/lessons" routerDirection="forward" detail="false">
             <ion-icon name="globe-outline" slot="start" class="menu-icon"></ion-icon>
             Lessons
           </ion-item>
@@ -53,13 +51,12 @@
       </ion-accordion>
 
       <ion-accordion value="crossref">
-        <ion-item slot="header">
+        <ion-item slot="header" detail="false">
           <ion-icon name="git-compare-outline" slot="start" class="menu-icon"></ion-icon>
           <ion-label>Crossref</ion-label>
-          <ion-icon name="chevron-forward" slot="end" class="accordion-icon"></ion-icon>
         </ion-item>
         <ion-list slot="content">
-          <ion-item routerLink="/crossref" routerDirection="forward">
+          <ion-item routerLink="/crossref" routerDirection="forward" detail="false">
             <ion-icon name="git-compare-outline" slot="start" class="menu-icon"></ion-icon>
             Cross References
           </ion-item>
@@ -67,13 +64,12 @@
       </ion-accordion>
 
       <ion-accordion value="podcast">
-        <ion-item slot="header">
+        <ion-item slot="header" detail="false">
           <ion-icon name="mic-outline" slot="start" class="menu-icon"></ion-icon>
           <ion-label>Podcast</ion-label>
-          <ion-icon name="chevron-forward" slot="end" class="accordion-icon"></ion-icon>
         </ion-item>
         <ion-list slot="content">
-          <ion-item routerLink="/podcast" routerDirection="forward">
+          <ion-item routerLink="/podcast" routerDirection="forward" detail="false">
             <ion-icon name="mic-outline" slot="start" class="menu-icon"></ion-icon>
             Episodes
           </ion-item>
@@ -81,13 +77,12 @@
       </ion-accordion>
 
       <ion-accordion value="planner">
-        <ion-item slot="header">
+        <ion-item slot="header" detail="false">
           <ion-icon name="calendar-outline" slot="start" class="menu-icon"></ion-icon>
           <ion-label>Planner</ion-label>
-          <ion-icon name="chevron-forward" slot="end" class="accordion-icon"></ion-icon>
         </ion-item>
         <ion-list slot="content">
-          <ion-item routerLink="/planner" routerDirection="forward">
+          <ion-item routerLink="/planner" routerDirection="forward" detail="false">
             <ion-icon name="calendar-outline" slot="start" class="menu-icon"></ion-icon>
             Weekly Plan
           </ion-item>
