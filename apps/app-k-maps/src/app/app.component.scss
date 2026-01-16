@@ -1,0 +1,32 @@
+
+ion-menu {
+  --width: 280px;
+}
+
+ion-menu ion-item[slot="header"],
+ion-menu ion-item {
+  --color: #e2e8f8;
+  --background: transparent;
+}
+
+ion-menu ion-item::part(native) {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+ion-menu ion-accordion-group {
+  --background: transparent;
+}
+
+.menu-icon {
+  color: #7ad7ff;
+  font-size: 20px;
+  opacity: 0.9;
+}
+
+ion-menu ion-item[slot="header"] .menu-icon {
+  font-size: 22px;
+}
+
+ion-accordion ion-item[slot="header"] ion-icon {
+  color: #7ad7ff;
+}
