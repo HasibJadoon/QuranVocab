@@ -5,9 +5,10 @@ import { IonicModule } from '@ionic/angular';
 
 import { ArabicRootsPageRoutingModule } from './arabic-roots-routing.module';
 import { ArabicRootsPage } from './arabic-roots.page';
+import { RootCardsComponent } from './root-cards/root-cards.component';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, IonicModule, ArabicRootsPageRoutingModule],
+  imports: [CommonModule, FormsModule, IonicModule, ArabicRootsPageRoutingModule, RootCardsComponent],
   declarations: [ArabicRootsPage],
 })
 export class ArabicRootsPageModule {}

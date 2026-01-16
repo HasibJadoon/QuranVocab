@@ -31,7 +31,7 @@
   </div>
 
   <ion-list *ngIf="!loading && !error && filtered.length">
-    <ion-item *ngFor="let item of filtered">
+    <ion-item *ngFor="let item of filtered" button detail="true" (click)="openRootModal(item)">
       <ion-label>
         <h2>{{ item.root }} <span *ngIf="item.family">({{ item.family }})</span></h2>
         <p>
@@ -46,4 +46,5 @@
     <ion-icon name="search-outline"></ion-icon>
     <p>No roots found.</p>
   </div>
+
 </ion-content>

@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { ModalController } from '@ionic/angular';
 import { ArabicRootsService, ArabicRoot } from '../../../shared/services/arabic-roots.service';
+import { RootCardsComponent } from './root-cards/root-cards.component';
+
+type RootCard = { front: string; back: string; tag?: string };
+
 
 @Component({
   selector: 'app-arabic-roots',
@@ -8,13 +13,19 @@ import { ArabicRootsService, ArabicRoot } from '../../../shared/services/arabic-
   standalone: false,
 })
 export class ArabicRootsPage implements OnInit {
+  selectedRoot: ArabicRoot | null = null;
+  selectedCards: RootCard[] = [];
+
   roots: ArabicRoot[] = [];
   filtered: ArabicRoot[] = [];
   loading = false;
   error = '';
   searchTerm = '';
 
-  constructor(private readonly rootsService: ArabicRootsService) {}
+  constructor(
+    private readonly rootsService: ArabicRootsService,
+    private readonly modalCtrl: ModalController
+  ) {}
 
   ngOnInit(): void {
     this.loadRoots();
@@ -43,6 +54,87 @@ export class ArabicRootsPage implements OnInit {
         }
       },
     });
+  }
+
+
+  async openRootModal(root: ArabicRoot): Promise<void> {
+    this.selectedRoot = root;
+    this.selectedCards = this.parseCards(root.cards);
+
+    const modal = await this.modalCtrl.create({
+      component: RootCardsComponent,
+      cssClass: 'root-cards-modal',
+      componentProps: {
+        root: root.root ?? '',
+        family: root.family ?? '',
+        cards: this.selectedCards,
+      },
+    });
+
+    await modal.present();
+  }
+
+  private parseCards(raw: ArabicRoot['cards']): RootCard[] {
+    if (!raw) {
+      return [];
+    }
+    let parsed: unknown = raw;
+    if (typeof parsed === 'string') {
+      try {
+        for (let i = 0; i < 2; i += 1) {
+          if (typeof parsed === 'string') {
+            parsed = JSON.parse(parsed);
+          }
+        }
+      } catch {
+        return [];
+      }
+    }
+
+    const arr = Array.isArray(parsed)
+      ? parsed
+      : parsed && Array.isArray((parsed as { cards?: unknown }).cards)
+      ? (parsed as { cards: unknown[] }).cards
+      : null;
+
+    if (!arr) {
+      return [];
+    }
+
+    return arr.map((item: any) => {
+      if (typeof item === 'string') {
+        return { front: item, back: '', tag: '' };
+      }
+      return {
+        front: typeof item?.front === 'string' ? item.front : String(item?.front ?? ''),
+        back: typeof item?.back === 'string' ? item.back : String(item?.back ?? ''),
+        tag: typeof item?.tag === 'string' ? item.tag : String(item?.tag ?? ''),
+      };
+    });
+  }
+
+  getSelectedCards(): RootCard[] {
+    const raw = this.selectedRoot?.cards;
+    if (!raw) {
+      return [];
+    }
+    if (Array.isArray(raw)) {
+      return raw as RootCard[];
+    }
+    if (typeof raw !== 'string') {
+      return [];
+    }
+    try {
+      let parsed: unknown = raw;
+      for (let i = 0; i < 2; i += 1) {
+        if (typeof parsed === 'string') {
+          parsed = JSON.parse(parsed);
+        }
+      }
+      return Array.isArray(parsed) ? (parsed as RootCard[]) : [];
+    } catch {
+      return [];
+    }
   }
 
   onSearchChange(event: CustomEvent): void {

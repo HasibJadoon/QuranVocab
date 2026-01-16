@@ -8,6 +8,7 @@ export type ArabicRoot = {
   family?: string;
   status?: string;
   frequency?: string;
+  cards?: string | unknown[];
 };
 
 type ApiResponse = {
