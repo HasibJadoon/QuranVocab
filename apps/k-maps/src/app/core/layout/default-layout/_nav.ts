@@ -12,19 +12,23 @@ export const navItems: INavData[] = [
     children: [
       {
         name: 'Lessons',
-        url: '/arabic/lessons'
+        url: '/arabic/lessons',
+        iconComponent: { name: 'cilBookmark' }
       },
       {
         name: 'Roots',
-        url: '/arabic/roots'
+        url: '/arabic/roots',
+        iconComponent: { name: 'cilList' }
       },
       {
         name: 'Lexicon',
-        url: '/arabic/lexicon'
+        url: '/arabic/lexicon',
+        iconComponent: { name: 'cilDescription' }
       },
       {
         name: 'Memory',
-        url: '/arabic/memory'
+        url: '/arabic/memory',
+        iconComponent: { name: 'cilTask' }
       }
     ]
   },
@@ -34,7 +38,8 @@ export const navItems: INavData[] = [
     children: [
       {
         name: 'Lessons',
-        url: '/worldview/lessons'
+        url: '/worldview/lessons',
+        iconComponent: { name: 'cilMap' }
       }
     ]
   },
@@ -44,7 +49,8 @@ export const navItems: INavData[] = [
     children: [
       {
         name: 'Cross References',
-        url: '/crossref'
+        url: '/crossref',
+        iconComponent: { name: 'cilShareAll' }
       }
     ]
   },
@@ -54,7 +60,8 @@ export const navItems: INavData[] = [
     children: [
       {
         name: 'Episodes',
-        url: '/podcast'
+        url: '/podcast',
+        iconComponent: { name: 'cilMediaPlay' }
       }
     ]
   },
@@ -64,7 +71,8 @@ export const navItems: INavData[] = [
     children: [
       {
         name: 'Weekly Plan',
-        url: '/planner'
+        url: '/planner',
+        iconComponent: { name: 'cilCalendar' }
       }
     ]
   }
