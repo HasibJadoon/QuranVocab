@@ -6,88 +6,88 @@
   </ion-header>
   <ion-content>
     <ion-list>
-      <ion-item routerLink="/dashboard" routerDirection="root" detail="false">
+      <ion-item button detail="false" (click)="go('/dashboard')">
         <ion-icon name="home-outline" slot="start" class="menu-icon"></ion-icon>
       </ion-item>
     </ion-list>
 
-    <ion-accordion-group>
-      <ion-accordion value="arabic">
-        <ion-item slot="header" detail="false">
+    <ion-list>
+      <ion-item-divider>Arabic</ion-item-divider>
+      <ion-item button detail="false" (click)="toggle('arabic')">
+        <ion-icon name="book-outline" slot="start" class="menu-icon"></ion-icon>
+        <ion-label>Arabic</ion-label>
+        <ion-icon name="chevron-forward" slot="end" class="menu-chevron" [class.open]="isOpen('arabic')"></ion-icon>
+      </ion-item>
+      <div class="submenu" *ngIf="isOpen('arabic')">
+        <ion-item button detail="false" (click)="go('/arabic/lessons')">
           <ion-icon name="book-outline" slot="start" class="menu-icon"></ion-icon>
-          <ion-label>Arabic</ion-label>
+          Lessons
         </ion-item>
-        <ion-list slot="content">
-          <ion-item routerLink="/arabic/lessons" routerDirection="forward" detail="false">
-            <ion-icon name="book-outline" slot="start" class="menu-icon"></ion-icon>
-            Lessons
-          </ion-item>
-          <ion-item routerLink="/arabic/roots" routerDirection="forward" detail="false">
-            <ion-icon name="leaf-outline" slot="start" class="menu-icon"></ion-icon>
-            Roots
-          </ion-item>
-          <ion-item routerLink="/arabic/lexicon" routerDirection="forward" detail="false">
-            <ion-icon name="library-outline" slot="start" class="menu-icon"></ion-icon>
-            Lexicon
-          </ion-item>
-          <ion-item routerLink="/arabic/memory" routerDirection="forward" detail="false">
-            <ion-icon name="sparkles-outline" slot="start" class="menu-icon"></ion-icon>
-            Memory
-          </ion-item>
-        </ion-list>
-      </ion-accordion>
+        <ion-item button detail="false" (click)="go('/arabic/roots')">
+          <ion-icon name="leaf-outline" slot="start" class="menu-icon"></ion-icon>
+          Roots
+        </ion-item>
+        <ion-item button detail="false" (click)="go('/arabic/lexicon')">
+          <ion-icon name="library-outline" slot="start" class="menu-icon"></ion-icon>
+          Lexicon
+        </ion-item>
+        <ion-item button detail="false" (click)="go('/arabic/memory')">
+          <ion-icon name="sparkles-outline" slot="start" class="menu-icon"></ion-icon>
+          Memory
+        </ion-item>
+      </div>
 
-      <ion-accordion value="worldview">
-        <ion-item slot="header" detail="false">
+      <ion-item-divider>Worldview</ion-item-divider>
+      <ion-item button detail="false" (click)="toggle('worldview')">
+        <ion-icon name="globe-outline" slot="start" class="menu-icon"></ion-icon>
+        <ion-label>Worldview</ion-label>
+        <ion-icon name="chevron-forward" slot="end" class="menu-chevron" [class.open]="isOpen('worldview')"></ion-icon>
+      </ion-item>
+      <div class="submenu" *ngIf="isOpen('worldview')">
+        <ion-item button detail="false" (click)="go('/worldview/lessons')">
           <ion-icon name="globe-outline" slot="start" class="menu-icon"></ion-icon>
-          <ion-label>Worldview</ion-label>
+          Lessons
         </ion-item>
-        <ion-list slot="content">
-          <ion-item routerLink="/worldview/lessons" routerDirection="forward" detail="false">
-            <ion-icon name="globe-outline" slot="start" class="menu-icon"></ion-icon>
-            Lessons
-          </ion-item>
-        </ion-list>
-      </ion-accordion>
+      </div>
 
-      <ion-accordion value="crossref">
-        <ion-item slot="header" detail="false">
+      <ion-item-divider>Crossref</ion-item-divider>
+      <ion-item button detail="false" (click)="toggle('crossref')">
+        <ion-icon name="git-compare-outline" slot="start" class="menu-icon"></ion-icon>
+        <ion-label>Crossref</ion-label>
+        <ion-icon name="chevron-forward" slot="end" class="menu-chevron" [class.open]="isOpen('crossref')"></ion-icon>
+      </ion-item>
+      <div class="submenu" *ngIf="isOpen('crossref')">
+        <ion-item button detail="false" (click)="go('/crossref')">
           <ion-icon name="git-compare-outline" slot="start" class="menu-icon"></ion-icon>
-          <ion-label>Crossref</ion-label>
+          Cross References
         </ion-item>
-        <ion-list slot="content">
-          <ion-item routerLink="/crossref" routerDirection="forward" detail="false">
-            <ion-icon name="git-compare-outline" slot="start" class="menu-icon"></ion-icon>
-            Cross References
-          </ion-item>
-        </ion-list>
-      </ion-accordion>
+      </div>
 
-      <ion-accordion value="podcast">
-        <ion-item slot="header" detail="false">
+      <ion-item-divider>Podcast</ion-item-divider>
+      <ion-item button detail="false" (click)="toggle('podcast')">
+        <ion-icon name="mic-outline" slot="start" class="menu-icon"></ion-icon>
+        <ion-label>Podcast</ion-label>
+        <ion-icon name="chevron-forward" slot="end" class="menu-chevron" [class.open]="isOpen('podcast')"></ion-icon>
+      </ion-item>
+      <div class="submenu" *ngIf="isOpen('podcast')">
+        <ion-item button detail="false" (click)="go('/podcast')">
           <ion-icon name="mic-outline" slot="start" class="menu-icon"></ion-icon>
-          <ion-label>Podcast</ion-label>
+          Episodes
         </ion-item>
-        <ion-list slot="content">
-          <ion-item routerLink="/podcast" routerDirection="forward" detail="false">
-            <ion-icon name="mic-outline" slot="start" class="menu-icon"></ion-icon>
-            Episodes
-          </ion-item>
-        </ion-list>
-      </ion-accordion>
+      </div>
 
-      <ion-accordion value="planner">
-        <ion-item slot="header" detail="false">
+      <ion-item-divider>Planner</ion-item-divider>
+      <ion-item button detail="false" (click)="toggle('planner')">
+        <ion-icon name="calendar-outline" slot="start" class="menu-icon"></ion-icon>
+        <ion-label>Planner</ion-label>
+        <ion-icon name="chevron-forward" slot="end" class="menu-chevron" [class.open]="isOpen('planner')"></ion-icon>
+      </ion-item>
+      <div class="submenu" *ngIf="isOpen('planner')">
+        <ion-item button detail="false" (click)="go('/planner')">
           <ion-icon name="calendar-outline" slot="start" class="menu-icon"></ion-icon>
-          <ion-label>Planner</ion-label>
+          Weekly Plan
         </ion-item>
-        <ion-list slot="content">
-          <ion-item routerLink="/planner" routerDirection="forward" detail="false">
-            <ion-icon name="calendar-outline" slot="start" class="menu-icon"></ion-icon>
-            Weekly Plan
-          </ion-item>
-        </ion-list>
-      </ion-accordion>
-    </ion-accordion-group>
+      </div>
+    </ion-list>
   </ion-content>
 </ion-menu>

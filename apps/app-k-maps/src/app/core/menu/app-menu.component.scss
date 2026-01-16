@@ -12,10 +12,7 @@ ion-menu ion-item::part(native) {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-ion-menu ion-accordion-group {
-  --background: transparent;
-}
-
+ion-menu 
 .menu-icon {
   color: #7ad7ff;
   font-size: 20px;
@@ -37,30 +34,21 @@ ion-menu ion-item[slot="header"] .menu-icon {
   transition: transform 0.2s ease;
 }
 
-ion-accordion[aria-expanded='true'] .accordion-icon,
-ion-accordion.accordion-expanded .accordion-icon,
-ion-accordion.ion-accordion-expanded .accordion-icon {
+
+
+
+
+.menu-chevron {
+  color: #7ad7ff;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+  transform: rotate(0deg);
+}
+
+.menu-chevron.open {
   transform: rotate(90deg);
 }
 
-
-ion-accordion-toggle::part(icon),
-ion-accordion-toggle::part(indicator),
-ion-accordion::part(indicator) {
-  color: #7ad7ff;
-  transform: rotate(-90deg) !important;
-  transition: transform 0.2s ease;
-  opacity: 1;
-}
-
-ion-accordion[aria-expanded='true'] ion-accordion-toggle::part(icon),
-ion-accordion[aria-expanded='true'] ion-accordion-toggle::part(indicator),
-ion-accordion[aria-expanded='true']::part(indicator),
-ion-accordion.accordion-expanded ion-accordion-toggle::part(icon),
-ion-accordion.accordion-expanded ion-accordion-toggle::part(indicator),
-ion-accordion.accordion-expanded::part(indicator),
-ion-accordion.ion-accordion-expanded ion-accordion-toggle::part(icon),
-ion-accordion.ion-accordion-expanded ion-accordion-toggle::part(indicator),
-ion-accordion.ion-accordion-expanded::part(indicator) {
-  transform: rotate(0deg) !important;
+.submenu {
+  padding-left: 0.5rem;
 }
