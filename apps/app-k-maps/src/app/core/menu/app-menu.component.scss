@@ -11,9 +11,6 @@ ion-menu {
     margin-bottom: 2px;
     font-size: 15px;
 
-    &::part(native) {
-      border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
-    }
 
     /* Style for the 'button' state hover/active */
     &.item-button.activated {
@@ -58,7 +55,6 @@ ion-item[slot="header"] .menu-icon {
 .submenu {
   padding-left: 12px; /* Indent sub-items */
   background: rgba(255, 255, 255, 0.03);
-  border-left: 1px solid rgba(122, 215, 255, 0.1);
   margin-left: 20px;
   
   /* Ensure submenu items feel distinct */
@@ -92,4 +88,15 @@ ion-item-divider {
 ion-menu-toggle {
   display: block;
   width: 100%;
+}
+
+
+ion-menu ion-item {
+  --inner-border-width: 0;
+  --border-width: 0;
+  --border-color: transparent;
+}
+
+ion-menu ion-list {
+  --ion-item-border-color: transparent;
 }
