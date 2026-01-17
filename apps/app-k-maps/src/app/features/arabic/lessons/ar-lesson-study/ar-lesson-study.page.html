@@ -2,7 +2,7 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button class="back-icon" fill="clear" (click)="back()">
-        <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
+        <ion-icon [icon]="icons.arrowBackOutline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
     <ion-title>{{ title || 'Arabic Lesson Study' }}</ion-title>
@@ -231,16 +231,16 @@
   <ion-toolbar>
     <ion-segment class="study-tabs" [value]="activeTab" (ionChange)="onTabChange($event)">
       <ion-segment-button value="reading">
-        <ion-icon name="book-outline" aria-hidden="true"></ion-icon>
+        <ion-icon [icon]="icons.bookOutline" aria-hidden="true"></ion-icon>
       </ion-segment-button>
       <ion-segment-button value="memory">
-        <ion-icon name="sparkles-outline" aria-hidden="true"></ion-icon>
+        <ion-icon [icon]="icons.sparklesOutline" aria-hidden="true"></ion-icon>
       </ion-segment-button>
       <ion-segment-button value="mcq">
-        <ion-icon name="list-outline" aria-hidden="true"></ion-icon>
+        <ion-icon [icon]="icons.listOutline" aria-hidden="true"></ion-icon>
       </ion-segment-button>
       <ion-segment-button value="passage">
-        <ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>
+        <ion-icon [icon]="icons.documentTextOutline" aria-hidden="true"></ion-icon>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>

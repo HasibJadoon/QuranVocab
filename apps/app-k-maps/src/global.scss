@@ -151,3 +151,209 @@ ion-content,
 ion-content * {
   user-select: text;
 }
+
+app-ar-lesson-study {
+  .arabic-title,
+  .arabic-text,
+  .arabic-inline,
+  .arabic-question {
+    font-family: var(--app-font-ar);
+    font-size: var(--app-font-ar-size, 1em);
+    direction: rtl;
+    text-align: right;
+  }
+
+  .study-page {
+    margin-inline: -0.75rem;
+  }
+
+  .study-page .study-content {
+    padding: 0.9rem;
+  }
+
+  .memory-label,
+  .question-list {
+    font-family: var(--app-font-sans);
+  }
+
+  .study-page .memory-label {
+    font-size: 1.4rem;
+    line-height: 1.1;
+  }
+
+  .arabic-text {
+    line-height: 1.9;
+    font-size: calc(var(--app-font-ar-size, 1em) * 1.2);
+    text-align: justify;
+  }
+
+  .arabic-sentence-line {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .arabic-sentence-line:last-child {
+    margin-bottom: 0;
+  }
+
+  .translation-text {
+    font-family: var(--app-font-sans);
+    font-size: calc(var(--app-font-size, 16px) * 1.05);
+  }
+
+  :is(.arabic-text, .translation-text) {
+    outline: none;
+    padding-bottom: 1rem;
+  }
+
+  .translation-number {
+    color: #ffd400;
+    font-weight: 800;
+    margin-inline-end: 0.35rem;
+  }
+
+  :is(.arabic-segment, .translation-segment, .word-segment, .question-item) {
+    cursor: pointer;
+    border-radius: 0.35rem;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    white-space: normal;
+  }
+
+  :is(.arabic-segment, .word-segment) {
+    padding: 0.1rem 0.2rem;
+  }
+
+  .translation-segment {
+    padding: 0.05rem 0.15rem;
+    display: inline-block;
+  }
+
+  .question-item {
+    display: inline-block;
+    padding: 0.2rem 0.35rem;
+  }
+
+  :is(.arabic-segment, .translation-segment, .word-segment, .question-item).is-highlighted {
+    background: rgba(66, 135, 245, 0.22);
+    box-shadow:
+      0 0 0 1px rgba(66, 135, 245, 0.35),
+      0 6px 12px rgba(66, 135, 245, 0.18);
+  }
+
+  :is(.arabic-segment, .translation-segment, .word-segment, .question-item).is-selected {
+    background: rgba(255, 213, 0, 0.22);
+    box-shadow:
+      0 0 0 1px rgba(255, 213, 0, 0.55),
+      0 8px 16px rgba(255, 213, 0, 0.2);
+  }
+
+  :is(.arabic-segment, .translation-segment, .word-segment, .question-item).is-hovered {
+    background: rgba(80, 180, 255, 0.22);
+    box-shadow:
+      0 0 0 1px rgba(80, 180, 255, 0.4),
+      0 6px 12px rgba(80, 180, 255, 0.18);
+  }
+
+  .arabic-segment.is-verse-marker {
+    color: #ff9b9b;
+    text-shadow: 0 0 8px rgba(255, 120, 120, 0.5);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .arabic-segment.is-verse-marker:is(.is-highlighted, .is-selected, .is-hovered) {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  :is(.arabic-inline, .arabic-question) {
+    line-height: 1.8;
+  }
+
+  .arabic-question {
+    list-style-position: inside;
+    padding-inline-end: 1rem;
+  }
+
+  .question-list {
+    margin: 0;
+    display: grid;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+  }
+
+  .passage-questions {
+    gap: 0.75rem;
+  }
+
+  :is(.passage-questions .question-item, .passage-questions .arabic-question) {
+    font-family: var(--app-font-sans);
+    font-size: var(--app-font-size, 16px);
+  }
+
+  .passage-questions .question-item {
+    line-height: 1.6;
+  }
+
+  .study-tabs {
+    --background: transparent;
+    --indicator-color: transparent;
+  }
+
+  .study-tabs ion-segment-button {
+    --color: rgba(120, 200, 255, 0.65);
+    --color-checked: #ff3b5c;
+    --background-checked: transparent;
+    --indicator-color: transparent;
+    --padding-start: 8px;
+    --padding-end: 8px;
+  }
+
+  .study-tabs ion-icon {
+    font-size: 1.35rem;
+  }
+
+  .arabic-text,
+  .translation-text,
+  .question-item,
+  .arabic-segment,
+  .translation-segment,
+  .word-segment {
+    user-select: text;
+  }
+
+  :is(.mcq-list, .memory-list) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.4rem;
+  }
+
+  :is(.mcq-list, .memory-list) .question-item {
+    display: block;
+    padding: 0.2rem 0;
+    border-radius: 0;
+  }
+
+  :is(.mcq-list, .memory-list) .question-item.is-highlighted,
+  :is(.mcq-list, .memory-list) .question-item.is-selected,
+  :is(.mcq-list, .memory-list) .question-item.is-hovered {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .study-page :is(h1, h2, h3, h4, h5, h6, .memory-label) {
+    color: #ffd400;
+  }
+
+  .back-icon {
+    --color: #56ccff;
+    --background: rgba(10, 14, 24, 0.4);
+    --border-radius: 10px;
+    --box-shadow: 0 0 10px rgba(86, 204, 255, 0.45);
+  }
+
+  .back-icon ion-icon {
+    font-size: 1.2rem;
+  }
+}

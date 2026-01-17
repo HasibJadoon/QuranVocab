@@ -4,13 +4,16 @@ import { addIcons } from 'ionicons';
 import {
   bookOutline,
   calendarOutline,
+  documentTextOutline,
   gitCompareOutline,
   globeOutline,
   homeOutline,
   leafOutline,
   libraryOutline,
+  listOutline,
   micOutline,
   sparklesOutline,
+  arrowBackOutline,
   chevronForward,
   settingsOutline,
 } from 'ionicons/icons';
@@ -31,6 +34,9 @@ export class AppComponent {
       leafOutline,
       libraryOutline,
       sparklesOutline,
+      listOutline,
+      documentTextOutline,
+      arrowBackOutline,
       globeOutline,
       gitCompareOutline,
       micOutline,
@@ -70,4 +76,3 @@ export class AppComponent {
     await this.menu.close();
   }
 }
-

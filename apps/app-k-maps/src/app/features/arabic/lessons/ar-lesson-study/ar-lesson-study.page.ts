@@ -2,6 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
+import {
+  arrowBackOutline,
+  bookOutline,
+  documentTextOutline,
+  listOutline,
+  sparklesOutline,
+} from 'ionicons/icons';
 
 import { ArLessonsService } from '../../../../shared/services/ar-lessons.service';
 import { GrammarNotesService } from '../../../../shared/services/grammar-notes.service';
@@ -66,6 +73,13 @@ export class ArLessonStudyPage implements OnInit {
   mcqQuestionSelectedIndex: number | null = null;
   passageQuestionHoverIndex: number | null = null;
   passageQuestionSelectedIndex: number | null = null;
+  readonly icons = {
+    arrowBackOutline,
+    bookOutline,
+    sparklesOutline,
+    listOutline,
+    documentTextOutline,
+  };
 
   constructor(
     private readonly lessons: ArLessonsService,
