@@ -247,3 +247,16 @@
   color: #ffd400;
   text-shadow: 0 0 8px rgba(255, 212, 0, 0.35);
 }
+
+
+.back-icon {
+  --color: #56ccff;
+  --background: rgba(10, 14, 24, 0.4);
+  --border-radius: 10px;
+  --box-shadow: 0 0 10px rgba(86, 204, 255, 0.45);
+}
+
+.back-icon ion-icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 8px rgba(86, 204, 255, 0.6));
+}
