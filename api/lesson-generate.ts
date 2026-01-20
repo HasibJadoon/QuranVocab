@@ -1,5 +1,5 @@
 import { generateLessonWithClaude } from "./claudeGenerateLesson";
-import type { PagesFunction } from "@cloudflare/workers-types";
+import type { PagesFunction, Response as WorkerResponse } from "@cloudflare/workers-types";
 
 interface Env {
   ANTHROPIC_API_KEY?: string;
@@ -12,14 +12,18 @@ const jsonHeaders = {
   "cache-control": "no-store",
 };
 
+const toWorkerResponse = (response: Response): WorkerResponse => response as WorkerResponse;
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let body: Record<string, any> | null = null;
   try {
     body = (await request.json()) as Record<string, any>;
   } catch {
-    return new Response(
-      JSON.stringify({ ok: false, error: "Invalid JSON body" }),
-      { status: 400, headers: jsonHeaders }
+    return toWorkerResponse(
+      new Response(
+        JSON.stringify({ ok: false, error: "Invalid JSON body" }),
+        { status: 400, headers: jsonHeaders }
+      )
     );
   }
 
@@ -30,9 +34,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     (passage ? { text: { arabic: passage } } : null);
 
   if (!lessonInput) {
-    return new Response(
-      JSON.stringify({ ok: false, error: "lesson or text/passage input is required" }),
-      { status: 400, headers: jsonHeaders }
+    return toWorkerResponse(
+      new Response(
+        JSON.stringify({ ok: false, error: "lesson or text/passage input is required" }),
+        { status: 400, headers: jsonHeaders }
+      )
     );
   }
 
@@ -45,19 +51,23 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       env
     );
 
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        generated_lesson: generatedLesson,
-        generated_at: new Date().toISOString(),
-        input: lessonInput,
-      }),
-      { headers: jsonHeaders }
+    return toWorkerResponse(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          generated_lesson: generatedLesson,
+          generated_at: new Date().toISOString(),
+          input: lessonInput,
+        }),
+        { headers: jsonHeaders }
+      )
     );
   } catch (err: any) {
-    return new Response(
-      JSON.stringify({ ok: false, error: err?.message ?? "Failed to generate lesson" }),
-      { status: 500, headers: jsonHeaders }
+    return toWorkerResponse(
+      new Response(
+        JSON.stringify({ ok: false, error: err?.message ?? "Failed to generate lesson" }),
+        { status: 500, headers: jsonHeaders }
+      )
     );
   }
 };
