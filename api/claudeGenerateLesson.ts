@@ -95,6 +95,17 @@ function parseClaudeLessonJson(outputText: string) {
     try {
       return JSON.parse(sanitizedText);
     } catch (secondaryError: any) {
+      const recoveredText = recoverJsonStructure(sanitizedText);
+      if (recoveredText !== sanitizedText) {
+        try {
+          return JSON.parse(recoveredText);
+        } catch (tertiaryError: any) {
+          const snippet = getSnippet(outputText);
+          throw new Error(
+            `Failed to parse Claude output JSON after sanitizing and recovery: ${tertiaryError.message}. Output snippet: ${snippet}`
+          );
+        }
+      }
       const snippet = getSnippet(outputText);
       throw new Error(
         `Failed to parse Claude output JSON after sanitizing: ${secondaryError.message}. Output snippet: ${snippet}`
@@ -246,6 +257,55 @@ function isIdentifierChar(char: string) {
 
 function escapeDoubleQuotes(value: string) {
   return value.replace(/"/g, '\\"');
+}
+
+function recoverJsonStructure(text: string) {
+  let index = 0;
+  let inString = false;
+  let escaping = false;
+  const stack: string[] = [];
+
+  while (index < text.length) {
+    const char = text[index];
+    if (inString) {
+      if (escaping) {
+        escaping = false;
+      } else if (char === "\\") {
+        escaping = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      index++;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      index++;
+      continue;
+    }
+
+    if (char === "{") {
+      stack.push("}");
+    } else if (char === "[") {
+      stack.push("]");
+    } else if (char === "}" || char === "]") {
+      if (stack.length && stack[stack.length - 1] === char) {
+        stack.pop();
+      }
+    }
+
+    index++;
+  }
+
+  let recovery = text;
+  if (inString) {
+    recovery += '"';
+  }
+  while (stack.length) {
+    recovery += stack.pop();
+  }
+  return recovery;
 }
 
 function getSnippet(text: string) {
