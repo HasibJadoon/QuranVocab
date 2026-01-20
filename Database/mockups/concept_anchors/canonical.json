@@ -1,0 +1,17 @@
+{
+  "entity_type": "concept_anchor",
+  "id": 0,
+  "concept_id": 0,
+  "anchor_type": "quran | hadith | linguistic | historical | rational | experiential",
+  "source_type": "quran | ar_lesson | worldview_lesson | library",
+  "source_id": "string|number|null",
+  "ref": "string|null",
+  "anchor_text_ar": "string|null",
+  "anchor_text_en": "string|null",
+  "claim": "string",
+  "explanation": "string|null",
+  "strength": 3,
+  "tags": [],
+  "created_at": "ISO_DATETIME",
+  "updated_at": "ISO_DATETIME|null"
+}

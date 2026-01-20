@@ -1,0 +1,28 @@
+{
+  "id": "GRAMMAR_NOTE_...",
+  "lesson_id": "string|number|null",
+  "concept_id": "GRAMMAR_CONCEPT_...",
+  "scope_type": "sentence_unit | vocab_unit | block",
+  "scope_id": "string",
+  "note_type": "syntax | morphology | particle | rhetoric | discourse | semantics",
+  "rule": "string",
+  "explanation": "string|null",
+  "example_ar": "string|null",
+  "example_ref": "string|null",
+  "tags": [],
+  "strength": 3,
+  "status": "draft | reviewed | active | archived",
+  "cards_json": {
+    "anki_cards": [
+      {
+        "card_id": "ANKI_...",
+        "card_type": "recall | cloze | recognition | production",
+        "front": "string",
+        "back": "string",
+        "tags": []
+      }
+    ]
+  },
+  "created_at": "ISO_DATETIME",
+  "updated_at": "ISO_DATETIME|null"
+}

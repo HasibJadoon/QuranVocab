@@ -1,0 +1,30 @@
+{
+  "table": "quran_relations",
+  "columns": [
+    "id",
+    "concept_id",
+    "target_type",
+    "target_id",
+    "relation",
+    "quran_evidence",
+    "note",
+    "created_at",
+    "updated_at"
+  ],
+  "display_columns": [
+    "id",
+    "concept_id",
+    "target_type",
+    "target_id",
+    "relation",
+    "quran_evidence",
+    "note",
+    "created_at",
+    "updated_at"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

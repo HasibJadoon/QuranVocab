@@ -1,0 +1,112 @@
+{
+  "discourse_edges": [
+    {
+      "entity_type": "discourse_edge",
+      "id": 9001,
+      "lesson_id": "AR_LESSON_QURAN_12_1_7",
+      "from_unit_id": "SENT_1",
+      "to_unit_id": "SENT_2",
+      "relation_type": "grounds",
+      "direction": "forward",
+      "evidence": {
+        "marker_ar": null,
+        "marker_en": null,
+        "note": "Clarity of the Book (12:1) grounds the purpose of Arabic revelation (12:2)."
+      },
+      "strength": 4,
+      "status": "active",
+      "created_at": "2026-01-19T13:30:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "discourse_edge",
+      "id": 9002,
+      "lesson_id": "AR_LESSON_QURAN_12_1_7",
+      "from_unit_id": "SENT_2",
+      "to_unit_id": "SENT_3",
+      "relation_type": "leads_to",
+      "direction": "forward",
+      "evidence": {
+        "marker_ar": null,
+        "marker_en": null,
+        "note": "Purpose (understanding) leads into narrative method: best of stories."
+      },
+      "strength": 4,
+      "status": "active",
+      "created_at": "2026-01-19T13:31:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "discourse_edge",
+      "id": 9003,
+      "lesson_id": "AR_LESSON_QURAN_12_1_7",
+      "from_unit_id": "SENT_3",
+      "to_unit_id": "SENT_4",
+      "relation_type": "introduces_story",
+      "direction": "forward",
+      "evidence": {
+        "marker_ar": "إِذْ",
+        "marker_en": "when",
+        "note": "إذ marks narrative entry into the Yusuf scene."
+      },
+      "strength": 5,
+      "status": "reviewed",
+      "created_at": "2026-01-19T13:32:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "discourse_edge",
+      "id": 9004,
+      "lesson_id": "AR_LESSON_QURAN_12_1_7",
+      "from_unit_id": "SENT_4",
+      "to_unit_id": "SENT_5",
+      "relation_type": "responds_by",
+      "direction": "forward",
+      "evidence": {
+        "marker_ar": "قَالَ",
+        "marker_en": "he said",
+        "note": "Dialogue response: Ya‘qub replies with warning."
+      },
+      "strength": 5,
+      "status": "active",
+      "created_at": "2026-01-19T13:33:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "discourse_edge",
+      "id": 9005,
+      "lesson_id": "AR_LESSON_QURAN_12_1_7",
+      "from_unit_id": "SENT_5",
+      "to_unit_id": "SENT_6",
+      "relation_type": "promises",
+      "direction": "forward",
+      "evidence": {
+        "marker_ar": "وَكَذَٰلِكَ",
+        "marker_en": "thus",
+        "note": "وَكَذَٰلِكَ shifts from warning to divine outcome (selection + teaching)."
+      },
+      "strength": 4,
+      "status": "active",
+      "created_at": "2026-01-19T13:34:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "discourse_edge",
+      "id": 9006,
+      "lesson_id": "AR_LESSON_QURAN_12_1_7",
+      "from_unit_id": "SENT_6",
+      "to_unit_id": "SENT_7",
+      "relation_type": "concludes",
+      "direction": "forward",
+      "evidence": {
+        "marker_ar": "لَقَدْ",
+        "marker_en": "surely",
+        "note": "Conclusion generalizes the narrative into signs for seekers."
+      },
+      "strength": 4,
+      "status": "active",
+      "created_at": "2026-01-19T13:35:00Z",
+      "updated_at": null
+    }
+  ]
+}

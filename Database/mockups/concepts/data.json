@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "slug": "REVELATION",
+    "label_ar": "الوحي",
+    "label_en": "Revelation",
+    "category": "epistemology",
+    "notes": "Concept of revelation",
+    "status": "active",
+    "created_at": "2026-01-19 05:33:22",
+    "updated_at": null
+  },
+  {
+    "id": 2,
+    "slug": "COVENANT",
+    "label_ar": "العهد",
+    "label_en": "Covenant",
+    "category": "law",
+    "notes": "Concept of covenant",
+    "status": "active",
+    "created_at": "2026-01-19 05:33:22",
+    "updated_at": null
+  }
+]

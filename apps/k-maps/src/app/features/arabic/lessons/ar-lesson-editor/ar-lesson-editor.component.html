@@ -87,6 +87,38 @@
           <label class="form-label">Reference</label>
           <input class="form-control" type="text" [(ngModel)]="lessonJson.text.reference" (input)="syncJsonText()" />
         </div>
+        <div class="card mt-4 border-primary">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <div>
+                <h6 class="card-title mb-1">Claude preview</h6>
+                <p class="card-subtitle text-muted small mb-0">Generate vocabulary/comprehension suggestions for this passage.</p>
+              </div>
+              <button
+                class="btn btn-outline-primary btn-sm"
+                type="button"
+                (click)="generateModelSuggestion()"
+                [disabled]="modelLoading || !modelPrompt"
+              >
+                {{ modelLoading ? 'Generating…' : 'Generate' }}
+              </button>
+            </div>
+            <label class="form-label small mb-1">Prompt</label>
+            <textarea
+              class="form-control form-control-sm mb-2"
+              rows="4"
+              [(ngModel)]="modelPrompt"
+              placeholder="Add Arabic text to craft the prompt"
+            ></textarea>
+            <div *ngIf="modelError" class="text-danger small mb-2">{{ modelError }}</div>
+            <div *ngIf="modelResponse" class="bg-light rounded p-2 small">
+              {{ modelResponse }}
+            </div>
+            <div *ngIf="!modelResponse && !modelError" class="text-muted small">
+              The preview will appear here after you generate it.
+            </div>
+          </div>
+        </div>
       </div>
 
       <div *ngIf="tab === 'vocab'">

@@ -1,0 +1,63 @@
+{
+  "entity_type": "publishable_content",
+  "id": 0,
+  "content_code": "CONTENT_...",
+  "content_type": "episode | video | article | short | lesson | series",
+  "title": "string",
+  "title_ar": "string|null",
+  "status": "idea | draft | script | recorded | edited | scheduled | published | archived",
+  "priority": 3,
+  "source_stream": "arabic_quran | worldview | mixed",
+  "summary": "string|null",
+  "structure": {
+    "series_id": "string|null",
+    "season": "number|null",
+    "episode_number": "number|null",
+    "parent_content_id": "string|number|null",
+    "children_content_ids": []
+  },
+  "assets": {
+    "script_text": "string|null",
+    "outline": [],
+    "show_notes": "string|null",
+    "thumbnail_ref": "string|null",
+    "files": [
+      {
+        "asset_type": "audio | video | image | doc | project_file",
+        "name": "string",
+        "uri": "string|null",
+        "status": "planned | ready | missing"
+      }
+    ]
+  },
+  "recording": {
+    "recorded_at": "ISO_DATETIME|null",
+    "duration_seconds": "number|null",
+    "raw_media_ref": "string|null"
+  },
+  "publishing": {
+    "primary_platform": "youtube | spotify | blog | other",
+    "publish_at": "ISO_DATETIME|null",
+    "published_at": "ISO_DATETIME|null",
+    "visibility": "public | unlisted | private",
+    "platform_posts": [
+      {
+        "platform": "youtube | spotify | blog | tiktok | instagram | x | facebook | other",
+        "url": "string|null",
+        "status": "draft | scheduled | published",
+        "published_at": "ISO_DATETIME|null"
+      }
+    ]
+  },
+  "links": {
+    "arabic_lesson_refs": [],
+    "worldview_lesson_refs": [],
+    "concept_refs": [],
+    "library_refs": [],
+    "cross_refs": []
+  },
+  "tags": [],
+  "notes": "string|null",
+  "created_at": "ISO_DATETIME",
+  "updated_at": "ISO_DATETIME|null"
+}

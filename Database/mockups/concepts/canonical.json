@@ -1,0 +1,16 @@
+{
+  "entity_type": "concept",
+  "id": 0,
+  "concept_code": "CONCEPT_...",
+  "title": "string",
+  "title_ar": "string|null",
+  "definition": "string",
+  "definition_ar": "string|null",
+  "concept_type": "theological | linguistic | ethical | narrative | legal | epistemic",
+  "scope": "local | thematic | universal",
+  "related_roots": [],
+  "related_vocab_units": [],
+  "status": "draft | reviewed | active | archived",
+  "created_at": "ISO_DATETIME",
+  "updated_at": "ISO_DATETIME|null"
+}

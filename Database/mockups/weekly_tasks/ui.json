@@ -1,0 +1,32 @@
+{
+  "table": "weekly_tasks",
+  "columns": [
+    "id",
+    "week_start",
+    "title",
+    "task_type",
+    "status",
+    "created_at",
+    "updated_at",
+    "task_json",
+    "ar_lesson_id",
+    "worldview_lesson_id"
+  ],
+  "display_columns": [
+    "id",
+    "week_start",
+    "title",
+    "task_type",
+    "status",
+    "created_at",
+    "updated_at",
+    "task_json",
+    "ar_lesson_id",
+    "worldview_lesson_id"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

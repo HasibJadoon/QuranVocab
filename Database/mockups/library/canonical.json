@@ -1,0 +1,48 @@
+{
+  "entity_type": "library_entry",
+  "id": "LIB_...",
+  "entry_type": "author|book|chapter|paper|video|podcast|episode|debate_series|debate|organization|journal|era_context|movement|event",
+  "title": "",
+  "title_ar": null,
+  "creators": [
+    {
+      "role": "author|speaker|host|editor|organization",
+      "ref_id": "LIB_..."
+    }
+  ],
+  "publication": {
+    "publisher_ref_id": null,
+    "journal_ref_id": null,
+    "year": null,
+    "date": null,
+    "edition": null,
+    "volume": null,
+    "issue": null,
+    "pages": null,
+    "doi": null,
+    "isbn": null
+  },
+  "source": {
+    "platform": null,
+    "url": null,
+    "language": "en|ar|ur|mixed",
+    "format": "text|pdf|video|audio|web",
+    "access": "public|private"
+  },
+  "structure": {
+    "parent_ref_id": null,
+    "children": []
+  },
+  "context": {
+    "era_ref_ids": [],
+    "movement_ref_ids": [],
+    "region_tags": [],
+    "institutions_ref_ids": [],
+    "political_context_ref_ids": []
+  },
+  "topics": [],
+  "tags": [],
+  "summary": "",
+  "status": "active",
+  "notes": ""
+}

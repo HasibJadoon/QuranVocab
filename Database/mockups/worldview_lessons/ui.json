@@ -1,0 +1,24 @@
+{
+  "table": "worldview_lessons",
+  "columns": [
+    "id",
+    "title",
+    "status",
+    "created_at",
+    "updated_at",
+    "lesson_json"
+  ],
+  "display_columns": [
+    "id",
+    "title",
+    "status",
+    "created_at",
+    "updated_at",
+    "lesson_json"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

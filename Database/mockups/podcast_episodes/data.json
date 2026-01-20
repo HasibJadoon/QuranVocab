@@ -1,0 +1,94 @@
+{
+  "entity_type": "publishable_content",
+  "id": 90001,
+  "content_code": "CONTENT_YUSUF_OPENING_001",
+  "content_type": "episode",
+  "title": "Surah Yusuf 12:1–7 — Revelation Frames the Story",
+  "title_ar": "يوسف ١–٧ — الوحي يفتتح القصة",
+  "status": "script",
+  "priority": 4,
+  "source_stream": "arabic_quran",
+  "summary": "Opening frame: clarity of the Book → Arabic revelation for understanding → best story → dream → warning → divine selection → signs for seekers.",
+  "structure": {
+    "series_id": "CONTENT_SERIES_MINING_WISDOM_YUSUF",
+    "season": 1,
+    "episode_number": 1,
+    "parent_content_id": null,
+    "children_content_ids": []
+  },
+  "assets": {
+    "script_text": "SCRIPT_REF: google_doc_or_local",
+    "outline": [
+      "Frame",
+      "Best story",
+      "Dream",
+      "Warning",
+      "Ijtiba",
+      "Signs"
+    ],
+    "show_notes": "Key concepts: revelation clarity, purpose, trial, divine selection.",
+    "thumbnail_ref": "THUMB_YUSUF_001",
+    "files": [
+      {
+        "asset_type": "doc",
+        "name": "Script Doc",
+        "uri": null,
+        "status": "ready"
+      },
+      {
+        "asset_type": "project_file",
+        "name": "DaVinci Project",
+        "uri": null,
+        "status": "planned"
+      }
+    ]
+  },
+  "recording": {
+    "recorded_at": null,
+    "duration_seconds": null,
+    "raw_media_ref": null
+  },
+  "publishing": {
+    "primary_platform": "youtube",
+    "publish_at": null,
+    "published_at": null,
+    "visibility": "public",
+    "platform_posts": [
+      {
+        "platform": "youtube",
+        "url": null,
+        "status": "draft",
+        "published_at": null
+      },
+      {
+        "platform": "spotify",
+        "url": null,
+        "status": "draft",
+        "published_at": null
+      }
+    ]
+  },
+  "links": {
+    "arabic_lesson_refs": [
+      "AR_LESSON_QURAN_12_1_7"
+    ],
+    "worldview_lesson_refs": [],
+    "concept_refs": [
+      "CONCEPT_REVELATION_CLARITY",
+      "CONCEPT_DIVINE_SELECTION",
+      "CONCEPT_TRIAL"
+    ],
+    "library_refs": [
+      "LIB_BOOK_IMPOSSIBLE_STATE_2013"
+    ],
+    "cross_refs": []
+  },
+  "tags": [
+    "yusuf",
+    "quran",
+    "mining_wisdom"
+  ],
+  "notes": "Need visual storyboard + vocabulary cards overlays.",
+  "created_at": "2026-01-19T16:00:00Z",
+  "updated_at": null
+}

@@ -62,6 +62,38 @@ const routes: Routes = [
     loadChildren: () => import('./features/planner/weekly-plan/weekly-plan.module').then(m => m.WeeklyPlanPageModule),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'discourse/quranic',
+    loadComponent: () =>
+      import('./features/discourse/discourse-placeholder/discourse-placeholder.page').then(m => m.DiscoursePlaceholderPage),
+    canActivate: [AuthGuard],
+    data: { title: "Qur'anic Discourse", subtitle: 'Coming soon.' }
+  },
+  {
+    path: 'discourse/concepts',
+    loadComponent: () =>
+      import('./features/discourse/discourse-concepts/discourse-concepts.page').then(m => m.DiscourseConceptsPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'discourse/concepts/:slug',
+    loadComponent: () =>
+      import('./features/discourse/discourse-concept-detail/discourse-concept-detail.page').then(m => m.DiscourseConceptDetailPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'discourse/relations/:id',
+    loadComponent: () =>
+      import('./features/discourse/discourse-relation-detail/discourse-relation-detail.page').then(m => m.DiscourseRelationDetailPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'discourse/flows',
+    loadComponent: () =>
+      import('./features/discourse/discourse-placeholder/discourse-placeholder.page').then(m => m.DiscoursePlaceholderPage),
+    canActivate: [AuthGuard],
+    data: { title: 'Flows', subtitle: 'Coming soon.' }
+  },
   { path: '**', redirectTo: 'dashboard' }
 ];
 @NgModule({

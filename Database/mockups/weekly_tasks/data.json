@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "week_start": "2026-01-12",
+    "title": "Review Lesson 1",
+    "task_type": "arabic",
+    "status": "doing",
+    "created_at": "2026-01-19 05:33:22",
+    "updated_at": null,
+    "task_json": "{\"description\": \"Review the first lesson\"}",
+    "ar_lesson_id": 1.0,
+    "worldview_lesson_id": NaN
+  },
+  {
+    "id": 2,
+    "week_start": "2026-01-12",
+    "title": "Read Theology",
+    "task_type": "worldview",
+    "status": "planned",
+    "created_at": "2026-01-19 05:33:22",
+    "updated_at": null,
+    "task_json": "{\"description\": \"Read theology resource\"}",
+    "ar_lesson_id": NaN,
+    "worldview_lesson_id": 2.0
+  }
+]

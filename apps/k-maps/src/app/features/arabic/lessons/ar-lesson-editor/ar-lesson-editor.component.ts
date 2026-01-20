@@ -64,6 +64,11 @@ export class ArLessonEditorComponent implements OnInit {
   lessonJson: LessonJson = this.defaultLessonJson();
   jsonText = JSON.stringify(this.lessonJson, null, 2);
 
+  modelPrompt = '';
+  modelResponse = '';
+  modelLoading = false;
+  modelError = '';
+
   compMemoryVerbsText = '';
   compMemoryNounsText = '';
   compMemoryQuestionsText = '';
@@ -176,6 +181,7 @@ export class ArLessonEditorComponent implements OnInit {
 
   syncJsonText() {
     this.jsonText = JSON.stringify(this.lessonJson, null, 2);
+    this.updateModelPrompt();
   }
 
   applyJsonText() {
@@ -201,6 +207,34 @@ export class ArLessonEditorComponent implements OnInit {
     this.compPassageQuestionsText = Array.isArray(passage?.questions)
       ? passage.questions.map((q: any) => q?.question ?? '').join('\n')
       : '';
+  }
+
+  private updateModelPrompt() {
+    const snippet = this.lessonJson.text?.arabic?.trim();
+    if (snippet) {
+      this.modelPrompt = `Summarize and capture vocabulary/MCQ ideas for this Arabic text:\n${snippet.slice(0, 320)}`;
+    } else {
+      this.modelPrompt = '';
+    }
+  }
+
+  async generateModelSuggestion() {
+    if (!this.modelPrompt.trim()) {
+      this.modelError = 'Add Arabic text to generate a Claude preview.';
+      return;
+    }
+    this.modelLoading = true;
+    this.modelError = '';
+    this.modelResponse = '';
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      this.modelResponse =
+        'Claude preview: focus on the vocabulary words (كلمة, فعل, اسم) in the passage and propose two comprehension questions that refer back to the root meanings.';
+    } catch (err: any) {
+      this.modelError = err?.message ?? 'Failed to generate preview.';
+    } finally {
+      this.modelLoading = false;
+    }
   }
 
 

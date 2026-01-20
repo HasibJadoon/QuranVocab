@@ -1,0 +1,139 @@
+{
+  "entity": "grammar_note",
+  "ui_fields": {
+    "lesson_id": {
+      "label": "Lesson",
+      "type": "picker",
+      "picker_source": "arabic_lesson"
+    },
+    "scope_type": {
+      "label": "Scope Type",
+      "type": "select",
+      "enum": "grammar_scope_type",
+      "required": true
+    },
+    "scope_id": {
+      "label": "Scope",
+      "type": "picker",
+      "picker_source": "dynamic",
+      "required": true
+    },
+    "note_type": {
+      "label": "Grammar Type",
+      "type": "select",
+      "enum": "grammar_note_type",
+      "required": true
+    },
+    "rule": {
+      "label": "Rule / Observation",
+      "type": "textarea",
+      "required": true
+    },
+    "explanation": {
+      "label": "Explanation",
+      "type": "textarea"
+    },
+    "example_ar": {
+      "label": "Arabic Example",
+      "type": "textarea"
+    },
+    "example_ref": {
+      "label": "Reference",
+      "type": "text",
+      "placeholder": "12:6"
+    },
+    "tags": {
+      "label": "Tags",
+      "type": "chips",
+      "allow_custom": true
+    },
+    "strength": {
+      "label": "Strength (1–5)",
+      "type": "select",
+      "enum": "grammar_strength",
+      "required": true
+    },
+    "status": {
+      "label": "Status",
+      "type": "select",
+      "enum": "status",
+      "required": true
+    },
+    "cards_json.anki_cards": {
+      "label": "Practice Cards",
+      "type": "repeater",
+      "item_schema": {
+        "card_id": {
+          "label": "Card ID",
+          "type": "text",
+          "required": true
+        },
+        "card_type": {
+          "label": "Card Type",
+          "type": "select",
+          "enum": "card_type",
+          "required": true
+        },
+        "front": {
+          "label": "Front",
+          "type": "textarea",
+          "required": true
+        },
+        "back": {
+          "label": "Back",
+          "type": "textarea",
+          "required": true
+        },
+        "tags": {
+          "label": "Tags",
+          "type": "chips",
+          "allow_custom": true
+        }
+      }
+    }
+  },
+  "tabs": [
+    {
+      "id": "scope",
+      "title": "Scope",
+      "fields": [
+        "lesson_id",
+        "scope_type",
+        "scope_id"
+      ]
+    },
+    {
+      "id": "note",
+      "title": "Grammar Note",
+      "fields": [
+        "note_type",
+        "rule",
+        "explanation"
+      ]
+    },
+    {
+      "id": "example",
+      "title": "Example",
+      "fields": [
+        "example_ar",
+        "example_ref"
+      ]
+    },
+    {
+      "id": "practice",
+      "title": "Practice",
+      "fields": [
+        "cards_json.anki_cards"
+      ]
+    },
+    {
+      "id": "meta",
+      "title": "Meta",
+      "fields": [
+        "tags",
+        "strength",
+        "status"
+      ]
+    }
+  ]
+}

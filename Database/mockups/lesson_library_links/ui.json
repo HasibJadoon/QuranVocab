@@ -1,0 +1,28 @@
+{
+  "table": "lesson_library_links",
+  "columns": [
+    "id",
+    "lesson_id",
+    "worldview_lesson_id",
+    "library_id",
+    "note",
+    "link_questions",
+    "created_at",
+    "updated_at"
+  ],
+  "display_columns": [
+    "id",
+    "lesson_id",
+    "worldview_lesson_id",
+    "library_id",
+    "note",
+    "link_questions",
+    "created_at",
+    "updated_at"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

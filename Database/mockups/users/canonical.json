@@ -1,0 +1,66 @@
+[
+  {
+    "cid": 0,
+    "name": "id",
+    "type": "INTEGER",
+    "notnull": false,
+    "default": null,
+    "primary_key": true
+  },
+  {
+    "cid": 1,
+    "name": "email",
+    "type": "TEXT",
+    "notnull": true,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 2,
+    "name": "password",
+    "type": "TEXT",
+    "notnull": true,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 3,
+    "name": "role",
+    "type": "TEXT",
+    "notnull": false,
+    "default": "'admin'",
+    "primary_key": false
+  },
+  {
+    "cid": 4,
+    "name": "token",
+    "type": "TEXT",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 5,
+    "name": "token_expires_at",
+    "type": "TEXT",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 6,
+    "name": "created_at",
+    "type": "TEXT",
+    "notnull": false,
+    "default": "datetime('now')",
+    "primary_key": false
+  },
+  {
+    "cid": 7,
+    "name": "updated_at",
+    "type": "TEXT",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  }
+]

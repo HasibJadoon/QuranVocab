@@ -1,0 +1,114 @@
+{
+  "concept_anchors": [
+    {
+      "entity_type": "concept_anchor",
+      "id": 1001,
+      "concept_id": "CONCEPT_DIVINE_SELECTION",
+      "anchor_type": "quran",
+      "anchor_scope": "explicit",
+      "source_type": "quran",
+      "source_id": 12,
+      "ref": "12:6",
+      "anchor_text_ar": "وَكَذَٰلِكَ يَجْتَبِيكَ رَبُّكَ",
+      "anchor_text_en": "Thus your Lord will choose you",
+      "claim": "Divine selection is an act of God that carries guidance, responsibility, and unfolding purpose.",
+      "explanation": "The verb يجتبيك indicates selective choosing accompanied by nearness and direction, not mere preference.",
+      "anchor_strength": 5,
+      "tags": [
+        "ijtiba",
+        "divine_action",
+        "guidance"
+      ],
+      "created_at": "2026-01-19T12:00:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "concept_anchor",
+      "id": 1002,
+      "concept_id": "CONCEPT_DIVINE_SELECTION",
+      "anchor_type": "linguistic",
+      "anchor_scope": "explicit",
+      "source_type": "ar_lesson",
+      "source_id": "AR_LESSON_QURAN_12_1_7",
+      "ref": "root:جتب",
+      "anchor_text_ar": "اجتبى ≠ اختار",
+      "anchor_text_en": "Ijtibāʾ is not generic choosing",
+      "claim": "Ijtibāʾ denotes selection with refinement, nearness, and assignment of duty.",
+      "explanation": "Classical lexicons distinguish اجتبى from اختار by added semantic weight and purpose.",
+      "anchor_strength": 4,
+      "tags": [
+        "lexicon",
+        "sarf",
+        "semantic_precision"
+      ],
+      "created_at": "2026-01-19T12:03:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "concept_anchor",
+      "id": 1003,
+      "concept_id": "CONCEPT_TRIAL",
+      "anchor_type": "quran",
+      "anchor_scope": "implicit",
+      "source_type": "quran",
+      "source_id": 12,
+      "ref": "12:5",
+      "anchor_text_ar": "فَيَكِيدُوا لَكَ كَيْدًا",
+      "anchor_text_en": "Lest they plot against you",
+      "claim": "Divine favor is often accompanied by human opposition and trial.",
+      "explanation": "The warning to Yusuf shows that chosen individuals are exposed to envy and testing.",
+      "anchor_strength": 4,
+      "tags": [
+        "trial",
+        "envy",
+        "testing"
+      ],
+      "created_at": "2026-01-19T12:06:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "concept_anchor",
+      "id": 1004,
+      "concept_id": "CONCEPT_REVELATION_CLARITY",
+      "anchor_type": "quran",
+      "anchor_scope": "explicit",
+      "source_type": "quran",
+      "source_id": 12,
+      "ref": "12:1",
+      "anchor_text_ar": "تِلْكَ آيَاتُ الْكِتَابِ الْمُبِينِ",
+      "anchor_text_en": "These are the verses of the clear Book",
+      "claim": "Revelation presents itself as intrinsically clear and intelligible.",
+      "explanation": "The adjective المبين frames the Qur’an as self-clarifying, not esoteric.",
+      "anchor_strength": 5,
+      "tags": [
+        "revelation",
+        "clarity",
+        "quranic_self_description"
+      ],
+      "created_at": "2026-01-19T12:09:00Z",
+      "updated_at": null
+    },
+    {
+      "entity_type": "concept_anchor",
+      "id": 1005,
+      "concept_id": "CONCEPT_REVELATION_PURPOSE",
+      "anchor_type": "rational",
+      "anchor_scope": "illustrative",
+      "source_type": "ar_lesson",
+      "source_id": "AR_LESSON_QURAN_12_1_7",
+      "ref": "12:2",
+      "anchor_text_ar": "لَعَلَّكُمْ تَعْقِلُونَ",
+      "anchor_text_en": "So that you may understand",
+      "claim": "Language selection in revelation serves comprehension, not obscurity.",
+      "explanation": "The stated purpose of Arabic revelation implies rational accessibility.",
+      "anchor_strength": 3,
+      "tags": [
+        "language",
+        "reason",
+        "purpose"
+      ],
+      "created_at": "2026-01-19T12:12:00Z",
+      "updated_at": null
+    }
+  ]
+}

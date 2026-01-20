@@ -1,0 +1,28 @@
+{
+  "table": "users",
+  "columns": [
+    "id",
+    "email",
+    "password",
+    "role",
+    "token",
+    "token_expires_at",
+    "created_at",
+    "updated_at"
+  ],
+  "display_columns": [
+    "id",
+    "email",
+    "password",
+    "role",
+    "token",
+    "token_expires_at",
+    "created_at",
+    "updated_at"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "table": "reviews",
+  "columns": [
+    "id",
+    "target_type",
+    "target_id",
+    "user_id",
+    "rating",
+    "note",
+    "created_at",
+    "updated_at"
+  ],
+  "display_columns": [
+    "id",
+    "target_type",
+    "target_id",
+    "user_id",
+    "rating",
+    "note",
+    "created_at",
+    "updated_at"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

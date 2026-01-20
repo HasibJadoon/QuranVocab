@@ -1,0 +1,14 @@
+{
+  "entity_type": "cross_reference",
+  "id": 0,
+  "from_entity_type": "concept | concept_anchor | ar_vocabulary | arabic_lesson | worldview_lesson | library",
+  "from_entity_id": "string|number",
+  "to_entity_type": "concept | concept_anchor | ar_vocabulary | arabic_lesson | worldview_lesson | library",
+  "to_entity_id": "string|number",
+  "relation_type": "supports | explains | contrasts | parallels | exemplifies | qualifies | refutes",
+  "description": "string|null",
+  "strength": 3,
+  "status": "draft | reviewed | active | archived",
+  "created_at": "ISO_DATETIME",
+  "updated_at": "ISO_DATETIME|null"
+}

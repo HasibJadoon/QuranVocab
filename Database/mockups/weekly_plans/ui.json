@@ -1,0 +1,26 @@
+{
+  "table": "weekly_plans",
+  "columns": [
+    "week_start",
+    "created_at",
+    "updated_at",
+    "planned_count",
+    "done_count",
+    "notes",
+    "week_json"
+  ],
+  "display_columns": [
+    "week_start",
+    "created_at",
+    "updated_at",
+    "planned_count",
+    "done_count",
+    "notes",
+    "week_json"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

@@ -1,0 +1,45 @@
+[{
+  "entity_type": "cross_reference",
+
+  "id": 801,
+
+  "from_entity_type": "concept",
+  "from_entity_id": "CONCEPT_DIVINE_SELECTION",
+
+  "to_entity_type": "concept_anchor",
+  "to_entity_id": 1001,
+
+  "relation_type": "supports",
+
+  "description": "Qur’anic usage of يجتبيك (12:6) directly grounds the concept of divine selection.",
+
+  "strength": 5,
+
+  "status": "active",
+
+  "created_at": "2026-01-19T13:00:00Z",
+  "updated_at": null
+},
+{
+  "entity_type": "cross_reference",
+
+  "id": 802,
+
+  "from_entity_type": "concept",
+  "from_entity_id": "CONCEPT_DIVINE_SELECTION",
+
+  "to_entity_type": "concept",
+  "to_entity_id": "CONCEPT_WORLDLY_FAVORITISM",
+
+  "relation_type": "contrasts",
+
+  "description": "Divine selection is responsibility-based, unlike worldly favoritism which is preference-based.",
+
+  "strength": 4,
+
+  "status": "reviewed",
+
+  "created_at": "2026-01-19T13:05:00Z",
+  "updated_at": null
+}
+]

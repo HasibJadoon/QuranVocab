@@ -1,0 +1,153 @@
+{
+  "ui_type": "library_entry_card",
+  "ref_id": "LIB_...",
+  "header": {
+    "title": "The Impossible State",
+    "subtitle": "book",
+    "title_secondary": "وائل حلاق",
+    "badges": [
+      "active",
+      "public",
+      "text"
+    ],
+    "meta_line": "2013 • ISBN 978-0231162589"
+  },
+  "quick_actions": [
+    {
+      "type": "open_ref",
+      "label": "Open",
+      "ref_id": "LIB_..."
+    },
+    {
+      "type": "copy_id",
+      "label": "Copy ID",
+      "value": "LIB_..."
+    },
+    {
+      "type": "open_url",
+      "label": "Source",
+      "url": null,
+      "enabled": false
+    }
+  ],
+  "sections": [
+    {
+      "key": "creators",
+      "label": "Creators",
+      "style": "list",
+      "items": [
+        {
+          "primary": "Wael B. Hallaq",
+          "secondary": "author",
+          "ref_id": "LIB_AUTHOR_WAEL_HALLAQ"
+        }
+      ]
+    },
+    {
+      "key": "publication",
+      "label": "Publication",
+      "style": "kv",
+      "items": [
+        {
+          "k": "Publisher",
+          "v": "LIB_ORG_COLUMBIA_UNIV_PRESS",
+          "ref_id": "LIB_ORG_COLUMBIA_UNIV_PRESS"
+        },
+        {
+          "k": "Year",
+          "v": "2013"
+        },
+        {
+          "k": "ISBN",
+          "v": "978-0231162589"
+        }
+      ]
+    },
+    {
+      "key": "source",
+      "label": "Source",
+      "style": "kv",
+      "items": [
+        {
+          "k": "Platform",
+          "v": "—"
+        },
+        {
+          "k": "Format",
+          "v": "text"
+        },
+        {
+          "k": "Access",
+          "v": "public"
+        }
+      ]
+    },
+    {
+      "key": "structure",
+      "label": "Structure",
+      "style": "tree",
+      "items": [
+        {
+          "k": "Parent",
+          "ref_id": null
+        },
+        {
+          "k": "Children",
+          "ref_ids": [
+            "LIB_CH_IMPOSSIBLE_STATE_CH02"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "context",
+      "label": "Context",
+      "style": "chips",
+      "chips": [
+        {
+          "label": "Era",
+          "ref_id": "LIB_ERA_POST_911"
+        },
+        {
+          "label": "Movement",
+          "ref_id": null
+        },
+        {
+          "label": "Institution",
+          "ref_id": null
+        }
+      ]
+    },
+    {
+      "key": "topics_tags",
+      "label": "Topics & Tags",
+      "style": "chips",
+      "chips": [
+        {
+          "label": "sovereignty",
+          "type": "topic"
+        },
+        {
+          "label": "sharia",
+          "type": "topic"
+        },
+        {
+          "label": "book",
+          "type": "tag"
+        }
+      ]
+    },
+    {
+      "key": "summary",
+      "label": "Summary",
+      "style": "text",
+      "text": "Critique of the modern nation-state from an Islamic legal perspective."
+    },
+    {
+      "key": "notes",
+      "label": "Notes",
+      "style": "markdown",
+      "text": ""
+    }
+  ]
+}

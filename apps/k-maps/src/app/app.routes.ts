@@ -4,17 +4,16 @@ import { RootRedirectGuard } from '../services/root-redirect.guard';
 
 export const routes: Routes = [
   // 👇 Root entry decision
-  {
-    path: '',
-    canActivate: [RootRedirectGuard],
-    component: class EmptyComponent {}
-  },
-
   // 🔓 Public login
   {
     path: 'login',
     loadComponent: () =>
       import('./core/auth/login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: 'admin/setup',
+    loadComponent: () =>
+      import('./features/admin/users/users-page.component').then(m => m.UsersPageComponent),
   },
 
   // 🔐 Protected layout
@@ -50,6 +49,11 @@ export const routes: Routes = [
           import('./features/crossref/routes').then(m => m.routes),
       },
       {
+        path: 'admin',
+        loadChildren: () =>
+          import('./features/admin/routes').then(m => m.routes),
+      },
+      {
         path: 'podcast',
         loadChildren: () =>
           import('./features/podcast/routes').then(m => m.routes),
@@ -58,6 +62,11 @@ export const routes: Routes = [
         path: 'planner',
         loadChildren: () =>
           import('./features/planner/routes').then(m => m.routes),
+      },
+      {
+        path: 'discourse',
+        loadChildren: () =>
+          import('./features/discourse/routes').then(m => m.routes),
       }
     ]
   },

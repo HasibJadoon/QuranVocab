@@ -1,0 +1,105 @@
+{
+  "entity": "concept_anchor",
+
+  "ui_fields": {
+    "concept_id": {
+      "label": "Concept",
+      "type": "picker",
+      "picker_source": "concepts",
+      "required": true
+    },
+
+    "anchor_type": {
+      "label": "Anchor Type",
+      "type": "select",
+      "enum": "anchor_type",
+      "required": true
+    },
+
+    "source_type": {
+      "label": "Source Type",
+      "type": "select",
+      "enum": "source_type",
+      "required": true
+    },
+
+    "source_id": {
+      "label": "Source ID",
+      "type": "text",
+      "placeholder": "e.g. lesson id, surah number, library id"
+    },
+
+    "ref": {
+      "label": "Reference",
+      "type": "text",
+      "placeholder": "e.g. 12:6 | root:جتب | book:page"
+    },
+
+    "anchor_text_ar": {
+      "label": "Anchor Text (AR)",
+      "type": "textarea",
+      "placeholder": "Short Arabic evidence snippet"
+    },
+
+    "anchor_text_en": {
+      "label": "Anchor Text (EN)",
+      "type": "textarea",
+      "placeholder": "Short English evidence snippet"
+    },
+
+    "claim": {
+      "label": "Anchor Claim",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "One assertive sentence that grounds the concept"
+    },
+
+    "explanation": {
+      "label": "Explanation / Notes",
+      "type": "textarea",
+      "placeholder": "Why this anchor proves/grounds the claim"
+    },
+
+    "strength": {
+      "label": "Strength (1–5)",
+      "type": "select",
+      "enum": "strength",
+      "required": true
+    },
+
+    "tags": {
+      "label": "Tags",
+      "type": "chips",
+      "allow_custom": true
+    }
+  },
+
+  "tabs": [
+    {
+      "id": "link",
+      "title": "Link",
+      "fields": ["concept_id", "anchor_type"]
+    },
+    {
+      "id": "source",
+      "title": "Source",
+      "fields": ["source_type", "source_id", "ref"]
+    },
+    {
+      "id": "evidence",
+      "title": "Evidence",
+      "fields": ["anchor_text_ar", "anchor_text_en"]
+    },
+    {
+      "id": "claim",
+      "title": "Claim",
+      "fields": ["claim", "explanation", "strength", "tags"]
+    }
+  ],
+
+  "enums": {
+    "anchor_type": ["quran", "hadith", "linguistic", "historical", "rational", "experiential"],
+    "source_type": ["quran", "ar_lesson", "worldview_lesson", "library"],
+    "strength": [1, 2, 3, 4, 5]
+  }
+}

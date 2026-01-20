@@ -76,8 +76,9 @@
         <div class="breadcrumb-row">
           <c-breadcrumb-router />
         </div>
-        <div class="header-breadcrumb-search" *ngIf="showHeaderSearch">
+        <div class="header-breadcrumb-search" *ngIf="showHeaderSearch || showDiscourseFilters">
           <app-header-search
+            *ngIf="showHeaderSearch"
             [placeholder]="headerPlaceholder"
             [value]="headerQuery"
             [primaryLabel]="headerActionLabel"
@@ -86,6 +87,18 @@
             (primary)="onHeaderActionClick()"
             (secondary)="onHeaderSecondaryClick()"
           />
+          <div class="header-filter-row" *ngIf="showDiscourseFilters">
+            <button
+              class="btn btn-sm header-filter-pill"
+              [class.btn-outline-secondary]="!discourseFilterActive(filter.key)"
+              [class.btn-secondary]="discourseFilterActive(filter.key)"
+              type="button"
+              *ngFor="let filter of discourseFilters"
+              (click)="toggleDiscourseFilter(filter.key)"
+            >
+              {{ filter.label }}
+            </button>
+          </div>
         </div>
       </div>
     </ng-template>

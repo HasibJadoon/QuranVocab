@@ -1,0 +1,824 @@
+[
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_ERA_POST_911",
+    "entry_type": "era_context",
+    "title": "Post-9/11 Era",
+    "title_ar": null,
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": 2001,
+      "date": "2001-09-11",
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": null,
+      "url": null,
+      "language": "en",
+      "format": "text",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "modern politics",
+      "security state"
+    ],
+    "tags": [
+      "era"
+    ],
+    "summary": "A period marker often used for geopolitical shifts, security regimes, and intensified statecraft.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_MOVEMENT_LEGAL_POSITIVISM",
+    "entry_type": "movement",
+    "title": "Legal Positivism",
+    "title_ar": null,
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": null,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": null,
+      "url": null,
+      "language": "en",
+      "format": "text",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "jurisprudence",
+      "law theory"
+    ],
+    "tags": [
+      "movement"
+    ],
+    "summary": "A family of views that grounds legal validity in social sources rather than moral content.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_ORG_COLUMBIA_UNIV_PRESS",
+    "entry_type": "organization",
+    "title": "Columbia University Press",
+    "title_ar": null,
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": null,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": "Website",
+      "url": null,
+      "language": "en",
+      "format": "web",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [
+        "North America"
+      ],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "publishing"
+    ],
+    "tags": [
+      "publisher"
+    ],
+    "summary": "Academic publisher.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_AUTHOR_WAEL_HALLAQ",
+    "entry_type": "author",
+    "title": "Wael B. Hallaq",
+    "title_ar": "وائل حلاق",
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": 1955,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": null,
+      "url": null,
+      "language": "en",
+      "format": "text",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [
+        "LIB_ERA_POST_911"
+      ],
+      "movement_ref_ids": [],
+      "region_tags": [
+        "Middle East",
+        "North America"
+      ],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "Islamic law",
+      "modern state"
+    ],
+    "tags": [
+      "author"
+    ],
+    "summary": "Scholar of Islamic law and critique of the modern state.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_BOOK_IMPOSSIBLE_STATE_2013",
+    "entry_type": "book",
+    "title": "The Impossible State",
+    "title_ar": null,
+    "creators": [
+      {
+        "role": "author",
+        "ref_id": "LIB_AUTHOR_WAEL_HALLAQ"
+      }
+    ],
+    "publication": {
+      "publisher_ref_id": "LIB_ORG_COLUMBIA_UNIV_PRESS",
+      "journal_ref_id": null,
+      "year": 2013,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": "978-0231162589"
+    },
+    "source": {
+      "platform": null,
+      "url": null,
+      "language": "en",
+      "format": "text",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": [
+        "LIB_CH_IMPOSSIBLE_STATE_CH02"
+      ]
+    },
+    "context": {
+      "era_ref_ids": [
+        "LIB_ERA_POST_911"
+      ],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "sovereignty",
+      "sharia",
+      "modern state"
+    ],
+    "tags": [
+      "book"
+    ],
+    "summary": "Critique of the modern nation-state from an Islamic legal perspective.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_CH_IMPOSSIBLE_STATE_CH02",
+    "entry_type": "chapter",
+    "title": "Chapter 2: Sovereignty",
+    "title_ar": null,
+    "creators": [
+      {
+        "role": "author",
+        "ref_id": "LIB_AUTHOR_WAEL_HALLAQ"
+      }
+    ],
+    "publication": {
+      "publisher_ref_id": "LIB_ORG_COLUMBIA_UNIV_PRESS",
+      "journal_ref_id": null,
+      "year": 2013,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": "26–60",
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": null,
+      "url": null,
+      "language": "en",
+      "format": "text",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": "LIB_BOOK_IMPOSSIBLE_STATE_2013",
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [
+        "LIB_ERA_POST_911"
+      ],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "sovereignty"
+    ],
+    "tags": [
+      "chapter"
+    ],
+    "summary": "Explains sovereignty as a structural feature of the modern state with legal implications.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_JOURNAL_LAW_REVIEW",
+    "entry_type": "journal",
+    "title": "Law Review",
+    "title_ar": null,
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": null,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": "Website",
+      "url": null,
+      "language": "en",
+      "format": "web",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "law"
+    ],
+    "tags": [
+      "journal"
+    ],
+    "summary": "Placeholder journal entity for academic paper linking.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_AUTHOR_JANE_DOE",
+    "entry_type": "author",
+    "title": "Jane Doe",
+    "title_ar": null,
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": null,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": null,
+      "url": null,
+      "language": "en",
+      "format": "text",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [
+        "LIB_MOVEMENT_LEGAL_POSITIVISM"
+      ],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "jurisprudence"
+    ],
+    "tags": [
+      "author"
+    ],
+    "summary": "Placeholder author for paper examples.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_PAPER_DOI_10_1234_ABCDE_2020",
+    "entry_type": "paper",
+    "title": "Law, Sovereignty, and Moral Authority",
+    "title_ar": null,
+    "creators": [
+      {
+        "role": "author",
+        "ref_id": "LIB_AUTHOR_JANE_DOE"
+      }
+    ],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": "LIB_JOURNAL_LAW_REVIEW",
+      "year": 2020,
+      "date": "2020-06-01",
+      "edition": null,
+      "volume": "12",
+      "issue": "2",
+      "pages": "101–130",
+      "doi": "10.1234/abcde",
+      "isbn": null
+    },
+    "source": {
+      "platform": "JournalSite",
+      "url": "https://journal.org/paper.pdf",
+      "language": "en",
+      "format": "pdf",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [
+        "LIB_MOVEMENT_LEGAL_POSITIVISM"
+      ],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "legal theory",
+      "authority"
+    ],
+    "tags": [
+      "paper"
+    ],
+    "summary": "Academic analysis of sovereignty and moral authority.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_DEBATE_SERIES_RELIGION_STATE",
+    "entry_type": "debate_series",
+    "title": "Religion and the State: Debate Series",
+    "title_ar": null,
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": 2026,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": "YouTube",
+      "url": null,
+      "language": "en",
+      "format": "video",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": [
+        "LIB_DEBATE_RELIGION_STATE_001"
+      ]
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "religion",
+      "politics"
+    ],
+    "tags": [
+      "series"
+    ],
+    "summary": "A set of debates on religion, politics, and modern governance.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_AUTHOR_SPEAKER_X",
+    "entry_type": "author",
+    "title": "Speaker X",
+    "title_ar": null,
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": null,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": null,
+      "url": null,
+      "language": "en",
+      "format": "text",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "public debate"
+    ],
+    "tags": [
+      "speaker"
+    ],
+    "summary": "Placeholder speaker entity.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_DEBATE_RELIGION_STATE_001",
+    "entry_type": "debate",
+    "title": "Debate 1: Religion and the State",
+    "title_ar": null,
+    "creators": [
+      {
+        "role": "speaker",
+        "ref_id": "LIB_AUTHOR_SPEAKER_X"
+      }
+    ],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": 2026,
+      "date": "2026-01-18",
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": "YouTube",
+      "url": null,
+      "language": "en",
+      "format": "video",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": "LIB_DEBATE_SERIES_RELIGION_STATE",
+      "children": [
+        "LIB_VIDEO_YT_dQw4w9WgXcQ"
+      ]
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "religion",
+      "politics"
+    ],
+    "tags": [
+      "debate"
+    ],
+    "summary": "A structured debate entry that can contain one or more video recordings.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_VIDEO_YT_dQw4w9WgXcQ",
+    "entry_type": "video",
+    "title": "Debate Recording: Religion and the State",
+    "title_ar": null,
+    "creators": [
+      {
+        "role": "speaker",
+        "ref_id": "LIB_AUTHOR_SPEAKER_X"
+      }
+    ],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": 2026,
+      "date": "2026-01-18",
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": "YouTube",
+      "url": "https://youtube.com/watch?v=dQw4w9WgXcQ",
+      "language": "en",
+      "format": "video",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": "LIB_DEBATE_RELIGION_STATE_001",
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "religion",
+      "politics"
+    ],
+    "tags": [
+      "video",
+      "debate"
+    ],
+    "summary": "",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_AUTHOR_HOST_Y",
+    "entry_type": "author",
+    "title": "Host Y",
+    "title_ar": null,
+    "creators": [],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": null,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": null,
+      "url": null,
+      "language": "en",
+      "format": "text",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "podcasting"
+    ],
+    "tags": [
+      "host"
+    ],
+    "summary": "Placeholder host entity.",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_POD_THEOLOGY_TODAY",
+    "entry_type": "podcast",
+    "title": "Theology Today",
+    "title_ar": null,
+    "creators": [
+      {
+        "role": "host",
+        "ref_id": "LIB_AUTHOR_HOST_Y"
+      }
+    ],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": null,
+      "date": null,
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": "Spotify",
+      "url": "https://spotify.com/show/xyz",
+      "language": "en",
+      "format": "audio",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": null,
+      "children": [
+        "LIB_EP_THEOLOGY_TODAY_042"
+      ]
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "religion",
+      "culture"
+    ],
+    "tags": [
+      "podcast"
+    ],
+    "summary": "",
+    "status": "active",
+    "notes": ""
+  },
+  {
+    "entity_type": "library_entry",
+    "id": "LIB_EP_THEOLOGY_TODAY_042",
+    "entry_type": "episode",
+    "title": "Episode 42: Authority and Modernity",
+    "title_ar": null,
+    "creators": [
+      {
+        "role": "host",
+        "ref_id": "LIB_AUTHOR_HOST_Y"
+      }
+    ],
+    "publication": {
+      "publisher_ref_id": null,
+      "journal_ref_id": null,
+      "year": 2026,
+      "date": "2026-01-10",
+      "edition": null,
+      "volume": null,
+      "issue": null,
+      "pages": null,
+      "doi": null,
+      "isbn": null
+    },
+    "source": {
+      "platform": "Spotify",
+      "url": "https://spotify.com/episode/abc",
+      "language": "en",
+      "format": "audio",
+      "access": "public"
+    },
+    "structure": {
+      "parent_ref_id": "LIB_POD_THEOLOGY_TODAY",
+      "children": []
+    },
+    "context": {
+      "era_ref_ids": [],
+      "movement_ref_ids": [],
+      "region_tags": [],
+      "institutions_ref_ids": [],
+      "political_context_ref_ids": []
+    },
+    "topics": [
+      "authority",
+      "modernity"
+    ],
+    "tags": [
+      "episode"
+    ],
+    "summary": "",
+    "status": "active",
+    "notes": ""
+  }
+]

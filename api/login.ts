@@ -35,20 +35,20 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     // ---------- fetch user ----------
     const user = await ctx.env.DB
       .prepare(`
-        SELECT id, password, role
+        SELECT id, password_hash, role
         FROM users
         WHERE lower(trim(email)) = lower(trim(?1))
         LIMIT 1
       `)
       .bind(email)
-      .first<{ id: number; password: string; role?: string }>();
+      .first<{ id: number; password_hash?: string; role?: string }>();
 
-    if (!user?.password) {
+    if (!user?.password_hash) {
       return Response.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     // ---------- verify password ----------
-    const ok = await verifyPassword(password, user.password);
+    const ok = await verifyPassword(password, user.password_hash);
     if (!ok) {
       return Response.json({ error: 'Invalid credentials' }, { status: 401 });
     }

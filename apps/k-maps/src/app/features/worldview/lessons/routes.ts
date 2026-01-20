@@ -10,19 +10,19 @@ export const routes: Routes = [
   {
     path: 'new',
     loadComponent: () =>
-      import('./worldview-lesson-editor/worldview-lesson-editor.component').then(m => m.WorldviewLessonEditorComponent),
-    data: { title: 'New Worldview Lesson' }
+      import('./worldview-entry/worldview-entry.component').then(m => m.WorldviewEntryComponent),
+    data: { title: 'New Worldview Entry' }
   },
   {
     path: ':id/edit',
     loadComponent: () =>
-      import('./worldview-lesson-editor/worldview-lesson-editor.component').then(m => m.WorldviewLessonEditorComponent),
-    data: { title: 'Edit Worldview Lesson' }
+      import('./worldview-entry/worldview-entry.component').then(m => m.WorldviewEntryComponent),
+    data: { title: 'Edit Worldview Entry' }
   },
   {
     path: ':id',
     loadComponent: () =>
-      import('./worldview-lesson-view/worldview-lesson-view.component').then(m => m.WorldviewLessonViewComponent),
-    data: { title: 'Worldview Lesson' }
+      import('./worldview-entry/worldview-entry.component').then(m => m.WorldviewEntryComponent),
+    data: { title: 'Worldview Entry' }
   }
 ];

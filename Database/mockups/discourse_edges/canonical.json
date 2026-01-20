@@ -1,0 +1,18 @@
+{
+  "entity_type": "discourse_edge",
+  "id": 0,
+  "lesson_id": "string|number",
+  "from_unit_id": "string",
+  "to_unit_id": "string",
+  "relation_type": "grounds | leads_to | explains | contrasts | elaborates | exemplifies | responds_by | warns | promises | concludes | transitions | introduces_story",
+  "direction": "forward",
+  "evidence": {
+    "marker_ar": "string|null",
+    "marker_en": "string|null",
+    "note": "string|null"
+  },
+  "strength": 3,
+  "status": "draft | reviewed | active | archived",
+  "created_at": "ISO_DATETIME",
+  "updated_at": "ISO_DATETIME|null"
+}

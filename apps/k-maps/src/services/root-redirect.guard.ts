@@ -13,6 +13,10 @@ export class RootRedirectGuard {
     const token = this.storage.getItem('token');
     const exp = this.storage.getItem('token_exp');
 
+    if (this.router.url.startsWith('/admin/setup')) {
+      return true;
+    }
+
     const loggedIn =
       !!token && !!exp && Date.now() < Date.parse(exp);
 

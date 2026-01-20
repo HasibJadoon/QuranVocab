@@ -1,0 +1,34 @@
+{
+  "table": "ar_vocabulary",
+  "columns": [
+    "id",
+    "lesson_id",
+    "word",
+    "root",
+    "vocab_type",
+    "meaning",
+    "cards_json",
+    "notes",
+    "created_at",
+    "updated_at",
+    "status"
+  ],
+  "display_columns": [
+    "id",
+    "lesson_id",
+    "word",
+    "root",
+    "vocab_type",
+    "meaning",
+    "cards_json",
+    "notes",
+    "created_at",
+    "updated_at",
+    "status"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

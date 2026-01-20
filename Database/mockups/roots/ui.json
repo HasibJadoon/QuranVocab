@@ -1,0 +1,32 @@
+{
+  "table": "roots",
+  "columns": [
+    "id",
+    "root",
+    "family",
+    "cards",
+    "status",
+    "difficulty",
+    "frequency",
+    "create_date",
+    "update_date",
+    "extract_date"
+  ],
+  "display_columns": [
+    "id",
+    "root",
+    "family",
+    "cards",
+    "status",
+    "difficulty",
+    "frequency",
+    "create_date",
+    "update_date",
+    "extract_date"
+  ],
+  "actions": [
+    "view",
+    "edit",
+    "delete"
+  ]
+}

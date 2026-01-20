@@ -1,4 +1,4 @@
-import { NgIf, NgTemplateOutlet } from '@angular/common';
+import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { Component, inject, input } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -35,6 +35,7 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
     HeaderNavComponent,
     NgTemplateOutlet,
     NgIf,
+    NgFor,
     RouterLink,
     BreadcrumbRouterComponent,
     DropdownComponent,
@@ -58,9 +59,26 @@ export class DefaultHeaderComponent extends HeaderComponent {
   headerQuery = '';
   headerPlaceholder = 'Search';
   headerActionLabel = '';
-  headerActionKind: 'lesson-new' | 'roots-refresh' | 'roots-new' | 'lesson-edit' | 'lesson-study' | '' = '';
+  headerActionKind:
+    | 'lesson-new'
+    | 'roots-refresh'
+    | 'roots-new'
+    | 'lesson-edit'
+    | 'lesson-study'
+    | 'worldview-new'
+    | '' = '';
   headerSecondaryLabel = '';
   headerSecondaryKind: 'refresh' | '' = '';
+  showDiscourseFilters = false;
+  discourseFilters = [
+    { key: 'Epistemology', label: 'Epistemology' },
+    { key: 'Law', label: 'Law' },
+    { key: 'Morality', label: 'Morality' },
+    { key: 'Power', label: 'Power' },
+    { key: 'Society', label: 'Society' },
+    { key: 'Narrative', label: 'Narrative' },
+  ];
+  activeDiscourseFilters = new Set<string>();
   private currentPath = '';
 
   constructor() {
@@ -130,6 +148,10 @@ export class DefaultHeaderComponent extends HeaderComponent {
       if (id) {
         this.router.navigate(['/arabic/lessons', id, 'study']);
       }
+      return;
+    }
+    if (this.headerActionKind === 'worldview-new') {
+      this.router.navigate(['/worldview/lessons/new'], { queryParams: { mode: 'capture' } });
     }
   }
 
@@ -137,6 +159,23 @@ export class DefaultHeaderComponent extends HeaderComponent {
     if (this.headerSecondaryKind === 'refresh') {
       this.triggerRefresh();
     }
+  }
+
+  toggleDiscourseFilter(key: string) {
+    if (this.activeDiscourseFilters.has(key)) {
+      this.activeDiscourseFilters.delete(key);
+    } else {
+      this.activeDiscourseFilters.add(key);
+    }
+    const categories = Array.from(this.activeDiscourseFilters.values());
+    this.router.navigate([], {
+      queryParams: { categories: categories.length ? categories.join(',') : null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  discourseFilterActive(key: string) {
+    return this.activeDiscourseFilters.has(key);
   }
 
   isStudyRoute() {
@@ -161,6 +200,17 @@ export class DefaultHeaderComponent extends HeaderComponent {
       this.headerActionKind = 'lesson-new';
       this.headerSecondaryLabel = 'Refresh';
       this.headerSecondaryKind = 'refresh';
+      return;
+    }
+
+    if (this.currentPath === '/worldview/lessons') {
+      this.showHeaderSearch = true;
+      this.headerPlaceholder = 'Search title, creator, or summary';
+      this.headerActionLabel = 'Log Source';
+      this.headerActionKind = 'worldview-new';
+      this.headerSecondaryLabel = '';
+      this.headerSecondaryKind = '';
+      this.showDiscourseFilters = false;
       return;
     }
 
@@ -189,6 +239,22 @@ export class DefaultHeaderComponent extends HeaderComponent {
       this.headerActionKind = 'roots-new';
       this.headerSecondaryLabel = 'Refresh';
       this.headerSecondaryKind = 'refresh';
+      this.showDiscourseFilters = false;
+      return;
+    }
+
+    if (this.currentPath === '/discourse/concepts') {
+      this.showHeaderSearch = true;
+      this.headerPlaceholder = 'Search concepts';
+      this.headerActionLabel = '';
+      this.headerActionKind = '';
+      this.headerSecondaryLabel = '';
+      this.headerSecondaryKind = '';
+      this.showDiscourseFilters = true;
+      const categoriesParam = String(url.queryParams['categories'] ?? '').trim();
+      this.activeDiscourseFilters = new Set(
+        categoriesParam ? categoriesParam.split(',').map((c) => c.trim()).filter(Boolean) : []
+      );
       return;
     }
 
@@ -198,6 +264,7 @@ export class DefaultHeaderComponent extends HeaderComponent {
     this.headerActionKind = '';
     this.headerSecondaryLabel = '';
     this.headerSecondaryKind = '';
+    this.showDiscourseFilters = false;
   }
 
   private triggerRefresh() {

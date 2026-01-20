@@ -1,0 +1,275 @@
+{
+  "entity": "publishable_content",
+  "ui_fields": {
+    "content_code": {
+      "label": "Content Code",
+      "type": "text",
+      "required": true,
+      "placeholder": "CONTENT_..."
+    },
+    "content_type": {
+      "label": "Content Type",
+      "type": "select",
+      "enum": "content_type",
+      "required": true
+    },
+    "title": {
+      "label": "Title (EN)",
+      "type": "text",
+      "required": true
+    },
+    "title_ar": {
+      "label": "Title (AR)",
+      "type": "text"
+    },
+    "status": {
+      "label": "Status",
+      "type": "select",
+      "enum": "content_status",
+      "required": true
+    },
+    "priority": {
+      "label": "Priority (1–5)",
+      "type": "select",
+      "enum": "priority"
+    },
+    "source_stream": {
+      "label": "Stream",
+      "type": "select",
+      "enum": "source_stream",
+      "required": true
+    },
+    "summary": {
+      "label": "Summary",
+      "type": "textarea"
+    },
+    "structure.series_id": {
+      "label": "Series",
+      "type": "picker",
+      "picker_source": "publishable_content_series"
+    },
+    "structure.season": {
+      "label": "Season",
+      "type": "number"
+    },
+    "structure.episode_number": {
+      "label": "Episode #",
+      "type": "number"
+    },
+    "structure.parent_content_id": {
+      "label": "Parent Content",
+      "type": "picker",
+      "picker_source": "publishable_content"
+    },
+    "assets.script_text": {
+      "label": "Script",
+      "type": "textarea"
+    },
+    "assets.outline": {
+      "label": "Outline",
+      "type": "chips",
+      "allow_custom": true
+    },
+    "assets.show_notes": {
+      "label": "Show Notes",
+      "type": "textarea"
+    },
+    "assets.thumbnail_ref": {
+      "label": "Thumbnail Ref",
+      "type": "text"
+    },
+    "assets.files": {
+      "label": "Files",
+      "type": "repeater",
+      "item_schema": {
+        "asset_type": {
+          "label": "Type",
+          "type": "select",
+          "enum": "asset_type",
+          "required": true
+        },
+        "name": {
+          "label": "Name",
+          "type": "text",
+          "required": true
+        },
+        "uri": {
+          "label": "URI",
+          "type": "text"
+        },
+        "status": {
+          "label": "Asset Status",
+          "type": "select",
+          "enum": "asset_status",
+          "required": true
+        }
+      }
+    },
+    "recording.recorded_at": {
+      "label": "Recorded At",
+      "type": "datetime"
+    },
+    "recording.duration_seconds": {
+      "label": "Duration (sec)",
+      "type": "number"
+    },
+    "recording.raw_media_ref": {
+      "label": "Raw Media Ref",
+      "type": "text"
+    },
+    "publishing.primary_platform": {
+      "label": "Primary Platform",
+      "type": "select",
+      "enum": "platform"
+    },
+    "publishing.publish_at": {
+      "label": "Publish At",
+      "type": "datetime"
+    },
+    "publishing.published_at": {
+      "label": "Published At",
+      "type": "datetime"
+    },
+    "publishing.visibility": {
+      "label": "Visibility",
+      "type": "select",
+      "enum": "visibility"
+    },
+    "publishing.platform_posts": {
+      "label": "Platform Posts",
+      "type": "repeater",
+      "item_schema": {
+        "platform": {
+          "label": "Platform",
+          "type": "select",
+          "enum": "platform",
+          "required": true
+        },
+        "url": {
+          "label": "URL",
+          "type": "text"
+        },
+        "status": {
+          "label": "Post Status",
+          "type": "select",
+          "enum": "post_status",
+          "required": true
+        },
+        "published_at": {
+          "label": "Published At",
+          "type": "datetime"
+        }
+      }
+    },
+    "links.arabic_lesson_refs": {
+      "label": "Arabic Lessons",
+      "type": "picker_multi",
+      "picker_source": "arabic_lesson"
+    },
+    "links.worldview_lesson_refs": {
+      "label": "Worldview Lessons",
+      "type": "picker_multi",
+      "picker_source": "worldview_lesson"
+    },
+    "links.concept_refs": {
+      "label": "Concepts",
+      "type": "picker_multi",
+      "picker_source": "concepts"
+    },
+    "links.library_refs": {
+      "label": "Library",
+      "type": "picker_multi",
+      "picker_source": "library"
+    },
+    "links.cross_refs": {
+      "label": "Cross Refs",
+      "type": "picker_multi",
+      "picker_source": "cross_references"
+    },
+    "tags": {
+      "label": "Tags",
+      "type": "chips",
+      "allow_custom": true
+    },
+    "notes": {
+      "label": "Notes",
+      "type": "textarea"
+    }
+  },
+  "tabs": [
+    {
+      "id": "core",
+      "title": "Core",
+      "fields": [
+        "content_code",
+        "content_type",
+        "title",
+        "title_ar",
+        "status",
+        "priority",
+        "source_stream",
+        "summary"
+      ]
+    },
+    {
+      "id": "structure",
+      "title": "Structure",
+      "fields": [
+        "structure.series_id",
+        "structure.season",
+        "structure.episode_number",
+        "structure.parent_content_id"
+      ]
+    },
+    {
+      "id": "assets",
+      "title": "Assets",
+      "fields": [
+        "assets.script_text",
+        "assets.outline",
+        "assets.show_notes",
+        "assets.thumbnail_ref",
+        "assets.files"
+      ]
+    },
+    {
+      "id": "recording",
+      "title": "Recording",
+      "fields": [
+        "recording.recorded_at",
+        "recording.duration_seconds",
+        "recording.raw_media_ref"
+      ]
+    },
+    {
+      "id": "publishing",
+      "title": "Publishing",
+      "fields": [
+        "publishing.primary_platform",
+        "publishing.visibility",
+        "publishing.publish_at",
+        "publishing.published_at",
+        "publishing.platform_posts"
+      ]
+    },
+    {
+      "id": "links",
+      "title": "Links",
+      "fields": [
+        "links.arabic_lesson_refs",
+        "links.worldview_lesson_refs",
+        "links.concept_refs",
+        "links.library_refs",
+        "links.cross_refs"
+      ]
+    },
+    {
+      "id": "notes",
+      "title": "Notes",
+      "fields": [
+        "tags",
+        "notes"
+      ]
+    }
+  ]
+}

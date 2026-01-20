@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "root": "زهد",
+    "family": "فَعِلَ",
+    "cards": "[\"card1\", \"card2\"]",
+    "status": "active",
+    "difficulty": 3,
+    "frequency": "medium",
+    "create_date": "2026-01-19 05:33:22",
+    "update_date": null,
+    "extract_date": null
+  },
+  {
+    "id": 2,
+    "root": "كتب",
+    "family": "فَعَلَ",
+    "cards": "[\"cardA\"]",
+    "status": "active",
+    "difficulty": 2,
+    "frequency": "high",
+    "create_date": "2026-01-19 05:33:22",
+    "update_date": null,
+    "extract_date": null
+  }
+]

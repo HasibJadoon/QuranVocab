@@ -1,0 +1,90 @@
+{
+  "entity": "concept",
+
+  "ui_fields": {
+    "concept_code": {
+      "label": "Concept Code",
+      "type": "text",
+      "required": true,
+      "placeholder": "CONCEPT_DIVINE_SELECTION"
+    },
+
+    "title": {
+      "label": "Title (EN)",
+      "type": "text",
+      "required": true
+    },
+
+    "title_ar": {
+      "label": "Title (AR)",
+      "type": "text"
+    },
+
+    "definition": {
+      "label": "Definition (EN)",
+      "type": "textarea",
+      "required": true
+    },
+
+    "definition_ar": {
+      "label": "Definition (AR)",
+      "type": "textarea"
+    },
+
+    "concept_type": {
+      "label": "Concept Type",
+      "type": "select",
+      "enum": "concept_type",
+      "required": true
+    },
+
+    "scope": {
+      "label": "Scope",
+      "type": "select",
+      "enum": "concept_scope",
+      "required": true
+    },
+
+    "related_roots": {
+      "label": "Related Roots",
+      "type": "picker_multi",
+      "picker_source": "roots"
+    },
+
+    "related_vocab_units": {
+      "label": "Related Vocabulary Units",
+      "type": "picker_multi",
+      "picker_source": "ar_vocabulary"
+    },
+
+    "status": {
+      "label": "Status",
+      "type": "select",
+      "enum": "status",
+      "required": true
+    }
+  },
+
+  "tabs": [
+    {
+      "id": "core",
+      "title": "Concept",
+      "fields": ["concept_code", "title", "title_ar", "definition", "definition_ar"]
+    },
+    {
+      "id": "classification",
+      "title": "Classification",
+      "fields": ["concept_type", "scope"]
+    },
+    {
+      "id": "links",
+      "title": "Links",
+      "fields": ["related_roots", "related_vocab_units"]
+    },
+    {
+      "id": "meta",
+      "title": "Meta",
+      "fields": ["status"]
+    }
+  ]
+}

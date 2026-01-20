@@ -1,0 +1,49 @@
+{
+  "entity_type": "grammar_note",
+  "id": 7101,
+  "lesson_id": "AR_LESSON_QURAN_12_1_7",
+  "concept_id": "GRAMMAR_CONCEPT_FA_SABIYYA",
+  "scope_type": "sentence_unit",
+  "scope_id": "SENT_5",
+  "note_type": "particle",
+  "rule": "الفاء في (فَيَكِيدُوا) فاءُ السببية، تفيد التعليل والنتيجة.",
+  "explanation": "النهي عن قصّ الرؤيا سببه الخوف من وقوع الكيد.",
+  "example_ar": "لَا تَقْصُصْ رُؤْيَاكَ ... فَيَكِيدُوا لَكَ كَيْدًا",
+  "example_ref": "12:5",
+  "tags": [
+    "فاء_السببية",
+    "تعليل"
+  ],
+  "strength": 4,
+  "status": "active",
+  "cards_json": {
+    "anki_cards": [
+      {
+        "card_id": "ANKI_GR_FA_SABIYYA_RECALL",
+        "card_type": "recall",
+        "front": "What is the function of فـ in (فَيَكِيدُوا) in 12:5?",
+        "back": "**فاء السببية** — it links the prohibition to its cause/result (plotting).",
+        "tags": [
+          "grammar",
+          "particle",
+          "fa",
+          "surah:12",
+          "ayah:5"
+        ]
+      },
+      {
+        "card_id": "ANKI_GR_FA_SABIYYA_CLOZE",
+        "card_type": "cloze",
+        "front": "Cloze: لَا تَقْصُصْ رُؤْيَاكَ ... {{c1::فَيَكِيدُوا}} لَكَ كَيْدًا (12:5)",
+        "back": "**فاء السببية (causal فـ)**",
+        "tags": [
+          "grammar",
+          "cloze",
+          "fa"
+        ]
+      }
+    ]
+  },
+  "created_at": "2026-01-19T15:00:00Z",
+  "updated_at": null
+}

@@ -1,0 +1,80 @@
+{
+  "entity": "cross_reference",
+  "ui_fields": {
+    "from_entity_type": {
+      "label": "From Entity Type",
+      "type": "select",
+      "enum": "cross_entity_type",
+      "required": true
+    },
+    "from_entity_id": {
+      "label": "From Entity",
+      "type": "picker",
+      "picker_source": "dynamic",
+      "required": true
+    },
+    "to_entity_type": {
+      "label": "To Entity Type",
+      "type": "select",
+      "enum": "cross_entity_type",
+      "required": true
+    },
+    "to_entity_id": {
+      "label": "To Entity",
+      "type": "picker",
+      "picker_source": "dynamic",
+      "required": true
+    },
+    "relation_type": {
+      "label": "Relation Type",
+      "type": "select",
+      "enum": "cross_relation_type",
+      "required": true
+    },
+    "description": {
+      "label": "Description / Note",
+      "type": "textarea",
+      "placeholder": "Optional explanation of the relationship"
+    },
+    "strength": {
+      "label": "Strength (1–5)",
+      "type": "select",
+      "enum": "cross_strength",
+      "required": true
+    },
+    "status": {
+      "label": "Status",
+      "type": "select",
+      "enum": "status",
+      "required": true
+    }
+  },
+  "tabs": [
+    {
+      "id": "link",
+      "title": "Link",
+      "fields": [
+        "from_entity_type",
+        "from_entity_id",
+        "to_entity_type",
+        "to_entity_id",
+        "relation_type"
+      ]
+    },
+    {
+      "id": "detail",
+      "title": "Details",
+      "fields": [
+        "description",
+        "strength"
+      ]
+    },
+    {
+      "id": "meta",
+      "title": "Meta",
+      "fields": [
+        "status"
+      ]
+    }
+  ]
+}

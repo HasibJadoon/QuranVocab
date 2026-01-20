@@ -1,0 +1,82 @@
+[
+  {
+    "cid": 0,
+    "name": "id",
+    "type": "INTEGER",
+    "notnull": false,
+    "default": null,
+    "primary_key": true
+  },
+  {
+    "cid": 1,
+    "name": "week_start",
+    "type": "TEXT",
+    "notnull": true,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 2,
+    "name": "title",
+    "type": "TEXT",
+    "notnull": true,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 3,
+    "name": "task_type",
+    "type": "TEXT",
+    "notnull": true,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 4,
+    "name": "status",
+    "type": "TEXT",
+    "notnull": true,
+    "default": "'planned'",
+    "primary_key": false
+  },
+  {
+    "cid": 5,
+    "name": "created_at",
+    "type": "TEXT",
+    "notnull": true,
+    "default": "datetime('now')",
+    "primary_key": false
+  },
+  {
+    "cid": 6,
+    "name": "updated_at",
+    "type": "TEXT",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 7,
+    "name": "task_json",
+    "type": "JSON",
+    "notnull": true,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 8,
+    "name": "ar_lesson_id",
+    "type": "INTEGER",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 9,
+    "name": "worldview_lesson_id",
+    "type": "INTEGER",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  }
+]

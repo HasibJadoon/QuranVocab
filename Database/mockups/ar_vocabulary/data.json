@@ -1,0 +1,156 @@
+{
+  "entity": "ar_vocabulary",
+  "ui_fields": {
+    "source_type": {
+      "label": "Source Type",
+      "type": "select",
+      "enum": "source_type",
+      "required": true
+    },
+    "source_id": {
+      "label": "Source ID",
+      "type": "text"
+    },
+    "unit_id": {
+      "label": "Vocabulary Unit ID",
+      "type": "text",
+      "required": true,
+      "placeholder": "VOCAB_..."
+    },
+    "block_id": {
+      "label": "Block ID",
+      "type": "text",
+      "placeholder": "AYAH_12_6"
+    },
+    "ref": {
+      "label": "Reference",
+      "type": "text",
+      "placeholder": "12:6"
+    },
+    "lemma": {
+      "label": "Lemma (Canonical)",
+      "type": "text",
+      "required": true
+    },
+    "surface": {
+      "label": "Surface Form",
+      "type": "text",
+      "required": true
+    },
+    "pos": {
+      "label": "Part of Speech",
+      "type": "select",
+      "enum": "pos",
+      "required": true
+    },
+    "derivation": {
+      "label": "Derivation / Ṣarf",
+      "type": "select",
+      "enum": "derivation"
+    },
+    "preposition": {
+      "label": "Bound Preposition",
+      "type": "text",
+      "placeholder": "بـ / على / إلى"
+    },
+    "gloss_hint": {
+      "label": "Gloss Hint",
+      "type": "textarea",
+      "placeholder": "Short meaning cue"
+    },
+    "note": {
+      "label": "Notes",
+      "type": "textarea"
+    },
+    "status": {
+      "label": "Status",
+      "type": "select",
+      "enum": "status",
+      "required": true
+    },
+    "difficulty": {
+      "label": "Difficulty",
+      "type": "select",
+      "enum": "difficulty"
+    },
+    "cards_json.anki_cards": {
+      "label": "Anki Cards",
+      "type": "repeater",
+      "item_schema": {
+        "card_id": {
+          "label": "Card ID",
+          "type": "text",
+          "required": true
+        },
+        "card_type": {
+          "label": "Card Type",
+          "type": "select",
+          "enum": "card_type",
+          "required": true
+        },
+        "front": {
+          "label": "Front",
+          "type": "textarea",
+          "required": true
+        },
+        "back": {
+          "label": "Back",
+          "type": "textarea",
+          "required": true
+        },
+        "tags": {
+          "label": "Tags",
+          "type": "chips",
+          "allow_custom": true
+        }
+      }
+    }
+  },
+  "tabs": [
+    {
+      "id": "source",
+      "title": "Source",
+      "fields": [
+        "source_type",
+        "source_id",
+        "block_id",
+        "ref"
+      ]
+    },
+    {
+      "id": "vocab",
+      "title": "Vocabulary",
+      "fields": [
+        "unit_id",
+        "lemma",
+        "surface",
+        "pos",
+        "derivation",
+        "preposition"
+      ]
+    },
+    {
+      "id": "meaning",
+      "title": "Meaning",
+      "fields": [
+        "gloss_hint",
+        "note"
+      ]
+    },
+    {
+      "id": "memory",
+      "title": "Memory Cards",
+      "fields": [
+        "cards_json.anki_cards"
+      ]
+    },
+    {
+      "id": "meta",
+      "title": "Meta",
+      "fields": [
+        "status",
+        "difficulty"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "entity": "discourse_edge",
+  "ui_fields": {
+    "lesson_id": {
+      "label": "Lesson",
+      "type": "picker",
+      "picker_source": "arabic_lesson",
+      "required": true
+    },
+    "from_unit_id": {
+      "label": "From Sentence Unit",
+      "type": "picker",
+      "picker_source": "lesson_sentence_units",
+      "required": true
+    },
+    "to_unit_id": {
+      "label": "To Sentence Unit",
+      "type": "picker",
+      "picker_source": "lesson_sentence_units",
+      "required": true
+    },
+    "relation_type": {
+      "label": "Relation Type",
+      "type": "select",
+      "enum": "discourse_relation_type",
+      "required": true
+    },
+    "direction": {
+      "label": "Direction",
+      "type": "select",
+      "enum": "edge_direction",
+      "required": true
+    },
+    "evidence.marker_ar": {
+      "label": "Marker (AR)",
+      "type": "text",
+      "placeholder": "e.g. إذ / وكذلك / فـ / ثم"
+    },
+    "evidence.marker_en": {
+      "label": "Marker (EN)",
+      "type": "text",
+      "placeholder": "e.g. thus / when / so"
+    },
+    "evidence.note": {
+      "label": "Evidence Note",
+      "type": "textarea"
+    },
+    "strength": {
+      "label": "Strength (1–5)",
+      "type": "select",
+      "enum": "edge_strength",
+      "required": true
+    },
+    "status": {
+      "label": "Status",
+      "type": "select",
+      "enum": "status",
+      "required": true
+    }
+  },
+  "tabs": [
+    {
+      "id": "edge",
+      "title": "Edge",
+      "fields": [
+        "lesson_id",
+        "from_unit_id",
+        "to_unit_id",
+        "relation_type",
+        "direction"
+      ]
+    },
+    {
+      "id": "evidence",
+      "title": "Evidence",
+      "fields": [
+        "evidence.marker_ar",
+        "evidence.marker_en",
+        "evidence.note"
+      ]
+    },
+    {
+      "id": "meta",
+      "title": "Meta",
+      "fields": [
+        "strength",
+        "status"
+      ]
+    }
+  ]
+}

@@ -1,24 +1,33 @@
-<div class="card">
-      <div class="card-body">
-        <div class="d-flex align-items-center mb-3">
-          <h5 class="mb-0 me-auto">Worldview Lessons Page</h5>
-          <button class="btn btn-primary btn-sm" type="button">New</button>
-        </div>
-        <div *ngIf="rows.length === 0" class="text-muted">No items yet.</div>
-        <div *ngIf="rows.length" class="table-responsive">
-          <table class="table table-sm align-middle">
-            <thead>
-              <tr>
-                <th *ngFor="let col of columns">{{ col }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let row of rows">
-                <td *ngFor="let col of columns">{{ row[col] }}</td>
-              </tr>
-            </tbody>
-          </table>
+<div class="card worldview-card">
+  <div class="card-body">
+    <div *ngIf="rows.length === 0" class="text-medium-emphasis">No entries yet.</div>
+
+    <div class="list-group worldview-list" *ngIf="rows.length">
+      <div
+        class="list-group-item list-group-item-action worldview-item"
+        *ngFor="let row of rows"
+        role="button"
+        tabindex="0"
+        (click)="openEntry(row.id)"
+      >
+        <div class="d-flex flex-wrap justify-content-between gap-2 align-items-center">
+          <div>
+            <div class="fw-semibold">{{ row.source.title }}</div>
+            <div class="text-medium-emphasis">{{ row.source.creator }}</div>
+            <small class="text-medium-emphasis">{{ row.summary.one_line }}</small>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge kind-badge">{{ row.source.kind }}</span>
+            <span class="badge" [ngClass]="statusBadgeClass(row.intake.status)">
+              {{ row.intake.status }}
+            </span>
+            <button class="btn btn-outline-secondary btn-sm" (click)="openEdit(row.id); $event.stopPropagation()">
+              Edit
+            </button>
+          </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
   

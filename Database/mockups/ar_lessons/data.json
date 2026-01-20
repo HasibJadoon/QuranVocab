@@ -1,0 +1,237 @@
+{
+  "entity_type": "arabic_lesson",
+  "id": "AR_LESSON_QURAN_12_1_7",
+  "lesson_type": "quran",
+  "subtype": "discourse",
+  "title": "Surah Yusuf 12:1–7 – Revelation, Story, and Trial",
+  "status": "active",
+  "difficulty": 3,
+  "reference": {
+    "source_type": "quran",
+    "source_ref_id": null,
+    "surah": 12,
+    "ayah_range": "1-7",
+    "page_range": null
+  },
+  "text": {
+    "arabic_full": [
+      {
+        "block_id": "AYAH_12_1",
+        "type": "verse",
+        "arabic": "الر تِلْكَ آيَاتُ الْكِتَابِ الْمُبِينِ",
+        "ref": "12:1"
+      },
+      {
+        "block_id": "AYAH_12_2",
+        "type": "verse",
+        "arabic": "إِنَّا أَنْزَلْنَاهُ قُرْآنًا عَرَبِيًّا لَعَلَّكُمْ تَعْقِلُونَ",
+        "ref": "12:2"
+      },
+      {
+        "block_id": "AYAH_12_3",
+        "type": "verse",
+        "arabic": "نَحْنُ نَقُصُّ عَلَيْكَ أَحْسَنَ الْقَصَصِ بِمَا أَوْحَيْنَا إِلَيْكَ هَٰذَا الْقُرْآنَ وَإِن كُنتَ مِن قَبْلِهِ لَمِنَ الْغَافِلِينَ",
+        "ref": "12:3"
+      },
+      {
+        "block_id": "AYAH_12_4",
+        "type": "verse",
+        "arabic": "إِذْ قَالَ يُوسُفُ لِأَبِيهِ يَا أَبَتِ إِنِّي رَأَيْتُ أَحَدَ عَشَرَ كَوْكَبًا وَالشَّمْسَ وَالْقَمَرَ رَأَيْتُهُمْ لِي سَاجِدِينَ",
+        "ref": "12:4"
+      },
+      {
+        "block_id": "AYAH_12_5",
+        "type": "verse",
+        "arabic": "قَالَ يَا بُنَيَّ لَا تَقْصُصْ رُؤْيَاكَ عَلَىٰ إِخْوَتِكَ فَيَكِيدُوا لَكَ كَيْدًا ۖ إِنَّ الشَّيْطَانَ لِلْإِنسَانِ عَدُوٌّ مُّبِينٌ",
+        "ref": "12:5"
+      },
+      {
+        "block_id": "AYAH_12_6",
+        "type": "verse",
+        "arabic": "وَكَذَٰلِكَ يَجْتَبِيكَ رَبُّكَ وَيُعَلِّمُكَ مِن تَأْوِيلِ الْأَحَادِيثِ وَيُتِمُّ نِعْمَتَهُ عَلَيْكَ وَعَلَىٰ آلِ يَعْقُوبَ كَمَا أَتَمَّهَا عَلَىٰ أَبَوَيْكَ مِن قَبْلُ إِبْرَاهِيمَ وَإِسْحَاقَ ۚ إِنَّ رَبَّكَ عَلِيمٌ حَكِيمٌ",
+        "ref": "12:6"
+      },
+      {
+        "block_id": "AYAH_12_7",
+        "type": "verse",
+        "arabic": "لَقَدْ كَانَ فِي يُوسُفَ وَإِخْوَتِهِ آيَاتٌ لِّلسَّائِلِينَ",
+        "ref": "12:7"
+      }
+    ],
+    "translation": [
+      { "block_id": "AYAH_12_1", "lang": "en", "text": "Alif, Lam, Ra. These are the verses of the clear Book." },
+      { "block_id": "AYAH_12_2", "lang": "en", "text": "Indeed, We sent it down as an Arabic Qur’an so that you may understand." },
+      { "block_id": "AYAH_12_3", "lang": "en", "text": "We relate to you the best of stories by what We have revealed to you of this Qur’an, though before it you were among the unaware." },
+      { "block_id": "AYAH_12_4", "lang": "en", "text": "When Joseph said to his father, “O my father, I saw eleven stars and the sun and the moon—I saw them prostrating to me.”" },
+      { "block_id": "AYAH_12_5", "lang": "en", "text": "He said, “O my son, do not relate your dream to your brothers, lest they plot against you. Indeed, Satan is a clear enemy to man.”" },
+      { "block_id": "AYAH_12_6", "lang": "en", "text": "Thus your Lord will choose you, teach you the interpretation of events, and complete His favor upon you and upon the family of Jacob, as He completed it upon your forefathers Abraham and Isaac. Indeed, your Lord is Knowing and Wise." },
+      { "block_id": "AYAH_12_7", "lang": "en", "text": "Surely in Joseph and his brothers are signs for those who ask." }
+    ],
+    "mode": "original"
+  },
+  "sentence_units": [
+    {
+      "unit_id": "SENT_1",
+      "text_blocks": ["AYAH_12_1"],
+      "sentence_type": "nominal",
+      "discourse_role": "initiation",
+      "structure": { "verb": null, "subject": null, "objects": [], "particles": [], "adjuncts": [] },
+      "grammar_notes": ["تلك: اسم إشارة للتعظيم"]
+    },
+    {
+      "unit_id": "SENT_2",
+      "text_blocks": ["AYAH_12_2"],
+      "sentence_type": "verbal",
+      "discourse_role": "purpose",
+      "structure": {
+        "verb": "أنزلنا",
+        "subject": "نحن",
+        "objects": ["قرآنًا"],
+        "particles": ["لعل"],
+        "adjuncts": ["عربيًّا"]
+      },
+      "grammar_notes": ["لعل = تعليل / بيان الغاية"]
+    },
+    {
+      "unit_id": "SENT_3",
+      "text_blocks": ["AYAH_12_3"],
+      "sentence_type": "verbal",
+      "discourse_role": "transition",
+      "structure": {
+        "verb": "نقص",
+        "subject": "نحن",
+        "objects": ["أحسن القصص"],
+        "particles": [],
+        "adjuncts": ["عليك"]
+      },
+      "grammar_notes": ["نحن = تعظيم", "وإن كنت = جملة حالية/اعتراضية"]
+    },
+    {
+      "unit_id": "SENT_4",
+      "text_blocks": ["AYAH_12_4"],
+      "sentence_type": "narrative",
+      "discourse_role": "initiation",
+      "structure": {
+        "verb": "قال",
+        "subject": "يوسف",
+        "objects": [],
+        "particles": ["إذ", "إن"],
+        "adjuncts": ["لأبيه"]
+      },
+      "grammar_notes": ["إذ = ظرف زمان للسرد"]
+    },
+    {
+      "unit_id": "SENT_5",
+      "text_blocks": ["AYAH_12_5"],
+      "sentence_type": "imperative",
+      "discourse_role": "warning",
+      "structure": {
+        "verb": "لا تقصص",
+        "subject": "أنت",
+        "objects": ["رؤياك"],
+        "particles": ["لا", "فـ", "إن"],
+        "adjuncts": ["على إخوتك"]
+      },
+      "grammar_notes": ["لا الناهية", "فَيَكِيدُوا = نتيجة/تعليل للنهي"]
+    },
+    {
+      "unit_id": "SENT_6",
+      "text_blocks": ["AYAH_12_6"],
+      "sentence_type": "verbal",
+      "discourse_role": "promise",
+      "structure": {
+        "verb": "يجتبيك",
+        "subject": "ربك",
+        "objects": ["ك"],
+        "particles": ["وكذلك", "كما", "إن"],
+        "adjuncts": []
+      },
+      "grammar_notes": ["وكذلك = ربط بما قبل", "يجتبيك = اختيار خاص"]
+    },
+    {
+      "unit_id": "SENT_7",
+      "text_blocks": ["AYAH_12_7"],
+      "sentence_type": "nominal",
+      "discourse_role": "conclusion",
+      "structure": { "verb": null, "subject": null, "objects": [], "particles": ["لقد"], "adjuncts": [] },
+      "grammar_notes": ["لقد = توكيد", "آيات للسائلين = تعميم للعبرة"]
+    }
+  ],
+  "discourse": {
+    "sentence_flow": [
+      { "from": "SENT_1", "to": "SENT_2", "relation": "grounds" },
+      { "from": "SENT_2", "to": "SENT_3", "relation": "leads_to" },
+      { "from": "SENT_3", "to": "SENT_4", "relation": "introduces_story" },
+      { "from": "SENT_4", "to": "SENT_5", "relation": "responded_by" },
+      { "from": "SENT_5", "to": "SENT_6", "relation": "divine_resolution" },
+      { "from": "SENT_6", "to": "SENT_7", "relation": "generalized_as_signs" }
+    ],
+    "concept_flow": [
+      "CONCEPT_REVELATION",
+      "CONCEPT_STORY",
+      "CONCEPT_TRIAL",
+      "CONCEPT_DIVINE_WISDOM"
+    ]
+  },
+  "mcqs": [
+    {
+      "mcq_id": "MCQ_001",
+      "linked_unit_id": "SENT_2",
+      "question": "What is the stated purpose of revealing the Qur’an in Arabic (12:2)?",
+      "question_ar": "ما الغاية المذكورة لإنزال القرآن عربيًا (12:2)؟",
+      "type": "discourse",
+      "difficulty": 2,
+      "options": [
+        { "id": "A", "text": "So that you may understand", "text_ar": "لَعَلَّكُمْ تَعْقِلُونَ", "is_correct": true },
+        { "id": "B", "text": "To make it harder to access", "text_ar": "لِتَصْعُبَ فَهْمُهُ", "is_correct": false },
+        { "id": "C", "text": "Only for poets", "text_ar": "لِلشُّعَرَاءِ فَقَطْ", "is_correct": false },
+        { "id": "D", "text": "Only for Arabs", "text_ar": "لِلْعَرَبِ فَقَطْ", "is_correct": false }
+      ],
+      "explanation": "The verse ends with لَعَلَّكُمْ تَعْقِلُونَ, stating the purpose: understanding/reasoning.",
+      "explanation_ar": "خاتمة الآية تصرّح بالغاية: لَعَلَّكُمْ تَعْقِلُونَ.",
+      "tags": ["purpose", "language", "understanding"],
+      "quranic_ref": "12:2"
+    },
+    {
+      "mcq_id": "MCQ_002",
+      "linked_unit_id": "SENT_5",
+      "question": "Why did Ya‘qub tell Yusuf not to tell his dream to his brothers (12:5)?",
+      "question_ar": "لماذا نهى يعقوب يوسف عن قصّ الرؤيا على إخوته (12:5)؟",
+      "type": "comprehension",
+      "difficulty": 2,
+      "options": [
+        { "id": "A", "text": "So they would not plot against him", "text_ar": "لِئَلَّا يَكِيدُوا لَهُ كَيْدًا", "is_correct": true },
+        { "id": "B", "text": "Because dreams are always false", "text_ar": "لِأَنَّ الرُّؤَى كُلَّهَا كَاذِبَة", "is_correct": false },
+        { "id": "C", "text": "Because it was not important", "text_ar": "لِأَنَّهَا غَيْرُ مُهِمَّة", "is_correct": false },
+        { "id": "D", "text": "Because he wanted secrecy without reason", "text_ar": "سِرًّا بِلَا سَبَب", "is_correct": false }
+      ],
+      "explanation": "The verse explicitly gives the reason: فَيَكِيدُوا لَكَ كَيْدًا.",
+      "explanation_ar": "السبب منصوص: فَيَكِيدُوا لَكَ كَيْدًا.",
+      "tags": ["warning", "envy", "plot"],
+      "quranic_ref": "12:5"
+    },
+    {
+      "mcq_id": "MCQ_003",
+      "linked_unit_id": "SENT_7",
+      "question": "According to 12:7, these events are presented as what?",
+      "question_ar": "بحسب (12:7) هذه الأحداث تُعرض باعتبارها ماذا؟",
+      "type": "discourse",
+      "difficulty": 2,
+      "options": [
+        { "id": "A", "text": "Signs for those who ask", "text_ar": "آيَاتٌ لِّلسَّائِلِينَ", "is_correct": true },
+        { "id": "B", "text": "Entertainment only", "text_ar": "تَسْلِيَةٌ فَقَطْ", "is_correct": false },
+        { "id": "C", "text": "Random history without meaning", "text_ar": "تَارِيخٌ عَشْوَائِيٌّ بِلَا مَعْنًى", "is_correct": false },
+        { "id": "D", "text": "A hidden code", "text_ar": "شِفْرَةٌ خَفِيَّة", "is_correct": false }
+      ],
+      "explanation": "The verse explicitly concludes with: آيات للسائلين.",
+      "explanation_ar": "خاتمة الآية: آيات للسائلين.",
+      "tags": ["signs", "lesson", "asking"],
+      "quranic_ref": "12:7"
+    }
+  ],
+  "teaching_notes": {
+    "child_friendly": "Allah starts the story by telling us the Qur’an is clear, then Yusuf shares a dream, and Ya‘qub warns him wisely.",
+    "advanced": "The opening frames narrative as revelation-driven pedagogy: clarity → intelligibility → best-story discourse → moral warning → divine choosing → universalized signs."
+  },
+  "notes": ""
+}

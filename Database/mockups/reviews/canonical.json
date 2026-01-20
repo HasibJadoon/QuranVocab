@@ -1,0 +1,66 @@
+[
+  {
+    "cid": 0,
+    "name": "id",
+    "type": "INTEGER",
+    "notnull": false,
+    "default": null,
+    "primary_key": true
+  },
+  {
+    "cid": 1,
+    "name": "target_type",
+    "type": "TEXT",
+    "notnull": true,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 2,
+    "name": "target_id",
+    "type": "INTEGER",
+    "notnull": true,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 3,
+    "name": "user_id",
+    "type": "INTEGER",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 4,
+    "name": "rating",
+    "type": "INTEGER",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 5,
+    "name": "note",
+    "type": "TEXT",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  },
+  {
+    "cid": 6,
+    "name": "created_at",
+    "type": "TEXT",
+    "notnull": true,
+    "default": "datetime('now')",
+    "primary_key": false
+  },
+  {
+    "cid": 7,
+    "name": "updated_at",
+    "type": "TEXT",
+    "notnull": false,
+    "default": null,
+    "primary_key": false
+  }
+]

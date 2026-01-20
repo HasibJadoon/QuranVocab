@@ -1,0 +1,73 @@
+"worldview_lesson_canonical_json": {
+    "entity_type": "worldview_lesson",
+    "id": "WV_LESSON_...",
+    "lesson_type": "worldview",
+    "subtype": "book_notes | article_notes | debate_notes | lecture_notes | theme_study | comparison",
+    "title": "string",
+    "status": "draft | reviewed | active | archived",
+    "difficulty": 3,
+    "reference": {
+      "source_ref_ids": [],
+      "primary_source_ref_id": "string|null",
+      "date": "YYYY-MM-DD|null"
+    },
+    "text": {
+      "mode": "excerpt | summary | quotes",
+      "content_blocks": [
+        {
+          "block_id": "BLK_1",
+          "type": "paragraph | quote | bullet | transcript",
+          "lang": "en | ar | ur | mixed",
+          "text": "string",
+          "source_ref_id": "string|null",
+          "citation": "string|null"
+        }
+      ]
+    },
+    "claims": [
+      {
+        "claim_id": "CLM_1",
+        "claim_type": "descriptive | normative | analytical",
+        "text": "string",
+        "stance": "agree | disagree | mixed | neutral",
+        "confidence": 3,
+        "evidence_ref_blocks": [],
+        "notes": "string|null"
+      }
+    ],
+    "concepts": [
+      {
+        "concept_ref_id": "CONCEPT_...",
+        "role": "core | supporting | contrasted"
+      }
+    ],
+    "comparison": {
+      "quran_relation": "supports | contrasts | reframes | requires_nuance | unclear",
+      "summary": "string|null",
+      "quran_refs": [],
+      "notes": "string|null"
+    },
+    "mcqs": [
+      {
+        "mcq_id": "MCQ_001",
+        "type": "comprehension | logic | reflection | worldview",
+        "difficulty": 2,
+        "question": "string",
+        "options": [
+          { "id": "A", "text": "string", "is_correct": false },
+          { "id": "B", "text": "string", "is_correct": false }
+        ],
+        "explanation": "string|null",
+        "tags": []
+      }
+    ],
+    "links": {
+      "library_refs": [],
+      "cross_refs": [],
+      "publishable_content_refs": []
+    },
+    "tags": [],
+    "notes": "string|null",
+    "created_at": "ISO_DATETIME",
+    "updated_at": "ISO_DATETIME|null"
+  }

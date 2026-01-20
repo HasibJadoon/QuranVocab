@@ -1,0 +1,35 @@
+{
+  "id": 0,
+  "root_id": 0,
+  "source_type": "ar_lesson | quran | hadith | classical_text",
+  "source_id": "string|number|null",
+  "lesson_id": "VOCAB_UNIT_...",
+  "block_id": "string|null",
+  "ref": "string|null",
+  "lemma": "string",
+  "surface": "string",
+  "pos": "verb | noun | adj | particle | phrase",
+  "derivation": "string|null",
+  "preposition": "string|null",
+  "gloss_hint": "string|null",
+  "note": "string|null",
+  "Word": "string",
+  "Morphology": "string|null",
+  "Meaning": "string|null",
+  "status": "active | draft | reviewed | archived",
+  "difficulty": 3,
+  "cards_json": {
+    "anki_cards": [
+      {
+        "card_id": "ANKI_...",
+        "card_type": "recall",
+        "front": "string",
+        "back": "string",
+        "tags": []
+      }
+    ]
+  },
+  "created_at": "ISO_DATETIME",
+  "updated_at": "ISO_DATETIME|null"
+}
+

@@ -44,6 +44,38 @@ export const navItems: INavData[] = [
     ]
   },
   {
+    name: 'Discourse',
+    iconComponent: { name: 'cilSpeech' },
+    children: [
+      {
+        name: "Qur'anic Discourse",
+        url: '/discourse/quranic',
+        iconComponent: { name: 'cilNotes' }
+      },
+      {
+        name: 'Concepts',
+        url: '/discourse/concepts',
+        iconComponent: { name: 'cilTags' }
+      },
+      {
+        name: 'Flows',
+        url: '/discourse/flows',
+        iconComponent: { name: 'cilShare' }
+      }
+    ]
+  },
+  {
+    name: 'Admin',
+    iconComponent: { name: 'cilUser' },
+    children: [
+      {
+        name: 'Users',
+        url: '/admin/users',
+        iconComponent: { name: 'cilUser' }
+      }
+    ]
+  },
+  {
     name: 'Crossref',
     iconComponent: { name: 'cilShareAll' },
     children: [

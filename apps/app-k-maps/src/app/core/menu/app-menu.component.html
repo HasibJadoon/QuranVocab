@@ -52,6 +52,32 @@
         </ion-menu-toggle>
       </div>
 
+            <ion-item button detail="false" (click)="toggle('discourse')">
+        <ion-icon name="chatbubbles-outline" slot="start" class="menu-icon"></ion-icon>
+        <ion-label><h2>Discourse</h2></ion-label>
+        <span class="menu-chevron" [class.open]="isOpen('discourse')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </ion-item>
+      <div class="submenu" *ngIf="isOpen('discourse')">
+        <ion-menu-toggle autoHide="true">
+          <ion-item routerLink="/discourse/quranic" routerDirection="root" detail="false">
+            <ion-icon name="book-outline" slot="start" class="menu-icon"></ion-icon>
+            <ion-label><h2>Qur&#39;anic Discourse</h2></ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+        <ion-menu-toggle autoHide="true">
+          <ion-item routerLink="/discourse/concepts" routerDirection="root" detail="false">
+            <ion-icon name="pricetags-outline" slot="start" class="menu-icon"></ion-icon>
+            <ion-label><h2>Concepts</h2></ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+        <ion-menu-toggle autoHide="true">
+          <ion-item routerLink="/discourse/flows" routerDirection="root" detail="false">
+            <ion-icon name="shuffle-outline" slot="start" class="menu-icon"></ion-icon>
+            <ion-label><h2>Flows</h2></ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+      </div>
+
             <ion-item button detail="false" (click)="toggle('crossref')">
         <ion-icon name="git-compare-outline" slot="start" class="menu-icon"></ion-icon>
         <ion-label><h2>Crossref</h2></ion-label>

@@ -1,0 +1,166 @@
+{
+  "entity": "arabic_lesson",
+  "enums": {
+    "lesson_type": ["quran", "classical", "modern"],
+    "subtype": ["discourse", "grammar", "vocabulary", "thematic"],
+    "status": ["active", "draft", "archived"],
+    "text_mode": ["original", "excerpt"],
+    "block_type": ["verse", "sentence", "line"],
+    "sentence_type": ["nominal", "verbal", "imperative", "narrative", "conditional"],
+    "discourse_role": [
+      "initiation",
+      "purpose",
+      "transition",
+      "warning",
+      "promise",
+      "conclusion",
+      "explanation",
+      "contrast",
+      "argument"
+    ],
+    "mcq_type": ["comprehension", "grammar", "vocabulary", "discourse", "logic", "reflection"],
+    "mcq_difficulty": [1, 2, 3, 4, 5],
+    "language": ["en", "ar", "ur", "mixed"]
+  },
+
+  "ui_fields": {
+    "lesson_type": { "label": "Lesson Type", "type": "select", "enum": "lesson_type", "required": true },
+    "subtype": { "label": "Subtype", "type": "select", "enum": "subtype", "required": true },
+    "title": { "label": "Title", "type": "text", "required": true },
+    "status": { "label": "Status", "type": "select", "enum": "status", "required": true },
+    "difficulty": { "label": "Difficulty (1–5)", "type": "select", "enum": "mcq_difficulty" },
+
+    "reference.surah": { "label": "Surah", "type": "number" },
+    "reference.ayah_range": { "label": "Ayah Range", "type": "text", "placeholder": "e.g. 1-7" },
+    "reference.page_range": { "label": "Page Range", "type": "text", "placeholder": "optional" },
+
+    "text.mode": { "label": "Text Mode", "type": "select", "enum": "text_mode" },
+
+    "text.arabic_full": {
+      "label": "Arabic Blocks",
+      "type": "repeater",
+      "item_schema": {
+        "block_id": { "label": "Block ID", "type": "text", "required": true, "placeholder": "AYAH_12_1" },
+        "type": { "label": "Block Type", "type": "select", "enum": "block_type" },
+        "arabic": { "label": "Arabic Text", "type": "textarea", "required": true },
+        "ref": { "label": "Reference", "type": "text", "placeholder": "12:1" }
+      }
+    },
+
+    "text.translation": {
+      "label": "Translations",
+      "type": "repeater",
+      "item_schema": {
+        "block_id": { "label": "Block ID", "type": "text", "required": true },
+        "lang": { "label": "Language", "type": "select", "enum": "language", "required": true },
+        "text": { "label": "Translation Text", "type": "textarea", "required": true }
+      }
+    },
+
+    "sentence_units": {
+      "label": "Sentence Units",
+      "type": "repeater",
+      "item_schema": {
+        "unit_id": { "label": "Unit ID", "type": "text", "required": true, "placeholder": "SENT_1" },
+        "text_blocks": {
+          "label": "Text Blocks",
+          "type": "picker_multi",
+          "picker_source": "text.arabic_full.block_id"
+        },
+        "sentence_type": { "label": "Sentence Type", "type": "select", "enum": "sentence_type" },
+        "discourse_role": { "label": "Discourse Role", "type": "select", "enum": "discourse_role" },
+
+        "structure.verb": { "label": "Verb", "type": "text" },
+        "structure.subject": { "label": "Subject", "type": "text" },
+        "structure.objects": { "label": "Objects", "type": "chips", "allow_custom": true },
+        "structure.particles": { "label": "Particles", "type": "chips", "allow_custom": true },
+        "structure.adjuncts": { "label": "Adjuncts", "type": "chips", "allow_custom": true },
+
+        "grammar_notes": { "label": "Grammar Notes", "type": "chips", "allow_custom": true }
+      }
+    },
+
+    "discourse.sentence_flow": {
+      "label": "Sentence Flow",
+      "type": "repeater",
+      "item_schema": {
+        "from": { "label": "From", "type": "picker", "picker_source": "sentence_units.unit_id" },
+        "to": { "label": "To", "type": "picker", "picker_source": "sentence_units.unit_id" },
+        "relation": { "label": "Relation", "type": "text", "placeholder": "grounds | leads_to | contrasts" }
+      }
+    },
+
+    "discourse.concept_flow": {
+      "label": "Concept Flow",
+      "type": "chips",
+      "allow_custom": true
+    },
+
+    "mcqs": {
+      "label": "MCQs",
+      "type": "repeater",
+      "item_schema": {
+        "mcq_id": { "label": "MCQ ID", "type": "text", "required": true, "placeholder": "MCQ_001" },
+        "linked_unit_id": {
+          "label": "Sentence Unit",
+          "type": "picker",
+          "picker_source": "sentence_units.unit_id"
+        },
+        "question": { "label": "Question (EN)", "type": "textarea", "required": true },
+        "question_ar": { "label": "Question (AR)", "type": "textarea" },
+        "type": { "label": "Type", "type": "select", "enum": "mcq_type" },
+        "difficulty": { "label": "Difficulty", "type": "select", "enum": "mcq_difficulty" },
+
+        "options": {
+          "label": "Options",
+          "type": "repeater",
+          "min_items": 2,
+          "item_schema": {
+            "id": { "label": "Option ID", "type": "text", "required": true, "placeholder": "A" },
+            "text": { "label": "Option (EN)", "type": "text", "required": true },
+            "text_ar": { "label": "Option (AR)", "type": "text" },
+            "is_correct": { "label": "Correct?", "type": "checkbox" }
+          }
+        },
+
+        "explanation": { "label": "Explanation (EN)", "type": "textarea" },
+        "explanation_ar": { "label": "Explanation (AR)", "type": "textarea" },
+        "tags": { "label": "Tags", "type": "chips", "allow_custom": true },
+        "quranic_ref": { "label": "Qur’anic Ref", "type": "text", "placeholder": "12:2" }
+      }
+    },
+
+    "links.concept_refs": { "label": "Concepts", "type": "picker_multi", "picker_source": "concepts" },
+    "links.library_refs": { "label": "Library References", "type": "picker_multi", "picker_source": "library" },
+    "links.worldview_refs": { "label": "Worldview Links", "type": "picker_multi", "picker_source": "worldview" },
+    "links.cross_refs": { "label": "Cross References", "type": "picker_multi", "picker_source": "cross_references" },
+
+    "teaching_notes.child_friendly": { "label": "Child-Friendly", "type": "textarea" },
+    "teaching_notes.advanced": { "label": "Advanced Notes", "type": "textarea" },
+
+    "notes": { "label": "Internal Notes", "type": "textarea" }
+  },
+
+  "tabs": [
+    { "id": "info", "title": "Information", "fields": ["lesson_type", "subtype", "title", "status", "difficulty"] },
+    { "id": "reference", "title": "Reference", "fields": ["reference.surah", "reference.ayah_range", "reference.page_range"] },
+    { "id": "text", "title": "Text", "fields": ["text.mode", "text.arabic_full", "text.translation"] },
+    { "id": "sentences", "title": "Sentences", "fields": ["sentence_units"] },
+    { "id": "discourse", "title": "Discourse", "fields": ["discourse.sentence_flow", "discourse.concept_flow"] },
+    { "id": "mcqs", "title": "MCQs", "fields": ["mcqs"] },
+    { "id": "links", "title": "Links", "fields": ["links.concept_refs", "links.library_refs", "links.worldview_refs", "links.cross_refs"] },
+    { "id": "teaching", "title": "Teaching", "fields": ["teaching_notes.child_friendly", "teaching_notes.advanced"] },
+    { "id": "notes", "title": "Notes", "fields": ["notes"] }
+  ],
+  "arabic_lesson_type_tab_map": {
+    "quran_passage": ["info","reference","text","sentences","discourse","mcqs","links","teaching","notes"],
+    "hadith_text": ["info","reference","text","sentences","mcqs","links","notes"],
+    "classical_text": ["info","reference","text","sentences","discourse","links","notes"],
+    "vocab_lesson": ["info","sentences","mcqs","links","notes"],
+    "grammar_lesson": ["info","sentences","discourse","mcqs","notes"],
+    "discourse_analysis": ["info","text","discourse","links","notes"],
+    "teaching_lesson": ["info","text","mcqs","teaching","links","notes"],
+    "quiz_only": ["info","mcqs","notes"]
+  }
+
+}
