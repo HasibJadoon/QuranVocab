@@ -70,6 +70,8 @@ export class ArLessonEditorComponent implements OnInit {
   modelResponse = '';
   modelLoading = false;
   modelError = '';
+  generatedLessonJson = '';
+  generatedLesson: any = null;
 
   compMemoryVerbsText = '';
   compMemoryNounsText = '';
@@ -232,6 +234,8 @@ export class ArLessonEditorComponent implements OnInit {
     this.modelLoading = true;
     this.modelError = '';
     this.modelResponse = '';
+    this.generatedLessonJson = '';
+    this.generatedLesson = null;
     try {
       const payload = {
         text: {
@@ -250,11 +254,43 @@ export class ArLessonEditorComponent implements OnInit {
         throw new Error('Claude did not return a lesson payload.');
       }
       this.modelResponse = this.formatLessonPreview(generatedLesson);
+      this.generatedLessonJson = JSON.stringify(generatedLesson, null, 2);
+      this.generatedLesson = generatedLesson;
     } catch (err: any) {
       this.modelError = err?.message ?? 'Failed to generate preview.';
     } finally {
       this.modelLoading = false;
     }
+  }
+
+  applyGeneratedLessonToEditor() {
+    const lesson = this.generatedLesson;
+    if (!lesson) {
+      return;
+    }
+
+    const arabicUnits = Array.isArray(lesson?.text?.arabic_full) ? lesson.text.arabic_full : [];
+    const concatenatedArabic = arabicUnits
+      .map((unit: any) => unit?.arabic ?? '')
+      .filter(Boolean)
+      .join(' ');
+    const sentencesList = Array.isArray(lesson?.sentences)
+      ? lesson.sentences.map((sentence: any) => sentence?.arabic_text ?? '').filter(Boolean)
+      : [];
+    const translations = arabicUnits.map((unit: any) => unit?.translation).filter(Boolean);
+    const normalized: LessonJson = {
+      text: {
+        arabic: concatenatedArabic || this.lessonJson.text.arabic,
+        sentences: sentencesList.length ? sentencesList.join('\n') : this.lessonJson.text.sentences,
+        translation: translations.length ? translations.join('\n') : this.lessonJson.text.translation,
+        reference: lesson?.reference?.citation ?? this.lessonJson.text.reference ?? '',
+        mode: lesson?.text?.mode === 'text' ? 'text' : this.lessonJson.text.mode === 'text' ? 'text' : 'quran'
+      },
+      vocabulary: Array.isArray(lesson?.vocabulary) ? lesson.vocabulary : this.lessonJson.vocabulary,
+      comprehension: this.lessonJson.comprehension
+    };
+
+    this.setLessonJson(normalized);
   }
 
   private formatLessonPreview(lesson: any): string {

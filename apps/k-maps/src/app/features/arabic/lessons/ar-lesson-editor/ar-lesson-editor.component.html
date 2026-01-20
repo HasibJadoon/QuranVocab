@@ -94,14 +94,24 @@
                 <h6 class="card-title mb-1">Claude preview</h6>
                 <p class="card-subtitle text-muted small mb-0">Generate vocabulary/comprehension suggestions for this passage.</p>
               </div>
-              <button
-                class="btn btn-outline-primary btn-sm"
-                type="button"
-                (click)="generateModelSuggestion()"
-                [disabled]="modelLoading || !hasArabicText"
-              >
-                {{ modelLoading ? 'Generating…' : 'Generate' }}
-              </button>
+              <div class="ms-auto d-flex gap-2">
+                <button
+                  class="btn btn-outline-primary btn-sm"
+                  type="button"
+                  (click)="generateModelSuggestion()"
+                  [disabled]="modelLoading || !hasArabicText"
+                >
+                  {{ modelLoading ? 'Generating…' : 'Generate' }}
+                </button>
+                <button
+                  class="btn btn-outline-success btn-sm"
+                  type="button"
+                  (click)="applyGeneratedLessonToEditor()"
+                  [disabled]="!generatedLesson"
+                >
+                  Use suggestion
+                </button>
+              </div>
             </div>
             <label class="form-label small mb-1">Prompt</label>
             <textarea
@@ -113,6 +123,16 @@
             <div *ngIf="modelError" class="text-danger small mb-2">{{ modelError }}</div>
             <div *ngIf="modelResponse" class="bg-light rounded p-2 small lh-sm">
               <pre class="mb-0 small" [textContent]="modelResponse"></pre>
+            </div>
+            <div *ngIf="generatedLessonJson" class="mt-2">
+              <label class="form-label small mb-1">Generated lesson JSON</label>
+              <textarea
+                class="form-control form-control-sm"
+                rows="6"
+                [value]="generatedLessonJson"
+                spellcheck="false"
+                readonly
+              ></textarea>
             </div>
             <div *ngIf="!modelResponse && !modelError" class="text-muted small">
               The preview will appear here after you generate it.
@@ -254,9 +274,12 @@
           rows="12"
           [(ngModel)]="jsonText"
           spellcheck="false"
-          readonly
         ></textarea>
-        <div *ngIf="jsonError" class="text-danger small mt-2">{{ jsonError }}</div>
+        <div class="d-flex justify-content-between align-items-center gap-2 mt-2">
+          <button class="btn btn-outline-secondary btn-sm" type="button" (click)="applyJsonText()">Apply JSON</button>
+          <div *ngIf="jsonError" class="text-danger small mb-0">{{ jsonError }}</div>
+          <div class="text-muted small mb-0 flex-grow-1 text-end">Fix the generated payload here and click apply to hydrate the form.</div>
+        </div>
       </div>
 
     </div>
