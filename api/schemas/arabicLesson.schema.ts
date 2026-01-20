@@ -120,7 +120,7 @@ export const ArabicLessonSchema = {
                 root: { anyOf: [{ type: "string" }, { type: "null" }] },
                 root_id: { anyOf: [{ type: "integer" }, { type: "null" }] },
                 pos: { type: "string" },
-                features: { anyOf: [{ type: "object" }, { type: "null" }] },
+                features: { anyOf: [{ type: "object", additionalProperties: false }, { type: "null" }] },
                 morph_ref: {
                   anyOf: [
                     {
@@ -166,7 +166,7 @@ export const ArabicLessonSchema = {
           linked_sentence_ids: { type: "array", items: { type: "string" } },
           linked_token_ids: { type: "array", items: { type: "string" } },
           notes: { anyOf: [{ type: "string" }, { type: "null" }] },
-          data: { anyOf: [{ type: "object" }, { type: "null" }] },
+              data: { anyOf: [{ type: "object", additionalProperties: false }, { type: "null" }] },
         },
       },
     },
@@ -176,9 +176,157 @@ export const ArabicLessonSchema = {
       additionalProperties: false,
       required: ["reflective", "analytical", "mcqs"],
       properties: {
-        reflective: { type: "array", items: { type: "object" } },
-        analytical: { type: "array", items: { type: "object" } },
-        mcqs: { type: "object" },
+        reflective: {
+          type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+               required: [
+                 "question_id",
+                 "linked_unit_ids",
+                 "question",
+               ],
+            properties: {
+              question_id: { type: "string" },
+              linked_unit_ids: { type: "array", items: { type: "string" } },
+              question: { type: "string" },
+              question_ar: { anyOf: [{ type: "string" }, { type: "null" }] },
+              answer_hint: { anyOf: [{ type: "string" }, { type: "null" }] },
+              tags: { type: "array", items: { type: "string" } },
+              quranic_ref: { anyOf: [{ type: "string" }, { type: "null" }] },
+            },
+          },
+        },
+        analytical: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: [
+              "question_id",
+              "linked_unit_ids",
+              "question",
+            ],
+            properties: {
+              question_id: { type: "string" },
+              linked_unit_ids: { type: "array", items: { type: "string" } },
+              question: { type: "string" },
+              question_ar: { anyOf: [{ type: "string" }, { type: "null" }] },
+              answer_hint: { anyOf: [{ type: "string" }, { type: "null" }] },
+              tags: { type: "array", items: { type: "string" } },
+              quranic_ref: { anyOf: [{ type: "string" }, { type: "null" }] },
+            },
+          },
+        },
+        mcqs: {
+          type: "object",
+          additionalProperties: false,
+          required: ["text", "vocabulary", "grammar"],
+          properties: {
+            text: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: [
+                  "mcq_id",
+                  "linked_unit_ids",
+                  "question",
+                  "options",
+                ],
+                properties: {
+                  mcq_id: { type: "string" },
+                  linked_unit_ids: { type: "array", items: { type: "string" } },
+                  question: { type: "string" },
+                  question_ar: { anyOf: [{ type: "string" }, { type: "null" }] },
+                  options: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      required: ["option", "is_correct"],
+                      properties: {
+                        option: { type: "string" },
+                        is_correct: { type: "boolean" },
+                        explanation: { anyOf: [{ type: "string" }, { type: "null" }] },
+                      },
+                    },
+                  },
+                  explanation: { anyOf: [{ type: "string" }, { type: "null" }] },
+                  tags: { type: "array", items: { type: "string" } },
+                },
+              },
+            },
+            vocabulary: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: [
+                  "mcq_id",
+                  "linked_unit_ids",
+                  "question",
+                  "options",
+                ],
+                properties: {
+                  mcq_id: { type: "string" },
+                  linked_unit_ids: { type: "array", items: { type: "string" } },
+                  question: { type: "string" },
+                  question_ar: { anyOf: [{ type: "string" }, { type: "null" }] },
+                  options: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      required: ["option", "is_correct"],
+                      properties: {
+                        option: { type: "string" },
+                        is_correct: { type: "boolean" },
+                        explanation: { anyOf: [{ type: "string" }, { type: "null" }] },
+                      },
+                    },
+                  },
+                  explanation: { anyOf: [{ type: "string" }, { type: "null" }] },
+                  tags: { type: "array", items: { type: "string" } },
+                },
+              },
+            },
+            grammar: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: [
+                  "mcq_id",
+                  "linked_unit_ids",
+                  "question",
+                  "options",
+                ],
+                properties: {
+                  mcq_id: { type: "string" },
+                  linked_unit_ids: { type: "array", items: { type: "string" } },
+                  question: { type: "string" },
+                  question_ar: { anyOf: [{ type: "string" }, { type: "null" }] },
+                  options: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      required: ["option", "is_correct"],
+                      properties: {
+                        option: { type: "string" },
+                        is_correct: { type: "boolean" },
+                        explanation: { anyOf: [{ type: "string" }, { type: "null" }] },
+                      },
+                    },
+                  },
+                  explanation: { anyOf: [{ type: "string" }, { type: "null" }] },
+                  tags: { type: "array", items: { type: "string" } },
+                },
+              },
+            },
+          },
+        },
       },
     },
 
