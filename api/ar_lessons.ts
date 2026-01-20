@@ -42,6 +42,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const url = new URL(ctx.request.url);
     const q = (url.searchParams.get('q') ?? '').trim();
+    const lessonTypeParam = (url.searchParams.get('lesson_type') ?? '').trim().toLowerCase();
 
     const limit = Math.min(200, Math.max(1, toInt(url.searchParams.get('limit'), 50)));
     const offset = Math.max(0, toInt(url.searchParams.get('offset'), 0));
@@ -54,26 +55,37 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       FROM ar_lessons
     `;
 
+    const whereClauses: string[] = [];
+    const queryParams: any[] = [];
+
     if (q) {
       const like = `%${q}%`;
-      countStmt = ctx.env.DB.prepare(
-        `SELECT COUNT(*) AS total FROM ar_lessons WHERE title LIKE ?1 OR source LIKE ?2`
-      ).bind(like, like);
+      whereClauses.push('(title LIKE ? OR source LIKE ?)');
+      queryParams.push(like, like);
+    }
 
-      dataStmt = ctx.env.DB.prepare(
-        `${selectSql}
-         WHERE title LIKE ?1 OR source LIKE ?2
-         ORDER BY created_at DESC
-         LIMIT ?3 OFFSET ?4`
-      ).bind(like, like, limit, offset);
-    } else {
-      countStmt = ctx.env.DB.prepare(`SELECT COUNT(*) AS total FROM ar_lessons`);
-      dataStmt = ctx.env.DB.prepare(
-        `${selectSql}
+    if (lessonTypeParam === 'quran') {
+      whereClauses.push('lesson_type = ?');
+      queryParams.push('quran');
+    } else if (lessonTypeParam === 'other') {
+      whereClauses.push('lesson_type != ?');
+      queryParams.push('quran');
+    }
+
+    const whereClause = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+    const countStmt = ctx.env.DB.prepare(`SELECT COUNT(*) AS total FROM ar_lessons ${whereClause}`).bind(
+      ...queryParams
+    );
+
+    const dataStmt = ctx.env.DB.prepare(
+      `${selectSql}
+         ${whereClause}
          ORDER BY created_at DESC
          LIMIT ?1 OFFSET ?2`
-      ).bind(limit, offset);
-    }
+    );
+    const dataParams = [...queryParams, limit, offset];
+    dataStmt.bind(...dataParams);
 
     const countRes = await countStmt.first<{ total: number }>();
     const total = Number(countRes?.total ?? 0);

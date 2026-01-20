@@ -14,12 +14,6 @@ export const routes: Routes = [
     data: { title: 'New Arabic Lesson' }
   },
   {
-    path: 'claude',
-    loadComponent: () =>
-      import('./ar-lesson-claude/ar-lesson-claude.component').then(m => m.ArLessonClaudeComponent),
-    data: { title: 'Claude Console' }
-  },
-  {
     path: ':id/edit',
     loadComponent: () =>
       import('./ar-lesson-editor/ar-lesson-editor.component').then(m => m.ArLessonEditorComponent),

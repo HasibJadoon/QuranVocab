@@ -29,11 +29,15 @@ export class ArLessonsPageComponent implements OnInit {
 
   loading = false;
   error = '';
+  lessonTypeFilter: 'all' | 'quran' | 'other' = 'quran';
   private debounce?: ReturnType<typeof setTimeout>;
 
   ngOnInit() {
     this.route.queryParamMap.subscribe((params) => {
       this.q = params.get('q') ?? '';
+      const typeParam = params.get('lesson_type');
+      this.lessonTypeFilter =
+        typeParam === 'other' ? 'other' : typeParam === 'all' ? 'all' : 'quran';
       this.load();
     });
   }
@@ -47,7 +51,14 @@ export class ArLessonsPageComponent implements OnInit {
     this.loading = true;
     this.error = '';
     try {
-      const data = await this.lessons.list(this.q ? { q: this.q, limit: '100' } : { limit: '100' });
+      const params: Record<string, string> = { limit: '100' };
+      if (this.q) params['q'] = this.q;
+      if (this.lessonTypeFilter === 'quran') {
+        params['lesson_type'] = 'quran';
+      } else if (this.lessonTypeFilter === 'other') {
+        params['lesson_type'] = 'other';
+      }
+      const data = await this.lessons.list(params);
       this.rows = Array.isArray((data as any)?.results) ? (data as any).results : [];
     } catch (err: any) {
       this.error = err?.message ?? 'Failed to load lessons';
@@ -61,8 +72,13 @@ export class ArLessonsPageComponent implements OnInit {
     this.router.navigate(['/arabic/lessons/new']);
   }
 
-  openClaudeConsole() {
-    this.router.navigate(['/arabic/lessons/claude']);
+  selectLessonType(type: 'all' | 'quran' | 'other') {
+    if (this.lessonTypeFilter === type) return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { lesson_type: type === 'all' ? null : type },
+      queryParamsHandling: 'merge',
+    });
   }
 
   view(id: number) {
