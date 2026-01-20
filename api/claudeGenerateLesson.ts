@@ -73,5 +73,179 @@ Return ONLY valid JSON that matches the schema.
     throw new Error("No structured JSON returned in content[0].text");
   }
 
-  return JSON.parse(outputText);
+  return parseClaudeLessonJson(outputText);
+}
+// Claude occasionally emits JSON that is missing quotes around property names,
+// so try a sanitized pass before giving up.
+function parseClaudeLessonJson(outputText: string) {
+  try {
+    return JSON.parse(outputText);
+  } catch (primaryError: any) {
+    const sanitizedText = sanitizeJsonLikeString(outputText);
+    if (sanitizedText === outputText) {
+      const snippet = getSnippet(outputText);
+      throw new Error(
+        `Failed to parse Claude output JSON: ${primaryError.message}. Output snippet: ${snippet}`
+      );
+    }
+
+    try {
+      return JSON.parse(sanitizedText);
+    } catch (secondaryError: any) {
+      const snippet = getSnippet(outputText);
+      throw new Error(
+        `Failed to parse Claude output JSON after sanitizing: ${secondaryError.message}. Output snippet: ${snippet}`
+      );
+    }
+  }
+}
+
+// Walk the text and quote keys that are not already wrapped, while respecting string literals.
+function sanitizeJsonLikeString(input: string) {
+  let result = "";
+  let index = 0;
+  let inString = false;
+  let stringQuote = "";
+  let escaping = false;
+
+  while (index < input.length) {
+    const char = input[index];
+
+    if (inString) {
+      result += char;
+      if (escaping) {
+        escaping = false;
+      } else if (char === "\\") {
+        escaping = true;
+      } else if (char === stringQuote) {
+        inString = false;
+        stringQuote = "";
+      }
+      index++;
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      inString = true;
+      stringQuote = char;
+      result += char;
+      index++;
+      continue;
+    }
+
+    if (char === "{" || char === ",") {
+      result += char;
+      const { chunk, nextIndex } = rewritePropertySegment(input, index + 1);
+      result += chunk;
+      index = nextIndex;
+      continue;
+    }
+
+    result += char;
+    index++;
+  }
+
+  return result;
+}
+
+function rewritePropertySegment(text: string, startIndex: number) {
+  let index = startIndex;
+  let chunk = "";
+
+  while (index < text.length && /\s/.test(text[index])) {
+    chunk += text[index];
+    index++;
+  }
+
+  if (index >= text.length) {
+    return { chunk, nextIndex: index };
+  }
+
+  const currentChar = text[index];
+  if (currentChar === '"') {
+    return { chunk, nextIndex: index };
+  }
+
+  if (currentChar === "'") {
+    const { value, nextIndex } = readQuotedIdentifier(text, index, "'");
+    let whitespace = "";
+    let j = nextIndex;
+    while (j < text.length && /\s/.test(text[j])) {
+      whitespace += text[j];
+      j++;
+    }
+
+    if (j < text.length && text[j] === ":") {
+      chunk += `"${escapeDoubleQuotes(value)}"` + whitespace;
+      return { chunk, nextIndex: j };
+    }
+
+    chunk += text.slice(index, nextIndex);
+    return { chunk, nextIndex };
+  }
+
+  if (isIdentifierStart(currentChar)) {
+    const nameStart = index;
+    while (index < text.length && isIdentifierChar(text[index])) {
+      index++;
+    }
+
+    const propertyName = text.slice(nameStart, index);
+    let whitespace = "";
+    let j = index;
+    while (j < text.length && /\s/.test(text[j])) {
+      whitespace += text[j];
+      j++;
+    }
+
+    if (j < text.length && text[j] === ":") {
+      chunk += `"${propertyName}"` + whitespace;
+      return { chunk, nextIndex: j };
+    }
+
+    chunk += text.slice(nameStart, index);
+    return { chunk, nextIndex: index };
+  }
+
+  return { chunk, nextIndex: index };
+}
+
+function readQuotedIdentifier(text: string, startIndex: number, quote: "'" | '"') {
+  let index = startIndex + 1;
+  let value = "";
+
+  while (index < text.length) {
+    const char = text[index];
+    if (char === "\\") {
+      if (index + 1 < text.length) {
+        value += text[index + 1];
+        index += 2;
+        continue;
+      }
+    } else if (char === quote) {
+      return { value, nextIndex: index + 1 };
+    }
+
+    value += char;
+    index++;
+  }
+
+  return { value, nextIndex: index };
+}
+
+function isIdentifierStart(char: string) {
+  return /[A-Za-z0-9_\-]/.test(char);
+}
+
+function isIdentifierChar(char: string) {
+  return /[A-Za-z0-9_\-]/.test(char);
+}
+
+function escapeDoubleQuotes(value: string) {
+  return value.replace(/"/g, '\\"');
+}
+
+function getSnippet(text: string) {
+  const maxLength = 800;
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 }
