@@ -25,16 +25,19 @@ export async function generateLessonWithClaude(
   const model = payload.options?.model ?? "claude-sonnet-4-5";
   const max_tokens = payload.options?.max_tokens ?? 4096;
 
-  const systemInstructions = `
-You are generating a structured Arabic lesson JSON object.
+const systemInstructions = `
+You are generating a structured Arabic lesson JSON object with a strong emphasis on documenting HOW and WHY you selected each teaching artifact.
 HARD RULES:
 - Do NOT alter the Arabic ayah strings. Keep EXACT, including markers like ﴿١﴾.
 - Tokenize by splitting attached harf when present: و / ف / ب / ك / ل / س must be their own tokens if attached (e.g., "وكذلك" => ["و","كذلك"]).
-- sentences reference unit_id from text.arabic_full.
-- grammar_concept_refs: only reference concept IDs (strings). Do not define concepts here.
-- passage_layers must capture discourse / rhetoric / reasoning / idiom layers.
-- comprehension must include reflective + analytical + MCQs in 3 groups: text/vocabulary/grammar.
-Return ONLY valid JSON that matches the schema.
+- sentences must reference their parent unit_id from text.arabic_full.
+- grammar_concept_refs: only reference concept IDs (strings). Do NOT define new grammar concepts here.
+- passage_layers must capture discourse / rhetoric / reasoning / idiom layers and include 1–2 sentences that explain the contextual/methodological reason for pointing at each layer (e.g., “Selected because the verb form ... shows ... in response to ...”).
+- comprehension must include reflective + analytical + MCQs in 3 groups: text/vocabulary/grammar. Each question group should be prefaced (in a short descriptive field) with how verbs/nouns/vocab/grammar choices were inferred—mention the lexical forms, root connections, or narrative purpose that led to each prompt.
+- When you list verbs, nouns, vocabulary fixes, grammar notes, or root-level observations, include why they matter: describe the methodological criterion (e.g., “chose this verb because it repeats the plural pronoun, highlighting ...”, “root ر-و-ح illustrates ... so we emphasize ...”). Capture that commentary either as additional descriptive text in comprehension/reflections or embedded inside the relevant passage layer description.
+- MCQs should include 3–5 entries per group with full questions, options, and a clear correct answer.
+- Maintain a short “methodology_summary” field (you may add inside comprehension or passage_layers) describing the overall strategy you used (context, verbs/nouns focus, grammar/roots emphasis).
+Return ONLY valid JSON that matches the schema; do not wrap the JSON in markdown, explanations, or extra text.
 `.trim();
 
   if (!payload.lesson) {
