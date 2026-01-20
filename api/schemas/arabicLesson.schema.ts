@@ -300,9 +300,9 @@ const referenceDefinition = {
       enum: ["quran", "classical_text", "hadith", "poetry", "grammar_example", "modern_arabic"],
     },
     source_ref_id: { anyOf: [{ type: "string" }, { type: "null" }] },
-    surah: { anyOf: [{ type: "integer" }, { type: "null" }], minimum: 1, maximum: 114 },
-    ayah_from: { anyOf: [{ type: "integer" }, { type: "null" }], minimum: 1 },
-    ayah_to: { anyOf: [{ type: "integer" }, { type: "null" }], minimum: 1 },
+    surah: { type: ["integer", "null"], minimum: 1, maximum: 114 },
+    ayah_from: { type: ["integer", "null"], minimum: 1 },
+    ayah_to: { type: ["integer", "null"], minimum: 1 },
     ref_label: { anyOf: [{ type: "string" }, { type: "null" }] },
     citation: { anyOf: [{ type: "string" }, { type: "null" }] },
   },
@@ -456,4 +456,3 @@ export const ArabicLessonSchema = createSchema({
   requiredFields: ["sentences", "passage_layers"],
   comprehensionFragment: lessonComprehensionDefinition,
 });
-
