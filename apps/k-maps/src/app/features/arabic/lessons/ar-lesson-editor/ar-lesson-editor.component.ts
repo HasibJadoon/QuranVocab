@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { ArLessonsService } from '../../../../shared/services/ar-lessons.service';
 import { GrammarNotesService } from '../../../../shared/services/grammar-notes.service';
+import { LessonGeneratorService } from '../../../../shared/services/lesson-generator.service';
 
 type VocabItem = {
   word: string;
@@ -44,6 +45,7 @@ type GrammarNoteItem = {
 export class ArLessonEditorComponent implements OnInit {
   private lessons = inject(ArLessonsService);
   private grammarNotes = inject(GrammarNotesService);
+  private lessonGenerator = inject(LessonGeneratorService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -227,14 +229,77 @@ export class ArLessonEditorComponent implements OnInit {
     this.modelError = '';
     this.modelResponse = '';
     try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      this.modelResponse =
-        'Claude preview: focus on the vocabulary words (كلمة, فعل, اسم) in the passage and propose two comprehension questions that refer back to the root meanings.';
+      const payload = {
+        text: {
+          arabic: this.lessonJson.text?.arabic ?? '',
+          sentences: this.lessonJson.text?.sentences ?? '',
+          translation: this.lessonJson.text?.translation ?? '',
+          reference: this.lessonJson.text?.reference ?? '',
+          mode: this.lessonJson.text?.mode,
+        },
+        vocabulary: this.lessonJson.vocabulary,
+        comprehension: this.lessonJson.comprehension,
+      };
+      const response = await this.lessonGenerator.generate(payload);
+      const generatedLesson = (response as any)?.generated_lesson ?? response;
+      if (!generatedLesson) {
+        throw new Error('Claude did not return a lesson payload.');
+      }
+      this.modelResponse = this.formatLessonPreview(generatedLesson);
     } catch (err: any) {
       this.modelError = err?.message ?? 'Failed to generate preview.';
     } finally {
       this.modelLoading = false;
     }
+  }
+
+  private formatLessonPreview(lesson: any): string {
+    const parts: string[] = [];
+
+    const arabicUnits = Array.isArray(lesson?.text?.arabic_full)
+      ? lesson.text.arabic_full.map((unit: any) => unit.arabic).filter(Boolean)
+      : [];
+    if (arabicUnits.length) {
+      parts.push(`Arabic units:\n${arabicUnits.join('\n')}`);
+    }
+
+    const sentences = Array.isArray(lesson?.sentences)
+      ? lesson.sentences.map((sentence: any) => sentence.arabic).filter(Boolean)
+      : [];
+    if (sentences.length) {
+      parts.push(`Sentences (first ${Math.min(4, sentences.length)}):\n${sentences.slice(0, 4).join('\n')}`);
+    }
+
+    const reflective = Array.isArray(lesson?.comprehension?.reflective)
+      ? lesson.comprehension.reflective.map((q: any) => q?.question).filter(Boolean)
+      : [];
+    if (reflective.length) {
+      parts.push(`Reflective questions:\n${reflective
+        .slice(0, 3)
+        .map((q: string) => `- ${q}`)
+        .join('\n')}`);
+    }
+
+    const analytical = Array.isArray(lesson?.comprehension?.analytical)
+      ? lesson.comprehension.analytical.map((q: any) => q?.question).filter(Boolean)
+      : [];
+    if (analytical.length) {
+      parts.push(`Analytical questions:\n${analytical
+        .slice(0, 3)
+        .map((q: string) => `- ${q}`)
+        .join('\n')}`);
+    }
+
+    const mcqs = Array.isArray(lesson?.comprehension?.mcqs?.text)
+      ? lesson.comprehension.mcqs.text
+      : [];
+    if (mcqs.length) {
+      parts.push(
+        `Sample MCQs:\n${mcqs.slice(0, 2).map((mcq: any) => `- ${mcq?.question ?? mcq?.text ?? 'Unnamed question'}`).join('\n')}`
+      );
+    }
+
+    return parts.length ? parts.join('\n\n') : JSON.stringify(lesson, null, 2);
   }
 
 

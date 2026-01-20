@@ -111,8 +111,8 @@
               placeholder="Add Arabic text to craft the prompt"
             ></textarea>
             <div *ngIf="modelError" class="text-danger small mb-2">{{ modelError }}</div>
-            <div *ngIf="modelResponse" class="bg-light rounded p-2 small">
-              {{ modelResponse }}
+            <div *ngIf="modelResponse" class="bg-light rounded p-2 small lh-sm">
+              <pre class="mb-0 small" [textContent]="modelResponse"></pre>
             </div>
             <div *ngIf="!modelResponse && !modelError" class="text-muted small">
               The preview will appear here after you generate it.
