@@ -21,8 +21,9 @@ coverage/
 .wrangler/
 .worker/
 *.wrangler/state*/
-# Generated Pages Functions (synced from api/)
-functions/
+## Generated Pages Functions (synced from api/)
+### Remove this ignore line if you want to commit the generated `functions/` folder:
+!functions/
 # D1 exports/dumps
 *.sqlite
 *.db
