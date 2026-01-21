@@ -55,24 +55,18 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const whereClauses: string[] = [];
     const queryParams: any[] = [];
-    let nextParamIndex = 1;
 
     if (q) {
       const like = `%${q}%`;
-      const titleParam = nextParamIndex++;
-      const sourceParam = nextParamIndex++;
-      whereClauses.push(`(title LIKE ?${titleParam} OR source LIKE ?${sourceParam})`);
+      whereClauses.push('(title LIKE ? OR source LIKE ?)');
       queryParams.push(like, like);
     }
 
     if (lessonTypeParam === 'quran') {
-      const lessonTypeParamIdx = nextParamIndex++;
-      whereClauses.push(`lesson_type = ?${lessonTypeParamIdx}`);
+      whereClauses.push('lesson_type = ?');
       queryParams.push('quran');
     } else if (lessonTypeParam === 'other') {
-      const lessonTypeParamIdx = nextParamIndex++;
-      whereClauses.push(`lesson_type != ?${lessonTypeParamIdx}`);
-      queryParams.push('quran');
+      whereClauses.push("lesson_type != 'quran'");
     }
 
     const whereClause = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
@@ -81,14 +75,12 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       ...queryParams
     );
 
-    const limitParamIdx = nextParamIndex++;
-    const offsetParamIdx = nextParamIndex++;
     const dataStmt = ctx.env.DB.prepare(
       `${selectSql}
          ${whereClause}
          ORDER BY created_at DESC
-         LIMIT ?${limitParamIdx}
-         OFFSET ?${offsetParamIdx}`
+         LIMIT ?
+         OFFSET ?`
     );
     const dataParams = [...queryParams, limit, offset];
     dataStmt.bind(...dataParams);
