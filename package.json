@@ -11,6 +11,7 @@
     "deploy:all": "npm run deploy:pages && npm run deploy:ionic"
   },
   "dependencies": {
+    "@angular/router": "^20.0.0",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.7"
