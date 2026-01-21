@@ -25,7 +25,7 @@ type ApiResponse = {
 
 @Injectable({ providedIn: 'root' })
 export class ArabicRootsService {
-  private readonly baseUrl = `${environment.apiBase}/lexicon_roots`;
+  private readonly baseUrl = `${environment.apiBase}/arabic/lexicon_roots`;
   private readonly tokenKey = 'auth_token';
 
   constructor(private readonly http: HttpClient) {}

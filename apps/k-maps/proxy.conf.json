@@ -9,22 +9,32 @@
     "secure": false,
     "changeOrigin": true
   },
-  "/lexicon_roots": {
+  "/arabic/lesson-generate": {
     "target": "https://api.k-maps.com",
     "secure": false,
     "changeOrigin": true
   },
-  "/lexicon_roots_update": {
+  "/arabic/lesson-generate-raw": {
     "target": "https://api.k-maps.com",
     "secure": false,
     "changeOrigin": true
   },
-  "/lexicon-roots": {
+  "/arabic/lexicon_roots": {
     "target": "https://api.k-maps.com",
     "secure": false,
     "changeOrigin": true
   },
-  "/lexicon-roots-update": {
+  "/arabic/lexicon_roots_update": {
+    "target": "https://api.k-maps.com",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/arabic/lexicon-roots-update": {
+    "target": "https://api.k-maps.com",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/arabic/grammar_notes": {
     "target": "https://api.k-maps.com",
     "secure": false,
     "changeOrigin": true
@@ -34,7 +44,12 @@
     "secure": false,
     "changeOrigin": true
   },
-  "/ar_lessons": {
+  "/arabic/literature/ar_lessons": {
+    "target": "https://api.k-maps.com",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/arabic/literature/ar_lessons/quran": {
     "target": "https://api.k-maps.com",
     "secure": false,
     "changeOrigin": true

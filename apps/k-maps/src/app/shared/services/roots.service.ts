@@ -5,7 +5,7 @@ import { API_BASE } from '../api-base';
 @Injectable({ providedIn: 'root' })
 export class RootsService {
   private auth = inject(AuthService);
-  private readonly baseUrl = `${API_BASE}/lexicon_roots`;
+  private readonly baseUrl = `${API_BASE}/arabic/lexicon_roots`;
 
   async list(params: Record<string, string> = {}) {
     const query = new URLSearchParams(params).toString();
@@ -14,7 +14,7 @@ export class RootsService {
   }
 
   async get(id: number | string) {
-    return this.request(`/lexicon_roots/${id}`);
+    return this.request(`${this.baseUrl}/${id}`);
   }
 
   async create(payload: unknown) {
@@ -22,11 +22,11 @@ export class RootsService {
   }
 
   async update(id: number | string, payload: unknown) {
-    return this.request(`/lexicon_roots/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+    return this.request(`${this.baseUrl}/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
   }
 
   async remove(id: number | string) {
-    return this.request(`/lexicon_roots/${id}`, { method: 'DELETE' });
+    return this.request(`${this.baseUrl}/${id}`, { method: 'DELETE' });
   }
 
   private async request(url: string, init: RequestInit = {}) {

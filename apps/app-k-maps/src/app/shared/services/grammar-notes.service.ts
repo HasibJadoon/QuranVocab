@@ -12,7 +12,7 @@ type ApiResponse = {
 
 @Injectable({ providedIn: 'root' })
 export class GrammarNotesService {
-  private readonly baseUrl = `${environment.apiBase}/grammar_notes`;
+  private readonly baseUrl = `${environment.apiBase}/arabic/grammar_notes`;
   private readonly tokenKey = 'auth_token';
 
   constructor(private readonly http: HttpClient) {}

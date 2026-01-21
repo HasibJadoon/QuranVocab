@@ -85,8 +85,14 @@ export class ArLessonsPageComponent implements OnInit {
     this.router.navigate(['/arabic/lessons', id]);
   }
 
-  study(id: number) {
-    this.router.navigate(['/arabic/lessons', id, 'study']);
+  study(row: { id: number; lesson_type: string }) {
+    const pathForQuran = ['/arabic/lessons/quran', row.id, 'study'];
+    const pathForLiterature = ['/arabic/lessons/literature', row.id, 'study'];
+    if (row.lesson_type === 'quran') {
+      this.router.navigate(pathForQuran);
+    } else {
+      this.router.navigate(pathForLiterature);
+    }
   }
 
   edit(id: number) {

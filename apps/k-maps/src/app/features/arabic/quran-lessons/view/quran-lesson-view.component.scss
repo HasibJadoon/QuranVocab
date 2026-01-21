@@ -1,0 +1,47 @@
+.quran-lesson-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.lesson-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title {
+  margin: 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--bs-secondary-text);
+}
+
+.arabic-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ayah {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.translation {
+  font-size: 0.95rem;
+  color: var(--bs-secondary-text);
+}
+
+.comprehension-section ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.loading {
+  padding: 1rem;
+  text-align: center;
+}

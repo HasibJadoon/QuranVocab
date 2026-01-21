@@ -19,7 +19,8 @@ export interface ClaudeRawGenerationSuccess {
 @Injectable({ providedIn: 'root' })
 export class LessonGeneratorService {
   private auth = inject(AuthService);
-  private readonly endpoint = `${API_BASE}/lesson-generate`;
+  private readonly endpoint = `${API_BASE}/arabic/lesson-generate`;
+  private readonly rawEndpoint = `${API_BASE}/arabic/lesson-generate-raw`;
 
   async generate(lesson: unknown, options?: { model?: string; max_tokens?: number }) {
     const headers: HeadersInit = {
@@ -58,7 +59,7 @@ export class LessonGeneratorService {
       ...this.auth.authHeaders(),
     };
 
-    const res = await fetch(`${this.endpoint}-raw`, {
+    const res = await fetch(this.rawEndpoint, {
       method: 'POST',
       headers,
       body: JSON.stringify({

@@ -1,4 +1,4 @@
-import { ArabicLessonSchema } from "./schemas/arabicLesson.schema";
+import { QuranLessonSchema } from "./schemas/quranLesson.schema";
 
 type GenerateLessonRequest = {
   lesson: any;
@@ -65,7 +65,7 @@ Return ONLY valid JSON that matches the schema; do not wrap the JSON in markdown
       messages: [{ role: "user", content: JSON.stringify(payload.lesson) }],
       output_format: {
         type: "json_schema",
-        schema: payload.schema ?? ArabicLessonSchema,
+        schema: payload.schema ?? QuranLessonSchema,
       },
     }),
   });

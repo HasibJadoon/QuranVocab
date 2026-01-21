@@ -1,0 +1,25 @@
+<section *ngIf="lesson; else loading">
+  <h1>Edit Quran Lesson</h1>
+  <form (ngSubmit)="save()">
+    <div class="form-group">
+      <label>Title</label>
+      <input class="form-control" [(ngModel)]="lesson.title" name="title" />
+    </div>
+    <div class="form-group">
+      <label>Mode</label>
+      <select class="form-select" [(ngModel)]="lesson.text.mode" name="mode">
+        <option value="original">Original</option>
+        <option value="edited">Edited</option>
+        <option value="mixed">Mixed</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Arabic Text (JSON)</label>
+      <textarea class="form-control" rows="6" [(ngModel)]="textJson" name="textJson"></textarea>
+    </div>
+    <button class="btn btn-primary" type="submit">Save</button>
+  </form>
+</section>
+<ng-template #loading>
+  <div class="loading text-muted">Loading lesson…</div>
+</ng-template>

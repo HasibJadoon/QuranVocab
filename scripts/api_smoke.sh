@@ -16,7 +16,7 @@ echo "$health" | jq -e '.ok == true' >/dev/null || fail "health ok=true"
 pass "health endpoint"
 
 # ---- Test 2: list returns shape ----
-resp="$(curl -s "$BASE_URL/lexicon_roots?limit=5&offset=0")"
+ resp="$(curl -s "$BASE_URL/arabic/lexicon_roots?limit=5&offset=0")"
 echo "$resp" | jq -e '.ok == true' >/dev/null || fail "lexicon_roots ok=true"
 echo "$resp" | jq -e '(.results | type) == "array"' >/dev/null || fail "results is array"
 echo "$resp" | jq -e 'has("total") and has("hasMore")' >/dev/null || fail "has total & hasMore"
@@ -32,7 +32,7 @@ fi
 
 # ---- Test 4: search works (root or family) ----
 # Try a query that should match family buckets like "فتح" or common roots "صرف"
-search="$(curl -s "$BASE_URL/lexicon_roots?q=%D9%81%D8%AA%D8%AD&limit=20&offset=0")"
+ search="$(curl -s "$BASE_URL/arabic/lexicon_roots?q=%D9%81%D8%AA%D8%AD&limit=20&offset=0")"
 echo "$search" | jq -e '.ok == true' >/dev/null || fail "search ok=true"
 # allow 0 results if dataset doesn't include it, but ensure no error and results array exists
 echo "$search" | jq -e '(.results | type) == "array"' >/dev/null || fail "search results array"
@@ -40,7 +40,7 @@ pass "search endpoint returns valid response"
 
 # ---- Test 5: sort by root ascending (spot-check) ----
 # We'll assert roots are non-decreasing lexicographically for the first page.
-sorted="$(curl -s "$BASE_URL/lexicon_roots?limit=50&offset=0")"
+ sorted="$(curl -s "$BASE_URL/arabic/lexicon_roots?limit=50&offset=0")"
 echo "$sorted" | jq -e '.ok == true' >/dev/null || fail "sorted ok=true"
 # extract roots
 roots="$(echo "$sorted" | jq -r '.results[].root')"

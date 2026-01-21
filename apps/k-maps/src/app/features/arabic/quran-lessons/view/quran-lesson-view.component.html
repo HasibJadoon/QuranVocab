@@ -1,0 +1,47 @@
+<section class="quran-lesson-view" *ngIf="lesson; else loadingTpl">
+  <app-quran-lesson-toolbar></app-quran-lesson-toolbar>
+  <header class="lesson-header">
+    <div>
+      <h1 class="title">{{ lesson.title }}</h1>
+      <p class="subtitle" *ngIf="lesson.reference?.ref_label">{{ lesson.reference?.ref_label }}</p>
+    </div>
+    <small class="status">Status: {{ lesson.status ?? 'draft' }}</small>
+  </header>
+  <article class="text-section">
+    <h2>Arabic Text</h2>
+    <div class="arabic-text">
+      <ng-container *ngFor="let unit of lesson.text.arabic_full">
+        <p class="ayah">{{ unit.arabic }}</p>
+        <p class="translation" *ngIf="unit.translation">{{ unit.translation }}</p>
+      </ng-container>
+    </div>
+    <p class="mode"><strong>Mode:</strong> {{ lesson.text.mode }}</p>
+  </article>
+  <article class="sentences-section" *ngIf="lesson.sentences?.length">
+    <h2>Sentences</h2>
+    <ul>
+      <li *ngFor="let sentence of lesson.sentences">
+        <p>{{ sentence.arabic }}</p>
+        <small class="text-muted" *ngIf="sentence.translation">{{ sentence.translation }}</small>
+      </li>
+    </ul>
+  </article>
+  <article class="comprehension-section" *ngIf="lesson.comprehension">
+    <h2>Comprehension</h2>
+    <div *ngIf="lesson.comprehension.reflective?.length">
+      <h3>Reflective</h3>
+      <ol>
+        <li *ngFor="let item of lesson.comprehension.reflective">{{ item.question }}</li>
+      </ol>
+    </div>
+    <div *ngIf="lesson.comprehension.analytical?.length">
+      <h3>Analytical</h3>
+      <ol>
+        <li *ngFor="let item of lesson.comprehension.analytical">{{ item.question }}</li>
+      </ol>
+    </div>
+  </article>
+</section>
+<ng-template #loadingTpl>
+  <div class="loading">Loading Quran lesson…</div>
+</ng-template>
