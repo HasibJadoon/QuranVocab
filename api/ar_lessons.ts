@@ -47,9 +47,6 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     const limit = Math.min(200, Math.max(1, toInt(url.searchParams.get('limit'), 50)));
     const offset = Math.max(0, toInt(url.searchParams.get('offset'), 0));
 
-    let dataStmt;
-    let countStmt;
-
     const selectSql = `
       SELECT id, title, lesson_type, subtype, source, status, created_at, updated_at
       FROM ar_lessons
