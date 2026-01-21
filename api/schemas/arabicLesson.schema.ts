@@ -1,3 +1,5 @@
+// -------------------- DEFINITIONS --------------------
+
 const lessonAyahUnitDefinition = {
   type: "object",
   additionalProperties: false,
@@ -81,7 +83,7 @@ const lessonSentenceDefinition = {
     },
     root_ids: {
       type: ["array", "null"],
-      items: { type: "integer" },
+      items: { anyOf: [{ type: "integer" }, { type: "null" }] },
     },
     tokens: {
       type: "array",
@@ -187,18 +189,9 @@ const lessonMCQGroupsDefinition = {
   additionalProperties: false,
   required: ["text", "vocabulary", "grammar"],
   properties: {
-    text: {
-      type: "array",
-      items: lessonMCQDefinition,
-    },
-    vocabulary: {
-      type: "array",
-      items: lessonMCQDefinition,
-    },
-    grammar: {
-      type: "array",
-      items: lessonMCQDefinition,
-    },
+    text: { type: "array", items: lessonMCQDefinition },
+    vocabulary: { type: "array", items: lessonMCQDefinition },
+    grammar: { type: "array", items: lessonMCQDefinition },
   },
 };
 
@@ -265,14 +258,8 @@ const lessonComprehensionDefinition = {
   additionalProperties: false,
   required: ["reflective", "analytical", "mcqs"],
   properties: {
-    reflective: {
-      type: "array",
-      items: reflectiveQuestionDefinition,
-    },
-    analytical: {
-      type: "array",
-      items: analyticalQuestionDefinition,
-    },
+    reflective: { type: "array", items: reflectiveQuestionDefinition },
+    analytical: { type: "array", items: analyticalQuestionDefinition },
     mcqs: lessonMCQGroupsDefinition,
   },
 };
@@ -289,6 +276,8 @@ const defs = {
   AnalyticalQuestion: analyticalQuestionDefinition,
   LessonComprehension: lessonComprehensionDefinition,
 };
+
+// -------------------- REFERENCE + TEXT --------------------
 
 const referenceDefinition = {
   type: "object",
@@ -318,12 +307,11 @@ const textDefinition = {
       minItems: 1,
       items: { $ref: "#/$defs/LessonAyahUnit" },
     },
-    mode: {
-      type: "string",
-      enum: ["original", "edited", "mixed"],
-    },
+    mode: { type: "string", enum: ["original", "edited", "mixed"] },
   },
 };
+
+// -------------------- META --------------------
 
 const metaProperties = {
   entity_type: { const: "ar_lesson" },
@@ -334,26 +322,33 @@ const metaProperties = {
   },
   subtype: {
     anyOf: [
-      { type: "string" },
+      {
+        type: "string",
+        enum: [
+          "discourse",
+          "narrative",
+          "legal",
+          "theology",
+          "rhetoric",
+          "grammar",
+          "vocabulary",
+          "reflection",
+        ],
+      },
       { type: "null" },
     ],
-    enum: ["discourse", "narrative", "legal", "theology", "rhetoric", "grammar", "vocabulary", "reflection", null],
   },
   title: { type: "string", minLength: 1 },
   title_ar: { anyOf: [{ type: "string" }, { type: "null" }] },
-  status: {
-    type: "string",
-    enum: ["draft", "reviewed", "active", "archived"],
-  },
-  difficulty: {
-    type: "integer",
-    enum: [1, 2, 3, 4, 5],
-  },
+  status: { type: "string", enum: ["draft", "reviewed", "active", "archived"] },
+  difficulty: { type: "integer", enum: [1, 2, 3, 4, 5] },
   reference: referenceDefinition,
   text: textDefinition,
   created_at: { type: "string", minLength: 1 },
   updated_at: { anyOf: [{ type: "string" }, { type: "null" }] },
 };
+
+// -------------------- SCHEMA BUILDER --------------------
 
 const createSchema = (options: {
   requiredFields: string[];
@@ -370,7 +365,7 @@ const createSchema = (options: {
       ? {
           sentences: {
             type: "array",
-            minItems: 3,
+            minItems: 1,
             items: { $ref: "#/$defs/LessonSentence" },
           },
         }
@@ -379,18 +374,16 @@ const createSchema = (options: {
       ? {
           passage_layers: {
             type: "array",
-            minItems: 3,
+            minItems: 1,
             items: { $ref: "#/$defs/PassageLayer" },
           },
         }
       : {}),
-    ...(options.comprehensionFragment
-      ? {
-          comprehension: options.comprehensionFragment,
-        }
-      : {}),
+    ...(options.comprehensionFragment ? { comprehension: options.comprehensionFragment } : {}),
   },
 });
+
+// -------------------- COMPREHENSION FRAGMENTS --------------------
 
 const reflectiveAnalyticalFragment = {
   type: "object",
@@ -399,12 +392,12 @@ const reflectiveAnalyticalFragment = {
   properties: {
     reflective: {
       type: "array",
-      minItems: 3,
+      minItems: 1,
       items: { $ref: "#/$defs/ReflectiveQuestion" },
     },
     analytical: {
       type: "array",
-      minItems: 3,
+      minItems: 1,
       items: { $ref: "#/$defs/AnalyticalQuestion" },
     },
   },
@@ -420,30 +413,24 @@ const mcqFragment = {
       additionalProperties: false,
       required: ["text", "vocabulary", "grammar"],
       properties: {
-        text: {
-          type: "array",
-          minItems: 3,
-          items: { $ref: "#/$defs/LessonMCQ" },
-        },
-        vocabulary: {
-          type: "array",
-          minItems: 3,
-          items: { $ref: "#/$defs/LessonMCQ" },
-        },
-        grammar: {
-          type: "array",
-          minItems: 3,
-          items: { $ref: "#/$defs/LessonMCQ" },
-        },
+        text: { type: "array", items: { $ref: "#/$defs/LessonMCQ" } },
+        vocabulary: { type: "array", items: { $ref: "#/$defs/LessonMCQ" } },
+        grammar: { type: "array", items: { $ref: "#/$defs/LessonMCQ" } },
       },
     },
     methodology_summary: { type: ["string", "null"] },
   },
 };
 
+// -------------------- EXPORTED SCHEMAS --------------------
+
 export const ArabicLessonMetadataSchema = createSchema({ requiredFields: [] });
-export const ArabicLessonSentencesSchema = createSchema({ requiredFields: ["sentences"] });
-export const ArabicLessonPassageLayerSchema = createSchema({ requiredFields: ["passage_layers"] });
+export const ArabicLessonSentencesSchema = createSchema({
+  requiredFields: ["sentences"],
+});
+export const ArabicLessonPassageLayerSchema = createSchema({
+  requiredFields: ["passage_layers"],
+});
 export const ArabicLessonReflectiveAnalyticalSchema = createSchema({
   requiredFields: [],
   comprehensionFragment: reflectiveAnalyticalFragment,
