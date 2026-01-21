@@ -153,7 +153,16 @@ export class ArabicRootsPage implements OnInit {
     this.filtered = this.roots.filter((item) => {
       const root = item.root?.toLowerCase() ?? '';
       const family = item.family?.toLowerCase() ?? '';
-      return root.includes(normalized) || family.includes(normalized);
+      const rootLatn = item.root_latn?.toLowerCase() ?? '';
+      const rootNorm = item.root_norm?.toLowerCase() ?? '';
+      const searchKeys = item.search_keys_norm?.toLowerCase() ?? '';
+      return (
+        root.includes(normalized) ||
+        family.includes(normalized) ||
+        rootLatn.includes(normalized) ||
+        rootNorm.includes(normalized) ||
+        searchKeys.includes(normalized)
+      );
     });
   }
 }

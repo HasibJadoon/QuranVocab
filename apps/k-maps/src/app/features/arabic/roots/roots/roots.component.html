@@ -38,6 +38,14 @@
 
             <td class="sticky-col-2">
               <span class="fw-semibold roots-root">{{ r.root }}</span>
+              <div class="text-muted small" *ngIf="r.root_latn || r.root_norm">
+                <span *ngIf="r.root_latn">{{ r.root_latn }}</span>
+                <span *ngIf="r.root_latn && r.root_norm"> • </span>
+                <span *ngIf="r.root_norm">{{ r.root_norm }}</span>
+              </div>
+              <div class="text-muted small" *ngIf="r.search_keys_norm">
+                Search keys: {{ r.search_keys_norm }}
+              </div>
             </td>
 
             <td class="roots-family">{{ r.family }}</td>
@@ -105,6 +113,45 @@
     <div class="mb-3">
       <label class="form-label">Family</label>
       <input type="text" class="form-control" [(ngModel)]="newFamily" />
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Latin</label>
+        <input type="text" class="form-control" [(ngModel)]="newRootLatn" placeholder="Z-H-D" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Normalized key</label>
+        <input type="text" class="form-control" [(ngModel)]="newRootNorm" placeholder="zhd" />
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Alternate transliterations (comma-separated)</label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="newAltLatn"
+        placeholder="z-h-d, ZHD, zhd"
+      />
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="form-label">Romanization lane</label>
+        <input type="text" class="form-control" [(ngModel)]="newRomanizationLane" placeholder="z-h-d" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Romanization key terms</label>
+        <input type="text" class="form-control" [(ngModel)]="newRomanizationKeyTerms" placeholder="zhd" />
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Search keys</label>
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="newSearchKeys"
+        placeholder="auto-generated if empty"
+      />
+      <div class="form-text">Enter normalized terms to improve search; defaults to root+family+romanization.</div>
     </div>
     <div class="roots-divider"></div>
     <div class="mb-2 fw-semibold">Cards</div>

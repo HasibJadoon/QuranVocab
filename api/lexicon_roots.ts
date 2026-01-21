@@ -12,6 +12,70 @@ const jsonHeaders = {
   'cache-control': 'no-store',
 };
 
+function safeJsonParse<T>(value: string | null | undefined): T | null {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function parseArrayField(value: unknown): unknown[] | null {
+  if (value === null || value === undefined) return null;
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function parseObjectField(value: unknown): Record<string, unknown> | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function generateSearchKeys(
+  root: string,
+  family: string,
+  rootLatn?: string | null,
+  rootNorm?: string | null,
+  alt?: unknown[]
+): string {
+  const parts = [
+    root,
+    family,
+    rootLatn ?? '',
+    rootNorm ?? '',
+    ...(alt ?? []).map((item) => String(item ?? '')),
+  ]
+    .map((part) => part.toLowerCase().trim())
+    .filter((part) => part.length > 0);
+  return parts.join(' ');
+}
+
 function toInt(v: string | null, def: number) {
   const n = Number.parseInt(String(v ?? ''), 10);
   return Number.isFinite(n) ? n : def;
@@ -58,6 +122,11 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         id,
         root,
         family,
+        root_latn,
+        root_norm,
+        alt_latn_json,
+        romanization_sources_json,
+        search_keys_norm,
         cards,
         status,
         difficulty,
@@ -75,18 +144,18 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         `
           SELECT COUNT(*) AS total
           FROM roots
-          WHERE root LIKE ?1 OR family LIKE ?2
+          WHERE root LIKE ?1 OR family LIKE ?1 OR search_keys_norm LIKE ?1
         `
-      ).bind(like, like);
+      ).bind(like);
 
       dataStmt = ctx.env.DB.prepare(
         `
           ${selectSql}
-          WHERE root LIKE ?1 OR family LIKE ?2
+          WHERE root LIKE ?1 OR family LIKE ?1 OR search_keys_norm LIKE ?1
           ORDER BY root ASC, family ASC
-          LIMIT ?3 OFFSET ?4
+          LIMIT ?2 OFFSET ?3
         `
-      ).bind(like, like, limit, offset);
+      ).bind(like, limit, offset);
     } else {
       countStmt = ctx.env.DB.prepare(
         `SELECT COUNT(*) AS total FROM roots`
@@ -106,7 +175,13 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const { results } = await dataStmt.all();
 
-    const returned = (results ?? []).length;
+    const rows = (results ?? []).map((row) => ({
+      ...row,
+      alt_latn_json: safeJsonParse<string[]>(row.alt_latn_json),
+      romanization_sources_json: safeJsonParse<Record<string, unknown>>(row.romanization_sources_json),
+    }));
+
+    const returned = rows.length;
     const nextOffset = offset + returned;
     const hasMore = nextOffset < total;
 
@@ -134,7 +209,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         total,
         hasMore,
         ...meta,
-        results: results ?? [],
+        results: rows,
       }),
       { headers: jsonHeaders }
     );
@@ -191,14 +266,54 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     const cards = Array.isArray(body?.cards) ? body.cards : [];
     const cardsJson = JSON.stringify(cards, null, 2);
 
+    const rootLatn = typeof body?.root_latn === 'string' ? body.root_latn.trim() : null;
+    const rootNorm = typeof body?.root_norm === 'string' ? body.root_norm.trim() : null;
+    const altLatn = parseArrayField(body?.alt_latn_json);
+    const romanizationSources = parseObjectField(body?.romanization_sources_json);
+    const altLatnJson = altLatn && altLatn.length ? JSON.stringify(altLatn, null, 2) : null;
+    const romanizationSourcesJson =
+      romanizationSources && Object.keys(romanizationSources).length
+        ? JSON.stringify(romanizationSources, null, 2)
+        : null;
+    const searchKeysCandidate =
+      typeof body?.search_keys_norm === 'string' ? body.search_keys_norm.trim() : '';
+    const searchKeys =
+      searchKeysCandidate ||
+      generateSearchKeys(root, family, rootLatn, rootNorm, altLatn);
+
     const res = await ctx.env.DB
       .prepare(
         `
-        INSERT INTO roots (root, family, cards, status, difficulty, frequency, create_date)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
+        INSERT INTO roots (
+          root,
+          family,
+          root_latn,
+          root_norm,
+          alt_latn_json,
+          romanization_sources_json,
+          cards,
+          search_keys_norm,
+          status,
+          difficulty,
+          frequency,
+          create_date
+        )
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, datetime('now'))
       `
       )
-      .bind(root, family, cardsJson, status, difficulty, frequency)
+      .bind(
+        root,
+        family,
+        rootLatn,
+        rootNorm,
+        altLatnJson,
+        romanizationSourcesJson,
+        cardsJson,
+        searchKeys,
+        status,
+        difficulty,
+        frequency
+      )
       .run();
 
     // @ts-ignore

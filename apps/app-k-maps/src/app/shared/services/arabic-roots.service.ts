@@ -9,6 +9,11 @@ export type ArabicRoot = {
   status?: string;
   frequency?: string;
   cards?: string | unknown[];
+  root_latn?: string;
+  root_norm?: string;
+  search_keys_norm?: string;
+  alt_latn_json?: string[] | null;
+  romanization_sources_json?: Record<string, unknown> | null;
 };
 
 type ApiResponse = {

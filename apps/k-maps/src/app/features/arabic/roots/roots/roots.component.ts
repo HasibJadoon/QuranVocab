@@ -18,6 +18,11 @@ export type RootRow = {
   frequency?: string;
   difficulty?: number | null;
   extract_date?: string | null;
+  root_latn?: string | null;
+  root_norm?: string | null;
+  alt_latn_json?: string[] | null;
+  romanization_sources_json?: Record<string, unknown> | null;
+  search_keys_norm?: string | null;
 };
 
 type RootsApiResponse = {
@@ -68,6 +73,12 @@ export class RootsComponent implements OnInit, OnDestroy {
   newCardMeaning = '';
   newCardTag = '';
   newCards: Card[] = [];
+  newRootLatn = '';
+  newRootNorm = '';
+  newAltLatn = '';
+  newRomanizationLane = '';
+  newRomanizationKeyTerms = '';
+  newSearchKeys = '';
 
   constructor(
     private auth: AuthService,
@@ -247,13 +258,33 @@ export class RootsComponent implements OnInit, OnDestroy {
 
     this.creating = true;
     try {
+      const rootLatn = this.newRootLatn.trim();
+      const rootNorm = this.newRootNorm.trim();
+      const altLatn = this.parseCommaList(this.newAltLatn);
+      const romanizationSources = this.buildRomanizationSources();
+      const searchKeysInput = this.newSearchKeys.trim();
+      const searchKeys =
+        searchKeysInput ||
+        this.generateSearchKeysForRoot(root, family, rootLatn, rootNorm, altLatn);
+
+      const payload: Record<string, unknown> = {
+        root,
+        family,
+        cards: this.newCards,
+        search_keys_norm: searchKeys,
+      };
+      if (rootLatn) payload['root_latn'] = rootLatn;
+      if (rootNorm) payload['root_norm'] = rootNorm;
+      if (altLatn.length) payload['alt_latn_json'] = altLatn;
+      if (romanizationSources) payload['romanization_sources_json'] = romanizationSources;
+
       const res = await fetch(this.createEndpoint, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
           ...this.authHeaders(),
         },
-        body: JSON.stringify({ root, family, cards: this.newCards }),
+        body: JSON.stringify(payload),
       });
 
       if (res.status === 401) this.handle401();
@@ -267,7 +298,7 @@ export class RootsComponent implements OnInit, OnDestroy {
 
       this.newRoot = '';
       this.newFamily = '';
-      this.resetNewCards();
+      this.resetCreateForm();
       this.showToast('Created ✔', 'success');
       this.closeCreate();
       this.load();
@@ -313,6 +344,16 @@ export class RootsComponent implements OnInit, OnDestroy {
     this.newCardTag = '';
   }
 
+  private resetCreateForm() {
+    this.resetNewCards();
+    this.newRootLatn = '';
+    this.newRootNorm = '';
+    this.newAltLatn = '';
+    this.newRomanizationLane = '';
+    this.newRomanizationKeyTerms = '';
+    this.newSearchKeys = '';
+  }
+
   openCreate() {
     this.showCreate = true;
     this.router.navigate([], {
@@ -327,6 +368,7 @@ export class RootsComponent implements OnInit, OnDestroy {
       queryParams: { new: null },
       queryParamsHandling: 'merge',
     });
+    this.resetCreateForm();
   }
 
   closeCards() {
@@ -434,5 +476,34 @@ export class RootsComponent implements OnInit, OnDestroy {
     }
 
     return [];
+  }
+
+  private parseCommaList(value: string): string[] {
+    return (value ?? '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+
+  private buildRomanizationSources(): Record<string, string> | null {
+    const lane = this.newRomanizationLane.trim();
+    const keyTerms = this.newRomanizationKeyTerms.trim();
+    const payload: Record<string, string> = {};
+    if (lane) payload['lane'] = lane;
+    if (keyTerms) payload['key_terms'] = keyTerms;
+    return Object.keys(payload).length ? payload : null;
+  }
+
+  private generateSearchKeysForRoot(
+    root: string,
+    family: string,
+    rootLatn: string,
+    rootNorm: string,
+    alt: string[]
+  ): string {
+    const parts = [root, family, rootLatn, rootNorm, ...alt]
+      .map((part) => (part ?? '').toLowerCase().trim())
+      .filter((part) => part.length > 0);
+    return parts.join(' ');
   }
 }
