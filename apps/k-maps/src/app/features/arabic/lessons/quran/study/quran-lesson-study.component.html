@@ -1,23 +1,18 @@
 <section *ngIf="lesson; else loadingTpl" class="lesson-study">
   <header class="study-header single-title">
-    <div>
-      <h1>Study: {{ lesson.title }}</h1>
-      <p class="study-meta">
-        Mode: {{ lesson.text.mode }} ·
-        <span *ngIf="lesson.reference?.surah">
-          Surah {{ lesson.reference?.surah }}
-          <span *ngIf="lesson.reference?.ayah_from">
-            :{{ lesson.reference?.ayah_from }}
-            <span *ngIf="lesson.reference?.ayah_to">&ndash;{{ lesson.reference?.ayah_to }}</span>
-          </span>
-        </span>
-      </p>
+    <div class="study-title">
+      <h2>{{ lesson.title }}</h2>
     </div>
   </header>
+  <hr class="study-divider" />
 
   <div class="study-grid">
     <article class="study-card">
-      <h2>Arabic Text</h2>
+      <div class="study-card-heading">
+        <h4>Arabic Text</h4>
+        <h4 class="study-card-mode"> {{ lesson.reference?.surah ? 'Surah ' + lesson.reference?.surah : 'Passage' }} </h4>
+      </div>
+      <hr class="study-card-divider" />
       <div class="arabic-text" *ngIf="lesson.text.arabic_full.length; else noArabic">
         <p class="arabic passage-paragraph">{{ arabicParagraph }}</p>
       </div>

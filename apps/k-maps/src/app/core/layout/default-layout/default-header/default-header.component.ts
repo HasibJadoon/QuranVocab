@@ -114,7 +114,9 @@ export class DefaultHeaderComponent extends HeaderComponent {
   }
 
   onFontSizeInput(event: Event) {
-    const value = Number((event.target as HTMLInputElement).value);
+    const target = event.target as { value?: string } | null;
+    if (!target?.value) return;
+    const value = Number(target.value);
     if (!Number.isFinite(value)) return;
     this.fontSize = value;
     this.applyFontSize(value);
@@ -122,7 +124,9 @@ export class DefaultHeaderComponent extends HeaderComponent {
   }
 
   onArabicFontSizeInput(event: Event) {
-    const value = Number((event.target as HTMLInputElement).value);
+    const target = event.target as { value?: string } | null;
+    if (!target?.value) return;
+    const value = Number(target.value);
     if (!Number.isFinite(value)) return;
     this.arabicFontSize = value;
     this.applyArabicFontSize(value);
@@ -407,7 +411,9 @@ export class DefaultHeaderComponent extends HeaderComponent {
   }
 
   onEnglishFontSizeInput(event: Event) {
-    const value = Number((event.target as HTMLInputElement).value);
+    const target = event.target as { value?: string } | null;
+    if (!target?.value) return;
+    const value = Number(target.value);
     if (!Number.isFinite(value)) return;
     this.englishFontSize = value;
   }

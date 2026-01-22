@@ -154,6 +154,7 @@
             <p class="settings-section-title">Preview:</p>
             <article class="preview-card" aria-live="polite">
               <p
+                *ngIf="activePreviewTab === 'arabic'"
                 class="preview-arabic"
                 [style.fontFamily]="selectedFontStyle"
                 [style.fontSize.px]="arabicFontSize"

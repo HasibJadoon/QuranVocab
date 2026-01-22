@@ -4,6 +4,68 @@
   gap: 1.5rem;
 }
 
+.study-divider,
+.study-card-divider {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.95),
+    rgba(255, 216, 0, 0.95),
+    rgba(0, 0, 0, 0.95)
+  );
+  margin: 0;
+}
+
+.study-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.study-title h1,
+.study-title h2,
+.study-title h3,
+.study-card-heading h4 {
+  font-family: var(--app-font-sans, 'Poppins', system-ui);
+  margin: 0;
+  letter-spacing: 0.04em;
+  color: #ffd800;
+  text-shadow:
+    0 0 12px rgba(0, 0, 0, 0.9),
+    0 3px 12px rgba(0, 0, 0, 0.7);
+}
+
+.study-title h1 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.study-title h2 {
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.study-title h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.study-card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.study-card-heading .study-card-mode {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 216, 0, 0.85);
+}
+
 .study-header {
   display: flex;
   align-items: center;
@@ -76,7 +138,7 @@
 }
 
 .arabic {
-  font-size: 1.2rem;
+  font-size: var(--app-ar-font-size, var(--app-font-ar-size, 1.2rem));
   line-height: 1.95;
   text-align: justify;
   text-justify: inter-word;
@@ -95,7 +157,7 @@
   text-align: justify;
   text-justify: inter-word;
   font-family: var(--app-font-ar, 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', 'Cairo', serif);
-  font-size: 1.3rem;
+  font-size: var(--app-ar-font-size, var(--app-font-ar-size, 1.3rem));
   line-height: 2;
 }
 .translation {
