@@ -1,4 +1,4 @@
-import { requireAuth } from '../../_utils/auth';
+import { requireAuth } from '../../../_utils/auth';
 
 interface Env {
   DB: D1Database;
@@ -41,7 +41,7 @@ function normStr(v: unknown) {
   return s || null;
 }
 
-/* ========================= GET /arabic/literature/ar_lessons/quran ========================= */
+/* ========================= GET /arabic/lessons/quran ========================= */
 
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   try {
@@ -123,7 +123,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   }
 };
 
-/* ========================= POST /arabic/literature/ar_lessons/quran ========================= */
+/* ========================= POST /arabic/lessons/quran ========================= */
 
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   try {

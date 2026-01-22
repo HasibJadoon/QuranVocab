@@ -44,12 +44,12 @@
     "secure": false,
     "changeOrigin": true
   },
-  "/arabic/literature/ar_lessons": {
+  "/arabic/lessons": {
     "target": "https://api.k-maps.com",
     "secure": false,
     "changeOrigin": true
   },
-  "/arabic/literature/ar_lessons/quran": {
+  "/arabic/lessons/quran": {
     "target": "https://api.k-maps.com",
     "secure": false,
     "changeOrigin": true

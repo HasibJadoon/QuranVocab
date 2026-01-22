@@ -23,7 +23,7 @@ type ApiResponse = {
 
 @Injectable({ providedIn: 'root' })
 export class ArLessonsService {
-  private readonly baseUrl = `${environment.apiBase}/arabic/literature/ar_lessons`;
+  private readonly baseUrl = `${environment.apiBase}/arabic/lessons`;
   private readonly tokenKey = 'auth_token';
 
   constructor(private readonly http: HttpClient) {}

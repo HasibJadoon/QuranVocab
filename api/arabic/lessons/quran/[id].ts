@@ -1,4 +1,4 @@
-import { requireAuth } from '../../_utils/auth';
+import { requireAuth } from '../../../_utils/auth';
 
 interface Env {
   DB: D1Database;
@@ -42,7 +42,7 @@ function normStr(v: unknown) {
   return s || null;
 }
 
-/* ========================= GET /arabic/literature/ar_lessons/:id ========================= */
+/* ========================= GET /arabic/lessons/quran/:id ========================= */
 
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   try {
@@ -69,7 +69,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
           id, user_id, title, title_ar, lesson_type, subtype, source, status, difficulty,
           created_at, updated_at, lesson_json
         FROM ar_lessons
-        WHERE id = ?1 AND user_id = ?2
+        WHERE id = ?1 AND user_id = ?2 AND lesson_type = 'quran'
         LIMIT 1
         `
       )
@@ -85,7 +85,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const parsed = safeJsonParse((row.lesson_json as string | null) ?? null);
 
-    const headers = { ...jsonHeaders, 'x-hit': 'ID /arabic/literature/ar_lessons/:id' };
+    const headers = { ...jsonHeaders, 'x-hit': 'ID /arabic/lessons/quran/:id' };
 
     return new Response(
       JSON.stringify({ ok: true, result: { ...row, lesson_json: parsed ?? row.lesson_json } }),
@@ -99,7 +99,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   }
 };
 
-/* ========================= PUT /arabic/literature/ar_lessons/:id ========================= */
+/* ========================= PUT /arabic/lessons/quran/:id ========================= */
 
 export const onRequestPut: PagesFunction<Env> = async (ctx) => {
   try {
@@ -145,7 +145,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
     }
 
     const title_ar = normStr(body?.title_ar);
-    const lesson_type = normLower(body?.lesson_type, 'quran');
+    const lesson_type = 'quran';
     const subtype = normStr(body?.subtype);
     const source = normStr(body?.source);
     const status = normLower(body?.status, 'draft');
@@ -168,7 +168,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
           difficulty = ?7,
           lesson_json = ?8,
           updated_at = datetime('now')
-        WHERE id = ?9 AND user_id = ?10
+        WHERE id = ?9 AND user_id = ?10 AND lesson_type = 'quran'
         RETURNING
           id, user_id, title, title_ar, lesson_type, subtype, source, status, difficulty,
           created_at, updated_at, lesson_json
@@ -197,7 +197,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
   }
 };
 
-/* ========================= DELETE /arabic/literature/ar_lessons/:id ========================= */
+/* ========================= DELETE /arabic/lessons/quran/:id ========================= */
 
 export const onRequestDelete: PagesFunction<Env> = async (ctx) => {
   try {
@@ -225,7 +225,7 @@ export const onRequestDelete: PagesFunction<Env> = async (ctx) => {
     }
 
     const res = await ctx.env.DB
-      .prepare(`DELETE FROM ar_lessons WHERE id = ?1 AND user_id = ?2 RETURNING id`)
+      .prepare(`DELETE FROM ar_lessons WHERE id = ?1 AND user_id = ?2 AND lesson_type = 'quran' RETURNING id`)
       .bind(id, user.id)
       .first<{ id: number }>();
 

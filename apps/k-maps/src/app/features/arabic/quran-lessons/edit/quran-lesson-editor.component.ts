@@ -32,7 +32,7 @@ export class QuranLessonEditorComponent implements OnInit {
   }
 
   save() {
-    // placeholder: ideally POST/PUT to /arabic/literature/ar_lessons/quran/:id
+    // placeholder: ideally POST/PUT to /arabic/lessons/quran/:id
     this.router.navigate(['../view'], { relativeTo: this.route });
   }
 }

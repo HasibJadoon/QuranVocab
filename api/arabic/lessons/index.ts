@@ -41,7 +41,7 @@ function normStr(v: unknown) {
   return s || null;
 }
 
-/* ========================= GET /arabic/literature/ar_lessons ========================= */
+/* ========================= GET /arabic/lessons ========================= */
 
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   try {
@@ -71,6 +71,9 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     if (lessonType === 'quran') {
       where.push('lesson_type = ?');
+      params.push('quran');
+    } else if (lessonType === 'other') {
+      where.push('lesson_type != ?');
       params.push('quran');
     }
 
@@ -126,7 +129,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   }
 };
 
-/* ========================= POST /arabic/literature/ar_lessons ========================= */
+/* ========================= POST /arabic/lessons ========================= */
 
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   try {

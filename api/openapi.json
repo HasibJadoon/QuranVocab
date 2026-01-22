@@ -234,7 +234,7 @@
         }
       }
     },
-    "/arabic/literature/ar_lessons": {
+    "/arabic/lessons": {
       "get": {
         "summary": "List Arabic lessons",
         "security": [
@@ -301,7 +301,7 @@
         }
       }
     },
-    "/arabic/literature/ar_lessons/quran": {
+    "/arabic/lessons/quran": {
       "get": {
         "summary": "List Quran lessons",
         "security": [
@@ -368,7 +368,7 @@
         }
       }
     },
-    "/arabic/literature/ar_lessons/quran/{id}": {
+    "/arabic/lessons/quran/{id}": {
       "get": {
         "summary": "Get Quran lesson",
         "security": [
@@ -458,7 +458,7 @@
         }
       }
     },
-    "/arabic/literature/ar_lessons/{id}": {
+    "/arabic/lessons/{id}": {
       "get": {
         "summary": "Get Arabic lesson",
         "security": [

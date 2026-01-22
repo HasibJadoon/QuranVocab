@@ -8,7 +8,7 @@ import { API_BASE } from '../api-base';
   providedIn: 'root'
 })
 export class QuranLessonService {
-  private readonly baseUrl = `${API_BASE}/arabic/literature/ar_lessons/quran`;
+  private readonly baseUrl = `${API_BASE}/arabic/lessons/quran`;
 
   constructor(private readonly http: HttpClient) {}
 
