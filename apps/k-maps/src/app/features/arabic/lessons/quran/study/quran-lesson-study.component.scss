@@ -1,0 +1,136 @@
+.lesson-study {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.study-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.study-meta {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.study-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .study-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+.study-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  padding: 1rem;
+  background: var(--card-bg, #0a0f1d);
+}
+
+.study-card h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.translation-card {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.08));
+  min-height: auto;
+}
+
+.arabic {
+  font-size: 1.2rem;
+  line-height: 1.9;
+  text-align: right;
+  margin: 0 0 0.25rem;
+  font-family: 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', 'Cairo', sans-serif;
+  direction: rtl;
+  letter-spacing: 0.02em;
+}
+
+.passage-line {
+  margin-bottom: 0.5rem;
+}
+.translation {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.notes {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  display: block;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.translation-missing {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.25rem;
+}
+
+.sentence-list {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sentence-list li {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sentence-list li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.mcq-item + .mcq-item {
+  margin-top: 1rem;
+}
+
+.mcq-options {
+  list-style: none;
+  padding: 0;
+  margin: 0.35rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mcq-options li {
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.95rem;
+}
+
+.mcq-options li.correct {
+  border-color: rgba(54, 179, 126, 0.8);
+  border-style: solid;
+  border-width: 1px;
+}
+
+.coming-soon {
+  text-align: center;
+}
+
+.loading {
+  padding: 1rem;
+  text-align: center;
+}

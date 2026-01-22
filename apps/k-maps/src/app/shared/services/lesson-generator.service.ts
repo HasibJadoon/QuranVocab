@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { API_BASE } from '../api-base';
-import { AuthService } from '../../../services/AuthService';
+import { AuthService } from './AuthService';
 
 export interface LessonGeneratorServiceResult {
   raw: string;

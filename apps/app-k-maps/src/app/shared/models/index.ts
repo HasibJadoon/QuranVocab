@@ -1,8 +1,8 @@
 export { AuiEnumsModel } from './aui-enums.model';
 export type { AuiEnums } from './aui-enums.model';
 
-export { ArabicLessonModel } from './arabic-lesson.model';
-export type { ArabicLesson } from './arabic-lesson.model';
+export { ArabicLessonModel } from './arabic/arabic-lesson.model';
+export type { ArabicLesson } from './arabic/arabic-lesson.model';
 
 export { LexiconEntryModel } from './lexicon-entry.model';
 export type { LexiconEntry } from './lexicon-entry.model';
@@ -37,8 +37,8 @@ export type { GrammaticalConcept } from './grammatical-concept.model';
 export { LibraryEntryModel } from './library-entry.model';
 export type { LibraryEntry } from './library-entry.model';
 
-export { QuranRelationModel } from './quran-relation.model';
-export type { QuranRelation } from './quran-relation.model';
+export { QuranRelationModel } from './arabic/quran-relation.model';
+export type { QuranRelation } from './arabic/quran-relation.model';
 
 export { RootModel } from './root.model';
 export type { Root } from './root.model';

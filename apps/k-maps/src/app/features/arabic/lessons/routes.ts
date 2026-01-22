@@ -9,11 +9,11 @@ export const routes: Routes = [
   },
   {
     path: 'quran',
-    loadChildren: () => import('../quran-lessons/routes').then(m => m.quranLessonRoutes)
+    loadChildren: () => import('./quran/routes').then(m => m.quranLessonRoutes)
   },
   {
     path: 'literature',
-    loadChildren: () => import('../literature-lessons/routes').then(m => m.literatureLessonRoutes)
+    loadChildren: () => import('./literature/routes').then(m => m.literatureLessonRoutes)
   },
   {
     path: 'new',

@@ -1,0 +1,35 @@
+<section *ngIf="lesson; else loadingTpl" class="lesson-study">
+  <header class="study-header single-title">
+    <div>
+      <h1>Study: {{ lesson.title }}</h1>
+      <p class="study-meta">
+        Mode: {{ lesson.text.mode }} ·
+        <span *ngIf="lesson.reference?.surah">
+          Surah {{ lesson.reference?.surah }}
+          <span *ngIf="lesson.reference?.ayah_from">
+            :{{ lesson.reference?.ayah_from }}
+            <span *ngIf="lesson.reference?.ayah_to">&ndash;{{ lesson.reference?.ayah_to }}</span>
+          </span>
+        </span>
+      </p>
+    </div>
+  </header>
+
+  <div class="study-grid">
+    <article class="study-card">
+      <h2>Arabic Text</h2>
+      <div class="arabic-text" *ngIf="lesson.text.arabic_full.length; else noArabic">
+        <div *ngFor="let unit of lesson.text.arabic_full" class="arabic-unit">
+          <p class="arabic passage-line">{{ unit.arabic }}</p>
+        </div>
+      </div>
+      <ng-template #noArabic>
+        <p class="text-muted">Arabic text is not available for this lesson yet.</p>
+      </ng-template>
+    </article>
+  </div>
+</section>
+
+<ng-template #loadingTpl>
+  <div class="loading text-muted">Loading study data…</div>
+</ng-template>
