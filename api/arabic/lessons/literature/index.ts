@@ -20,11 +20,11 @@ export const onRequestGet: PagesFunction<Env> = async () => {
 };
 
 export const onRequestPost: PagesFunction<Env> = async () => {
-    return new Response(
-      JSON.stringify({
-        ok: false,
-        error: 'Literature-specific endpoint not implemented yet. Please use /arabic/lessons for now.',
-      }),
-      { headers: jsonHeaders, status: 501 }
-    );
-  };
+  return new Response(
+    JSON.stringify({
+      ok: false,
+      error: 'Literature-specific endpoint not implemented yet. Please use /arabic/lessons for now.',
+    }),
+    { headers: jsonHeaders, status: 501 }
+  );
+};
