@@ -379,11 +379,36 @@
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
-.mcq-question-card:hover {
+.mcq-question-card:hover,
+.mcq-question-card:focus-within {
   box-shadow:
     0 0 30px rgba(255, 216, 0, 0.25),
     inset 0 0 12px rgba(255, 216, 0, 0.15);
   transform: translateY(-2px);
+}
+
+.mcq-question-text {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow:
+    inset 0 0 10px rgba(255, 255, 255, 0.05),
+    0 0 15px rgba(255, 216, 0, 0.2);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  font-weight: 600;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  color: #ffd800;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.mcq-question-card:hover .mcq-question-text,
+.mcq-question-card:focus-within .mcq-question-text {
+  border-color: rgba(255, 216, 0, 0.45);
+  box-shadow:
+    inset 0 0 10px rgba(255, 255, 255, 0.1),
+    0 0 25px rgba(255, 216, 0, 0.3);
 }
 
 .mcq-question-head {
@@ -403,12 +428,6 @@
 .mcq-question-ar {
   font-size: 0.85rem;
   opacity: 0.7;
-}
-
-.mcq-question-text {
-  margin: 0;
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.9);
 }
 
 .mcq-options {

@@ -120,12 +120,12 @@
                 <span>Reflective</span>
                 <small>Spend time thinking through the passage.</small>
               </div>
-              <article
-                class="comp-item"
-                *ngFor="let question of reflectiveQuestions"
-                (click)="selectQuestion(question)"
-                [class.active]="selectedQuestionId === (question.question_id ?? question.question)"
-              >
+                <article
+                  class="comp-item"
+                  *ngFor="let question of reflectiveQuestions"
+                  (click)="selectQuestion(question)"
+                  [class.active]="selectedQuestionId === getQuestionKey(question)"
+                >
                 <p class="comp-question text-gold">{{ question.question }}</p>
                 <!-- <p class="comp-question-ar" *ngIf="question.question_ar">{{ question.question_ar }}</p> -->
                 <p class="comp-hint" *ngIf="question.answer_hint">Hint: {{ question.answer_hint }}</p>
@@ -140,9 +140,7 @@
                 class="comp-item"
                 *ngFor="let question of analyticalQuestions"
                 (click)="selectQuestion(question)"
-                [class.active]="
-                  selectedQuestionId === (question.question_id ?? question.question)
-                "
+                [class.active]="selectedQuestionId === getQuestionKey(question)"
               >
                 <p class="comp-question text-gold">{{ question.question }}</p>
                 <!-- <p class="comp-question-ar" *ngIf="question.question_ar">{{ question.question_ar }}</p> -->

@@ -101,8 +101,12 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     this.selectedVerseId = this.selectedVerseId === unitId ? null : unitId;
   }
 
+  getQuestionKey(question: QuranLessonComprehensionQuestion) {
+    return question.question_id ?? question.question;
+  }
+
   selectQuestion(question: QuranLessonComprehensionQuestion) {
-    const id = question.question_id ?? question.question;
+    const id = this.getQuestionKey(question);
     if (!id) return;
     this.selectedQuestionId = this.selectedQuestionId === id ? null : id;
   }
