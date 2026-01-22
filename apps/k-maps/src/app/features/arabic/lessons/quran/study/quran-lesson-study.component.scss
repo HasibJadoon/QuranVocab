@@ -30,10 +30,39 @@
 }
 
 .study-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.85rem;
-  padding: 1rem;
-  background: var(--card-bg, #0a0f1d);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(8, 14, 30, 0.95), rgba(12, 8, 18, 0.95));
+  box-shadow:
+    0 15px 35px rgba(3, 10, 25, 0.8),
+    0 0 30px rgba(9, 150, 227, 0.35),
+    inset 0 0 1px rgba(255, 255, 255, 0.08);
+  position: relative;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.study-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 25px rgba(9, 150, 227, 0.35);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.study-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 25px 45px rgba(3, 10, 25, 0.85),
+    0 0 45px rgba(9, 150, 227, 0.45),
+    inset 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.study-card:hover::after {
+  opacity: 1;
 }
 
 .study-card h2 {
@@ -48,16 +77,26 @@
 
 .arabic {
   font-size: 1.2rem;
-  line-height: 1.9;
-  text-align: right;
-  margin: 0 0 0.25rem;
-  font-family: 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', 'Cairo', sans-serif;
+  line-height: 1.95;
+  text-align: justify;
+  text-justify: inter-word;
+  margin: 0 0 0.5rem;
+  font-family: var(--app-font-ar, 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', 'Cairo', serif);
   direction: rtl;
   letter-spacing: 0.02em;
+  hyphens: auto;
 }
 
 .passage-line {
   margin-bottom: 0.5rem;
+}
+
+.passage-paragraph {
+  text-align: justify;
+  text-justify: inter-word;
+  font-family: var(--app-font-ar, 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', 'Cairo', serif);
+  font-size: 1.3rem;
+  line-height: 2;
 }
 .translation {
   font-size: 0.95rem;

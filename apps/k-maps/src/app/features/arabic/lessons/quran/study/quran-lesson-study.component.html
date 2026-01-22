@@ -19,9 +19,7 @@
     <article class="study-card">
       <h2>Arabic Text</h2>
       <div class="arabic-text" *ngIf="lesson.text.arabic_full.length; else noArabic">
-        <div *ngFor="let unit of lesson.text.arabic_full" class="arabic-unit">
-          <p class="arabic passage-line">{{ unit.arabic }}</p>
-        </div>
+        <p class="arabic passage-paragraph">{{ arabicParagraph }}</p>
       </div>
       <ng-template #noArabic>
         <p class="text-muted">Arabic text is not available for this lesson yet.</p>

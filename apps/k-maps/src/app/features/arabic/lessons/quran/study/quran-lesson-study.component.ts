@@ -21,6 +21,14 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
   private defaultText: QuranLesson['text'] = { arabic_full: [], mode: 'original' };
   lesson: QuranLesson | null = null;
 
+  get arabicParagraph(): string {
+    const units = this.lesson?.text?.arabic_full ?? [];
+    const cleaned = units
+      .map((unit) => unit.arabic?.trim())
+      .filter(Boolean) as string[];
+    return cleaned.join(' ');
+  }
+
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!isNaN(id)) {

@@ -12,7 +12,7 @@
 
 /* Qur’anic Arabic — Hafs (Uthmani) */
 @font-face {
-  font-family: 'UthmanicHafs';
+  font-family: 'Uthmanic Hafs';
   src: url('/assets/fonts/UthmanicHafs_V22.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
@@ -25,6 +25,11 @@
 /* Default English typography */
 body {
   font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+:root {
+  --app-font-ar: 'Uthmanic Hafs', 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', 'Cairo', serif;
+  --app-font-ar-size: 1.35rem;
 }
 
 /* Global card hover lift */

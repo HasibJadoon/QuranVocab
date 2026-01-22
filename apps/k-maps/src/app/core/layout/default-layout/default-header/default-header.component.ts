@@ -1,4 +1,4 @@
-import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
+import { NgFor, NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet } from '@angular/common';
 import { Component, inject, input } from '@angular/core';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -36,6 +36,8 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
     NgTemplateOutlet,
     NgIf,
     NgFor,
+    NgSwitch,
+    NgSwitchCase,
     RouterLink,
     BreadcrumbRouterComponent,
     DropdownComponent,
@@ -53,7 +55,7 @@ export class DefaultHeaderComponent extends HeaderComponent {
   sidebarId = input('sidebar1');
 
   fontSize = 16;
-  arabicFontSize = 20;
+  arabicFontSize = 23;
   currentUrl = '';
   showHeaderSearch = false;
   headerQuery = '';
@@ -83,6 +85,22 @@ export class DefaultHeaderComponent extends HeaderComponent {
   activeDiscourseFilters = new Set<string>();
   private currentPath = '';
 
+  readonly scriptModes = ['Uthmani', 'IndoPak', 'Tajweed'];
+  readonly fontStyles = ['Uthmanic Hafs'];
+  readonly reciters = [
+    { id: 'afasy', name: 'Mishari Rashid al-ʿAfasy', detail: 'Mecca · Hafs' },
+    { id: 'abdulbasit', name: 'Abdulbasit Abdulsamad', detail: 'Madinah · Warsh' },
+    { id: 'alhubayshi', name: 'Mansour al-Hubayshi', detail: 'Medina · Qaloon' },
+  ];
+
+  selectedScriptMode = this.scriptModes[0];
+  selectedFontStyle = this.fontStyles[0];
+  selectedReciter = this.reciters[0];
+  activePreviewTab: 'arabic' | 'english' | 'more' = 'arabic';
+  englishTranslations = ['Dr. Mustafa Khattab, The Clear Quran', 'Saheeh International', 'Yusuf Ali'];
+  selectedTranslation = this.englishTranslations[0];
+  englishFontSize = 22;
+
   constructor() {
     super();
     this.loadFontSize();
@@ -100,6 +118,7 @@ export class DefaultHeaderComponent extends HeaderComponent {
     if (!Number.isFinite(value)) return;
     this.fontSize = value;
     this.applyFontSize(value);
+    this.syncArabicSizeWithText(value);
   }
 
   onArabicFontSizeInput(event: Event) {
@@ -343,6 +362,54 @@ export class DefaultHeaderComponent extends HeaderComponent {
     }
     this.arabicFontSize = value;
     this.applyArabicFontSize(value);
+  }
+
+  get previewArabicText(): string {
+    return 'الر تلك آيات الكتاب المبين';
+  }
+
+  get previewTranslationText(): string {
+    return 'In the Name of Allah—the Most Compassionate, Most Merciful.';
+  }
+
+  get previewTranslationFontSize(): number {
+    return this.englishFontSize;
+  }
+
+  selectScriptMode(mode: string) {
+    this.selectedScriptMode = mode;
+  }
+
+  selectFontStyle(event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
+    this.selectedFontStyle = value;
+  }
+
+  resetAppearance() {
+    this.selectedScriptMode = this.scriptModes[0];
+    this.selectedFontStyle = this.fontStyles[0];
+    this.selectedReciter = this.reciters[0];
+    this.loadFontSize();
+    this.loadArabicFontSize();
+    this.activePreviewTab = 'arabic';
+    this.selectedTranslation = this.englishTranslations[0];
+    this.englishFontSize = 22;
+  }
+
+  private syncArabicSizeWithText(textSize: number) {
+    const next = Math.min(74, Math.max(14, textSize + 4));
+    this.arabicFontSize = next;
+    this.applyArabicFontSize(next);
+  }
+
+  setPreviewTab(tab: 'arabic' | 'english' | 'more') {
+    this.activePreviewTab = tab;
+  }
+
+  onEnglishFontSizeInput(event: Event) {
+    const value = Number((event.target as HTMLInputElement).value);
+    if (!Number.isFinite(value)) return;
+    this.englishFontSize = value;
   }
 
 }

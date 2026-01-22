@@ -109,45 +109,151 @@
 <!--</c-header>-->
 
 <ng-template #userDropdown>
-  <c-dropdown [popperOptions]="{ placement: 'bottom-start' }" variant="nav-item">
+  <c-dropdown [popperOptions]="{ placement: 'bottom-start' }" variant="nav-item" autoClose="outside">
     <button [caret]="false" cDropdownToggle class="py-0 pe-0" aria-label="Open user menu">
       <span class="settings-avatar">
         <svg cIcon name="cilSettings" size="lg"></svg>
       </span>
     </button>
-    <ul cDropdownMenu class="pt-0 w-auto">
-      <li class="px-3 py-2">
-        <div class="size-group">
-          <div class="size-title">Font sizes</div>
-          <div class="size-block">
-            <div class="size-row">
-              <span>Text</span>
-              <span class="size-value">{{ fontSize }}px</span>
-            </div>
-            <input
-              type="range"
-              min="12"
-              max="74"
-              step="1"
-              [value]="fontSize"
-              (input)="onFontSizeInput($event)"
-              class="form-range size-range"
-            />
+    <ul cDropdownMenu class="pt-0 w-auto settings-dropdown">
+      <li class="px-3 py-3">
+        <div class="settings-panel">
+          <div class="settings-panel-tabs">
+            <button
+              type="button"
+              class="settings-tab"
+              [class.active]="activePreviewTab === 'arabic'"
+              (click)="setPreviewTab('arabic')"
+            >
+              Arabic
+            </button>
+            <button
+              type="button"
+              class="settings-tab"
+              [class.active]="activePreviewTab === 'english'"
+              (click)="setPreviewTab('english')"
+            >
+              English
+            </button>
+            <button
+              type="button"
+              class="settings-tab"
+              [class.active]="activePreviewTab === 'more'"
+              (click)="setPreviewTab('more')"
+            >
+              More
+            </button>
           </div>
-          <div class="size-block">
-            <div class="size-row">
-              <span>Arabic</span>
-              <span class="size-value">{{ arabicFontSize }}px</span>
+          <div class="settings-panel-header">
+            <div>
+              <p class="settings-panel-label">Preview</p>
+              <h3>Arabic appearance</h3>
             </div>
-            <input
-              type="range"
-              min="14"
-              max="74"
-              step="1"
-              [value]="arabicFontSize"
-              (input)="onArabicFontSizeInput($event)"
-              class="form-range size-range"
-            />
+          </div>
+          <div class="settings-preview-section">
+            <p class="settings-section-title">Preview:</p>
+            <article class="preview-card" aria-live="polite">
+              <p
+                class="preview-arabic"
+                [style.fontFamily]="selectedFontStyle"
+                [style.fontSize.px]="arabicFontSize"
+              >
+                {{ previewArabicText }}
+              </p>
+              <p
+                *ngIf="activePreviewTab === 'english'"
+                class="preview-translation"
+                [style.fontSize.px]="previewTranslationFontSize"
+              >
+                {{ previewTranslationText }}
+              </p>
+            </article>
+          </div>
+          <ng-container [ngSwitch]="activePreviewTab">
+            <div *ngSwitchCase="'arabic'">
+              <div class="setting-group">
+                <p class="setting-title">Script type</p>
+                <div class="script-toggle">
+                  <button
+                    type="button"
+                    *ngFor="let script of scriptModes"
+                    class="script-btn"
+                    [class.active]="selectedScriptMode === script"
+                    (click)="selectScriptMode(script)"
+                  >
+                    {{ script }}
+                  </button>
+                </div>
+              </div>
+              <div class="setting-group">
+                <p class="setting-title">Font style</p>
+                <div class="font-style-chip">{{ selectedFontStyle }}</div>
+              </div>
+              <div class="setting-group">
+                <p class="setting-title">Arabic size</p>
+                <div class="range-block">
+                  <span class="size-value">{{ arabicFontSize }}px</span>
+                  <input
+                    type="range"
+                    min="14"
+                    max="74"
+                    step="1"
+                    [value]="arabicFontSize"
+                    (input)="onArabicFontSizeInput($event)"
+                    class="form-range size-range"
+                  />
+                </div>
+              </div>
+              <div class="setting-group reciter-section">
+                <p class="setting-title">Selected Reciter</p>
+                <div class="reciter-card">
+                  <div>
+                    <p class="reciter-name">{{ selectedReciter.name }}</p>
+                    <p class="reciter-detail">{{ selectedReciter.detail }}</p>
+                  </div>
+                  <span aria-hidden="true" class="reciter-arrow">›</span>
+                </div>
+              </div>
+            </div>
+            <div *ngSwitchCase="'english'">
+              <div class="setting-group">
+                <p class="setting-title">Selected English translation</p>
+                <div class="reciter-card translation-card">
+                  <div>
+                    <p class="reciter-name">{{ selectedTranslation }}</p>
+                    <p class="reciter-detail">Select one for the preview</p>
+                  </div>
+                </div>
+              </div>
+              <div class="setting-group">
+                <p class="setting-title">English size</p>
+                <div class="range-block translation-slider-block">
+                  <span class="size-value">{{ englishFontSize }}px</span>
+                  <input
+                    type="range"
+                    min="12"
+                    max="74"
+                    step="1"
+                    [value]="englishFontSize"
+                    (input)="onEnglishFontSizeInput($event)"
+                    class="form-range size-range"
+                  />
+                </div>
+              </div>
+            </div>
+            <div *ngSwitchCase="'more'">
+              <div class="setting-group">
+                <p class="setting-title">More coming soon</p>
+                <p class="more-text">
+                  Adjust tajweed marks, chapter colors, and audio cues from this area in the next
+                  update.
+                </p>
+              </div>
+            </div>
+          </ng-container>
+          <div class="settings-actions">
+            <button type="button" class="link-btn" (click)="resetAppearance()">Reset</button>
+            <button type="button" class="primary-btn" cDropdownToggle>Done</button>
           </div>
         </div>
       </li>
