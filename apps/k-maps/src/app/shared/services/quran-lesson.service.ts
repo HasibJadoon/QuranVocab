@@ -35,4 +35,17 @@ export class QuranLessonService {
         })
       );
   }
+
+  updateLesson(id: number | string, payload: QuranLesson) {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+
+    return this.http.put<{ ok: boolean; result: QuranLesson }>(
+      `${this.baseUrl}/${id}`,
+      payload,
+      { headers }
+    );
+  }
 }

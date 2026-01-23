@@ -10,10 +10,11 @@ import { QuranSectionStudyComponent } from './sections/study/quran-section-study
 export const quranLessonRoutes: Routes = [
   {
     path: '',
+    data: { title: 'Quran Lessons' },
     children: [
-      { path: ':id/view', component: QuranLessonViewComponent },
-      { path: ':id/edit', component: QuranLessonEditorComponent },
-      { path: ':id/study', component: QuranLessonStudyComponent },
+      { path: ':id/view', component: QuranLessonViewComponent, data: { title: 'Quran Lesson' } },
+      { path: ':id/edit', component: QuranLessonEditorComponent, data: { title: 'Edit Quran Lesson' } },
+      { path: ':id/study', component: QuranLessonStudyComponent, data: { title: 'Study Quran Lesson' } },
       {
         path: 'sections',
         children: [

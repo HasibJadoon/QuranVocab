@@ -95,8 +95,12 @@ export class ArLessonsPageComponent implements OnInit {
     }
   }
 
-  edit(id: number) {
-    this.router.navigate(['/arabic/lessons', id, 'edit']);
+  edit(row: { id: number; lesson_type: string }) {
+    if (row.lesson_type === 'quran') {
+      this.router.navigate(['/arabic/lessons/quran', row.id, 'edit']);
+    } else {
+      this.router.navigate(['/arabic/lessons', row.id, 'edit']);
+    }
   }
 
   statusBadgeClass(status: string) {

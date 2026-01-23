@@ -135,9 +135,17 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     const mcqs = this.lesson?.comprehension?.mcqs;
     if (!mcqs) return [];
     if (Array.isArray(mcqs)) return mcqs;
-    if (typeof mcqs === 'object' && mcqs !== null && 'text' in mcqs) {
-      const typed = mcqs as { text?: QuranLessonMcq[] };
-      return Array.isArray(typed.text) ? typed.text : [];
+    if (typeof mcqs === 'object' && mcqs !== null) {
+      const typed = mcqs as {
+        text?: QuranLessonMcq[];
+        vocabulary?: QuranLessonMcq[];
+        grammar?: QuranLessonMcq[];
+      };
+      return [
+        ...(Array.isArray(typed.text) ? typed.text : []),
+        ...(Array.isArray(typed.vocabulary) ? typed.vocabulary : []),
+        ...(Array.isArray(typed.grammar) ? typed.grammar : []),
+      ];
     }
     return [];
   }

@@ -68,6 +68,150 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* =========================
+   Lesson Editor (shared)
+   ========================= */
+.lesson-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 2rem;
+}
+
+.lesson-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 0.15rem;
+}
+
+.lesson-editor-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.lesson-editor-header h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.lesson-editor-actions {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 0.5rem;
+}
+
+.editor-meta-panel {
+  padding: 1.2rem;
+  border-radius: 1rem;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.meta-row label {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  letter-spacing: 0.04em;
+}
+
+.meta-input {
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.95rem;
+  color: #fff;
+  font-family: var(--app-font-sans, 'Poppins', system-ui);
+}
+
+.lesson-editor-tabs {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border 0.25s ease, background 0.25s ease;
+}
+
+.tab-btn.active {
+  background: rgba(255, 216, 0, 0.08);
+  border-color: rgba(255, 216, 0, 0.55);
+  color: #fff;
+}
+
+.lesson-editor-tabs-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.json-label {
+  display: block;
+  margin: 1rem 0 0.35rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.json-editor {
+  width: 100%;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: 'Fira Code', 'Source Code Pro', Menlo, monospace;
+  line-height: 1.4;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.95rem;
+}
+
+.editable-field {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-family: var(--app-font-sans, 'Poppins', system-ui);
+  font-size: 0.95rem;
+  padding: 0.5rem 0.75rem;
+  resize: vertical;
+}
+
+.mcq-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.lesson-editor .study-card {
+  padding: 1.2rem;
+}
+
 .study-card-heading {
   display: flex;
   align-items: baseline;

@@ -47,7 +47,11 @@ export interface QuranLessonMcq {
 export interface QuranLessonComprehension {
   reflective?: QuranLessonComprehensionQuestion[];
   analytical?: QuranLessonComprehensionQuestion[];
-  mcqs?: QuranLessonMcq[] | { text?: QuranLessonMcq[] };
+  mcqs?: QuranLessonMcq[] | {
+    text?: QuranLessonMcq[];
+    vocabulary?: QuranLessonMcq[];
+    grammar?: QuranLessonMcq[];
+  };
 }
 
 export interface QuranLesson {
