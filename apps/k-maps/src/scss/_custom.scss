@@ -200,6 +200,30 @@ body {
   font-size: 0.95rem;
   padding: 0.5rem 0.75rem;
   resize: vertical;
+  box-sizing: border-box;
+}
+
+.lesson-editor .comprehension-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.lesson-editor .comprehension-card .comp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem 0;
+}
+
+.lesson-editor .comprehension-card .comp-item textarea {
+  min-height: 3.5rem;
+  line-height: 1.4;
+  max-height: 9rem;
+}
+
+.lesson-editor .comprehension-card .comp-item textarea[rows='1'] {
+  min-height: 2.25rem;
 }
 
 .mcq-option {
