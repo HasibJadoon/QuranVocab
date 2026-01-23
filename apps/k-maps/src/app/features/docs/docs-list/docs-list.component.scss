@@ -34,8 +34,14 @@
 }
 
 .doc-link {
-  color: #0f172a;
+  color: #f8fafc;
   text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.doc-link:hover,
+.doc-link:focus-visible {
+  color: #f9b115;
 }
 
 .doc-link h3 {
