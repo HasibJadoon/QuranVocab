@@ -2,6 +2,7 @@
   max-width: 820px;
   margin: 0 auto;
   padding: 1rem;
+  color: #f8fafc;
 }
 
 .doc-back {
@@ -25,7 +26,7 @@
 .doc-status {
   text-transform: capitalize;
   font-size: 0.85rem;
-  color: rgba(15, 23, 42, 0.6);
+  color: rgba(248, 250, 252, 0.6);
   letter-spacing: 0.05em;
 }
 
@@ -35,13 +36,14 @@
 
 .doc-meta {
   margin: 0;
-  color: rgba(15, 23, 42, 0.65);
+  color: rgba(248, 250, 252, 0.65);
   font-size: 0.9rem;
 }
 
 .doc-body {
   line-height: 1.6;
   margin-top: 1.5rem;
+  color: #e2e8f0;
 }
 
 .doc-body h2,
