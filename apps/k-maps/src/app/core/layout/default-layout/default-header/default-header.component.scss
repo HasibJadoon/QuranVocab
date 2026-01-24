@@ -46,3 +46,45 @@
   border-color: rgba(249, 177, 21, 0.8);
   background: rgba(249, 177, 21, 0.22);
 }
+
+.header-breadcrumb {
+  width: 100%;
+}
+
+.header-breadcrumb-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.header-breadcrumb-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.header-breadcrumb-title h1 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.header-breadcrumb-search {
+  flex: 1 1 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 220px;
+}
+
+.header-breadcrumb-search app-header-search,
+.header-breadcrumb-search .header-search {
+  width: 100%;
+}
+
+.header-breadcrumb-search .header-search-input {
+  min-width: 0;
+}

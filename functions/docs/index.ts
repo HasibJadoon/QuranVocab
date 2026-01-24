@@ -39,7 +39,8 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const url = new URL(ctx.request.url);
     const search = (url.searchParams.get('q') ?? '').trim();
-    const limit = Math.min(200, Math.max(1, toInt(url.searchParams.get('limit'), 50)));
+    const limitParam = url.searchParams.get('limit');
+    const limit = limitParam === null ? -1 : Math.max(1, toInt(limitParam, 50));
     const offset = Math.max(0, toInt(url.searchParams.get('offset'), 0));
     const statusParam = (url.searchParams.get('status') ?? 'published').trim().toLowerCase();
     const statusFilter = statusParam === 'all' ? null : statusParam;
@@ -62,7 +63,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     const docsStmt = ctx.env.DB
       .prepare(
         `
-          SELECT slug, title, tags_json, status, created_at, updated_at
+          SELECT slug, title, parent_slug, sort_order, tags_json, status, created_at, updated_at
           FROM docs
           ${whereSql}
           ORDER BY datetime(updated_at) DESC, id DESC
@@ -86,13 +87,15 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       tags: parseTags(row.tags_json),
       created_at: row.created_at,
       updated_at: row.updated_at,
+      parent_slug: row.parent_slug ?? null,
+      sort_order: row.sort_order ?? 0,
     }));
 
     return new Response(
       JSON.stringify({
         ok: true,
         total: Number(countRes?.total ?? 0),
-        limit,
+        limit: limitParam === null ? null : limit,
         offset,
         results,
       }),

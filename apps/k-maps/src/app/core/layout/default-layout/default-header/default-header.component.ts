@@ -1,6 +1,12 @@
 import { NgFor, NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet } from '@angular/common';
 import { Component, inject, input } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive
+} from '@angular/router';
 import { filter } from 'rxjs/operators';
 
 import {
@@ -81,6 +87,8 @@ export class DefaultHeaderComponent extends HeaderComponent {
   ];
   activeDiscourseFilters = new Set<string>();
   private currentPath = '';
+  headerTitle = 'k-maps';
+  showHeaderTitle = false;
 
   readonly scriptModes = ['Uthmani', 'IndoPak', 'Tajweed'];
   readonly fontStyles = ['Uthmanic Hafs'];
@@ -215,8 +223,12 @@ export class DefaultHeaderComponent extends HeaderComponent {
 
   private updateHeaderContext() {
     const url = this.router.parseUrl(this.currentUrl);
-    const path = url.root.children['primary']?.segments.map((s) => s.path).join('/') ?? '';
+    const segments = url.root.children['primary']?.segments ?? [];
+    const path = segments.map((s) => s.path).join('/') ?? '';
     this.currentPath = `/${path}`;
+    this.showHeaderTitle = segments.length > 1;
+    this.headerTitle =
+      this.resolveActiveTitle(this.router.routerState.snapshot.root) || 'k-maps';
     this.headerQuery = String(url.queryParams['q'] ?? '');
     this.headerTertiaryLabel = '';
     this.headerTertiaryKind = '';
@@ -306,6 +318,16 @@ export class DefaultHeaderComponent extends HeaderComponent {
     this.headerSecondaryLabel = '';
     this.headerSecondaryKind = '';
     this.showDiscourseFilters = false;
+  }
+
+  private resolveActiveTitle(snapshot: ActivatedRouteSnapshot | null): string {
+    if (!snapshot) return '';
+    if (snapshot.firstChild) {
+      const childTitle = this.resolveActiveTitle(snapshot.firstChild);
+      if (childTitle) return childTitle;
+    }
+    const title = snapshot.data?.['title'];
+    return typeof title === 'string' ? title : '';
   }
 
   private triggerRefresh() {

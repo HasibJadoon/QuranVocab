@@ -42,7 +42,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     const row = await ctx.env.DB
       .prepare(
         `
-          SELECT slug, title, body_md, body_json, tags_json, status, created_at, updated_at
+          SELECT slug, title, body_md, body_json, tags_json, status, created_at, updated_at, parent_slug, sort_order
           FROM docs
           WHERE slug = ?
           LIMIT 1
@@ -67,6 +67,8 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       status: row.status,
       created_at: row.created_at,
       updated_at: row.updated_at,
+      parent_slug: row.parent_slug ?? null,
+      sort_order: row.sort_order ?? 0,
     };
 
     return new Response(JSON.stringify({ ok: true, doc }), { headers: jsonHeaders });

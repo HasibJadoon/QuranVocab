@@ -2,15 +2,28 @@
   <div *ngIf="loading" class="docs-loading">Loading docs…</div>
   <p *ngIf="!loading && error" class="docs-error">{{ error }}</p>
 
-  <ul *ngIf="!loading && !error && docs.length" class="doc-items">
-    <li *ngFor="let doc of docs" class="doc-item">
-      <a [routerLink]="['/docs', doc.slug]" class="doc-link">
-        <h6>{{ doc.title }}</h6>
-      </a>
-    </li>
-  </ul>
+  <ng-container *ngIf="!loading && !error">
+    <ul *ngIf="docsTree.length" class="docs-tree">
+      <li *ngFor="let node of docsTree" class="docs-branch">
+          <div class="docs-branch-header">
+            <a
+              class="docs-branch-title"
+              [routerLink]="docLinkSegmentsBySlug(node.slug)">
+              {{ node.label }}
+            </a>
+          </div>
+            <ul *ngIf="node.children.length" class="docs-children">
+              <li *ngFor="let child of node.children">
+                <a class="docs-child-link" [routerLink]="docLinkSegmentsBySlug(child.slug)">
+                  {{ child.doc?.title || child.label }}
+                </a>
+              </li>
+            </ul>
+      </li>
+    </ul>
 
-  <p *ngIf="!loading && !error && !docs.length" class="docs-empty">
-    {{ searchTerm ? 'No docs match \"' + searchTerm + '\".' : 'No docs available yet.' }}
-  </p>
+    <p *ngIf="!docsTree.length" class="docs-empty">
+      {{ searchTerm ? 'No docs match \"' + searchTerm + '\".' : 'No docs available yet.' }}
+    </p>
+  </ng-container>
 </div>

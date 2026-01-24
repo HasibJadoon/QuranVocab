@@ -9,6 +9,8 @@ export interface DocSummary {
   tags: string[];
   created_at: string;
   updated_at: string | null;
+  parent_slug: string | null;
+  sort_order: number | null;
 }
 
 export interface DocDetail extends DocSummary {
@@ -19,7 +21,7 @@ export interface DocDetail extends DocSummary {
 export interface DocListResponse {
   ok: boolean;
   total: number;
-  limit: number;
+  limit: number | null;
   offset: number;
   results: DocSummary[];
 }

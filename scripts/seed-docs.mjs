@@ -12,10 +12,23 @@ if (!fs.existsSync(inputDir)) {
   process.exit(1);
 }
 
-const files = fs
-  .readdirSync(inputDir)
-  .filter((file) => file.toLowerCase().endsWith('.md'))
-  .sort();
+const collectMarkdownFiles = (dir, base = '') => {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const collected = [];
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      collected.push(...collectMarkdownFiles(path.join(dir, entry.name), base ? `${base}/${entry.name}` : entry.name));
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    if (!entry.name.toLowerCase().endsWith('.md')) continue;
+    const relative = base ? `${base}/${entry.name}` : entry.name;
+    collected.push(relative);
+  }
+  return collected;
+};
+
+const files = collectMarkdownFiles(inputDir).sort((a, b) => a.localeCompare(b));
 
 if (!files.length) {
   console.error(`No Markdown files found inside ${inputDir}`);
@@ -69,14 +82,32 @@ const escapeSql = (value) => {
   return value.replace(/'/g, "''");
 };
 
+const slugSortOrder = (slug) => {
+  const match = slug.match(/^(\d+)-/);
+  if (match) return Number(match[1]);
+  return 9999;
+};
+
 const statements = files.map((file) => {
-  const slug = path.basename(file, '.md');
+  const relative = file.replace(/\\/g, '/');
+  let slug = relative.replace(/\.md$/i, '');
+  if (slug.toLowerCase().endsWith('/readme')) {
+    slug = slug.slice(0, -'/readme'.length);
+  }
+  slug = slug.replace(/\/$/, '');
+  if (!slug) {
+    slug = 'index';
+  }
   const raw = fs.readFileSync(path.join(inputDir, file), 'utf8');
   const { metadata, body } = parseDoc(raw);
 
   if (!body) {
     throw new Error(`Empty Markdown body for ${file}`);
   }
+
+  const parentMatch = slug.match(/^(.*)\/[^/]+$/);
+  const parentSlug = parentMatch ? parentMatch[1] : null;
+  const sortOrder = slugSortOrder(slug);
 
   const title = metadata.title || slug;
   const status = ['published', 'draft'].includes(metadata.status)
@@ -89,9 +120,11 @@ const statements = files.map((file) => {
 
   const tagsValue = tagsJson ? `'${escapeSql(tagsJson)}'` : 'NULL';
 
-  return `INSERT INTO docs (slug, title, body_md, tags_json, status, created_at, updated_at)
-VALUES ('${slug}', '${titleSql}', '${bodySql}', ${tagsValue}, '${status}', datetime('now'), datetime('now'))
-ON CONFLICT(slug) DO UPDATE SET title = excluded.title, body_md = excluded.body_md, tags_json = excluded.tags_json, status = excluded.status, updated_at = datetime('now');`;
+  return `INSERT INTO docs (slug, title, body_md, tags_json, status, parent_slug, sort_order, created_at, updated_at)
+VALUES ('${slug}', '${titleSql}', '${bodySql}', ${tagsValue}, '${status}', ${
+    parentSlug ? `'${escapeSql(parentSlug)}'` : 'NULL'
+  }, ${sortOrder}, datetime('now'), datetime('now'))
+ON CONFLICT(slug) DO UPDATE SET title = excluded.title, body_md = excluded.body_md, tags_json = excluded.tags_json, status = excluded.status, parent_slug = excluded.parent_slug, sort_order = excluded.sort_order, updated_at = datetime('now');`;
 });
 
 const output = [
