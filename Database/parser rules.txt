@@ -1,89 +1,237 @@
-{
-  "entity_type": "universal_id_rules",
-  "model_id": "UID_RULES_V1",
-  "normalization": {
-    "arabic_norm": "remove_diacritics; normalize_alef; normalize_ya; normalize_ta_marbuta; remove_tatweel; collapse_spaces",
-    "token_norm": "same_as_arabic_norm"
-  },
-  "hashing": {
-    "algo": "sha256",
-    "encoding": "hex",
-    "prefixes": {
-      "token": "TU_TOK_",
-      "compound": "TU_COMP_",
-      "clause": "TU_CL_",
-      "sentence": "TU_SENT_",
-      "span": "TU_SPAN_"
-    }
-  },
-  "canonical_strings": {
-    "token": "TOK|surface_norm|lemma_norm|word_type",
-    "compound": "COMP|compound_type|child_uids_in_order",
-    "clause": "CL|role_or_subtype|sequence_signature(child_uids+owned_token_uids)",
-    "sentence": "SENT|grammar_ids_sorted|sequence_signature(child_uids+owned_token_uids)",
-    "span": "SPAN|span_kind|grammar_ids_sorted|target_child_uid_or_owned_range_signature"
-  },
-  "sequence_signature": {
-    "rule": "serialize sequence as: T:<token_uid> or C:<child_uid> in slot order joined by ';'"
-  }
-}
+
+Perfect. Here is the UPDATED PARSER CONTRACT (v2) that exactly matches what you just locked in:
+	•	Tokens created once
+	•	Spans created once
+	•	Sentences are recursive trees
+	•	Text lives at token + node level (for audit / UI)
+	•	No duplication, bottom-up only
+
+This is the version you can hand directly to an AI parser.
+
+⸻
+
+✅ Canonical Recursive Parser Contract — v2 (LOCKED)
+
+⸻
+
+0️⃣ Absolute Ordering (Non-Negotiable)
+
+TOKENS  →  SPANS  →  SENTENCE NODES  →  ROOT SENTENCE
+
+	•	Parser MUST fail if this order is violated
+	•	No structure may reference something not yet created
+
+⸻
+
+1️⃣ TOKEN CREATION RULES
+
+Definition
+
+Token = smallest indivisible lexical unit (كلمة)
+	•	Prefixes / suffixes MUST be split when grammatically relevant
+(ب + ما, ل + من, على + ك, قبل + ه)
+
+Token schema (mandatory)
 
 {
-  "entity_type": "universal_id_rules",
-  "model_id": "UID_RULES_V1",
-  "normalization": {
-    "arabic_norm": "remove_diacritics; normalize_alef; normalize_ya; normalize_ta_marbuta; remove_tatweel; collapse_spaces",
-    "token_norm": "same_as_arabic_norm"
-  },
-  "hashing": {
-    "algo": "sha256",
-    "encoding": "hex",
-    "prefixes": {
-      "token": "TU_TOK_",
-      "compound": "TU_COMP_",
-      "clause": "TU_CL_",
-      "sentence": "TU_SENT_",
-      "span": "TU_SPAN_"
-    }
-  },
-  "canonical_strings": {
-    "token": "TOK|surface_norm|lemma_norm|word_type",
-    "compound": "COMP|compound_type|child_uids_in_order",
-    "clause": "CL|role_or_subtype|sequence_signature(child_uids+owned_token_uids)",
-    "sentence": "SENT|grammar_ids_sorted|sequence_signature(child_uids+owned_token_uids)",
-    "span": "SPAN|span_kind|grammar_ids_sorted|target_child_uid_or_owned_range_signature"
-  },
-  "sequence_signature": {
-    "rule": "serialize sequence as: T:<token_uid> or C:<child_uid> in slot order joined by ';'"
-  }
+  "token_uid": "TU_...",
+  "surface_ar": "...",
+  "surface_ar_norm": "...",
+  "lemma_ar": "...",
+  "lemma_ar_norm": "...",
+  "word_type": "WORD_NOUN | WORD_VERB | WORD_PARTICLE | WORD_INTERJECTION"
 }
 
-You are an Arabic recursive parser. Output ONLY valid JSON.
+Rules
+	•	✔ Token created ONCE globally
+	•	✔ Token NEVER duplicated
+	•	❌ Token NEVER embeds grammar
+	•	❌ Token NEVER embeds span or sentence logic
 
-CONSTRAINTS:
-- Use ONLY these catalogs: unit_catalog, word_type_catalog, compound_catalog, grammar_catalog.
-- Bottom-up parsing only: TOKEN -> UNIT_WORD -> UNIT_COMPOUND -> UNIT_CLAUSE -> UNIT_SENTENCE.
-- No token duplication across nodes.
-- Parent owns only tokens not owned by children.
-- Every node must include text_ar and text_ar_norm.
-- Connectors (و/ف/إن/كان...) stay in the parent, and the introduced clause is a child.
-- Compounds are never sentences.
-- Promotion rules A/B/C must be enforced exactly.
-- Include spans on any node if helpful, but spans must not reuse child-owned tokens.
+⸻
 
-INPUT:
-- verse_ref: {surah:X, ayah:Y, unit_id:"..."}
-- text_ar: "..."
-- translation: "..."
+2️⃣ SPAN CREATION RULES
 
-OUTPUT:
-- entity_type: sentence_tree_occurrence
-- model_id: SENT_TREE_V2_NO_DUP
-- status: draft
-- ref, text_ar, text_ar_norm, translation
-- tree root node + nodes[] (children)
-- tokens must include: surface_ar, lemma_ar, word_type, t_u (nullable)
-- universal ids placeholders allowed (null) but structure must be correct.
+Definition
 
-Now parse.
+Span = grammatical compound, NOT a sentence
+
+Span = token_uids[] only
+
+Allowed span types (from catalog)
+	•	COMP_JAR_MAJRUR
+	•	COMP_IDAFI
+	•	COMP_WASFI
+	•	COMP_ZARF
+	•	COMP_HARFI
+
+Span schema
+
+{
+  "span_uid": "TU_SPN_...",
+  "span_type": "COMP_...",
+  "token_uids": ["TU_TOK_..."],
+  "grammar_ids": ["GRAM_..."]
+}
+
+Rules
+	•	✔ Span references ONLY token_uids
+	•	✔ Span created ONCE globally
+	•	❌ Span NEVER contains text
+	•	❌ Span NEVER promoted to sentence
+
+⸻
+
+3️⃣ SENTENCE NODE CREATION (RECURSIVE CORE)
+
+Definition
+
+Sentence node = grammatical meaning unit
+
+Sentence nodes can be:
+	•	UNIT_SENTENCE (complete)
+	•	UNIT_CLAUSE (subordinate)
+
+Sentence node schema
+
+{
+  "node_id": "N_...",
+  "node_kind": "UNIT_SENTENCE | UNIT_CLAUSE",
+  "sentence_type": "simple | complex",
+  "grammar_ids": ["GRAM_..."],
+
+  "text_ar": "...",
+  "text_ar_norm": "...",
+
+  "owned_token_uids": [],
+  "owned_span_uids": [],
+  "children": []
+}
+
+
+⸻
+
+4️⃣ OWNERSHIP RULE (CRITICAL)
+
+A node owns ONLY what is not owned by its children
+
+Therefore:
+	•	Tokens/spans used inside a child node
+❌ MUST NOT appear in parent owned_*
+	•	Parent only owns:
+	•	its own verbs / connectors
+	•	its own particles (و، إن، لام…)
+	•	spans not delegated to children
+
+This guarantees:
+	•	No duplication
+	•	Clean upward meaning assembly
+
+⸻
+
+5️⃣ SENTENCE PROMOTION RULES (UNCHANGED, STRICT)
+
+Rule A — Verbal Sentence
+
+Promote UNIT_CLAUSE → UNIT_SENTENCE if:
+	•	Contains WORD_VERB
+	•	Verb has implicit OR explicit فاعل
+
+→ assign GRAM_JUMLA_FIILIYYA
+
+Rule B — Nominal Sentence
+
+Promote if:
+	•	GRAM_MUBTADA present
+	•	GRAM_KHABAR or GRAM_KHABAR_JUMLA present
+
+→ assign GRAM_JUMLA_ISMIYYA
+
+Rule C — Never Promote
+
+❌ UNIT_COMPOUND
+❌ WORD_PARTICLE alone
+❌ Connector without clause
+❌ Relative particle without صلة
+
+⸻
+
+6️⃣ CONNECTOR HANDLING (IMPORTANT UPDATE)
+
+Connectors are TOKENS, not spans
+
+Token	Grammar
+و	GRAM_ATF / GRAM_ISTINAF
+إن	GRAM_INNA
+كان	GRAM_KANA
+ل	GRAM_TAWKID
+
+Rule
+	•	Connector token belongs to parent sentence
+	•	Introduced clause is a child node
+
+Example:
+
+[و] + (إن كنت...)
+
+	•	و → owned_token of parent
+	•	إن كنت… → child sentence node
+
+⸻
+
+7️⃣ TEXT RULE (NEW & IMPORTANT)
+
+Text is allowed ONLY at two levels:
+
+	1.	TOKEN (surface form)
+	2.	SENTENCE NODE (assembled view)
+
+Why sentence text is allowed
+	•	UI rendering
+	•	Debugging
+	•	Tafsir alignment
+	•	Human audit
+
+But:
+
+❌ Text is NEVER authoritative
+✔ Structure is authoritative
+
+⸻
+
+8️⃣ ROOT SENTENCE RULE
+	•	Exactly ONE root UNIT_SENTENCE
+	•	Root may be nominal or verbal
+	•	Root may have multiple children
+	•	Root MUST represent a complete thought
+
+⸻
+
+9️⃣ VALIDATION (HARD FAIL IF BROKEN)
+
+{
+  "all_tokens_unique": true,
+  "all_spans_unique": true,
+  "all_sentence_nodes_unique": true,
+  "token_not_reused_across_levels": true,
+  "each_sentence_has_single_root": true,
+  "subtypes_used_are_in_catalog": true
+}
+
+
+⸻
+
+🧠 Final Mental Model (Parser Must Obey)
+
+Token = word
+Span = grammar glue
+Sentence = meaning
+Tree = rhetoric
+
+This parser is now:
+	•	🔒 deterministic
+	•	🔁 reusable
+	•	🤖 AI-safe
+	•	📚 classical-Arabic correct
+	•	🧩 expandable to tafsir / balagha
 
