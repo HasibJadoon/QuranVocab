@@ -1,0 +1,240 @@
+Excellent — this catalog is strong, orthodox, and future-proof.
+What you need now is a clean, executable parser contract that uses exactly these catalogs (no extra theory, no ambiguity).
+
+Below is a tight, AI-passable rule set that plugs directly into what you posted.
+
+⸻
+
+✅ Canonical Recursive Parser Rules
+
+(strictly aligned to your catalogs)
+
+⸻
+
+1️⃣ UNIT HIERARCHY (non-negotiable)
+
+TOKEN → UNIT_WORD → UNIT_COMPOUND → UNIT_CLAUSE → UNIT_SENTENCE
+
+	•	Bottom-up only
+	•	No token duplication across units
+	•	A higher unit owns only what is not owned by children
+
+⸻
+
+2️⃣ UNIT DEFINITIONS (exactly as your catalog)
+
+🔹 UNIT_WORD — كلمة
+
+A single lexical item.
+
+Word types (must use catalog):
+	•	WORD_NOUN
+	•	WORD_VERB
+	•	WORD_PARTICLE
+	•	WORD_INTERJECTION
+
+✅ Examples
+	•	نحن → WORD_NOUN
+	•	نقص → WORD_VERB
+	•	أوحى → WORD_VERB
+	•	إن → WORD_PARTICLE
+
+⸻
+
+🔹 UNIT_COMPOUND — مركب
+
+A grammatical grouping that is NOT a sentence.
+
+Allowed compound types (only from your catalog):
+	•	COMP_IDAFI → مضاف + مضاف إليه
+	•	COMP_WASFI → موصوف + صفة
+	•	COMP_JAR_MAJRUR → حرف جر + اسم
+	•	COMP_ZARF → ظرف + متعلّق
+	•	COMP_HARFI → حرف + متعلّق
+
+❌ A compound can NEVER be promoted to UNIT_SENTENCE.
+
+✅ Examples
+	•	عليك → COMP_JAR_MAJRUR
+	•	أحسن القصص → COMP_IDAFI
+	•	قبله → COMP_IDAFI (قبل + ه)
+
+⸻
+
+🔹 UNIT_CLAUSE — جملة صغرى / شبه جملة
+
+A subordinate grammatical structure that may contain:
+	•	a verb
+	•	or a compound
+	•	or both
+
+Clause grammar must be tagged using grammar_catalog.
+
+Typical clauses:
+	•	صلة الموصول
+	•	حال
+	•	تعليل
+	•	شرط
+	•	ظرفيّة
+	•	مقول قول
+
+✅ Clause may be complete grammatically
+❌ Clause is not independent rhetorically
+
+⸻
+
+🔹 UNIT_SENTENCE — جملة
+
+A complete thought unit.
+
+Must be classified as:
+	•	GRAM_JUMLA_FIILIYYA
+	•	OR GRAM_JUMLA_ISMIYYA
+
+⸻
+
+3️⃣ SENTENCE PROMOTION RULES (CRITICAL)
+
+✅ Rule A — Verbal Sentence (جملة فعلية)
+
+IF
+  a UNIT_CLAUSE contains WORD_VERB
+AND
+  (
+    the verb is conjugated with an implicit subject
+    OR an explicit فاعل exists
+  )
+THEN
+  promote to UNIT_SENTENCE
+  assign GRAM_JUMLA_FIILIYYA
+
+✅ Examples
+	•	أوحينا → sentence
+	•	أوحينا إليك → sentence
+	•	نقص عليك أحسن القصص → sentence
+
+⸻
+
+✅ Rule B — Nominal Sentence (جملة اسمية)
+
+IF
+  clause contains:
+    GRAM_MUBTADA
+AND
+  clause contains:
+    GRAM_KHABAR or GRAM_KHABAR_JUMLA
+THEN
+  promote to UNIT_SENTENCE
+  assign GRAM_JUMLA_ISMIYYA
+
+✅ Example
+	•	نحن + (نقص عليك أحسن القصص)
+
+⸻
+
+❌ Rule C — Never a Sentence
+
+The following must never be UNIT_SENTENCE:
+	•	UNIT_COMPOUND
+	•	WORD_PARTICLE alone
+	•	Connector without clause
+	•	Relative particle without صلة
+
+Examples:
+	•	بما ❌
+	•	عليك ❌
+	•	أحسن القصص ❌
+
+⸻
+
+4️⃣ COMPLEX SENTENCE RULE
+
+A UNIT_SENTENCE is complex if it contains any of:
+	•	UNIT_CLAUSE children
+	•	GRAM_HAAL
+	•	GRAM_TAALIL
+	•	GRAM_ISTINAF
+	•	GRAM_INNA / GRAM_KANA
+	•	GRAM_SHART
+
+"classification": {
+  "simplicity": "complex",
+  "grammar_ids": [
+    "GRAM_JUMLA_FIILIYYA",
+    "GRAM_TAALIL",
+    "GRAM_HAAL"
+  ]
+}
+
+
+⸻
+
+5️⃣ CONNECTORS (control flow, not content)
+
+Connectors must be tokens and assigned grammar IDs:
+
+Token	Grammar ID
+و	GRAM_ATF / GRAM_ISTINAF
+ف	GRAM_ATF
+إن	GRAM_INNA
+كان	GRAM_KANA
+
+Rule:
+	•	Connector belongs to the parent sentence
+	•	The clause it introduces is a child UNIT_CLAUSE
+
+⸻
+
+6️⃣ RECURSIVE PARSING ALGORITHM (AI-SAFE)
+
+Step 1 — Tokenize
+	•	Normalize text
+	•	Identify WORD_VERB / WORD_NOUN / WORD_PARTICLE
+
+Step 2 — Build UNIT_COMPOUND
+	•	Detect jar-majrur, idafa, wasfi
+	•	Assign compound type
+
+Step 3 — Build UNIT_CLAUSE (smallest first)
+	•	Detect minimal verbal cores (e.g. أوحينا)
+	•	Detect kana / inna frames
+	•	Attach compounds inside clause
+
+Step 4 — Promote UNIT_SENTENCE
+	•	Apply promotion rules A / B
+	•	Assign grammar IDs
+
+Step 5 — Assemble Root Sentence
+	•	Parent sentence owns only:
+	•	its own words
+	•	connectors
+	•	child clause references
+
+⸻
+
+7️⃣ HARD VALIDATION RULES (you already listed — correct)
+
+✔ all_sentence_ids_unique
+✔ each_sentence_has_single_root_clause
+✔ token_span_integrity_expected
+✔ subtypes_used_are_in_catalog
+
+These are exactly right. Do not loosen them.
+
+⸻
+
+🧠 Final Architectural Truth
+
+Grammar is structure, not text.
+Text lives only at leaves.
+Meaning emerges upward.
+
+You now have a compiler-grade Arabic grammar system.
+
+If you want next, I can:
+	•	✔ apply this to 12:3 fully
+	•	✔ generate canonical sentence JSON per node
+	•	✔ define hash rules for universal IDs
+	•	✔ help you design the AI prompt template
+
+Just tell me the next step.
