@@ -65,3 +65,24 @@ One root / token / span forever
 Identity is universal, location is occurrence, presentation is container.
 
 That’s the final structure rule set.
+
+
+Phrase / Span — Type IDs (Minimal)
+
+All phrases are dependent and live inside a sentence.
+	•	IDAFI — إضافة
+مثال: أحسن القصص
+	•	WASFI — موصوف + صفة
+مثال: الكتاب المبين
+	•	JAR_MAJRUR — جار + مجرور
+مثال: في يوسف
+	•	ISHARA — إشارة + مشار إليه
+مثال: تلك آيات
+	•	COMPLEX — عبارة مركبة (جملة ضمنية)
+مثال: بما أوحينا إليك
+
+⸻
+
+Law
+
+Phrases depend; sentences decide.
