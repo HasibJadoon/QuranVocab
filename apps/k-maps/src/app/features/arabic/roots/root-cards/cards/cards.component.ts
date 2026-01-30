@@ -12,7 +12,7 @@ import { RootCard } from '../../../../../shared/models/arabic/root-card.model';
   styleUrls: ['./cards.component.scss'],
 })
 export class CardsComponent implements OnChanges {
-  @Input() id?: number; // REQUIRED for save
+  @Input() id?: string; // REQUIRED for save
   @Input() root = '';
   @Input() family = '';
 
@@ -25,7 +25,7 @@ export class CardsComponent implements OnChanges {
   @Input() initialJsonMode: 'view' | 'edit' = 'view';
 
   @Output() close = new EventEmitter<void>();
-  @Output() saveJson = new EventEmitter<{ id: number; cardsJson: string }>();
+  @Output() saveJson = new EventEmitter<{ id: string; cardsJson: string }>();
 
   tab: 'preview' | 'json' = 'preview';
   jsonMode: 'view' | 'edit' = 'view';
@@ -75,9 +75,9 @@ export class CardsComponent implements OnChanges {
   }
 
   onSaveClicked() {
-    const id = Number(this.id);
+    const id = (this.id ?? '').trim();
 
-    if (!Number.isFinite(id) || id <= 0) {
+    if (!id) {
       this.jsonParseError =
         'Missing/invalid id. Fix: ensure /lexicon_roots returns "id" and pass [id]="selectedRoot?.id".';
       this.tab = 'json';

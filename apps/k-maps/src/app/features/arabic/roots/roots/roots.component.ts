@@ -209,10 +209,7 @@ export class RootsComponent implements OnInit, OnDestroy {
     this.cardsTab = mode === 'edit' ? 'json' : 'preview';
     this.cardsJsonMode = mode;
 
-    this.selectedCardsJson =
-      typeof r.cards === 'string'
-        ? r.cards
-        : JSON.stringify(r.cards ?? [], null, 2);
+    this.selectedCardsJson = JSON.stringify(r.cards ?? [], null, 2);
 
     try {
     this.selectedCards = this.parseCards(this.selectedCardsJson);
@@ -363,13 +360,13 @@ export class RootsComponent implements OnInit, OnDestroy {
   // save cards
   // =====================================================
 
-  async saveCardsJson(payload: { id: number; cardsJson: string }) {
+  async saveCardsJson(payload: { id: string; cardsJson: string }) {
     this.savingCards = true;
     this.cardsError = '';
 
     try {
-      const id = Number(payload.id);
-      if (!Number.isFinite(id) || id <= 0) {
+      const id = payload.id.trim();
+      if (!id) {
         throw new Error('Invalid id (missing id in table results?)');
       }
 
@@ -398,7 +395,7 @@ export class RootsComponent implements OnInit, OnDestroy {
         throw new Error(data?.error ?? raw ?? `HTTP ${res.status}`);
       }
 
-      if (this.selectedRoot) this.selectedRoot.cards = pretty;
+      if (this.selectedRoot) this.selectedRoot.cards = parsed;
 
       this.selectedCardsJson = pretty;
       this.selectedCards = this.parseCards(pretty);
@@ -407,7 +404,7 @@ export class RootsComponent implements OnInit, OnDestroy {
       if (idx >= 0) {
         this.rows[idx] = {
           ...this.rows[idx],
-          cards: pretty,
+          cards: parsed,
           status: 'Edited',
         };
       }

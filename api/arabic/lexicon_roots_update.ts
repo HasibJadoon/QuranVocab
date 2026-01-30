@@ -7,8 +7,9 @@ interface Env {
 }
 
 type Body = {
-  id: number;
-  cards: string | unknown[]; // allow string OR array
+  id: string;
+  cards: string | unknown[];
+  status?: string;
 };
 
 export const onRequestPut: PagesFunction<Env> = async (ctx) => {
@@ -41,10 +42,10 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       );
     }
 
-    const id = Number(body.id);
-    if (!Number.isFinite(id) || id <= 0) {
+    const id = String(body.id ?? '').trim();
+    if (!id) {
       return Response.json(
-        { ok: false, error: 'Expected numeric id' },
+        { ok: false, error: 'Missing id' },
         { status: 400 }
       );
     }
@@ -86,18 +87,20 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
     const cardsToStore = JSON.stringify(cardsArray, null, 2);
 
     // ---------------- UPDATE ----------------
+    const status = typeof body.status === 'string' ? body.status.trim() : 'Edited';
+
     const res = await ctx.env.DB
       .prepare(
         `
-        UPDATE roots
+        UPDATE ar_u_roots
         SET
           cards_json = ?,
-          status = 'Edited',
+          status = ?,
           updated_at = datetime('now')
-        WHERE id = ?
+        WHERE ar_u_root = ?
       `
       )
-      .bind(cardsToStore, id)
+      .bind(cardsToStore, status, id)
       .run();
 
     // @ts-ignore
