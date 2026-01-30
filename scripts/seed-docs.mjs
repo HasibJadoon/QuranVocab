@@ -5,7 +5,14 @@ import path from 'node:path';
 
 const baseDir = process.cwd();
 const inputDir = path.join(baseDir, 'docs', 'wiki');
-const outputPath = path.join(baseDir, 'database', 'migrations', 'seed-docs.sql');
+const targetTable = process.argv[2] ?? 'docs';
+const sanitizedTable = targetTable.replace(/_/g, '-');
+const outputPath = path.join(
+  baseDir,
+  'database',
+  'migrations',
+  `seed-${sanitizedTable}.sql`
+);
 
 if (!fs.existsSync(inputDir)) {
   console.error(`Docs folder not found: ${inputDir}`);
@@ -120,7 +127,7 @@ const statements = files.map((file) => {
 
   const tagsValue = tagsJson ? `'${escapeSql(tagsJson)}'` : 'NULL';
 
-  return `INSERT INTO docs (slug, title, body_md, tags_json, status, parent_slug, sort_order, created_at, updated_at)
+  return `INSERT INTO ${targetTable} (slug, title, body_md, tags_json, status, parent_slug, sort_order, created_at, updated_at)
 VALUES ('${slug}', '${titleSql}', '${bodySql}', ${tagsValue}, '${status}', ${
     parentSlug ? `'${escapeSql(parentSlug)}'` : 'NULL'
   }, ${sortOrder}, datetime('now'), datetime('now'))
@@ -128,7 +135,7 @@ ON CONFLICT(slug) DO UPDATE SET title = excluded.title, body_md = excluded.body_
 });
 
 const output = [
-  '-- Auto-generated docs seed from scripts/seed-docs.mjs',
+  `-- Auto-generated seed for table ${targetTable} from scripts/seed-docs.mjs`,
   `-- Source directory: ${inputDir}`,
   '',
   ...statements,
