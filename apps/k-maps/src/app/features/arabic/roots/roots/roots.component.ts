@@ -156,6 +156,56 @@ export class RootsComponent implements OnInit, OnDestroy {
   // load roots
   // =====================================================
 
+  private rowsContainRoot(term: string) {
+    const normalized = term.trim();
+    if (!normalized) return true;
+    const lower = normalized.toLowerCase();
+    return this.rows.some((row) => {
+      if (!row) return false;
+      if (row.root === normalized) return true;
+      const rootNorm = (row.root_norm ?? '').toLowerCase();
+      if (rootNorm && rootNorm === lower) return true;
+      const searchKeys = (row.search_keys_norm ?? '').toLowerCase();
+      return searchKeys.includes(lower);
+    });
+  }
+
+  private async fetchExactRoot(term: string): Promise<RootRow | null> {
+    if (!term.trim()) return null;
+    try {
+      const params = new URLSearchParams({ root: term.trim(), limit: '1' });
+      const res = await fetch(`${this.listEndpoint}?${params.toString()}`, {
+        signal: this.abort?.signal,
+        headers: {
+          ...this.authHeaders(),
+        },
+      });
+
+      if (res.status === 401) this.handle401();
+      if (!res.ok) return null;
+
+      const data = (await res.json()) as RootsApiResponse;
+      if (data?.ok && Array.isArray(data.results) && data.results.length) {
+        return data.results[0];
+      }
+      return null;
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        console.error('Root lookup failed', err);
+      }
+      return null;
+    }
+  }
+
+  private async ensureExactRootPresent(term: string) {
+    const trimmed = term.trim();
+    if (!trimmed || this.rowsContainRoot(trimmed)) return;
+    const found = await this.fetchExactRoot(trimmed);
+    if (found && !this.rowsContainRoot(trimmed)) {
+      this.rows = [found, ...this.rows];
+    }
+  }
+
   async load() {
     this.loading = true;
     this.error = '';
@@ -164,8 +214,9 @@ export class RootsComponent implements OnInit, OnDestroy {
     this.abort = new AbortController();
 
     try {
+      const searchTerm = this.q.trim();
       const params = new URLSearchParams();
-      if (this.q.trim()) params.set('q', this.q.trim());
+      if (searchTerm) params.set('q', searchTerm);
       params.set('limit', String(this.limit));
 
       const res = await fetch(
@@ -188,6 +239,9 @@ export class RootsComponent implements OnInit, OnDestroy {
       }
 
       this.rows = Array.isArray(data?.results) ? data.results : [];
+      if (searchTerm) {
+        await this.ensureExactRootPresent(searchTerm);
+      }
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
         this.error = e?.message ?? 'Failed to load roots';

@@ -1,10 +1,19 @@
 import { requireAuth } from '../_utils/auth';
+import { canonicalize, ArURootPayload, upsertArURoot } from '../_utils/universal';
 
 interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
   JWT_SECRET: string;
 }
+
+type RootCard = {
+  card_id: string;
+  card_type: string;
+  front: string;
+  back: string;
+  tags: string[];
+};
 
 const jsonHeaders = {
   'content-type': 'application/json; charset=utf-8',
@@ -19,6 +28,15 @@ function safeJsonParse<T>(value: string | null | undefined): T | null {
   } catch {
     return null;
   }
+}
+
+function mapArURoot(row: any) {
+  return {
+    ...row,
+    cards: safeJsonParse<RootCard[]>(row.cards_json) ?? [],
+    alt_latn_json: safeJsonParse<string[]>(row.alt_latn_json),
+    romanization_sources_json: safeJsonParse<Record<string, unknown>>(row.romanization_sources_json),
+  };
 }
 
 function parseArrayField(value: unknown): unknown[] | null {
@@ -95,6 +113,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     }
 
     const url = new URL(ctx.request.url);
+    const rootParam = (url.searchParams.get('root') ?? '').trim();
     const q = (url.searchParams.get('q') ?? '').trim();
 
     // ---------------- pagination ----------------
@@ -119,46 +138,80 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const selectSql = `
       SELECT
-        id,
+        ar_u_root AS id,
+        canonical_input,
         root,
         family,
         root_latn,
         root_norm,
         alt_latn_json,
         romanization_sources_json,
+        cards_json,
         search_keys_norm,
-        cards_json AS cards,
         status,
         difficulty,
         frequency,
+        extracted_at,
+        arabic_trilateral,
+        english_trilateral,
         created_at,
-        updated_at,
-        extracted_at
-      FROM roots
+        updated_at
+      FROM ar_u_roots
     `;
+
+    if (rootParam) {
+      const canonicalRoot = canonicalize(rootParam);
+      const pattern = `%${rootParam}%`;
+      const exactLimit = Math.max(1, Math.min(limit, 20));
+
+      const { results } = await ctx.env.DB
+        .prepare(
+          `
+          ${selectSql}
+          WHERE root = ?1 OR root_norm = ?2 OR search_keys_norm LIKE ?3
+          ORDER BY root ASC, family ASC
+          LIMIT ?4
+        `
+        )
+        .bind(rootParam, canonicalRoot, pattern, exactLimit)
+        .all();
+
+      const rows = (results ?? []).map(mapArURoot);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          total: rows.length,
+          hasMore: rows.length === exactLimit,
+          mode: 'exact',
+          root: rootParam,
+          results: rows,
+        }),
+        { headers: jsonHeaders }
+      );
+    }
 
     if (q) {
       const like = `%${q}%`;
 
       countStmt = ctx.env.DB.prepare(
-        `
-          SELECT COUNT(*) AS total
-          FROM roots
-          WHERE root LIKE ?1 OR family LIKE ?1 OR search_keys_norm LIKE ?1
-        `
+      `
+        SELECT COUNT(*) AS total
+        FROM ar_u_roots
+        WHERE root LIKE ?1 OR family LIKE ?1 OR search_keys_norm LIKE ?1
+      `
       ).bind(like);
 
       dataStmt = ctx.env.DB.prepare(
         `
-          ${selectSql}
-          WHERE root LIKE ?1 OR family LIKE ?1 OR search_keys_norm LIKE ?1
+      ${selectSql}
+      WHERE root LIKE ?1 OR family LIKE ?1 OR search_keys_norm LIKE ?1
           ORDER BY root ASC, family ASC
           LIMIT ?2 OFFSET ?3
         `
       ).bind(like, limit, offset);
     } else {
       countStmt = ctx.env.DB.prepare(
-        `SELECT COUNT(*) AS total FROM roots`
+      `SELECT COUNT(*) AS total FROM ar_u_roots`
       );
 
       dataStmt = ctx.env.DB.prepare(
@@ -175,11 +228,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const { results } = await dataStmt.all();
 
-    const rows = (results ?? []).map((row) => ({
-      ...row,
-      alt_latn_json: safeJsonParse<string[]>(row.alt_latn_json),
-      romanization_sources_json: safeJsonParse<Record<string, unknown>>(row.romanization_sources_json),
-    }));
+    const rows = (results ?? []).map(mapArURoot);
 
     const returned = rows.length;
     const nextOffset = offset + returned;
@@ -264,61 +313,35 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     }
 
     const cards = Array.isArray(body?.cards) ? body.cards : [];
-    const cardsJson = JSON.stringify(cards, null, 2);
 
     const rootLatn = typeof body?.root_latn === 'string' ? body.root_latn.trim() : null;
-    const rootNorm = typeof body?.root_norm === 'string' ? body.root_norm.trim() : null;
+    const rootNorm = typeof body?.root_norm === 'string' ? body.root_norm.trim() : root;
     const altLatn = parseArrayField(body?.alt_latn_json);
     const romanizationSources = parseObjectField(body?.romanization_sources_json);
-    const altLatnJson = altLatn && altLatn.length ? JSON.stringify(altLatn, null, 2) : null;
-    const romanizationSourcesJson =
-      romanizationSources && Object.keys(romanizationSources).length
-        ? JSON.stringify(romanizationSources, null, 2)
-        : null;
     const searchKeysCandidate =
       typeof body?.search_keys_norm === 'string' ? body.search_keys_norm.trim() : '';
     const searchKeys =
       searchKeysCandidate ||
       generateSearchKeys(root, family, rootLatn, rootNorm, altLatn);
 
-    const res = await ctx.env.DB
-      .prepare(
-        `
-        INSERT INTO roots (
-          root,
-          family,
-          root_latn,
-          root_norm,
-          alt_latn_json,
-          romanization_sources_json,
-          cards_json,
-          search_keys_norm,
-          status,
-          difficulty,
-          frequency,
-          created_at,
-          updated_at
-        )
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, datetime('now'), datetime('now'))
-      `
-      )
-      .bind(
-        root,
-        family,
-        rootLatn,
-        rootNorm,
-        altLatnJson,
-        romanizationSourcesJson,
-        cardsJson,
-        searchKeys,
-        status,
-        difficulty,
-        frequency
-      )
-      .run();
+    const payload: ArURootPayload = {
+      root,
+      family,
+      rootLatn,
+      rootNorm,
+      arabicTrilateral: typeof body?.arabic_trilateral === 'string' ? body.arabic_trilateral.trim() : null,
+      englishTrilateral: typeof body?.english_trilateral === 'string' ? body.english_trilateral.trim() : null,
+      altLatn: altLatn ?? null,
+      searchKeys,
+      cards,
+      status,
+      difficulty,
+      frequency,
+      extractedAt: typeof body?.extracted_at === 'string' ? body.extracted_at.trim() : null,
+      meta: parseObjectField(body?.meta_json),
+    };
 
-    // @ts-ignore
-    const id = Number(res?.meta?.last_row_id ?? 0);
+    const { ar_u_root: id } = await upsertArURoot(ctx.env, payload);
 
     return new Response(
       JSON.stringify({ ok: true, id }),

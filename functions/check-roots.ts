@@ -40,7 +40,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   const tuples = unique.map(() => "(?, ?)").join(",");
   const sql = `
     SELECT DISTINCT root, family
-    FROM roots
+    FROM ar_u_roots
     WHERE (root, family) IN (${tuples})
   `;
 

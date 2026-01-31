@@ -1,5 +1,5 @@
 import { requireAuth } from '../_utils/auth';
-import { ArURootPayload, upsertArURoot } from '../_utils/universal';
+import { canonicalize, ArURootPayload, upsertArURoot } from '../_utils/universal';
 
 interface Env {
   DB: D1Database;
@@ -28,6 +28,15 @@ function safeJsonParse<T>(value: string | null | undefined): T | null {
   } catch {
     return null;
   }
+}
+
+function mapArURoot(row: any) {
+  return {
+    ...row,
+    cards: safeJsonParse<RootCard[]>(row.cards_json) ?? [],
+    alt_latn_json: safeJsonParse<string[]>(row.alt_latn_json),
+    romanization_sources_json: safeJsonParse<Record<string, unknown>>(row.romanization_sources_json),
+  };
 }
 
 function parseArrayField(value: unknown): unknown[] | null {
@@ -104,6 +113,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     }
 
     const url = new URL(ctx.request.url);
+    const rootParam = (url.searchParams.get('root') ?? '').trim();
     const q = (url.searchParams.get('q') ?? '').trim();
 
     // ---------------- pagination ----------------
@@ -149,6 +159,37 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       FROM ar_u_roots
     `;
 
+    if (rootParam) {
+      const canonicalRoot = canonicalize(rootParam);
+      const pattern = `%${rootParam}%`;
+      const exactLimit = Math.max(1, Math.min(limit, 20));
+
+      const { results } = await ctx.env.DB
+        .prepare(
+          `
+          ${selectSql}
+          WHERE root = ?1 OR root_norm = ?2 OR search_keys_norm LIKE ?3
+          ORDER BY root ASC, family ASC
+          LIMIT ?4
+        `
+        )
+        .bind(rootParam, canonicalRoot, pattern, exactLimit)
+        .all();
+
+      const rows = (results ?? []).map(mapArURoot);
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          total: rows.length,
+          hasMore: rows.length === exactLimit,
+          mode: 'exact',
+          root: rootParam,
+          results: rows,
+        }),
+        { headers: jsonHeaders }
+      );
+    }
+
     if (q) {
       const like = `%${q}%`;
 
@@ -187,12 +228,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const { results } = await dataStmt.all();
 
-    const rows = (results ?? []).map((row) => ({
-      ...row,
-      cards: safeJsonParse<RootCard[]>(row.cards_json) ?? [],
-      alt_latn_json: safeJsonParse<string[]>(row.alt_latn_json),
-      romanization_sources_json: safeJsonParse<Record<string, unknown>>(row.romanization_sources_json),
-    }));
+    const rows = (results ?? []).map(mapArURoot);
 
     const returned = rows.length;
     const nextOffset = offset + returned;
