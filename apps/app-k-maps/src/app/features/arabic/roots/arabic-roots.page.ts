@@ -21,6 +21,7 @@ export class ArabicRootsPage implements OnInit {
   loading = false;
   error = '';
   searchTerm = '';
+  private lastRemoteQuery = '';
 
   private readonly rootsService = inject(ArabicRootsService);
   private readonly modalCtrl = inject(ModalController);
@@ -145,10 +146,11 @@ export class ArabicRootsPage implements OnInit {
     this.searchTerm = term;
     if (!normalized) {
       this.filtered = [...this.roots];
+      this.lastRemoteQuery = '';
       return;
     }
 
-    this.filtered = this.roots.filter((item) => {
+    const matched = this.roots.filter((item) => {
       const root = item.root?.toLowerCase() ?? '';
       const family = item.family?.toLowerCase() ?? '';
       const rootLatn = item.root_latn?.toLowerCase() ?? '';
@@ -162,5 +164,49 @@ export class ArabicRootsPage implements OnInit {
         searchKeys.includes(normalized)
       );
     });
+
+    this.filtered = matched;
+    if (!matched.length && normalized !== this.lastRemoteQuery) {
+      this.fetchRootFromServer(term.trim(), normalized);
+    }
+  }
+
+  private fetchRootFromServer(term: string, normalized: string): void {
+    if (!term) {
+      return;
+    }
+    this.lastRemoteQuery = normalized;
+
+    this.rootsService.list({ root: term }).subscribe({
+      next: (response) => {
+        const remoteResults = Array.isArray(response?.results) ? response.results : [];
+        if (!remoteResults.length) {
+          return;
+        }
+        this.mergeRoots(remoteResults);
+        this.filtered = remoteResults;
+      },
+      error: () => {
+        // fail silently for now; the template already handles empty results
+      },
+    });
+  }
+
+  private mergeRoots(remoteRoots: ArabicRoot[]): void {
+    if (!remoteRoots.length) {
+      return;
+    }
+    const map = new Map<string, ArabicRoot>();
+    for (const item of this.roots) {
+      if (item.id) {
+        map.set(item.id, item);
+      }
+    }
+    for (const item of remoteRoots) {
+      if (item.id) {
+        map.set(item.id, item);
+      }
+    }
+    this.roots = Array.from(map.values());
   }
 }

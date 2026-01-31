@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
 export type ArabicRoot = {
-  id: number;
+  id: string;
   root: string;
   family?: string;
   status?: string;

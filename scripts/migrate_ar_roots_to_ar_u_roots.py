@@ -53,7 +53,7 @@ def build_meta(row: sqlite3.Row) -> Optional[str]:
     return json.dumps(meta, ensure_ascii=False) if meta else None
 
 
-def build_insert_payload(row: sqlite3.Row) -> Tuple:
+def build_insert_payload(row: sqlite3.Row) -> Tuple[str, str, Tuple]:
     root_norm = (row["root_norm"] or row["root"] or "").strip()
     if not root_norm:
         root_norm = row["root"] or ""
@@ -65,7 +65,7 @@ def build_insert_payload(row: sqlite3.Row) -> Tuple:
 
     meta_json = build_meta(row)
 
-    return (
+    payload = (
         ar_u_root,
         canonical,
         row["root"],
@@ -83,6 +83,7 @@ def build_insert_payload(row: sqlite3.Row) -> Tuple:
         row["created_at"],
         row["updated_at"],
     )
+    return canonical, root_norm, payload
 
 
 def migrate(db_path: Path, dry_run: bool = False) -> None:
@@ -140,9 +141,15 @@ def migrate(db_path: Path, dry_run: bool = False) -> None:
       updated_at = excluded.updated_at
   """
 
+    seen_canonical: set[str] = set()
+    seen_root_norm: set[str] = set()
     migrated = 0
     for row in rows:
-        payload = build_insert_payload(row)
+        canonical_input, root_norm, payload = build_insert_payload(row)
+        if canonical_input in seen_canonical or root_norm in seen_root_norm:
+            continue
+        seen_canonical.add(canonical_input)
+        seen_root_norm.add(root_norm)
         if dry_run:
             print(f"Would migrate root={row['root']} family={row['family']}")
             migrated += 1

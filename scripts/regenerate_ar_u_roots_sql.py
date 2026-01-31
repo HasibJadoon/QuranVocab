@@ -54,6 +54,28 @@ def parse_json_value(value: Any) -> Optional[Any]:
     except json.JSONDecodeError:
         return normalized
 
+def collect_search_keys(values: list[tuple[Any, bool]]) -> Optional[str]:
+    tokens: list[str] = []
+    seen: set[str] = set()
+    for value, should_split in values:
+        normalized = normalize_text(value)
+        if not normalized:
+            continue
+        parts = (
+            re.split(r"\s+", normalized.strip())
+            if should_split
+            else [normalized]
+        )
+        for part in parts:
+            if not part:
+                continue
+            lower = part.lower()
+            if lower in seen:
+                continue
+            seen.add(lower)
+            tokens.append(lower)
+    return " ".join(tokens) if tokens else None
+
 
 def build_meta(row: sqlite3.Row) -> Optional[Dict[str, Any]]:
     meta: Dict[str, Any] = {}
@@ -104,12 +126,26 @@ def sql_literal(value: Any) -> str:
     return f"'{text}'"
 
 
-def dump_rows(rows: Iterable[sqlite3.Row]) -> str:
+def extract_first_string(value: Any) -> Optional[str]:
+    parsed = parse_json_value(value)
+    if isinstance(parsed, list):
+        for item in parsed:
+            text = normalize_text(item)
+            if text:
+                return text
+    return None
+
+
+def dump_rows(rows: Iterable[sqlite3.Row]) -> tuple[str, int]:
     lines = []
+    seen_canonical: set[str] = set()
     for row in rows:
         root_norm = normalize_text(row["c17"]) or normalize_text(row["c5"]) or ""
         canonical_template = f"ROOT|{root_norm}"
         ar_u_root, canonical_input = sha256_hex(canonical_template)
+        if canonical_input in seen_canonical:
+            continue
+        seen_canonical.add(canonical_input)
         status = normalize_text(row["c11"]) or "active"
         difficulty = parse_int(row["c12"])
         frequency = normalize_text(row["c13"])
@@ -120,16 +156,26 @@ def dump_rows(rows: Iterable[sqlite3.Row]) -> str:
         meta = build_meta(row)
         meta_json = json.dumps(meta, ensure_ascii=False, separators=(",", ":")) if meta else None
 
+        arabic_trilateral = normalize_text(row["c18"])
+        english_trilateral = extract_first_string(row["c7"]) or normalize_text(row["c5"])
+        search_keys_norm = collect_search_keys(
+            [
+                (row["c10"], True),
+                (arabic_trilateral, False),
+                (english_trilateral, False),
+            ]
+        )
+
         values = [
             ar_u_root,
             canonical_input,
             normalize_text(row["c3"]) or "",
             root_norm,
-            None,
-            None,
+            arabic_trilateral,
+            english_trilateral,
             normalize_text(row["c5"]),
             normalize_text(row["c7"]),
-            normalize_text(row["c10"]),
+            search_keys_norm,
             status,
             difficulty,
             frequency,
@@ -140,7 +186,7 @@ def dump_rows(rows: Iterable[sqlite3.Row]) -> str:
         ]
 
         lines.append(f"INSERT INTO ar_u_roots VALUES({', '.join(sql_literal(v) for v in values)});")
-    return "\n".join(lines)
+    return "\n".join(lines), len(lines)
 
 
 def main() -> None:
@@ -188,9 +234,9 @@ CREATE TABLE ar_u_roots (
 );
 
 """
-    body = dump_rows(rows)
+    body, exported = dump_rows(rows)
     TARGET_SQL.write_text(header + body + ("\n" if body else ""))
-    print(f"Wrote {len(rows)} rows → {TARGET_SQL}")
+    print(f"Wrote {exported} rows → {TARGET_SQL}")
 
 
 if __name__ == "__main__":
