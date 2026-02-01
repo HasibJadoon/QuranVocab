@@ -72,6 +72,9 @@ CREATE TABLE user_activity_logs (
 -- 1) CONTAINER LAYER (Arabic sources + registry)
 --------------------------------------------------------------------------------
 DROP TABLE IF EXISTS ar_quran_text;
+DROP TABLE IF EXISTS ar_surah_aya;
+DROP TABLE IF EXISTS ar_quran_ayah;
+DROP TABLE IF EXISTS ar_surah_ayah_meta;
 DROP TABLE IF EXISTS ar_lessons;
 DROP TABLE IF EXISTS ar_docs;
 DROP TABLE IF EXISTS wiki_docs;
@@ -83,31 +86,52 @@ DROP TABLE IF EXISTS ar_container_units;
 DROP TABLE IF EXISTS ar_surahs;
 
 -- Quran text (container content)
-CREATE TABLE ar_quran_text (
-  id              INTEGER PRIMARY KEY AUTOINCREMENT,
-  sura            INTEGER NOT NULL,
-  aya             INTEGER NOT NULL,
-  surah_ayah      INTEGER NOT NULL,
-  page            INTEGER,
-  juz             INTEGER,
-  hizb            INTEGER,
-  ruku            INTEGER,
-  surah_name      TEXT,
-  surah_verse     TEXT,
-  verse_mark      TEXT,
-
-  text            TEXT NOT NULL,
-  text_simple     TEXT NOT NULL,
-  text_normalized TEXT NOT NULL,
-
-  first_word      TEXT,
-  last_word       TEXT,
-  word_count      INTEGER,
-  char_count      INTEGER,
-
-  UNIQUE (surah_ayah),
-  UNIQUE (sura, aya)
+CREATE TABLE ar_quran_ayah (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  surah             INTEGER NOT NULL,
+  ayah              INTEGER NOT NULL,
+  surah_ayah        INTEGER NOT NULL UNIQUE,
+  page              INTEGER,
+  juz               INTEGER,
+  hizb              INTEGER,
+  ruku              INTEGER,
+  surah_name_ar     TEXT,
+  surah_name_en     TEXT,
+  text              TEXT NOT NULL,
+  text_simple       TEXT NOT NULL,
+  text_normalized   TEXT NOT NULL,
+  text_diacritics   TEXT,
+  text_no_diacritics TEXT,
+  first_word        TEXT,
+  last_word         TEXT,
+  word_count        INTEGER,
+  char_count        INTEGER,
+  verse_mark        TEXT,
+  verse_full        TEXT,
+  created_at        TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at        TEXT,
+  FOREIGN KEY (surah) REFERENCES ar_surahs(surah) ON DELETE RESTRICT,
+  UNIQUE (surah, ayah)
 );
+
+CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_surah_ayah ON ar_quran_ayah(surah, ayah);
+CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_page ON ar_quran_ayah(page);
+CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_juz ON ar_quran_ayah(juz);
+
+CREATE TABLE ar_surah_ayah_meta (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  surah_ayah      INTEGER NOT NULL UNIQUE,
+  theme           TEXT,
+  keywords        TEXT,
+  theme_json      JSON CHECK (theme_json IS NULL OR json_valid(theme_json)),
+  matching_json   JSON CHECK (matching_json IS NULL OR json_valid(matching_json)),
+  extra_json      JSON CHECK (extra_json IS NULL OR json_valid(extra_json)),
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT,
+  FOREIGN KEY (surah_ayah) REFERENCES ar_quran_ayah(surah_ayah) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_surah_ayah_meta_theme ON ar_surah_ayah_meta(theme);
 
 -- Lessons (Arabic stream)
 CREATE TABLE ar_lessons (
