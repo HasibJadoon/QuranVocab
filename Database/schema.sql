@@ -72,9 +72,6 @@ CREATE TABLE user_activity_logs (
 --------------------------------------------------------------------------------
 -- 1) CONTAINER LAYER (Arabic sources + registry)
 --------------------------------------------------------------------------------
-DROP TABLE IF EXISTS ar_quran_text;
-DROP TABLE IF EXISTS ar_surah_aya;
-
 CREATE TABLE ar_surahs (
   surah        INTEGER PRIMARY KEY,
   name_ar      TEXT NOT NULL,
@@ -257,6 +254,72 @@ CREATE TABLE IF NOT EXISTS ar_lesson_unit_progress (
 CREATE INDEX idx_ar_lesson_unit_progress_user
   ON ar_lesson_unit_progress(user_id, lesson_id, status);
 
+--------------------------------------------------------------------------------
+-- 1c) NOTES & CITATIONS (scholarly annotations)
+--------------------------------------------------------------------------------
+DROP TABLE IF EXISTS ar_note_targets;
+DROP TABLE IF EXISTS ar_notes;
+DROP TABLE IF EXISTS ar_sources;
+
+CREATE TABLE ar_sources (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_type   TEXT NOT NULL,
+  title         TEXT NOT NULL,
+  author        TEXT,
+  year          INTEGER,
+  publisher     TEXT,
+  url           TEXT,
+  identifier    TEXT,
+  notes         TEXT,
+  meta_json     JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT
+);
+
+CREATE INDEX idx_ar_sources_type ON ar_sources(source_type);
+CREATE INDEX idx_ar_sources_title ON ar_sources(title);
+
+CREATE TABLE ar_notes (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id       INTEGER,
+  note_type     TEXT NOT NULL,
+  title         TEXT,
+  excerpt       TEXT NOT NULL,
+  commentary    TEXT,
+  source_id     INTEGER,
+  locator       TEXT,
+  extra_json    JSON CHECK (extra_json IS NULL OR json_valid(extra_json)),
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (source_id) REFERENCES ar_sources(id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_ar_notes_type ON ar_notes(note_type);
+CREATE INDEX idx_ar_notes_source ON ar_notes(source_id);
+
+CREATE TABLE ar_note_targets (
+  note_id       INTEGER NOT NULL,
+  target_type   TEXT NOT NULL,
+  target_id     TEXT NOT NULL,
+  relation      TEXT NOT NULL DEFAULT 'about',
+  strength      REAL,
+  share_scope   TEXT NOT NULL DEFAULT 'private',
+  edge_note     TEXT,
+  container_id  TEXT,
+  unit_id       TEXT,
+  ref           TEXT,
+  extra_json    JSON CHECK (extra_json IS NULL OR json_valid(extra_json)),
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (note_id, target_type, target_id),
+  FOREIGN KEY (note_id) REFERENCES ar_notes(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_ar_note_targets_target ON ar_note_targets(target_type, target_id);
+CREATE INDEX idx_ar_note_targets_relation ON ar_note_targets(relation);
+CREATE INDEX idx_ar_note_targets_share ON ar_note_targets(share_scope);
+CREATE INDEX idx_ar_note_targets_container ON ar_note_targets(container_id, unit_id);
+
 -- =====================================================================================
 -- 2) SRS LAYER (per-user spaced repetition)
 -- =====================================================================================
@@ -318,21 +381,6 @@ CREATE TABLE IF NOT EXISTS ar_srs_reviews (
 );
 CREATE INDEX IF NOT EXISTS idx_ar_srs_reviews_user_time ON ar_srs_reviews(user_id, reviewed_at);
 CREATE INDEX IF NOT EXISTS idx_ar_srs_reviews_item_time ON ar_srs_reviews(srs_item_id, reviewed_at);
-
-CREATE TABLE ar_surah_ayah_meta (
-  id              INTEGER PRIMARY KEY AUTOINCREMENT,
-  surah_ayah      INTEGER NOT NULL UNIQUE,
-  theme           TEXT,
-  keywords        TEXT,
-  theme_json      JSON CHECK (theme_json IS NULL OR json_valid(theme_json)),
-  matching_json   JSON CHECK (matching_json IS NULL OR json_valid(matching_json)),
-  extra_json      JSON CHECK (extra_json IS NULL OR json_valid(extra_json)),
-  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at      TEXT,
-  FOREIGN KEY (surah_ayah) REFERENCES ar_quran_ayah(surah_ayah) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_ar_surah_ayah_meta_theme ON ar_surah_ayah_meta(theme);
 
 -- 2) UNIVERSAL LAYER (ar_u_*)
 --------------------------------------------------------------------------------

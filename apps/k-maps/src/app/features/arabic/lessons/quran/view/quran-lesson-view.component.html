@@ -12,7 +12,7 @@
     <div class="arabic-text">
       <ng-container *ngFor="let unit of lesson.text.arabic_full">
         <div class="arabic-text-row">
-          <span class="arabic-text-run">{{ unit.arabic }}</span>
+          <span class="arabic-text-run">{{ unit.arabic_non_diacritics ?? unit.arabic }}</span>
         </div>
         <p class="translation" *ngIf="unit.translation">{{ unit.translation }}</p>
       </ng-container>

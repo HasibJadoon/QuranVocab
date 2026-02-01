@@ -6,6 +6,8 @@ export interface QuranLessonAyahUnit {
   surah: number;
   ayah: number;
   notes: string | null;
+  arabic_diacritics?: string | null;
+  arabic_non_diacritics?: string | null;
 }
 
 export interface QuranLessonText {

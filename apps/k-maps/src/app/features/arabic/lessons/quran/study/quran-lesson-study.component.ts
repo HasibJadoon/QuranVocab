@@ -48,7 +48,7 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     return (this.lesson?.text.arabic_full ?? [])
       .map((verse) => ({
         id: verse.unit_id,
-        text: verse.arabic?.trim() ?? '',
+        text: (verse.arabic_non_diacritics ?? verse.arabic ?? '').trim(),
       }))
       .filter((verse) => verse.text);
   }
