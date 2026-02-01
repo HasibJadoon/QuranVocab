@@ -1,0 +1,44 @@
+.tokens-page {
+  padding: 1rem;
+  .tokens-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    .tokens-title {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .tokens-controls {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+
+      .input-group {
+        min-width: 280px;
+      }
+
+      .tokens-filters {
+        display: flex;
+        gap: 0.5rem;
+      }
+    }
+  }
+
+  .table-responsive {
+    max-height: 70vh;
+    overflow: auto;
+  }
+
+  .tokens-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+  }
+}

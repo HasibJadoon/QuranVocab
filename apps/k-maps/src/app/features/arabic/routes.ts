@@ -17,6 +17,12 @@ export const routes: Routes = [
     data: { title: 'Arabic Lexicon' }
   },
   {
+    path: 'tokens',
+    loadComponent: () =>
+      import('./tokens/tokens.component').then(m => m.TokensComponent),
+    data: { title: 'Arabic Tokens' }
+  },
+  {
     path: 'roots',
     loadChildren: () => import('./roots/routes').then(m => m.routes),
     data: { title: 'Roots' }

@@ -33,6 +33,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'arabic/tokens',
+    loadChildren: () => import('./features/arabic/tokens/arabic-tokens.module').then(m => m.ArabicTokensPageModule),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'arabic/memory',
     loadChildren: () => import('./features/arabic/memory/arabic-memory.module').then(m => m.ArabicMemoryPageModule),
     canActivate: [AuthGuard]

@@ -1,0 +1,95 @@
+<div class="tokens-page">
+  <header class="tokens-header">
+    <div class="tokens-title">
+      <h1 class="h5 mb-0">Tokens</h1>
+      <p class="text-muted mb-0">Browse the canonical ar_u_tokens layer linked to roots.</p>
+    </div>
+    <div class="tokens-controls">
+      <div class="input-group">
+        <input
+          class="form-control"
+          placeholder="Search lemma, root, or canonical input"
+          [(ngModel)]="q"
+          (keyup.enter)="onSearch()"
+        />
+        <button class="btn btn-primary" type="button" (click)="onSearch()">Search</button>
+      </div>
+      <div class="tokens-filters">
+        <select class="form-select" [(ngModel)]="pos" (change)="onSearch()">
+          <option value="">All POS</option>
+          <option *ngFor="let posOption of posOptions" [value]="posOption">
+            {{ posOption | titlecase }}
+          </option>
+        </select>
+        <select class="form-select" [(ngModel)]="pageSize" (change)="setPageSize(pageSize)">
+          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }} / page</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <section *ngIf="error" class="alert alert-danger" role="alert">
+    {{ error }}
+  </section>
+
+  <section *ngIf="loading" class="text-muted">Loading tokens…</section>
+
+  <section *ngIf="!loading && !tokens.length" class="text-muted">
+    No tokens found for the current filters.
+  </section>
+
+  <div *ngIf="tokens.length" class="table-responsive">
+    <table class="table table-sm table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Lemma</th>
+          <th>POS</th>
+          <th>Root</th>
+          <th>Canonical</th>
+          <th class="text-end">Meta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let token of tokens; trackBy: trackByToken">
+          <td>
+            <div class="fw-semibold">{{ token.lemma_ar }}</div>
+            <div class="text-muted small">{{ token.lemma_norm }}</div>
+          </td>
+          <td>{{ token.pos }}</td>
+          <td>{{ displayRoot(token) }}</td>
+          <td>
+            <div class="text-monospace small">{{ token.canonical_input }}</div>
+          </td>
+          <td class="text-end small">
+            <span *ngIf="token.meta && (token.meta | json).length">meta</span>
+            <span *ngIf="token.root_meta && (token.root_meta | json).length">root meta</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer *ngIf="tokens.length" class="tokens-pagination">
+    <div>
+      Showing {{ tokens.length }} of {{ total }} tokens (Page {{ page }} of {{ totalPages }})
+    </div>
+    <div class="btn-group">
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        type="button"
+        (click)="changePage('prev')"
+        [disabled]="page <= 1"
+      >
+        Prev
+      </button>
+      <button
+        class="btn btn-outline-secondary btn-sm"
+        type="button"
+        (click)="changePage('next')"
+        [disabled]="page >= totalPages"
+      >
+        Next
+      </button>
+    </div>
+  </footer>
+</div>

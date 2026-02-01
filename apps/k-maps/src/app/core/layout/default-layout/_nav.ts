@@ -26,6 +26,11 @@ export const navItems: INavData[] = [
         iconComponent: { name: 'cilDescription' }
       },
       {
+        name: 'Tokens',
+        url: '/arabic/tokens',
+        iconComponent: { name: 'cilSpeech' }
+      },
+      {
         name: 'Memory',
         url: '/arabic/memory',
         iconComponent: { name: 'cilTask' }

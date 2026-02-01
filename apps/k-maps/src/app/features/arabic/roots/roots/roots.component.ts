@@ -325,7 +325,6 @@ export class RootsComponent implements OnInit, OnDestroy {
       }
 
       this.newRoot = '';
-      this.newFamily = '';
       this.resetCreateForm();
       this.showToast('Created ✔', 'success');
       this.closeCreate();
