@@ -3,6 +3,7 @@ export interface QuranLessonAyahUnit {
   unit_type: 'ayah';
   arabic: string;
   translation: string | null;
+  translations?: Record<string, unknown> | null;
   surah: number;
   ayah: number;
   notes: string | null;
@@ -57,6 +58,7 @@ export interface QuranLessonSentence {
   entity_type?: string;
   sentence_id: string;
   unit_id: string;
+  sentence_order?: number;
   text: QuranLessonSentenceText;
   notes?: string | null;
   ref?: QuranLessonSentenceRef;
@@ -259,6 +261,11 @@ export interface QuranLesson {
   _notes?: QuranLessonNotes;
   created_at?: string;
   updated_at?: string | null;
+  analysis?: {
+    tokens?: QuranLessonTokenV2[];
+    spans?: QuranLessonSpanV2[];
+    vocab?: QuranLessonVocabBuckets;
+  };
 }
 
 export function getQuranSentenceArabic(sentence: QuranLessonSentence): string | null {
@@ -278,4 +285,124 @@ export function normalizeQuranLessonSentences(
     arabic: getQuranSentenceArabic(sentence),
     translation: getQuranSentenceTranslation(sentence),
   }));
+}
+
+export interface QuranLessonTokenV2 {
+  token_occ_id: string;
+  u_token_id: string;
+  u_root_id?: string | null;
+  container_id: string;
+  unit_id?: string | null;
+  pos_index: number;
+  surface_ar: string;
+  norm_ar?: string | null;
+  lemma_ar?: string | null;
+  pos?: string | null;
+  features?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string | null;
+}
+
+export interface QuranLessonSpanV2 {
+  span_occ_id: string;
+  u_span_id: string;
+  container_id: string;
+  unit_id?: string | null;
+  start_index: number;
+  end_index: number;
+  text_cache?: string | null;
+  span_type?: string;
+  span_kind?: string | null;
+  token_ids: string[];
+  meta?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string | null;
+}
+
+export interface QuranLessonVocabBuckets {
+  verbs: Array<{
+    token_occ_id: string;
+    u_token_id: string;
+    u_root_id?: string | null;
+    surface_ar: string;
+    lemma_ar?: string | null;
+    features?: Record<string, unknown> | null;
+  }>;
+  nouns: Array<{
+    token_occ_id: string;
+    u_token_id: string;
+    u_root_id?: string | null;
+    surface_ar: string;
+    lemma_ar?: string | null;
+    features?: Record<string, unknown> | null;
+  }>;
+  spans: Array<{
+    kind?: string | null;
+    text?: string | null;
+    u_span_id: string;
+    token_u_ids: string[];
+    meta?: Record<string, unknown> | null;
+  }>;
+}
+
+export interface QuranLessonSentenceV2 {
+  sentence_occ_id: string;
+  u_sentence_id: string;
+  unit_id: string;
+  sentence_order: number;
+  text: {
+    arabic: string;
+    translation?: string | null;
+  };
+  notes?: string | null;
+  ref?: {
+    unit_id?: string;
+  };
+  anchors?: Record<string, string>;
+  sentence_kind?: string;
+  sequence?: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string | null;
+}
+
+export interface QuranLessonApiPayload {
+  lesson_row: {
+    id: number;
+    user_id: number | null;
+    title: string;
+    title_ar: string | null;
+    lesson_type: string;
+    subtype: string | null;
+    status: string;
+    difficulty: number | null;
+    source: string | null;
+    container_id: string | null;
+    unit_id: string | null;
+    created_at: string;
+    updated_at: string | null;
+  };
+  container: {
+    id: string;
+    container_type: string;
+    container_key: string;
+    title: string | null;
+    meta_json: Record<string, unknown> | null;
+  };
+  units: Array<{
+    id: string | null;
+    unit_type: string | null;
+    order_index: number;
+    ayah_from: number | null;
+    ayah_to: number | null;
+    start_ref: string | null;
+    end_ref: string | null;
+    text_cache: string | null;
+    meta_json: Record<string, unknown> | null;
+  }>;
+  ayat: QuranLessonAyahUnit[];
+  sentences: QuranLessonSentenceV2[];
+  tokens: QuranLessonTokenV2[];
+  spans: QuranLessonSpanV2[];
+  vocab: QuranLessonVocabBuckets;
+  lesson_json: Record<string, unknown>;
 }

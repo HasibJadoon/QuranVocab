@@ -158,9 +158,26 @@ CREATE TABLE ar_surah_ayah_meta (
 
 CREATE INDEX IF NOT EXISTS idx_ar_surah_ayah_meta_theme ON ar_surah_ayah_meta(theme);
 
+CREATE TABLE ar_quran_translations (
+  surah              INTEGER NOT NULL,
+  ayah               INTEGER NOT NULL,
+  translation_haleem TEXT,
+  translation_asad   TEXT,
+  translation_sahih  TEXT,
+  translation_usmani TEXT,
+  footnotes_sahih    TEXT,
+  footnotes_usmani   TEXT,
+  meta_json          JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at         TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at         TEXT,
+  PRIMARY KEY (surah, ayah)
+);
+
 CREATE TABLE ar_lessons (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id     INTEGER,
+  container_id TEXT,
+  unit_id     TEXT,
   title       TEXT NOT NULL,
   title_ar    TEXT,
   lesson_type TEXT NOT NULL,
@@ -173,6 +190,9 @@ CREATE TABLE ar_lessons (
   updated_at  TEXT,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_ar_lessons_container_id ON ar_lessons(container_id);
+CREATE INDEX IF NOT EXISTS idx_ar_lessons_unit_id ON ar_lessons(unit_id);
 
 CREATE TABLE ar_lesson_unit_link (
   lesson_id     INTEGER NOT NULL,
@@ -434,6 +454,7 @@ CREATE TABLE ar_u_spans (
   canonical_input  TEXT NOT NULL UNIQUE,
 
   span_type        TEXT NOT NULL,
+  span_kind        TEXT,
   token_ids_csv    TEXT NOT NULL,
 
   meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
@@ -1008,6 +1029,7 @@ CREATE INDEX idx_user_logs_user_id      ON user_activity_logs(user_id);
 CREATE INDEX idx_user_logs_type         ON user_activity_logs(event_type);
 CREATE INDEX idx_user_logs_target       ON user_activity_logs(target_type, target_id);
 CREATE INDEX idx_user_logs_created      ON user_activity_logs(created_at);
+
 
 
 CREATE INDEX idx_ar_lessons_user_id  ON ar_lessons(user_id);
