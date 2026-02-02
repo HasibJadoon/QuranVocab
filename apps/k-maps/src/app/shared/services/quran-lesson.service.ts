@@ -5,11 +5,14 @@ import { AuthService } from './AuthService';
 import {
   QuranLesson,
   QuranLessonSentence,
+  QuranLessonSentenceV2,
+  QuranLessonText,
   QuranLessonApiPayload,
   QuranLessonTokenV2,
   QuranLessonSpanV2,
   QuranLessonVocabBuckets,
   QuranLessonNotes,
+  QuranLessonReference,
   normalizeQuranLessonSentences,
 } from '../models/arabic/quran-lesson.model';
 import { API_BASE } from '../api-base';
@@ -63,9 +66,34 @@ export class QuranLessonService {
   private mergeLessonPayload(data: LessonResponse): QuranLesson {
     const lessonJson = (data.lesson_json as Record<string, unknown>) ?? {};
     const ayat = data.ayat ?? [];
-    const sentencesPayload = (data.sentences ?? []) as QuranLessonSentence[];
+    const sentencesV2 = (data.sentences ?? []) as QuranLessonSentenceV2[];
+    const sentencesPayload = sentencesV2.map((sentence) => {
+      const translationValue = sentence.text.translation ?? null;
+      return {
+        entity_type: 'sentence',
+        sentence_id: sentence.sentence_occ_id,
+        unit_id: sentence.unit_id,
+        sentence_order: sentence.sentence_order,
+        text: {
+          arabic: sentence.text.arabic,
+          translation: translationValue,
+        },
+        notes: sentence.notes ?? null,
+        ref: sentence.ref,
+        anchors: sentence.anchors as QuranLessonSentence['anchors'],
+        classification: {},
+        markers: [],
+      };
+    });
     const normalizedSentences = normalizeQuranLessonSentences(sentencesPayload);
-    const text = {
+    const rawMode = lessonJson['mode'];
+    const lessonMode: 'original' | 'edited' | 'mixed' =
+      rawMode === 'edited'
+        ? 'edited'
+        : rawMode === 'mixed'
+          ? 'mixed'
+          : 'original';
+    const text: QuranLessonText = {
       arabic_full: ayat.map((unit) => ({
         unit_id: unit.unit_id,
         unit_type: unit.unit_type,
@@ -73,17 +101,25 @@ export class QuranLessonService {
         arabic_diacritics: unit.arabic_diacritics ?? null,
         arabic_non_diacritics: unit.arabic_non_diacritics ?? null,
         translation:
-          (unit.translation && typeof unit.translation === 'string'
-            ? unit.translation
-            : null) ?? null,
-        translations:
-          unit.translation && typeof unit.translation === 'object' ? unit.translation : null,
+          unit.translation && typeof unit.translation === 'string' ? unit.translation : null,
+        translations: unit.translations ?? null,
         surah: unit.surah,
         ayah: unit.ayah,
         notes: unit.notes ?? null,
       })),
-      mode: (lessonJson.mode as 'original' | 'edited' | 'mixed') ?? 'original',
+      mode:
+        rawMode === 'edited'
+          ? 'edited'
+          : rawMode === 'mixed'
+            ? 'mixed'
+            : 'original',
     };
+
+    const lessonReference = lessonJson['reference'] as QuranLessonReference | undefined;
+    const lessonComprehension = lessonJson['comprehension'] as QuranLesson['comprehension'] | undefined;
+    const lessonVocabLayer = lessonJson['vocab_layer'] as QuranLesson['vocab_layer'] | undefined;
+    const lessonPassageLayers = lessonJson['passage_layers'] as QuranLesson['passage_layers'] | undefined;
+    const lessonNotes = lessonJson['_notes'] as QuranLessonNotes | undefined;
 
     const lesson: QuranLesson = {
       lesson_type: 'quran',
@@ -93,13 +129,13 @@ export class QuranLessonService {
       status: data.lesson_row.status,
       difficulty:
         typeof data.lesson_row.difficulty === 'number' ? data.lesson_row.difficulty : undefined,
-      reference: lessonJson.reference,
+      reference: lessonReference,
       text,
       sentences: normalizedSentences,
-      comprehension: lessonJson.comprehension as QuranLesson['comprehension'],
-      vocab_layer: lessonJson.vocab_layer as QuranLesson['vocab_layer'],
-      passage_layers: lessonJson.passage_layers as QuranLesson['passage_layers'],
-      _notes: lessonJson._notes as QuranLessonNotes,
+      comprehension: lessonComprehension,
+      vocab_layer: lessonVocabLayer,
+      passage_layers: lessonPassageLayers,
+      _notes: lessonNotes,
       created_at: data.lesson_row.created_at,
       updated_at: data.lesson_row.updated_at ?? undefined,
       analysis: {
