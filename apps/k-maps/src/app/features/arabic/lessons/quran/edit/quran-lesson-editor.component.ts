@@ -27,6 +27,22 @@ export class QuranLessonEditorComponent implements OnInit {
   activeTab: 'arabic' | 'sentences' | 'mcq' | 'comprehension' | 'json' = 'arabic';
   isSaving = false;
   isNewLesson = false;
+  containerForm = {
+    title: '',
+    surah: 12,
+    ayahFrom: 1,
+    ayahTo: 7,
+    containerId: '',
+    unitId: '',
+  };
+  sentenceForm = {
+    text: '',
+    translation: '',
+    tokens: '',
+    spans: '',
+    grammarIds: '',
+  };
+  occurrenceFeedback: string | null = null;
 
   ngOnInit() {
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -158,6 +174,85 @@ export class QuranLessonEditorComponent implements OnInit {
     this.lesson = this.buildBlankLesson();
     this.ensureDefaults();
     this.lessonJson = JSON.stringify(this.lesson, null, 2);
+  }
+
+  createContainer() {
+    const payload = {
+      title: this.containerForm.title || `Surah ${this.containerForm.surah}`,
+      surah: Math.max(1, this.containerForm.surah),
+      ayah_from: Math.max(1, this.containerForm.ayahFrom),
+      ayah_to: Math.max(this.containerForm.ayahTo, this.containerForm.ayahFrom),
+      container_id: this.containerForm.containerId || undefined,
+    };
+    this.service.createContainer(payload).subscribe({
+      next: (res) => {
+        if (res.ok) {
+          this.occurrenceFeedback = 'Container + units created';
+          this.containerForm.containerId = res.result?.container?.id || '';
+          const passage = (res.result?.units ?? []).find((unit: any) => unit.unit_type === 'passage');
+          this.containerForm.unitId = passage?.id ?? '';
+        }
+      },
+      error: () => {
+        this.occurrenceFeedback = 'Failed to create container';
+      },
+    });
+  }
+
+  submitOccurrence() {
+    if (!this.lesson || !this.containerForm.containerId || !this.containerForm.unitId) {
+      this.occurrenceFeedback = 'Complete container + unit first.';
+      return;
+    }
+    const tokens = this.sentenceForm.tokens
+      .split(',')
+      .map((text) => text.trim())
+      .filter(Boolean)
+      .map((tokenText, index) => {
+        const [surface, lexiconId] = tokenText.split('|').map((part) => part.trim());
+        return {
+          surface,
+          lexicon_id: lexiconId || undefined,
+          pos_index: index,
+        };
+      });
+    const spans = this.sentenceForm.spans
+      .split(';')
+      .map((text) => text.trim())
+      .filter(Boolean)
+      .map((entry) => {
+        const [spanText, range] = entry.split('|');
+        const [start = '0', end = '0'] = (range ?? '').split('-');
+        return {
+          text: spanText?.trim() ?? '',
+          start_index: Number(start) || 0,
+          end_index: Number(end) || 0,
+          token_u_ids: [],
+        };
+      });
+    const payload = {
+      lesson_id: Number(this.lesson.id) || 0,
+      container_id: this.containerForm.containerId,
+      unit_id: this.containerForm.unitId,
+      sentence: {
+        text: this.sentenceForm.text,
+        translation: this.sentenceForm.translation || null,
+        tokens,
+        spans,
+        grammar_ids: this.sentenceForm.grammarIds
+          .split(',')
+          .map((grammarId) => grammarId.trim())
+          .filter(Boolean),
+      },
+    };
+    this.service.addOccurrences(this.lesson.id, payload).subscribe({
+      next: () => {
+        this.occurrenceFeedback = 'Occurrence saved.';
+      },
+      error: () => {
+        this.occurrenceFeedback = 'Failed to save occurrence.';
+      },
+    });
   }
 
   private buildBlankLesson(): QuranLesson {

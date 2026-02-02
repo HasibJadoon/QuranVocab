@@ -146,4 +146,32 @@ export class QuranLessonService {
     };
     return lesson;
   }
+
+  createContainer(payload: {
+    container_id?: string;
+    container_key?: string;
+    title?: string;
+    surah: number;
+    ayah_from: number;
+    ayah_to: number;
+    text_cache?: string;
+  }) {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+    return this.http.post<{ ok: boolean; result: any }>(`${this.baseUrl}/create`, payload, { headers });
+  }
+
+  addOccurrences(lessonId: number | string, payload: any) {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+    return this.http.post<{ ok: boolean; result: any }>(
+      `${this.baseUrl}/${lessonId}/occurrences`,
+      payload,
+      { headers }
+    );
+  }
 }

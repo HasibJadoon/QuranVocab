@@ -154,6 +154,65 @@
         <ng-template #noSentences>
           <p class="text-muted">Sentence segmentation is not available yet.</p>
         </ng-template>
+        <div class="lesson-editor-section mt-3">
+          <h5>Authoring helpers</h5>
+          <div class="grid-gap">
+            <div class="block">
+              <label>Surah</label>
+              <input type="number" [(ngModel)]="containerForm.surah" />
+            </div>
+            <div class="block">
+              <label>Ayah from</label>
+              <input type="number" [(ngModel)]="containerForm.ayahFrom" />
+            </div>
+            <div class="block">
+              <label>Ayah to</label>
+              <input type="number" [(ngModel)]="containerForm.ayahTo" />
+            </div>
+          </div>
+          <div class="grid-gap mt-2">
+            <div class="block">
+              <label>Container ID</label>
+              <input [(ngModel)]="containerForm.containerId" placeholder="C:QURAN:12" />
+            </div>
+            <div class="block">
+              <label>Passage Unit ID</label>
+              <input [(ngModel)]="containerForm.unitId" placeholder="U:C:QURAN:12:1-7" />
+            </div>
+          </div>
+          <button class="btn btn-outline" type="button" (click)="createContainer()">
+            Create container + units
+          </button>
+        </div>
+        <div class="lesson-editor-section mt-3">
+          <h5>New sentence</h5>
+          <textarea
+            [(ngModel)]="sentenceForm.text"
+            placeholder="Sentence Arabic text"
+            rows="2"
+          ></textarea>
+          <textarea
+            [(ngModel)]="sentenceForm.translation"
+            placeholder="Translation (optional)"
+            rows="2"
+          ></textarea>
+          <input
+            [(ngModel)]="sentenceForm.tokens"
+            placeholder="Tokens (format: surface|lexiconId, ...)"
+          />
+          <input
+            [(ngModel)]="sentenceForm.spans"
+            placeholder="Spans (text|start-end; ...)"
+          />
+          <input
+            [(ngModel)]="sentenceForm.grammarIds"
+            placeholder="Grammar IDs (comma separated)"
+          />
+          <button class="btn btn-primary" type="button" (click)="submitOccurrence()">
+            Save occurrence
+          </button>
+          <p class="text-muted" *ngIf="occurrenceFeedback">{{ occurrenceFeedback }}</p>
+        </div>
       </article>
 
       <article *ngSwitchCase="'mcq'" class="study-card study-card--mcq">
