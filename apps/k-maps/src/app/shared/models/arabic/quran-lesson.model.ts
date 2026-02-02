@@ -9,6 +9,8 @@ export interface QuranLessonAyahUnit {
   notes: string | null;
   arabic_diacritics?: string | null;
   arabic_non_diacritics?: string | null;
+  verse_mark?: string | null;
+  verse_full?: string | null;
 }
 
 export interface QuranLessonUnit {

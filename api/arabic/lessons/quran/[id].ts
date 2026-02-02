@@ -70,6 +70,9 @@ interface QuranVerseRow {
   text: string;
   text_diacritics?: string | null;
   text_simple?: string | null;
+  text_non_diacritics?: string | null;
+  verse_mark?: string | null;
+  verse_full?: string | null;
 }
 
 interface QuranLessonAyahUnit {
@@ -228,7 +231,15 @@ async function fetchAyahRows(db: D1Database, requests: Map<number, Set<number>>)
     const stmt = db
       .prepare(
         `
-        SELECT surah, ayah, text, text_diacritics, text_simple
+        SELECT
+          surah,
+          ayah,
+          text,
+          text_diacritics,
+          text_simple,
+          text_non_diacritics,
+          verse_mark,
+          verse_full
         FROM ar_quran_ayah
         WHERE surah = ?1 AND ayah IN (${placeholders})
       `
@@ -489,6 +500,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       translationMap.set(`${translation.surah}:${translation.ayah}`, translation);
     }
     const ayat: QuranLessonAyahUnit[] = [];
+    const seenVerseKeys = new Set<string>();
     for (const unit of unitRows) {
       if (!unit.unit_id || unit.unit_type !== 'ayah') continue;
       const surah = parseSurahFromUnitId(unit.unit_id);
@@ -498,6 +510,8 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       const end = rawTo ?? parseAyahFromRef(unit.end_ref) ?? start;
       for (let ayah = start; ayah <= end; ayah += 1) {
         const key = `${surah}:${ayah}`;
+        if (seenVerseKeys.has(key)) continue;
+        seenVerseKeys.add(key);
         const verse = verseMap.get(key);
         if (!verse) continue;
         const translationRow = translationMap.get(key);
@@ -518,8 +532,19 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
           translationRow?.translation_usmani ??
           null;
         const cleanText =
-          verse.text_simple ?? verse.text ?? verse.text_diacritics ?? '';
-        const diacText = verse.text ?? verse.text_diacritics ?? verse.text_simple ?? '';
+          verse.text_simple ??
+          verse.text_non_diacritics ??
+          verse.text ??
+          verse.text_diacritics ??
+          '';
+        const diacText =
+          verse.text ??
+          verse.text_diacritics ??
+          verse.text_non_diacritics ??
+          verse.text_simple ??
+          '';
+        const verseMarker =
+          (verse.verse_mark ?? verse.verse_full ?? `﴿${ayah}﴾`).trim();
         ayat.push({
           unit_id: unit.unit_id,
           unit_type: 'ayah',
@@ -531,6 +556,8 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
           surah,
           ayah,
           notes: parseMetaLabel(unit.meta_json),
+          verse_mark: verseMarker || null,
+          verse_full: verse.verse_full ?? null,
         });
       }
     }

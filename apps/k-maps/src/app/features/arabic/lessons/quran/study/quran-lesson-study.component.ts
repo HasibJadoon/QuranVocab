@@ -47,10 +47,12 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
 
   get verseList() {
     return (this.lesson?.text.arabic_full ?? [])
-      .map((verse) => ({
-        id: verse.unit_id,
-        text: (verse.arabic_non_diacritics ?? verse.arabic ?? '').trim(),
-      }))
+      .map((verse) => {
+        const text = (verse.arabic_non_diacritics ?? verse.arabic ?? '').trim();
+        const marker =
+          (verse.verse_mark ?? verse.verse_full ?? (verse.ayah ? `﴿${verse.ayah}﴾` : '')).trim();
+        return { id: verse.unit_id, text, marker };
+      })
       .filter((verse) => verse.text);
   }
 

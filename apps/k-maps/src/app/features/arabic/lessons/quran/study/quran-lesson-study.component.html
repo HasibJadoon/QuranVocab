@@ -5,24 +5,7 @@
     </div>
   </header>
 
-  <div class="study-tabs">
-    <button class="tab-btn" [class.active]="activeTab === 'study'" type="button" (click)="setActiveTab('study')">
-      <span class="tab-icon">📖</span>
-      Passage
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'sentences'" type="button" (click)="setActiveTab('sentences')">
-      <span class="tab-icon">🧾</span>
-      Sentences
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'mcq'" type="button" (click)="setActiveTab('mcq')">
-      <span class="tab-icon">❓</span>
-      MCQs
-    </button>
-    <button class="tab-btn" [class.active]="activeTab === 'passage'" type="button" (click)="setActiveTab('passage')">
-      <span class="tab-icon">🧠</span>
-      Comprehension
-    </button>
-  </div>
+
 
 
   <hr class="study-divider" />
@@ -38,25 +21,28 @@
         <!-- -------- Arabic Text (Verses) -------- -->
         <article class="study-card">
           <div class="study-card-heading">
-            <h4>Arabic Text</h4>
-            <h4 class="study-card-mode">
-              {{ lesson.reference?.surah ? 'Surah ' + lesson.reference?.surah : 'Passage' }}
+            <h4>Text</h4>
+            <h4 >
+              {{ lesson.reference?.surah ? lesson.reference?.surah : 'Passage' }}
             </h4>
           </div>
 
           <hr class="study-card-divider" />
 
-          <div class="arabic-text-container" *ngIf="verseList.length; else noArabic">
+          <div  *ngIf="verseList.length; else noArabic">
             <div
               *ngFor="let verse of verseList"
-              class="arabic-text arabic-text-row glow-card"
-              [class.glow-card--active]="selectedVerseId === verse.id"
+              class="arabic-text arabic-text-row"
               [class.arabic-text-selected]="selectedVerseId === verse.id"
               (click)="selectVerse(verse.id)"
             >
-              <span class="arabic-text-run">
+              <span
+                class="arabic-text-run glow-card verse-glow"
+                [class.glow-card--active]="selectedVerseId === verse.id"
+              >
                 {{ verse.text }}
               </span>
+              <span class="verse-marker" *ngIf="verse.marker">{{ verse.marker }}</span>
             </div>
           </div>
 

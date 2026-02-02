@@ -22,3 +22,23 @@
   resize: vertical;
   font-family: 'IBM Plex Sans', 'Scheherazade', 'Amiri', sans-serif;
 }
+
+.arabic-text-row {
+  justify-content: flex-end;
+}
+
+.verse-glow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+}
+
+.verse-marker {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  margin-inline-start: 0.5rem;
+}

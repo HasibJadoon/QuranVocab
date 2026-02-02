@@ -122,10 +122,12 @@ export class ArQuranStudyPage implements OnInit {
   }
 
   get verseList() {
-    return (this.lesson?.text.arabic_full ?? []).map((verse) => ({
-      id: verse.unit_id,
-      text: verse.arabic?.trim() ?? '',
-    }));
+    return (this.lesson?.text.arabic_full ?? []).map((verse) => {
+      const text = verse.arabic?.trim() ?? '';
+      const marker =
+        (verse.verse_mark ?? verse.verse_full ?? (verse.ayah ? `﴿${verse.ayah}﴾` : '')).trim();
+      return { id: verse.unit_id, text, marker };
+    });
   }
 
   get sentenceGroups() {

@@ -39,12 +39,17 @@
               <div class="arabic-text-container" *ngIf="verseList.length; else noArabic">
                 <div
                   *ngFor="let verse of verseList"
-                  class="arabic-text arabic-text-row glow-card"
-                  [class.glow-card--active]="selectedVerseId === verse.id"
+                  class="arabic-text arabic-text-row"
                   [class.arabic-text-selected]="selectedVerseId === verse.id"
                   (click)="selectVerse(verse.id)"
                 >
-                  <span class="arabic-text-run">{{ verse.text }}</span>
+                  <span
+                    class="arabic-text-run glow-card verse-glow"
+                    [class.glow-card--active]="selectedVerseId === verse.id"
+                  >
+                    {{ verse.text }}
+                  </span>
+                  <span class="verse-marker" *ngIf="verse.marker">{{ verse.marker }}</span>
                 </div>
               </div>
 
