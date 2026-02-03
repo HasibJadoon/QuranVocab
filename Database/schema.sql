@@ -783,6 +783,8 @@ CREATE TABLE quran_ayah_lemma_location (
   token_index    INTEGER NOT NULL,
   ar_token_occ_id TEXT,
   ar_u_token     TEXT,
+  word_simple    TEXT,
+  word_diacritic TEXT,
   created_at     TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id),
   FOREIGN KEY (ar_u_token) REFERENCES ar_u_tokens(ar_u_token)

@@ -71,6 +71,8 @@ export interface QuranLessonLemmaLocation {
   token_index: number;
   ar_token_occ_id?: string | null;
   ar_u_token?: string | null;
+  word_simple?: string | null;
+  word_diacritic?: string | null;
 }
 
 export interface QuranLessonSentenceMarker {

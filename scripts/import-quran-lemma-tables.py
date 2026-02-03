@@ -8,6 +8,8 @@ import sqlite3
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
+from quran_words import load_salam_word_map
+
 
 def parse_word_location(location: str) -> Optional[Tuple[int, int, int]]:
     """Parse word_location strings like 54:26:4 or DOC_QURAN_HAFS:12:23:TOK_05."""
@@ -81,19 +83,24 @@ def load_lemmas(lemmas_conn: sqlite3.Connection) -> Tuple[Dict[int, sqlite3.Row]
     return lemmas, word_rows
 
 
-def find_token(cursor: sqlite3.Cursor, surah: int, ayah: int, token_index: int) -> Tuple[Optional[str], Optional[str]]:
-    unit_id = f"U:QURAN:{surah}:{ayah}"
-    pos_candidates = [token_index - 1, token_index]
-    for pos in pos_candidates:
-        if pos < 0:
-            continue
-        row = cursor.execute(
-            "SELECT ar_token_occ_id, ar_u_token FROM ar_occ_token WHERE unit_id = ? AND pos_index = ? LIMIT 1",
-            (unit_id, pos),
-        ).fetchone()
-        if row:
-            return row[0], row[1]
-    return None, None
+def find_token(
+    cursor: sqlite3.Cursor,
+    surah: int,
+    ayah: int,
+    token_index: int,
+) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+  unit_id = f"U:QURAN:{surah}:{ayah}"
+  pos_candidates = [token_index - 1, token_index]
+  for pos in pos_candidates:
+    if pos < 0:
+      continue
+    row = cursor.execute(
+      "SELECT ar_token_occ_id, ar_u_token, surface_ar, norm_ar FROM ar_occ_token WHERE unit_id = ? AND pos_index = ? LIMIT 1",
+      (unit_id, pos),
+    ).fetchone()
+    if row:
+      return row[0], row[1], row[2], row[3]
+  return None, None, None, None
 
 
 def group_locations(locations: Iterable[Tuple[int, str]]) -> Dict[int, List[str]]:
@@ -107,6 +114,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Import QUL lemmas into quran_ayah_lemmas tables.")
     parser.add_argument("--lemmas-db", type=Path, required=True, help="Path to word-lemma SQLite file.")
     parser.add_argument("--target-db", type=Path, default=Path("database/d1.db"), help="Target D1 SQLite file.")
+    parser.add_argument(
+        "--quran-words",
+        type=Path,
+        default=Path("database/data/tarteel.ai/quran-meta/salamquran_quran_words.sql"),
+        help="Path to the Salam Quran words SQL dump for actual word surface forms.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print actions without writing to target.")
     return parser.parse_args()
 
@@ -126,6 +139,7 @@ def main() -> None:
     lemmas_conn.row_factory = sqlite3.Row
     total_locations = 0
     missing_tokens = 0
+    word_map = load_salam_word_map(args.quran_words)
 
     insert_lemma_sql = """
         INSERT INTO quran_ayah_lemmas (lemma_id, lemma_text, lemma_text_clean, words_count, uniq_words_count)
@@ -137,11 +151,23 @@ def main() -> None:
             uniq_words_count = excluded.uniq_words_count;
     """
     insert_location_sql = """
-        INSERT INTO quran_ayah_lemma_location (lemma_id, word_location, surah, ayah, token_index, ar_token_occ_id, ar_u_token)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO quran_ayah_lemma_location (
+            lemma_id,
+            word_location,
+            surah,
+            ayah,
+            token_index,
+            ar_token_occ_id,
+            ar_u_token,
+            word_simple,
+            word_diacritic
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(lemma_id, word_location) DO UPDATE SET
             ar_token_occ_id = excluded.ar_token_occ_id,
-            ar_u_token = excluded.ar_u_token;
+            ar_u_token = excluded.ar_u_token,
+            word_simple = excluded.word_simple,
+            word_diacritic = excluded.word_diacritic;
     """
 
     for lemma_row in lemmas_conn.execute("SELECT id, text, text_clean, words_count, uniq_words_count FROM lemmas"):
@@ -162,7 +188,9 @@ def main() -> None:
             if not parsed:
                 continue
             surah, ayah, token_index = parsed
-            token_occ_id, ar_u_token = find_token(target_cursor, surah, ayah, token_index)
+            token_occ_id, ar_u_token, surface_ar, norm_ar = find_token(
+                target_cursor, surah, ayah, token_index
+            )
             if not token_occ_id and not ar_u_token:
                 missing_tokens += 1
             else:
@@ -172,9 +200,24 @@ def main() -> None:
                         (ar_u_token, lemma_id),
                     )
                     primary_set = True
+            word_simple, word_diacritic = word_map.get((surah, ayah, token_index), (None, None))
+            if word_simple is None:
+                word_simple = norm_ar or surface_ar
+            if word_diacritic is None:
+                word_diacritic = surface_ar
             target_cursor.execute(
                 insert_location_sql,
-                (lemma_id, location, surah, ayah, token_index, token_occ_id, ar_u_token),
+                (
+                    lemma_id,
+                    location,
+                    surah,
+                    ayah,
+                    token_index,
+                    token_occ_id,
+                    ar_u_token,
+                    word_simple,
+                    word_diacritic,
+                ),
             )
             total_locations += 1
 

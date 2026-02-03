@@ -143,6 +143,8 @@ interface QuranLessonLemmaLocation {
   token_index: number;
   ar_token_occ_id: string | null;
   ar_u_token: string | null;
+  word_simple: string | null;
+  word_diacritic: string | null;
 }
 
 interface QuranLessonLemmaLocationRow extends QuranLessonLemmaLocation {
@@ -449,17 +451,19 @@ async function fetchAyahLemmaLocations(
   if (!unique.length) return map;
 
   const clause = unique.map(() => "(?, ?)").join(", ");
-  const sql = `
-    SELECT
-      loc.surah,
-      loc.ayah,
-      loc.word_location,
-      loc.token_index,
-      loc.ar_token_occ_id,
-      loc.ar_u_token,
-      l.lemma_id,
-      l.lemma_text,
-      l.lemma_text_clean,
+    const sql = `
+      SELECT
+        loc.surah,
+        loc.ayah,
+        loc.word_location,
+        loc.token_index,
+        loc.ar_token_occ_id,
+        loc.ar_u_token,
+        loc.word_simple,
+        loc.word_diacritic,
+        l.lemma_id,
+        l.lemma_text,
+        l.lemma_text_clean,
       l.words_count,
       l.uniq_words_count
     FROM quran_ayah_lemma_location loc
@@ -473,19 +477,21 @@ async function fetchAyahLemmaLocations(
     results?: QuranLessonLemmaLocationRow[];
   };
 
-  for (const row of result?.results ?? []) {
-    const key = `${row.surah}:${row.ayah}`;
-    const entry: QuranLessonLemmaLocation = {
-      lemma_id: row.lemma_id,
-      lemma_text: row.lemma_text,
-      lemma_text_clean: row.lemma_text_clean,
-      words_count: row.words_count,
-      uniq_words_count: row.uniq_words_count,
-      word_location: row.word_location,
-      token_index: row.token_index,
-      ar_token_occ_id: row.ar_token_occ_id,
-      ar_u_token: row.ar_u_token,
-    };
+    for (const row of result?.results ?? []) {
+      const key = `${row.surah}:${row.ayah}`;
+      const entry: QuranLessonLemmaLocation = {
+        lemma_id: row.lemma_id,
+        lemma_text: row.lemma_text,
+        lemma_text_clean: row.lemma_text_clean,
+        words_count: row.words_count,
+        uniq_words_count: row.uniq_words_count,
+        word_location: row.word_location,
+        token_index: row.token_index,
+        ar_token_occ_id: row.ar_token_occ_id,
+        ar_u_token: row.ar_u_token,
+        word_simple: row.word_simple,
+        word_diacritic: row.word_diacritic,
+      };
     const existing = map.get(key);
     if (existing) {
       existing.push(entry);
