@@ -105,13 +105,17 @@ export class DefaultHeaderComponent extends HeaderComponent {
   selectedScriptMode = this.scriptModes[0];
   selectedFontStyle = this.fontStyles[0];
   selectedReciter = this.reciters[0];
-  activePreviewTab: 'arabic' | 'english' | 'more' = 'arabic';
+  activePreviewTab: 'arabic' | 'english' | 'system' = 'arabic';
   englishFontSize = 22;
+  menuTextSize = 15;
+  headerTextSize = 15;
+  footerTextSize = 14;
 
   constructor() {
     super();
     this.loadFontSize();
     this.loadArabicFontSize();
+    this.loadSystemTextSizes();
     this.currentUrl = this.router.url;
     this.updateHeaderContext();
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
@@ -127,7 +131,6 @@ export class DefaultHeaderComponent extends HeaderComponent {
     if (!Number.isFinite(value)) return;
     this.fontSize = value;
     this.applyFontSize(value);
-    this.syncArabicSizeWithText(value);
   }
 
   onArabicFontSizeInput(event: Event) {
@@ -290,9 +293,9 @@ export class DefaultHeaderComponent extends HeaderComponent {
   private applyFontSize(value: number) {
     const doc = (globalThis as any)?.document as any;
     if (!doc?.documentElement) return;
-    doc.documentElement.style.setProperty('--app-font-size', `${value}px`);
+    doc.documentElement.style.setProperty('--app-body-font-size', `${value}px`);
     try {
-      (globalThis as any)?.localStorage?.setItem('app_font_size', String(value));
+      (globalThis as any)?.localStorage?.setItem('app_body_font_size', String(value));
     } catch {
       // ignore storage errors
     }
@@ -314,9 +317,12 @@ export class DefaultHeaderComponent extends HeaderComponent {
     if (!doc?.documentElement) return;
     let value = 16;
     try {
-      const stored = Number((globalThis as any)?.localStorage?.getItem('app_font_size'));
+      const storage = (globalThis as any)?.localStorage;
+      const storedBody = Number(storage?.getItem('app_body_font_size'));
+      const storedLegacy = Number(storage?.getItem('app_font_size'));
+      const stored = Number.isFinite(storedBody) ? storedBody : storedLegacy;
       if (Number.isFinite(stored)) {
-        value = stored <= 0 ? 20 : Math.min(74, Math.max(12, stored));
+        value = Math.min(74, Math.max(12, stored));
       }
     } catch {
       // ignore storage errors
@@ -324,13 +330,6 @@ export class DefaultHeaderComponent extends HeaderComponent {
     this.fontSize = value;
     this.englishFontSize = value;
     this.applyFontSize(value);
-    try {
-      if (value === 20) {
-        (globalThis as any)?.localStorage?.setItem('app_font_size', String(value));
-      }
-    } catch {
-      // ignore storage errors
-    }
   }
 
   private loadArabicFontSize() {
@@ -375,17 +374,11 @@ export class DefaultHeaderComponent extends HeaderComponent {
     this.selectedReciter = this.reciters[0];
     this.loadFontSize();
     this.loadArabicFontSize();
+    this.loadSystemTextSizes();
     this.activePreviewTab = 'arabic';
-    this.englishFontSize = this.fontSize;
   }
 
-  private syncArabicSizeWithText(textSize: number) {
-    const next = Math.min(74, Math.max(14, textSize + 4));
-    this.arabicFontSize = next;
-    this.applyArabicFontSize(next);
-  }
-
-  setPreviewTab(tab: 'arabic' | 'english' | 'more') {
+  setPreviewTab(tab: 'arabic' | 'english' | 'system') {
     this.activePreviewTab = tab;
   }
 
@@ -397,7 +390,115 @@ export class DefaultHeaderComponent extends HeaderComponent {
     this.englishFontSize = value;
     this.fontSize = value;
     this.applyFontSize(value);
-    this.syncArabicSizeWithText(value);
+  }
+
+  onMenuTextSizeInput(event: Event) {
+    const target = event.target as { value?: string } | null;
+    if (!target?.value) return;
+    const value = Number(target.value);
+    if (!Number.isFinite(value)) return;
+    this.menuTextSize = value;
+    this.applyMenuTextSize(value);
+  }
+
+  onHeaderTextSizeInput(event: Event) {
+    const target = event.target as { value?: string } | null;
+    if (!target?.value) return;
+    const value = Number(target.value);
+    if (!Number.isFinite(value)) return;
+    this.headerTextSize = value;
+    this.applyHeaderTextSize(value);
+  }
+
+  onFooterTextSizeInput(event: Event) {
+    const target = event.target as { value?: string } | null;
+    if (!target?.value) return;
+    const value = Number(target.value);
+    if (!Number.isFinite(value)) return;
+    this.footerTextSize = value;
+    this.applyFooterTextSize(value);
+  }
+
+  private loadSystemTextSizes() {
+    this.loadMenuTextSize();
+    this.loadHeaderTextSize();
+    this.loadFooterTextSize();
+  }
+
+  private applyMenuTextSize(value: number) {
+    const doc = (globalThis as any)?.document as any;
+    if (!doc?.documentElement) return;
+    doc.documentElement.style.setProperty('--app-menu-font-size', `${value}px`);
+    try {
+      (globalThis as any)?.localStorage?.setItem('app_menu_text_size', String(value));
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  private applyHeaderTextSize(value: number) {
+    const doc = (globalThis as any)?.document as any;
+    if (!doc?.documentElement) return;
+    doc.documentElement.style.setProperty('--app-header-font-size', `${value}px`);
+    doc.documentElement.style.setProperty('--app-header-title-size', `${value + 2}px`);
+    try {
+      (globalThis as any)?.localStorage?.setItem('app_header_text_size', String(value));
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  private applyFooterTextSize(value: number) {
+    const doc = (globalThis as any)?.document as any;
+    if (!doc?.documentElement) return;
+    doc.documentElement.style.setProperty('--app-footer-font-size', `${value}px`);
+    try {
+      (globalThis as any)?.localStorage?.setItem('app_footer_text_size', String(value));
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  private loadMenuTextSize() {
+    let value = 15;
+    try {
+      const stored = Number((globalThis as any)?.localStorage?.getItem('app_menu_text_size'));
+      if (Number.isFinite(stored)) {
+        value = Math.min(28, Math.max(12, stored));
+      }
+    } catch {
+      // ignore storage errors
+    }
+    this.menuTextSize = value;
+    this.applyMenuTextSize(value);
+  }
+
+  private loadHeaderTextSize() {
+    let value = 15;
+    try {
+      const stored = Number((globalThis as any)?.localStorage?.getItem('app_header_text_size'));
+      if (Number.isFinite(stored)) {
+        value = Math.min(28, Math.max(12, stored));
+      }
+    } catch {
+      // ignore storage errors
+    }
+    this.headerTextSize = value;
+    this.applyHeaderTextSize(value);
+  }
+
+  private loadFooterTextSize() {
+    let value = 14;
+    try {
+      const stored = Number((globalThis as any)?.localStorage?.getItem('app_footer_text_size'));
+      if (Number.isFinite(stored)) {
+        value = Math.min(28, Math.max(11, stored));
+      }
+    } catch {
+      // ignore storage errors
+    }
+    this.footerTextSize = value;
+    this.applyFooterTextSize(value);
   }
 
 }

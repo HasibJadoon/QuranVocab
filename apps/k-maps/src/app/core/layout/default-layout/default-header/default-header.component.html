@@ -150,6 +150,13 @@
               (click)="setPreviewTab('english')">
               English
             </button>
+            <button
+              type="button"
+              class="settings-tab"
+              [class.active]="activePreviewTab === 'system'"
+              (click)="setPreviewTab('system')">
+              Sys
+            </button>
           </div>
 
           <!-- BODY: scrollable -->
@@ -158,8 +165,13 @@
               <div>
                 <p class="settings-panel-label">Preview</p>
                 <h3>
-                  {{ activePreviewTab === 'english' ? 'English appearance' :
-                  'Arabic appearance' }}
+                  {{
+                    activePreviewTab === 'english'
+                      ? 'English appearance'
+                      : activePreviewTab === 'system'
+                        ? 'System appearance'
+                        : 'Arabic appearance'
+                  }}
                 </h3>
               </div>
             </div>
@@ -183,6 +195,21 @@
                   [style.fontSize.px]="previewTranslationFontSize"
                 >
                   {{ previewTranslationText }}
+                </div>
+
+                <div
+                  *ngIf="activePreviewTab === 'system'"
+                  class="preview-box preview-box--system"
+                >
+                  <div class="system-preview-row" [style.fontSize.px]="menuTextSize">
+                    Menu text sample
+                  </div>
+                  <div class="system-preview-row" [style.fontSize.px]="headerTextSize">
+                    Header text sample
+                  </div>
+                  <div class="system-preview-row" [style.fontSize.px]="footerTextSize">
+                    Footer text sample
+                  </div>
                 </div>
               </article>
             </div>
@@ -238,6 +265,54 @@
                       step="1"
                       [value]="englishFontSize"
                       (input)="onEnglishFontSizeInput($event)"
+                      class="form-range size-range" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- SYSTEM TAB -->
+              <div *ngSwitchCase="'system'">
+                <div class="setting-group">
+                  <p class="setting-title">Menu text size</p>
+                  <div class="range-block">
+                    <span class="size-value">{{ menuTextSize }}px</span>
+                    <input
+                      type="range"
+                      min="12"
+                      max="28"
+                      step="1"
+                      [value]="menuTextSize"
+                      (input)="onMenuTextSizeInput($event)"
+                      class="form-range size-range" />
+                  </div>
+                </div>
+
+                <div class="setting-group">
+                  <p class="setting-title">Header text size</p>
+                  <div class="range-block">
+                    <span class="size-value">{{ headerTextSize }}px</span>
+                    <input
+                      type="range"
+                      min="12"
+                      max="28"
+                      step="1"
+                      [value]="headerTextSize"
+                      (input)="onHeaderTextSizeInput($event)"
+                      class="form-range size-range" />
+                  </div>
+                </div>
+
+                <div class="setting-group">
+                  <p class="setting-title">Footer text size</p>
+                  <div class="range-block">
+                    <span class="size-value">{{ footerTextSize }}px</span>
+                    <input
+                      type="range"
+                      min="11"
+                      max="28"
+                      step="1"
+                      [value]="footerTextSize"
+                      (input)="onFooterTextSizeInput($event)"
                       class="form-range size-range" />
                   </div>
                 </div>

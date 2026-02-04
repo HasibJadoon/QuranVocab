@@ -75,7 +75,7 @@
 }
 .header-app-title {
   margin-left: 0.75rem;
-  font-size: 1.05rem;
+  font-size: var(--app-header-title-size, 1.05rem);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -271,6 +271,15 @@
 .preview-box--english {
   direction: ltr;
   text-align: left;
+}
+
+.preview-box--system {
+  direction: ltr;
+  text-align: left;
+}
+
+.system-preview-row {
+  line-height: 1.5;
 }
 
 /* Settings blocks */

@@ -19,6 +19,11 @@
 
 :root {
   --app-font-size: 16px;
+  --app-body-font-size: 16px;
+  --app-menu-font-size: 15px;
+  --app-header-font-size: 15px;
+  --app-header-title-size: 17px;
+  --app-footer-font-size: 14px;
   --app-font-sans: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
   --app-font-ar: "Uthmanic Hafs", "Scheherazade New", "Amiri", "Noto Naskh Arabic", "Cairo", serif;
   --app-font-ar-size: 1.35rem;
@@ -32,11 +37,45 @@
 }
 
 html {
-  font-size: var(--app-font-size, 16px);
+  font-size: 16px;
 }
 
 body {
   font-family: var(--app-font-sans, "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif);
+}
+
+.wrapper > .body {
+  font-size: var(--app-body-font-size, 16px);
+}
+
+.sidebar .nav-link,
+.sidebar .nav-group-toggle,
+.sidebar .nav-title,
+.sidebar .sidebar-brand {
+  font-size: var(--app-menu-font-size, 15px);
+}
+
+.header .header-breadcrumb .breadcrumb,
+.header .header-breadcrumb .breadcrumb-item,
+.header .header-breadcrumb .breadcrumb-item a,
+.header .header-search-input,
+.header .header-search .btn,
+.header .header-filter-pill,
+.header .study-edit-btn,
+.header .header-tabs .nav-link {
+  font-size: var(--app-header-font-size, 15px);
+}
+
+.header .header-app-title {
+  font-size: var(--app-header-title-size, 17px);
+}
+
+.footer,
+.footer span,
+.footer a,
+.footer small,
+.footer .text-body-secondary {
+  font-size: var(--app-footer-font-size, 14px);
 }
 
 /* =========================
@@ -381,7 +420,6 @@ body {
 .arabic-text {
   font-family: var(--app-font-ar);
   font-size: calc(var(--app-ar-font-size, 1.3rem) * 1.05);
-  line-height: 1.75;
   text-align: right;
   direction: rtl;
   color: rgba(255, 255, 255, 0.92);

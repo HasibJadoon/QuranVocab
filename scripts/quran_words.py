@@ -7,6 +7,17 @@ from typing import Dict, List, Optional, Tuple
 WordKey = Tuple[int, int, int]
 WordValue = Tuple[Optional[str], Optional[str]]
 
+# Normalize a few orthographic variants from the Salam dump to the app's
+# expected "simple" spelling.
+SIMPLE_SPELLING_OVERRIDES = {
+    "هاذا": "هذا",
+    "هاذه": "هذه",
+    "هاذان": "هذان",
+    "هاذين": "هذين",
+    "ذالك": "ذلك",
+    "لاكن": "لكن",
+}
+
 
 def _parse_word_row(line: str) -> Optional[List[str]]:
     """Split a single INSERT row into individual column strings."""
@@ -65,6 +76,12 @@ def _normalize_value(value: str) -> Optional[str]:
     return normalized
 
 
+def _normalize_simple_spelling(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    return SIMPLE_SPELLING_OVERRIDES.get(value, value)
+
+
 def load_salam_word_map(path: Path) -> Dict[WordKey, WordValue]:
     """Load the salamquran_quran_words dataset and return (surah, ayah, position) -> (simple, text)."""
     if not path.exists():
@@ -82,7 +99,7 @@ def load_salam_word_map(path: Path) -> Dict[WordKey, WordValue]:
             except ValueError:
                 continue
             text = _normalize_value(columns[5])
-            simple = _normalize_value(columns[6])
+            simple = _normalize_simple_spelling(_normalize_value(columns[6]))
             if text is None and simple is None:
                 continue
             mapping[(surah, aya, position)] = (simple, text)
