@@ -26,7 +26,7 @@
   <c-container [fluid]="true" class="px-4">
     <ng-container *ngIf="isStudyRoute(); else defaultBreadcrumb">
       <div class="study-tabs-row">
-        <ul class="nav nav-tabs header-tabs">
+        <ul class="nav nav-tabs header-tabs study-page-tabs">
           <li class="nav-item">
             <a
               class="nav-link"
@@ -71,7 +71,7 @@
             </a>
           </li>
         </ul>
-        <button class="btn btn-sm btn-outline-secondary study-edit-btn"
+        <button class="btn btn-sm btn-outline-secondary study-edit-btn study-page-edit-btn"
           (click)="onHeaderActionClick()">
           Edit Lesson
         </button>
