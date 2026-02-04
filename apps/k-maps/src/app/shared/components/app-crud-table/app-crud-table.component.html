@@ -1,0 +1,55 @@
+<div class="table-responsive app-crud-table-shell">
+  <table class="table align-middle app-crud-table">
+    <thead>
+      <tr>
+        <th *ngFor="let col of normalizedColumns">{{ col.label }}</th>
+        <th *ngIf="showActions" class="text-end">{{ actionsLabel }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of rows; trackBy: trackByRow">
+        <td *ngFor="let col of normalizedColumns" [ngClass]="resolveCellClass(col, row)">
+          <ng-container [ngSwitch]="col.type">
+            <span *ngSwitchCase="'badge'" class="badge app-crud-badge" [ngClass]="resolveBadgeClass(col, row)">
+              {{ resolveCellValue(col, row) }}
+            </span>
+            <span *ngSwitchDefault>{{ resolveCellValue(col, row) }}</span>
+          </ng-container>
+        </td>
+        <td *ngIf="showActions" class="text-end app-crud-actions">
+          <button
+            *ngIf="showViewAction"
+            type="button"
+            class="btn btn-sm btn-outline-info app-crud-view-btn"
+            (click)="onView(row)"
+            aria-label="View row"
+            title="View data"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12Z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7" />
+            </svg>
+          </button>
+          <button
+            *ngIf="showEditAction"
+            type="button"
+            class="btn btn-sm btn-primary app-crud-edit-btn"
+            (click)="onEdit(row)"
+          >
+            Edit
+          </button>
+        </td>
+      </tr>
+      <tr *ngIf="rows.length === 0">
+        <td class="text-muted py-3" [attr.colspan]="colSpan">{{ emptyMessage }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

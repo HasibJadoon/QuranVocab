@@ -1,0 +1,65 @@
+:host {
+  display: block;
+}
+
+.app-crud-table-shell {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(11, 20, 34, 0.88), rgba(7, 13, 24, 0.9));
+}
+
+.app-crud-table {
+  margin: 0;
+}
+
+.app-crud-table thead th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.73rem;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.75rem 0.9rem;
+}
+
+.app-crud-table tbody td {
+  border-color: rgba(255, 255, 255, 0.06);
+  padding: 0.7rem 0.9rem;
+}
+
+.app-crud-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.app-crud-actions {
+  white-space: nowrap;
+}
+
+.app-crud-view-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  margin-right: 0.45rem;
+  border-radius: 999px;
+}
+
+.app-crud-view-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.app-crud-edit-btn {
+  min-width: 70px;
+}
+
+.app-crud-badge {
+  font-weight: 600;
+}
+
+.app-table-arabic {
+  font-family: var(--app-font-ar, 'Uthmanic Hafs', 'Amiri', 'Noto Naskh Arabic', serif);
+  font-size: calc(var(--app-ar-font-size, 1rem) * 0.9);
+  direction: rtl;
+  letter-spacing: 0.2px;
+}

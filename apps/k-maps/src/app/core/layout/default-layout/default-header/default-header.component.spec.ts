@@ -16,7 +16,6 @@ import {
 import { IconModule, IconSetService } from '@coreui/icons-angular';
 import { iconSubset } from '../../../icons/icon-subset';
 import { DefaultHeaderComponent } from './default-header.component';
-import { describe, beforeEach, it } from 'node:test';
 
 describe('DefaultHeaderComponent', () => {
   let component: DefaultHeaderComponent;

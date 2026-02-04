@@ -18,7 +18,7 @@ export class DocsLinkComponent {
 
   readonly #nameEffect = effect(() => {
     const name = this.name();
-    this.href.update(href => name ? `# : href);
+    this.href.update((href) => (name ? `${href}#${name}` : href));
   });
 
 }

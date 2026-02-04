@@ -24,58 +24,8 @@
 
   </c-container>
   <c-container [fluid]="true" class="px-4">
-    <ng-container *ngIf="isStudyRoute(); else defaultBreadcrumb">
-      <div class="study-tabs-row">
-        <ul class="nav nav-tabs header-tabs study-page-tabs">
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              [class.active]="studyTabIsActive('reading') || !currentUrl.includes('tab=')"
-              [routerLink]="[]"
-              [queryParams]="{ tab: 'reading' }"
-              queryParamsHandling="merge">
-              <span class="header-tab-icon icon-reading"
-                aria-hidden="true"></span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              [class.active]="studyTabIsActive('memory')"
-              [routerLink]="[]"
-              [queryParams]="{ tab: 'memory' }"
-              queryParamsHandling="merge">
-              <span class="header-tab-icon icon-memory"
-                aria-hidden="true"></span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              [class.active]="studyTabIsActive('mcq')"
-              [routerLink]="[]"
-              [queryParams]="{ tab: 'mcq' }"
-              queryParamsHandling="merge">
-              <span class="header-tab-icon icon-mcqs" aria-hidden="true"></span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              [class.active]="studyTabIsActive('passage')"
-              [routerLink]="[]"
-              [queryParams]="{ tab: 'passage' }"
-              queryParamsHandling="merge">
-              <span class="header-tab-icon icon-passage"
-                aria-hidden="true"></span>
-            </a>
-          </li>
-        </ul>
-        <button class="btn btn-sm btn-outline-secondary study-edit-btn study-page-edit-btn"
-          (click)="onHeaderActionClick()">
-          Edit Lesson
-        </button>
-      </div>
+    <ng-container *ngIf="pageHeaderTabs(); else defaultBreadcrumb">
+      <app-page-header-tabs [config]="pageHeaderTabs()!" />
     </ng-container>
     <ng-template #defaultBreadcrumb>
       <div class="header-breadcrumb">
@@ -86,16 +36,18 @@
             </div>
           </div>
           <div class="header-breadcrumb-search"
-            *ngIf="showHeaderSearch || showDiscourseFilters">
+            *ngIf="pageHeaderSearch() || showHeaderSearch || showDiscourseFilters">
             <app-header-search
-              *ngIf="showHeaderSearch"
-              [placeholder]="headerPlaceholder"
-              [value]="headerQuery"
-              [primaryLabel]="headerActionLabel"
-              [secondaryLabel]="headerSecondaryLabel"
+              *ngIf="pageHeaderSearch() || showHeaderSearch"
+              [placeholder]="resolvedHeaderPlaceholder()"
+              [value]="resolvedHeaderValue()"
+              [primaryLabel]="resolvedPrimaryLabel()"
+              [secondaryLabel]="resolvedSecondaryLabel()"
+              [tertiaryLabel]="resolvedTertiaryLabel()"
               (search)="onHeaderSearchInput($event)"
               (primary)="onHeaderActionClick()"
-              (secondary)="onHeaderSecondaryClick()" />
+              (secondary)="onHeaderSecondaryClick()"
+              (tertiary)="onHeaderTertiaryClick()" />
             <div class="header-filter-row" *ngIf="showDiscourseFilters">
               <button
                 class="btn btn-sm header-filter-pill"

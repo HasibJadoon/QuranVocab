@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { TokensService } from '../../../shared/services/tokens.service';
+import { PageHeaderSearchService } from '../../../shared/services/page-header-search.service';
 import { TokenRow } from '../../../shared/models/arabic/token.model';
 
 @Component({
@@ -11,7 +14,11 @@ import { TokenRow } from '../../../shared/models/arabic/token.model';
   templateUrl: './tokens.component.html',
   styleUrls: ['./tokens.component.scss'],
 })
-export class TokensComponent implements OnInit {
+export class TokensComponent implements OnInit, OnDestroy {
+  private readonly route = inject(ActivatedRoute);
+  private readonly pageHeaderSearch = inject(PageHeaderSearchService);
+  private readonly subs = new Subscription();
+
   readonly posOptions = ['verb', 'noun', 'adj', 'particle', 'phrase'];
 
   q = '';
@@ -28,7 +35,22 @@ export class TokensComponent implements OnInit {
   constructor(private tokensService: TokensService) {}
 
   ngOnInit() {
-    this.load();
+    this.pageHeaderSearch.setConfig({
+      placeholder: 'Search lemma, root, or canonical input',
+      queryParamKey: 'q',
+    });
+    this.subs.add(
+      this.route.queryParamMap.subscribe((params) => {
+        this.q = params.get('q') ?? '';
+        this.page = 1;
+        this.load();
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subs.unsubscribe();
+    this.pageHeaderSearch.clearConfig();
   }
 
   get totalPages() {
@@ -53,11 +75,6 @@ export class TokensComponent implements OnInit {
     } finally {
       this.loading = false;
     }
-  }
-
-  onSearch() {
-    this.page = 1;
-    this.load();
   }
 
   setPageSize(size: number) {

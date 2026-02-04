@@ -1,22 +1,24 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { ArLessonsService } from '../../../../shared/services/ar-lessons.service';
+import { PageHeaderSearchService } from '../../../../shared/services/page-header-search.service';
 import { ArLessonRow } from '../../../../shared/models/arabic/lesson-row.model';
+import { AppCrudTableComponent, CrudTableColumn } from '../../../../shared/components';
 
 @Component({
   selector: 'app-ar-lessons-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, AppCrudTableComponent],
   templateUrl: './ar-lessons-page.component.html',
   styleUrls: ['./ar-lessons-page.component.scss']
 })
-export class ArLessonsPageComponent implements OnInit {
+export class ArLessonsPageComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private lessons = inject(ArLessonsService);
+  private pageHeaderSearch = inject(PageHeaderSearchService);
 
   q = '';
   rows: ArLessonRow[] = [];
@@ -24,7 +26,20 @@ export class ArLessonsPageComponent implements OnInit {
   loading = false;
   error = '';
   lessonTypeFilter: 'all' | 'quran' | 'other' = 'quran';
-  private debounce?: ReturnType<typeof setTimeout>;
+  tableColumns: CrudTableColumn[] = [
+    {
+      key: 'title',
+      label: 'Title',
+      cellClass: (row) => (this.isArabicText(String(row['title'] ?? '')) ? 'app-table-arabic' : ''),
+    },
+    { key: 'lesson_type', label: 'Type' },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'badge',
+      badgeClass: (row) => this.statusBadgeClass(String(row['status'] ?? '')),
+    },
+  ];
 
   ngOnInit() {
     this.route.queryParamMap.subscribe((params) => {
@@ -32,13 +47,13 @@ export class ArLessonsPageComponent implements OnInit {
       const typeParam = params.get('lesson_type');
       this.lessonTypeFilter =
         typeParam === 'other' ? 'other' : typeParam === 'all' ? 'all' : 'quran';
+      this.syncPageHeaderSearch();
       this.load();
     });
   }
 
-  onSearchInput() {
-    if (this.debounce) clearTimeout(this.debounce);
-    this.debounce = setTimeout(() => this.load(), 250);
+  ngOnDestroy() {
+    this.pageHeaderSearch.clearConfig();
   }
 
   async load() {
@@ -62,11 +77,6 @@ export class ArLessonsPageComponent implements OnInit {
     }
   }
 
-  createNew() {
-    const target = this.lessonTypeFilter === 'other' ? 'literature' : 'quran';
-    this.router.navigate(['/arabic/lessons', target, 'new']);
-  }
-
   selectLessonType(type: 'all' | 'quran' | 'other') {
     if (this.lessonTypeFilter === type) return;
     this.router.navigate([], {
@@ -81,18 +91,39 @@ export class ArLessonsPageComponent implements OnInit {
     this.router.navigate(['/arabic/lessons', prefix, id, 'view']);
   }
 
-  study(row: { id: number; lesson_type: string }) {
-    const prefix = this.getLessonPrefix(row.lesson_type);
-    this.router.navigate(['/arabic/lessons', prefix, row.id, 'study']);
-  }
-
   edit(row: { id: number; lesson_type: string }) {
     const prefix = this.getLessonPrefix(row.lesson_type);
     this.router.navigate(['/arabic/lessons', prefix, row.id, 'edit']);
   }
 
+  onViewRow(row: Record<string, unknown>) {
+    const id = Number(row['id']);
+    const lessonType = String(row['lesson_type'] ?? '');
+    if (!Number.isFinite(id)) return;
+    this.view(id, lessonType);
+  }
+
+  onEditRow(row: Record<string, unknown>) {
+    const id = Number(row['id']);
+    const lessonType = String(row['lesson_type'] ?? '');
+    if (!Number.isFinite(id)) return;
+    this.edit({ id, lesson_type: lessonType });
+  }
+
   private getLessonPrefix(type?: string): 'quran' | 'literature' {
     return type?.toLowerCase() === 'quran' ? 'quran' : 'literature';
+  }
+
+  private syncPageHeaderSearch() {
+    const target = this.lessonTypeFilter === 'other' ? 'literature' : 'quran';
+    this.pageHeaderSearch.setConfig({
+      placeholder: 'Search title or source',
+      queryParamKey: 'q',
+      primaryAction: {
+        label: 'Add',
+        commands: ['/arabic/lessons', target, 'new'],
+      },
+    });
   }
 
   statusBadgeClass(status: string) {

@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { worldviewEntries } from '../worldview-mock';
 import { WorldviewEntrySummary } from '../../../../shared/models/worldview/worldview-entry.model';
+import { PageHeaderSearchService } from '../../../../shared/services/page-header-search.service';
 
 @Component({
   selector: 'app-worldview-lessons-page',
@@ -11,9 +12,10 @@ import { WorldviewEntrySummary } from '../../../../shared/models/worldview/world
   templateUrl: './worldview-lessons-page.component.html',
   styleUrls: ['./worldview-lessons-page.component.scss']
 })
-export class WorldviewLessonsPageComponent implements OnInit {
+export class WorldviewLessonsPageComponent implements OnInit, OnDestroy {
   q = '';
   rows: WorldviewEntrySummary[] = worldviewEntries;
+  private readonly pageHeaderSearch = inject(PageHeaderSearchService);
 
   constructor(
     private readonly router: Router,
@@ -21,10 +23,23 @@ export class WorldviewLessonsPageComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.pageHeaderSearch.setConfig({
+      placeholder: 'Search title, creator, or summary',
+      queryParamKey: 'q',
+      primaryAction: {
+        label: 'Add',
+        commands: ['/worldview/lessons/new'],
+        queryParams: { mode: 'capture' },
+      },
+    });
     this.route.queryParamMap.subscribe((params) => {
       this.q = params.get('q') ?? '';
       this.applyFilters();
     });
+  }
+
+  ngOnDestroy() {
+    this.pageHeaderSearch.clearConfig();
   }
 
   openEntry(id: number) {

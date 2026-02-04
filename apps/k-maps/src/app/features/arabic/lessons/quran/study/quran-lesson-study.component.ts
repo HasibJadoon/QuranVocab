@@ -5,7 +5,9 @@ import { Subscription } from 'rxjs';
 
 import { QuranLessonService } from '../../../../../shared/services/quran-lesson.service';
 import { TokensService } from '../../../../../shared/services/tokens.service';
+import { PageHeaderService } from '../../../../../shared/services/page-header.service';
 import { TokenRow } from '../../../../../shared/models/arabic/token.model';
+import { PageHeaderTabsConfig } from '../../../../../shared/models/core/page-header.model';
 import {
   QuranLesson,
   QuranLessonComprehensionQuestion,
@@ -14,6 +16,7 @@ import {
 } from '../../../../../shared/models/arabic/quran-lesson.model';
 
 type StudyTab = 'study' | 'sentences' | 'mcq' | 'passage';
+type StudyHeaderTab = 'reading' | 'memory' | 'mcq' | 'passage';
 type McqSelection = { selectedIndex: number; isCorrect: boolean };
 
 type VerseWordView = {
@@ -65,6 +68,7 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly service = inject(QuranLessonService);
   private readonly tokensService = inject(TokensService);
+  private readonly pageHeaderService = inject(PageHeaderService);
   private readonly subs = new Subscription();
   private readonly defaultText: QuranLesson['text'] = { arabic_full: [], mode: 'original' };
 
@@ -314,6 +318,7 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     this.subs.add(
       this.route.queryParamMap.subscribe((params) => {
         this.activeTab = this.parseTab(params.get('tab'));
+        this.syncPageHeaderTabs();
       })
     );
 
@@ -337,6 +342,7 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
+    this.pageHeaderService.clearTabs();
     this.audioContext?.close?.();
   }
 
@@ -471,12 +477,75 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     ).trim();
   }
 
-  private parseTab(tab: string | null): StudyTab {
+  private syncPageHeaderTabs() {
+    const lessonId = this.route.snapshot.paramMap.get('id');
+    if (!lessonId) {
+      this.pageHeaderService.clearTabs();
+      return;
+    }
+
+    const baseCommands = ['/arabic/lessons/quran', lessonId, 'study'];
+    const config: PageHeaderTabsConfig = {
+      activeTabId: this.toHeaderTab(this.activeTab),
+      tabs: [
+        {
+          id: 'reading',
+          iconUrl: '/assets/images/app-icons/study-reading-tab.png',
+          commands: baseCommands,
+          queryParams: { tab: 'reading' },
+        },
+        {
+          id: 'memory',
+          iconUrl: '/assets/images/app-icons/study-vocab-tab.png',
+          commands: baseCommands,
+          queryParams: { tab: 'memory' },
+        },
+        {
+          id: 'mcq',
+          iconUrl: '/assets/images/app-icons/study-mcqs-tab.png',
+          commands: baseCommands,
+          queryParams: { tab: 'mcq' },
+        },
+        {
+          id: 'passage',
+          iconUrl: '/assets/images/app-icons/study-reflection-tab.png',
+          commands: baseCommands,
+          queryParams: { tab: 'passage' },
+        },
+      ],
+      action: {
+        label: 'Edit Lesson',
+        commands: ['/arabic/lessons/quran', lessonId, 'edit'],
+      },
+    };
+    this.pageHeaderService.setTabs(config);
+  }
+
+  private toHeaderTab(tab: StudyTab): StudyHeaderTab {
     switch (tab) {
       case 'sentences':
+        return 'memory';
       case 'mcq':
+        return 'mcq';
       case 'passage':
-        return tab;
+        return 'passage';
+      default:
+        return 'reading';
+    }
+  }
+
+  private parseTab(tab: string | null): StudyTab {
+    switch (tab) {
+      case 'reading':
+      case 'study':
+        return 'study';
+      case 'memory':
+      case 'sentences':
+        return 'sentences';
+      case 'mcq':
+        return 'mcq';
+      case 'passage':
+        return 'passage';
       default:
         return 'study';
     }

@@ -5,17 +5,8 @@
       <p class="text-muted mb-0">Browse the canonical ar_u_tokens layer linked to roots.</p>
     </div>
     <div class="tokens-controls">
-      <div class="input-group">
-        <input
-          class="form-control"
-          placeholder="Search lemma, root, or canonical input"
-          [(ngModel)]="q"
-          (keyup.enter)="onSearch()"
-        />
-        <button class="btn btn-primary" type="button" (click)="onSearch()">Search</button>
-      </div>
       <div class="tokens-filters">
-        <select class="form-select" [(ngModel)]="pos" (change)="onSearch()">
+        <select class="form-select" [(ngModel)]="pos" (change)="load()">
           <option value="">All POS</option>
           <option *ngFor="let posOption of posOptions" [value]="posOption">
             {{ posOption | titlecase }}

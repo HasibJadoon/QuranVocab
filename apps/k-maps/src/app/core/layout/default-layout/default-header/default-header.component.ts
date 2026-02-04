@@ -27,7 +27,14 @@ import {
 
 import { IconDirective } from '@coreui/icons-angular';
 import { AuthService } from '../../../../shared/services/AuthService';
-import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
+import { AppPageHeaderTabsComponent, HeaderSearchComponent } from '../../../../shared/components';
+import { PageHeaderService } from '../../../../shared/services/page-header.service';
+import { PageHeaderSearchService } from '../../../../shared/services/page-header-search.service';
+import {
+  PageHeaderSearchAction,
+  PageHeaderSearchConfig,
+  PageHeaderTabsConfig
+} from '../../../../shared/models/core/page-header.model';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 const SKIPPED_BREADCRUMB_LABELS = new Set(['Arabic Lessons', 'Quran Lessons']);
@@ -53,15 +60,24 @@ const SKIPPED_BREADCRUMB_LABELS = new Set(['Arabic Lessons', 'Quran Lessons']);
     DropdownComponent,
     DropdownToggleDirective,
     DropdownMenuDirective,
-    HeaderSearchComponent
+    HeaderSearchComponent,
+    AppPageHeaderTabsComponent
   ]
 })
 export class DefaultHeaderComponent extends HeaderComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private pageHeaderService = inject(PageHeaderService);
+  private pageHeaderSearchService = inject(PageHeaderSearchService);
   private breadcrumbService = inject(BreadcrumbRouterService);
   private breadcrumbsSignal = toSignal(this.breadcrumbService.breadcrumbs$, {
     initialValue: [],
+  });
+  pageHeaderTabs = toSignal(this.pageHeaderService.tabs$, {
+    initialValue: null as PageHeaderTabsConfig | null,
+  });
+  pageHeaderSearch = toSignal(this.pageHeaderSearchService.config$, {
+    initialValue: null as PageHeaderSearchConfig | null,
   });
 
   sidebarId = input('sidebar1');
@@ -148,14 +164,21 @@ export class DefaultHeaderComponent extends HeaderComponent {
   }
 
   onHeaderSearchInput(value: string) {
-    this.headerQuery = value;
+    const key = this.pageHeaderSearch()?.queryParamKey ?? 'q';
+    if (key === 'q') this.headerQuery = value;
     this.router.navigate([], {
-      queryParams: { q: value || null },
+      queryParams: { [key]: value || null },
       queryParamsHandling: 'merge',
     });
   }
 
   onHeaderActionClick() {
+    const primaryAction = this.pageHeaderSearch()?.primaryAction;
+    if (primaryAction) {
+      this.runPageHeaderSearchAction(primaryAction);
+      return;
+    }
+
     if (this.headerActionKind === 'lesson-new') {
       this.router.navigate(['/arabic/lessons', this.lessonHeaderTarget, 'new']);
       return;
@@ -173,9 +196,43 @@ export class DefaultHeaderComponent extends HeaderComponent {
   }
 
   onHeaderSecondaryClick() {
+    const secondaryAction = this.pageHeaderSearch()?.secondaryAction;
+    if (secondaryAction) {
+      this.runPageHeaderSearchAction(secondaryAction);
+      return;
+    }
+
     if (this.headerSecondaryKind === 'refresh') {
       this.triggerRefresh();
     }
+  }
+
+  onHeaderTertiaryClick() {
+    const tertiaryAction = this.pageHeaderSearch()?.tertiaryAction;
+    if (!tertiaryAction) return;
+    this.runPageHeaderSearchAction(tertiaryAction);
+  }
+
+  resolvedHeaderPlaceholder() {
+    return this.pageHeaderSearch()?.placeholder ?? this.headerPlaceholder;
+  }
+
+  resolvedHeaderValue() {
+    const key = this.pageHeaderSearch()?.queryParamKey ?? 'q';
+    const url = this.router.parseUrl(this.currentUrl);
+    return String(url.queryParams[key] ?? '');
+  }
+
+  resolvedPrimaryLabel() {
+    return this.pageHeaderSearch()?.primaryAction?.label ?? this.headerActionLabel;
+  }
+
+  resolvedSecondaryLabel() {
+    return this.pageHeaderSearch()?.secondaryAction?.label ?? this.headerSecondaryLabel;
+  }
+
+  resolvedTertiaryLabel() {
+    return this.pageHeaderSearch()?.tertiaryAction?.label ?? '';
   }
 
   toggleDiscourseFilter(key: string) {
@@ -193,15 +250,6 @@ export class DefaultHeaderComponent extends HeaderComponent {
 
   discourseFilterActive(key: string) {
     return this.activeDiscourseFilters.has(key);
-  }
-
-  isStudyRoute() {
-    return this.currentUrl.includes('/arabic/lessons/') && this.currentUrl.includes('/study');
-  }
-
-  studyTabIsActive(tab: 'reading' | 'memory' | 'mcq' | 'passage') {
-    const url = this.currentUrl;
-    return url.includes(`tab=${tab}`);
   }
 
   private updateHeaderContext() {
@@ -286,6 +334,23 @@ export class DefaultHeaderComponent extends HeaderComponent {
   private triggerRefresh() {
     this.router.navigate([], {
       queryParams: { refresh: Date.now() },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  private runPageHeaderSearchAction(action: PageHeaderSearchAction) {
+    if (action.commands?.length) {
+      if (action.queryParams) {
+        this.router.navigate(action.commands, { queryParams: action.queryParams });
+        return;
+      }
+      this.router.navigate(action.commands);
+      return;
+    }
+
+    if (!action.queryParams) return;
+    this.router.navigate([], {
+      queryParams: action.queryParams,
       queryParamsHandling: 'merge',
     });
   }
