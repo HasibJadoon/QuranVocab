@@ -82,7 +82,9 @@
   </div>
 
   <article class="panel">
-    <h2 class="panel-title">Arabic Text and Translation</h2>
+    <h2 class="panel-title">
+      {{ activeViewTab === 'translation' ? 'Translation View' : 'Arabic Text View' }}
+    </h2>
     <div class="ayah-list" *ngIf="lessonData.text.arabic_full.length; else noAyatTpl">
       <article class="ayah-card" *ngFor="let ayah of lessonData.text.arabic_full; trackBy: trackByAyah">
         <div class="ayah-head">
@@ -90,8 +92,10 @@
           <span class="ayah-unit">Unit {{ ayah.unit_id }}</span>
           <span class="ayah-lemmas" *ngIf="ayah.lemmas?.length">{{ ayah.lemmas?.length }} lemmas</span>
         </div>
-        <p class="ayah-ar">{{ ayah.arabic_diacritics ?? ayah.arabic }}</p>
-        <p class="ayah-en">{{ ayah.translation ?? 'No translation available' }}</p>
+        <p class="ayah-ar" *ngIf="activeViewTab === 'arabic'">{{ ayah.arabic_diacritics ?? ayah.arabic }}</p>
+        <p class="ayah-en" *ngIf="activeViewTab === 'translation'">
+          {{ ayah.translation ?? 'No translation available' }}
+        </p>
         <p class="ayah-note" *ngIf="ayah.notes">{{ ayah.notes }}</p>
       </article>
     </div>
@@ -107,8 +111,12 @@
             <span>#{{ sentence.sentence_order ?? '—' }}</span>
             <span *ngIf="sentence.roots?.length">Roots: {{ sentence.roots?.join(', ') }}</span>
           </div>
-          <p class="sentence-ar">{{ sentence.arabic || sentence.text.arabic }}</p>
-          <p class="sentence-en">{{ sentence.translation || sentence.text.translation || '—' }}</p>
+          <p class="sentence-ar" *ngIf="activeViewTab === 'arabic'">
+            {{ sentence.arabic || sentence.text.arabic }}
+          </p>
+          <p class="sentence-en" *ngIf="activeViewTab === 'translation'">
+            {{ sentence.translation || sentence.text.translation || '—' }}
+          </p>
         </article>
       </div>
     </article>

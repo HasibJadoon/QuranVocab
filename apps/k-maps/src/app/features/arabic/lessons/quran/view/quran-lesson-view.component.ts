@@ -4,6 +4,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 import { QuranLessonService } from '../../../../../shared/services/quran-lesson.service';
+import { PageHeaderService } from '../../../../../shared/services/page-header.service';
+import { PageHeaderTabsConfig } from '../../../../../shared/models/core/page-header.model';
 import {
   QuranLesson,
   QuranLessonAyahUnit,
@@ -12,6 +14,8 @@ import {
   QuranLessonUnit,
 } from '../../../../../shared/models/arabic/quran-lesson.model';
 import { QuranLessonToolbarComponent } from '../toolbar/quran-lesson-toolbar.component';
+
+type QuranViewTab = 'arabic' | 'translation';
 
 @Component({
   selector: 'app-quran-lesson-view',
@@ -23,10 +27,12 @@ import { QuranLessonToolbarComponent } from '../toolbar/quran-lesson-toolbar.com
 export class QuranLessonViewComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private service = inject(QuranLessonService);
+  private pageHeaderService = inject(PageHeaderService);
   private subs = new Subscription();
 
   lesson: QuranLesson | null = null;
   readonly tokenPreviewLimit = 14;
+  activeViewTab: QuranViewTab = 'arabic';
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -41,10 +47,18 @@ export class QuranLessonViewComponent implements OnInit, OnDestroy {
         });
       this.subs.add(sub);
     }
+
+    this.subs.add(
+      this.route.queryParamMap.subscribe((params) => {
+        this.activeViewTab = this.parseViewTab(params.get('tab'));
+        this.syncPageHeaderTabs();
+      })
+    );
   }
 
   ngOnDestroy() {
     this.subs.unsubscribe();
+    this.pageHeaderService.clearTabs();
   }
 
   get lessonTokens() {
@@ -135,4 +149,41 @@ export class QuranLessonViewComponent implements OnInit, OnDestroy {
 
   trackById = (_index: number, item: { question_id?: string; mcq_id?: string; word?: string; u_span_id?: string }) =>
     item.question_id ?? item.mcq_id ?? item.word ?? item.u_span_id ?? `${_index}`;
+
+  private parseViewTab(tab: string | null): QuranViewTab {
+    return tab === 'translation' ? 'translation' : 'arabic';
+  }
+
+  private syncPageHeaderTabs() {
+    const lessonId = this.route.snapshot.paramMap.get('id');
+    if (!lessonId) {
+      this.pageHeaderService.clearTabs();
+      return;
+    }
+
+    const baseCommands = ['/arabic/lessons/quran', lessonId, 'view'];
+    const config: PageHeaderTabsConfig = {
+      activeTabId: this.activeViewTab,
+      tabs: [
+        {
+          id: 'arabic',
+          iconUrl: '/assets/images/app-icons/study-reading-tab.png',
+          commands: baseCommands,
+          queryParams: { tab: 'arabic' },
+        },
+        {
+          id: 'translation',
+          iconUrl: '/assets/images/app-icons/study-vocab-tab.png',
+          commands: baseCommands,
+          queryParams: { tab: 'translation' },
+        },
+      ],
+      action: {
+        label: 'Edit Lesson',
+        commands: ['/arabic/lessons/quran', lessonId, 'edit'],
+      },
+    };
+
+    this.pageHeaderService.setTabs(config);
+  }
 }

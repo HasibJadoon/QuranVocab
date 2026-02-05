@@ -279,6 +279,7 @@ export interface QuranLesson {
   id: string;
   title: string;
   title_ar?: string;
+  source?: string | null;
   status?: string;
   difficulty?: number;
   reference?: QuranLessonReference;

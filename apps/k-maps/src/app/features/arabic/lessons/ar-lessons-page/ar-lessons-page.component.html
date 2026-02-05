@@ -11,13 +11,10 @@
         [primaryLabel]="'Add'"
         [secondaryLabel]="'Refresh'"
         [filters]="headerFilters"
-        [pagination]="headerPagination"
         (search)="onHeaderSearchInput($event)"
         (primary)="onHeaderAddClick()"
         (secondary)="refresh()"
         (filterChange)="onHeaderFilterChange($event)"
-        (pageChange)="onHeaderPageChange($event)"
-        (pageSizeChange)="onHeaderPageSizeChange($event)"
       />
       <div *ngIf="error" class="alert alert-danger py-2">{{ error }}</div>
       <div *ngIf="loading" class="text-muted">Loading…</div>
@@ -30,6 +27,15 @@
         [emptyMessage]="'No lessons yet.'"
         (action)="onTableAction($event)"
       ></app-crud-table>
+
+      <app-headerbar
+        class="lessons-pagination-footer"
+        [showTitle]="false"
+        [showSearch]="false"
+        [pagination]="headerPagination"
+        (pageChange)="onHeaderPageChange($event)"
+        (pageSizeChange)="onHeaderPageSizeChange($event)"
+      />
     </div>
   </div>
   

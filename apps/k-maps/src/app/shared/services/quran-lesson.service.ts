@@ -48,7 +48,7 @@ export class QuranLessonService {
 
     return this.http.put<{ ok: boolean; result: QuranLesson }>(
       `${this.baseUrl}/${id}`,
-      payload,
+      this.buildPersistPayload(payload),
       { headers }
     );
   }
@@ -60,12 +60,16 @@ export class QuranLessonService {
     });
 
     return this.http
-      .post<{ ok: boolean; result: QuranLesson }>(this.baseUrl, payload, { headers })
+      .post<{ ok: boolean; result: QuranLesson }>(
+        this.baseUrl,
+        this.buildPersistPayload(payload),
+        { headers }
+      )
       .pipe(map((res) => res.result));
   }
 
   private mergeLessonPayload(data: LessonResponse): QuranLesson {
-    const lessonJson = (data.lesson_json as Record<string, unknown>) ?? {};
+    const lessonJson = this.asRecord(data.lesson_json) ?? {};
     const ayat = data.ayat ?? [];
     const sentencesV2 = (data.sentences ?? []) as QuranLessonSentenceV2[];
     const sentencesPayload = sentencesV2.map((sentence) => {
@@ -98,14 +102,7 @@ export class QuranLessonService {
       text_cache: unit.text_cache ?? null,
       meta_json: unit.meta_json ?? null,
     }));
-    const rawMode = lessonJson['mode'];
-    const lessonMode: 'original' | 'edited' | 'mixed' =
-      rawMode === 'edited'
-        ? 'edited'
-        : rawMode === 'mixed'
-          ? 'mixed'
-          : 'original';
-    const text: QuranLessonText = {
+    const baseText: QuranLessonText = {
       arabic_full: ayat.map((unit) => ({
         unit_id: unit.unit_id,
         unit_type: unit.unit_type,
@@ -120,31 +117,60 @@ export class QuranLessonService {
         notes: unit.notes ?? null,
         lemmas: unit.lemmas ?? undefined,
       })),
-      mode:
-        rawMode === 'edited'
-          ? 'edited'
-          : rawMode === 'mixed'
-            ? 'mixed'
-            : 'original',
+      mode: 'original',
     };
+
+    const textOverride = this.asRecord(lessonJson['text']);
+    const overrideAyat = this.asArray<QuranLessonText['arabic_full'][number]>(
+      textOverride?.['arabic_full']
+    );
+    const overrideModeRaw = textOverride?.['mode'];
+    const overrideMode: QuranLessonText['mode'] =
+      overrideModeRaw === 'edited'
+        ? 'edited'
+        : overrideModeRaw === 'mixed'
+          ? 'mixed'
+          : overrideModeRaw === 'original'
+            ? 'original'
+            : baseText.mode;
+
+    const text: QuranLessonText = {
+      arabic_full: overrideAyat ?? baseText.arabic_full,
+      mode: overrideMode,
+    };
+
+    const sentencesOverride = this.asArray<QuranLessonSentence>(lessonJson['sentences']);
+    const lessonSentences = normalizeQuranLessonSentences(
+      sentencesOverride?.length ? sentencesOverride : normalizedSentences
+    );
 
     const lessonReference = lessonJson['reference'] as QuranLessonReference | undefined;
     const lessonComprehension = lessonJson['comprehension'] as QuranLesson['comprehension'] | undefined;
     const lessonVocabLayer = lessonJson['vocab_layer'] as QuranLesson['vocab_layer'] | undefined;
     const lessonPassageLayers = lessonJson['passage_layers'] as QuranLesson['passage_layers'] | undefined;
     const lessonNotes = lessonJson['_notes'] as QuranLessonNotes | undefined;
+    const analysisOverride = this.asRecord(lessonJson['analysis']);
+    const analysisTokens = this.asArray<QuranLessonTokenV2>(analysisOverride?.['tokens']);
+    const analysisSpans = this.asArray<QuranLessonSpanV2>(analysisOverride?.['spans']);
+    const analysisVocab = this.asRecord(analysisOverride?.['vocab']) as QuranLessonVocabBuckets | null;
+    const lessonSource =
+      typeof lessonJson['source'] === 'string'
+        ? (lessonJson['source'] as string)
+        : data.lesson_row.source ?? null;
 
     const lesson: QuranLesson = {
       lesson_type: 'quran',
       id: `${data.lesson_row.id}`,
       title: data.lesson_row.title,
       title_ar: data.lesson_row.title_ar ?? undefined,
+      source: lessonSource,
       status: data.lesson_row.status,
+      subtype: data.lesson_row.subtype ?? undefined,
       difficulty:
         typeof data.lesson_row.difficulty === 'number' ? data.lesson_row.difficulty : undefined,
       reference: lessonReference,
       text,
-      sentences: normalizedSentences,
+      sentences: lessonSentences,
       comprehension: lessonComprehension,
       vocab_layer: lessonVocabLayer,
       passage_layers: lessonPassageLayers,
@@ -153,12 +179,39 @@ export class QuranLessonService {
       created_at: data.lesson_row.created_at,
       updated_at: data.lesson_row.updated_at ?? undefined,
       analysis: {
-        tokens: data.tokens as QuranLessonTokenV2[],
-        spans: data.spans as QuranLessonSpanV2[],
-        vocab: data.vocab as QuranLessonVocabBuckets,
+        tokens: analysisTokens ?? (data.tokens as QuranLessonTokenV2[]),
+        spans: analysisSpans ?? (data.spans as QuranLessonSpanV2[]),
+        vocab: analysisVocab ?? (data.vocab as QuranLessonVocabBuckets),
       },
     };
     return lesson;
+  }
+
+  private buildPersistPayload(payload: Partial<QuranLesson>) {
+    const title = String(payload.title ?? '').trim();
+    return {
+      title,
+      title_ar: payload.title_ar ?? null,
+      lesson_type: 'quran',
+      subtype: payload.subtype ?? null,
+      source: payload.source ?? payload.reference?.ref_label ?? null,
+      status: payload.status ?? 'draft',
+      difficulty:
+        typeof payload.difficulty === 'number' && Number.isFinite(payload.difficulty)
+          ? Math.trunc(payload.difficulty)
+          : null,
+      lesson_json: payload,
+    };
+  }
+
+  private asRecord(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    return value as Record<string, unknown>;
+  }
+
+  private asArray<T>(value: unknown): T[] | null {
+    if (!Array.isArray(value)) return null;
+    return value as T[];
   }
 
   createContainer(payload: {

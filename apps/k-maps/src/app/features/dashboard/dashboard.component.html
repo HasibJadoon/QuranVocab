@@ -6,15 +6,17 @@
         <c-card class="dashboard-card cursor-pointer" [ngClass]="card.theme" (click)="go(card.route)">
           <c-card-body class="dashboard-card-body">
             <div class="menu-poster">
-              <div class="icon-badge">
-                <c-icon [name]="card.icon" size="xl" class="card-icon"></c-icon>
-              </div>
+              <img class="menu-poster-img menu-poster-img--primary" [src]="card.image" [alt]="card.title" loading="lazy" />
+              <img
+                class="menu-poster-img menu-poster-img--secondary"
+                [src]="card.imageAlt || card.image"
+                [alt]="card.title + ' preview'"
+                loading="lazy"
+              />
             </div>
             <div class="menu-information">
               <span class="menu-title">{{ card.title }}</span>
-              <div class="menu-line my-2">
-                <span class="menu-button" aria-hidden="true">→</span>
-              </div>
+              <span class="menu-arrow" aria-hidden="true">→</span>
               <p class="menu-text">{{ card.description }}</p>
             </div>
           </c-card-body>

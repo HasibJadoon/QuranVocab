@@ -1,331 +1,408 @@
-<section *ngIf="lesson; else loadingTpl" class="lesson-editor">
-  <header class="lesson-editor-header">
-    <div>
-      <p class="lesson-editor-subtitle">
-        {{ lesson.reference?.ref_label || 'Quran Lesson' }}
-      </p>
-      <h1>Arabic Lesson Editor</h1>
-    </div>
-    <div class="lesson-editor-actions">
-      <button type="button" class="btn btn-ghost" (click)="back()">Back</button>
-      <button type="button" class="btn btn-primary" (click)="save()">Save</button>
-    </div>
-  </header>
+<section *ngIf="lesson as lessonData; else loadingTpl" class="lesson-builder lesson-builder--workflow">
+  <app-lesson-builder-header
+    [kicker]="'K-Maps · Quran Lesson Builder'"
+    [title]="lessonData.title"
+    [intent]="activeTabIntent"
+    [currentStep]="activeTabIndex + 1"
+    [totalSteps]="tabs.length"
+    [isSaving]="isSaving"
+    [isNew]="isNewLesson"
+    (back)="back()"
+    (view)="openView()"
+    (save)="save()"
+  />
 
-  <div class="editor-meta-panel glow-card">
-    <div class="meta-row">
-      <label>Title</label>
-      <input
-        class="meta-input"
-        [(ngModel)]="lesson.title"
-        name="lessonTitle"
-        placeholder="Lesson title"
+  <div class="builder-workspace">
+    <aside class="builder-workflow-rail">
+      <app-lesson-builder-tabs
+        [tabs]="tabs"
+        [activeTabId]="activeTabId"
+        [lockedTabs]="lockedTabs"
+        [statuses]="tabStatuses"
+        [layout]="'rail'"
+        (tabChange)="selectTab($event)"
       />
-    </div>
-    <div class="meta-grid">
-      <div class="meta-row">
-        <label>Type</label>
-        <input class="meta-input" [value]="lesson.lesson_type" disabled />
-      </div>
-      <div class="meta-row">
-        <label>Status</label>
-        <input
-          class="meta-input"
-          [(ngModel)]="lesson.status"
-          name="lessonStatus"
-          placeholder="draft"
+    </aside>
+
+    <section class="builder-main">
+      <app-dirty-state-bar
+        [currentStep]="activeTabIndex + 1"
+        [totalSteps]="tabs.length"
+        [canPrev]="canGoPrevTab"
+        [canNext]="canGoNextTab"
+        (prev)="goPrevTab()"
+        (next)="goNextTab()"
+      />
+
+      <section class="builder-panel">
+        <app-tab-lock-banner [message]="activeTabLockMessage" />
+
+        <ng-container *ngIf="!activeTabLockMessage" [ngSwitch]="activeTabId">
+      <ng-container *ngSwitchCase="'meta'">
+        <app-lesson-meta-form
+          [lesson]="lessonData"
+          [reference]="safeReference"
+          (changed)="onLessonEdited()"
         />
-      </div>
-      <div class="meta-row">
-        <label>Subtype</label>
-        <input
-          class="meta-input"
-          [(ngModel)]="referenceLabel"
-          name="lessonSubtype"
-          placeholder="narrative"
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'verses'">
+        <app-verse-range-picker
+          [surahOptions]="surahOptions"
+          [selection]="verseSelection"
+          (apply)="applyVerseSelection()"
         />
-      </div>
-      <div class="meta-row">
-        <label>Source</label>
-        <input
-          class="arabic-input"
-          [(ngModel)]="referenceLabel"
-          name="lessonSource"
-          placeholder="Surah Yusuf 12:19–29"
+
+        <app-selection-summary-card
+          [containerId]="proposedContainerId"
+          [passageUnitId]="proposedPassageUnitId"
         />
-      </div>
-    </div>
-  </div>
 
-  <div class="lesson-editor-tabs">
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'arabic'"
-      (click)="activeTab = 'arabic'"
-    >
-      Arabic Text
-    </button>
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'sentences'"
-      (click)="activeTab = 'sentences'"
-    >
-      Sentences
-    </button>
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'mcq'"
-      (click)="activeTab = 'mcq'"
-    >
-      MCQs
-    </button>
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'comprehension'"
-      (click)="activeTab = 'comprehension'"
-    >
-      Comprehension
-    </button>
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab === 'json'"
-      (click)="activeTab = 'json'"
-    >
-      JSON
-    </button>
-  </div>
+        <app-verse-preview-list
+          [verses]="safeArabicVerses"
+          (changed)="onLessonEdited()"
+        />
+      </ng-container>
 
-  <div class="lesson-editor-tabs-panel">
-    <ng-container [ngSwitch]="activeTab">
-      <article *ngSwitchCase="'arabic'" class="study-card">
-        <div class="study-card-heading">
-          <h4>Arabic Text (editable)</h4>
-          <h4 class="study-card-mode">{{ safeArabicVerses.length }} verses</h4>
-        </div>
-        <hr class="study-card-divider" />
-        <div *ngIf="safeArabicVerses.length; else noArabic">
-          <div
-            class="arabic-text-row"
-            *ngFor="let verse of safeArabicVerses; let index = index"
-          >
-            <label class="json-label">Verse {{ index + 1 }}</label>
-            <textarea
-              class="editable-field  arabic-text"
-              rows="2"
-              [(ngModel)]="verse.arabic"
-              (ngModelChange)="onLessonEdited()"
-            ></textarea>
-          </div>
-        </div>
-        <ng-template #noArabic>
-          <p class="text-muted">Arabic text is not available yet.</p>
-        </ng-template>
-      </article>
+      <ng-container *ngSwitchCase="'container'">
+        <app-selection-summary-card
+          [containerId]="containerForm.containerId || proposedContainerId"
+          [passageUnitId]="containerForm.unitId || proposedPassageUnitId"
+        />
 
-      <article *ngSwitchCase="'sentences'" class="study-card">
-        <div class="study-card-heading">
-          <h4>Sentences (editable)</h4>
-          <h4 class="study-card-mode">{{ safeSentences.length }} segments</h4>
-        </div>
-        <hr class="study-card-divider" />
-        <div *ngIf="safeSentences.length; else noSentences">
-          <div class="arabic-text-row" *ngFor="let sentence of safeSentences; let index = index">
-            <label class="json-label">Sentence {{ index + 1 }}</label>
-            <textarea
-              class="editable-field  arabic-text"
-              rows="2"
-              [(ngModel)]="sentence.arabic"
-              (ngModelChange)="onLessonEdited()"
-            ></textarea>
-            <textarea
-              class="editable-field"
-              rows="2"
-              [(ngModel)]="sentence.translation"
-              (ngModelChange)="onLessonEdited()"
-              placeholder="Translation"
-            ></textarea>
-          </div>
-        </div>
-        <ng-template #noSentences>
-          <p class="text-muted">Sentence segmentation is not available yet.</p>
-        </ng-template>
-        <div class="lesson-editor-section mt-3">
-          <h5>Authoring helpers</h5>
-          <div class="grid-gap">
-            <div class="block">
-              <label>Surah</label>
-              <input type="number" [(ngModel)]="containerForm.surah" />
-            </div>
-            <div class="block">
-              <label>Ayah from</label>
-              <input type="number" [(ngModel)]="containerForm.ayahFrom" />
-            </div>
-            <div class="block">
-              <label>Ayah to</label>
-              <input type="number" [(ngModel)]="containerForm.ayahTo" />
-            </div>
-          </div>
-          <div class="grid-gap mt-2">
-            <div class="block">
-              <label>Container ID</label>
-              <input [(ngModel)]="containerForm.containerId" placeholder="C:QURAN:12" />
-            </div>
-            <div class="block">
-              <label>Passage Unit ID</label>
-              <input [(ngModel)]="containerForm.unitId" placeholder="U:C:QURAN:12:1-7" />
-            </div>
-          </div>
-          <button class="btn btn-outline" type="button" (click)="createContainer()">
-            Create container + units
-          </button>
-        </div>
-        <div class="lesson-editor-section mt-3">
-          <h5>New sentence</h5>
-          <textarea
-            [(ngModel)]="sentenceForm.text"
-            placeholder="Sentence Arabic text"
-            rows="2"
-          ></textarea>
-          <textarea
-            [(ngModel)]="sentenceForm.translation"
-            placeholder="Translation (optional)"
-            rows="2"
-          ></textarea>
-          <input
-            [(ngModel)]="sentenceForm.tokens"
-            placeholder="Tokens (format: surface|lexiconId, ...)"
+        <app-container-builder-form [form]="containerForm" />
+
+        <app-create-container-button-row
+          (createContainer)="createContainer()"
+          (linkLesson)="linkLessonContainer()"
+        />
+
+        <app-passage-unit-builder
+          [unitId]="containerForm.unitId"
+          (draftPassage)="createPassageUnitDraft()"
+        />
+
+        <p class="feedback" *ngIf="occurrenceFeedback">{{ occurrenceFeedback }}</p>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'units'">
+        <app-bulk-actions
+          (createAll)="attachAllVerseUnits()"
+          (fixOrder)="fixVerseUnitOrder()"
+        />
+
+        <app-verse-units-table
+          [rows]="verseUnitRows"
+          (attach)="attachVerseUnit($event)"
+        />
+
+        <app-lesson-unit-link-panel
+          [units]="safeUnits"
+          (remove)="removeLessonUnit($event)"
+        />
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'tokens'">
+        <div class="split-layout">
+          <app-unit-navigator
+            [verses]="selectedVerseNavItems"
+            [selectedUnitId]="selectedVerse?.unit_id || ''"
+            (select)="selectVerse($event)"
           />
-          <input
-            [(ngModel)]="sentenceForm.spans"
-            placeholder="Spans (text|start-end; ...)"
-          />
-          <input
-            [(ngModel)]="sentenceForm.grammarIds"
-            placeholder="Grammar IDs (comma separated)"
-          />
-          <button class="btn btn-primary" type="button" (click)="submitOccurrence()">
-            Save occurrence
-          </button>
-          <p class="text-muted" *ngIf="occurrenceFeedback">{{ occurrenceFeedback }}</p>
-        </div>
-      </article>
 
-      <article *ngSwitchCase="'mcq'" class="study-card study-card--mcq">
-        <div class="study-card-heading">
-          <h4>Comprehension MCQs (editable)</h4>
-          <h4 class="study-card-mode">{{ safeMcqQuestions.length }} questions</h4>
+          <app-center-workspace-outlet>
+            <app-occ-token-grid
+              [tokens]="selectedVerseTokens"
+              (add)="addTokenForSelectedVerse()"
+              (remove)="removeTokenById($event)"
+              (changed)="onLessonEdited()"
+              (tokenFeaturesInput)="onTokenFeaturesInput($event)"
+            />
+          </app-center-workspace-outlet>
+
+          <app-context-right-pane>
+            <app-lemma-location-panel
+              [lemmas]="selectedVerseLemmas"
+              (add)="addLemmaToSelectedVerse()"
+              (remove)="removeSelectedVerseLemma($event)"
+              (changed)="onLessonEdited()"
+            />
+
+            <app-grammar-link-panel
+              [title]="'Token Grammar Links'"
+              [targets]="tokenGrammarTargets"
+              [selectedTargetId]="selectedGrammarTargetId.token"
+              [grammarConcepts]="grammarConcepts"
+              [linkMap]="grammarLinks.token"
+              (selectedTargetChange)="onGrammarTargetChange('token', $event)"
+              (add)="addGrammarLink('token', $event)"
+              (remove)="removeGrammarLink('token', $event)"
+            />
+          </app-context-right-pane>
         </div>
-        <hr class="study-card-divider" />
-        <div *ngIf="safeMcqQuestions.length; else noMcqs">
-          <section class="mcq-question-card" *ngFor="let mcq of safeMcqQuestions; let qIndex = index">
-            <label class="json-label">Question {{ qIndex + 1 }}</label>
-            <textarea
-              class="editable-field"
-              rows="2"
-              [(ngModel)]="mcq.question"
-              (ngModelChange)="onLessonEdited()"
-            ></textarea>
-            <div class="mcq-options">
-              <div
-                class="mcq-option"
-                *ngFor="let option of mcq.options; let optionIndex = index"
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'spans'">
+        <div class="split-layout">
+          <app-unit-navigator
+            [verses]="selectedVerseNavItems"
+            [selectedUnitId]="selectedVerse?.unit_id || ''"
+            (select)="selectVerse($event)"
+          />
+
+          <app-center-workspace-outlet>
+            <app-span-builder
+              [spans]="selectedVerseSpans"
+              (add)="addSpanForSelectedVerse()"
+              (remove)="removeSpanById($event)"
+              (changed)="onLessonEdited()"
+              (tokenIdsInput)="onSpanTokenIdsInput($event.span, $event.value)"
+            />
+          </app-center-workspace-outlet>
+
+          <app-context-right-pane>
+            <app-grammar-link-panel
+              [title]="'Span Grammar Links'"
+              [targets]="spanGrammarTargets"
+              [selectedTargetId]="selectedGrammarTargetId.span"
+              [grammarConcepts]="grammarConcepts"
+              [linkMap]="grammarLinks.span"
+              (selectedTargetChange)="onGrammarTargetChange('span', $event)"
+              (add)="addGrammarLink('span', $event)"
+              (remove)="removeGrammarLink('span', $event)"
+            />
+          </app-context-right-pane>
+        </div>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'sentences'">
+        <div class="split-layout">
+          <app-unit-navigator
+            [verses]="selectedVerseNavItems"
+            [selectedUnitId]="selectedVerse?.unit_id || ''"
+            (select)="selectVerse($event)"
+          />
+
+          <app-center-workspace-outlet>
+            <app-sentence-segmentation-canvas
+              (add)="addSentenceForSelectedVerse()"
+            />
+            <app-sentence-list
+              [sentences]="selectedVerseSentences"
+              (remove)="removeSentenceById($event)"
+              (changed)="onLessonEdited()"
+            />
+          </app-center-workspace-outlet>
+
+          <app-context-right-pane>
+            <app-sentence-upsert-actions
+              [form]="sentenceForm"
+              [feedback]="occurrenceFeedback || ''"
+              (save)="submitOccurrence()"
+            />
+
+            <app-grammar-link-panel
+              [title]="'Sentence Grammar Links'"
+              [targets]="sentenceGrammarTargets"
+              [selectedTargetId]="selectedGrammarTargetId.sentence"
+              [grammarConcepts]="grammarConcepts"
+              [linkMap]="grammarLinks.sentence"
+              (selectedTargetChange)="onGrammarTargetChange('sentence', $event)"
+              (add)="addGrammarLink('sentence', $event)"
+              (remove)="removeGrammarLink('sentence', $event)"
+            />
+          </app-context-right-pane>
+        </div>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'grammar'">
+        <div class="split-layout">
+          <app-unit-navigator
+            [verses]="selectedVerseNavItems"
+            [selectedUnitId]="selectedVerse?.unit_id || ''"
+            (select)="selectVerse($event)"
+          />
+
+          <app-center-workspace-outlet>
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn"
+                [class.btn-primary]="grammarFocusType === 'token'"
+                (click)="selectGrammarFocus('token')"
               >
-                <input
-                  type="checkbox"
-                  [(ngModel)]="option.is_correct"
-                  (ngModelChange)="onLessonEdited()"
-                  class="me-2"
-                />
-                <textarea
-                  class="editable-field"
-                  rows="1"
-                  [(ngModel)]="option.option"
-                  (ngModelChange)="onLessonEdited()"
-                ></textarea>
-              </div>
+                Token Links
+              </button>
+              <button
+                type="button"
+                class="btn"
+                [class.btn-primary]="grammarFocusType === 'span'"
+                (click)="selectGrammarFocus('span')"
+              >
+                Span Links
+              </button>
+              <button
+                type="button"
+                class="btn"
+                [class.btn-primary]="grammarFocusType === 'sentence'"
+                (click)="selectGrammarFocus('sentence')"
+              >
+                Sentence Links
+              </button>
             </div>
-          </section>
-        </div>
-        <ng-template #noMcqs>
-          <p class="text-muted">Comprehension MCQs are not available for this lesson yet.</p>
-        </ng-template>
-      </article>
 
-      <article *ngSwitchCase="'comprehension'" class="study-card comprehension-card">
-        <div class="study-card-heading">
-          <h4>Comprehension questions (editable)</h4>
-          <h4 class="study-card-mode">
-            {{ reflectiveQuestions.length + analyticalQuestions.length }} questions
-          </h4>
-        </div>
-        <hr class="study-card-divider" />
-        <ng-container *ngIf="reflectiveQuestions.length">
-          <div class="comp-section-heading">
-            <span>Reflective</span>
-            <small>Spend time thinking through the passage.</small>
-          </div>
-          <article class="comp-item" *ngFor="let question of reflectiveQuestions">
-            <textarea
-              class="editable-field"
-              rows="2"
-              [(ngModel)]="question.question"
-              (ngModelChange)="onLessonEdited()"
-            ></textarea>
-            <textarea
-              class="editable-field"
-              rows="1"
-              [(ngModel)]="question.answer_hint"
-              (ngModelChange)="onLessonEdited()"
-              placeholder="Hint (optional)"
-            ></textarea>
-          </article>
-        </ng-container>
-        <ng-container *ngIf="analyticalQuestions.length">
-          <div class="comp-section-heading">
-            <span>Analytical</span>
-            <small>Trace how the story is constructed.</small>
-          </div>
-          <article class="comp-item" *ngFor="let question of analyticalQuestions">
-            <textarea
-              class="editable-field"
-              rows="2"
-              [(ngModel)]="question.question"
-              (ngModelChange)="onLessonEdited()"
-            ></textarea>
-            <textarea
-              class="editable-field"
-              rows="1"
-              [(ngModel)]="question.answer_hint"
-              (ngModelChange)="onLessonEdited()"
-              placeholder="Hint (optional)"
-            ></textarea>
-          </article>
-        </ng-container>
-      </article>
+            <app-grammar-matrix [rows]="grammarMatrixRows" />
+          </app-center-workspace-outlet>
 
-      <article *ngSwitchCase="'json'" class="study-card">
-        <div class="study-card-heading">
-          <h4>Lesson JSON</h4>
-          <h4 class="study-card-mode">Editable JSON</h4>
+          <app-context-right-pane>
+            <ng-container [ngSwitch]="grammarFocusType">
+              <app-grammar-link-panel
+                *ngSwitchCase="'token'"
+                [title]="'Token Grammar Links'"
+                [targets]="tokenGrammarTargets"
+                [selectedTargetId]="selectedGrammarTargetId.token"
+                [grammarConcepts]="grammarConcepts"
+                [linkMap]="grammarLinks.token"
+                (selectedTargetChange)="onGrammarTargetChange('token', $event)"
+                (add)="addGrammarLink('token', $event)"
+                (remove)="removeGrammarLink('token', $event)"
+              />
+
+              <app-grammar-link-panel
+                *ngSwitchCase="'span'"
+                [title]="'Span Grammar Links'"
+                [targets]="spanGrammarTargets"
+                [selectedTargetId]="selectedGrammarTargetId.span"
+                [grammarConcepts]="grammarConcepts"
+                [linkMap]="grammarLinks.span"
+                (selectedTargetChange)="onGrammarTargetChange('span', $event)"
+                (add)="addGrammarLink('span', $event)"
+                (remove)="removeGrammarLink('span', $event)"
+              />
+
+              <app-grammar-link-panel
+                *ngSwitchCase="'sentence'"
+                [title]="'Sentence Grammar Links'"
+                [targets]="sentenceGrammarTargets"
+                [selectedTargetId]="selectedGrammarTargetId.sentence"
+                [grammarConcepts]="grammarConcepts"
+                [linkMap]="grammarLinks.sentence"
+                (selectedTargetChange)="onGrammarTargetChange('sentence', $event)"
+                (add)="addGrammarLink('sentence', $event)"
+                (remove)="removeGrammarLink('sentence', $event)"
+              />
+            </ng-container>
+          </app-context-right-pane>
         </div>
-        <hr class="study-card-divider" />
-        <label class="json-label">Entire lesson JSON</label>
-        <textarea
-          class="json-editor"
-          [(ngModel)]="lessonJson"
-          name="lessonJsonEditor"
-          rows="24"
-        ></textarea>
-      </article>
-    </ng-container>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'tree'">
+        <div class="split-layout">
+          <app-unit-navigator
+            [verses]="selectedVerseNavItems"
+            [selectedUnitId]="selectedVerse?.unit_id || ''"
+            (select)="selectVerse($event)"
+          />
+
+          <app-center-workspace-outlet>
+            <label>
+              <span>Sentence target</span>
+              <select [ngModel]="selectedSentenceIdForTree" (ngModelChange)="selectTreeSentence($event)">
+                <option value="">Select sentence</option>
+                <option *ngFor="let sentence of treeSentenceTargets" [value]="sentence.id">
+                  {{ sentence.label }}
+                </option>
+              </select>
+            </label>
+
+            <app-sentence-tree-canvas
+              [tree]="activeSentenceTree"
+              (addNode)="addTreeNode()"
+              (removeNode)="removeTreeNode($event)"
+              (addEdge)="addTreeEdge()"
+              (removeEdge)="removeTreeEdge($event)"
+              (changed)="onTreeChanged()"
+            />
+          </app-center-workspace-outlet>
+
+          <app-context-right-pane>
+            <h3>Tree Coverage</h3>
+            <p class="feedback">
+              Nodes: {{ activeSentenceTree?.nodes?.length || 0 }}
+            </p>
+            <p class="feedback">
+              Edges: {{ activeSentenceTree?.edges?.length || 0 }}
+            </p>
+            <p class="feedback" *ngIf="!selectedSentenceIdForTree">
+              Select a sentence to start a tree.
+            </p>
+          </app-context-right-pane>
+        </div>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'content'">
+        <div class="content-grid">
+          <app-mcq-editor
+            [questions]="safeMcqQuestions"
+            (addQuestion)="addMcqQuestion()"
+            (removeQuestion)="removeMcqQuestion($event)"
+            (addOption)="addMcqOption($event)"
+            (removeOption)="removeMcqOption($event)"
+            (changed)="onLessonEdited()"
+          />
+
+          <app-reflective-questions
+            [questions]="reflectiveQuestions"
+            (add)="addReflectiveQuestion()"
+            (remove)="removeReflectiveQuestion($event)"
+            (changed)="onLessonEdited()"
+          />
+
+          <app-analytical-questions
+            [questions]="analyticalQuestions"
+            (add)="addAnalyticalQuestion()"
+            (remove)="removeAnalyticalQuestion($event)"
+            (changed)="onLessonEdited()"
+          />
+        </div>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'review'">
+        <div class="review-head">
+          <h3>Workflow Health</h3>
+          <strong>{{ completionPercent }}%</strong>
+        </div>
+
+        <app-lesson-validation-checklist [items]="reviewItems" />
+
+        <div class="row-actions">
+          <button type="button" class="btn btn-primary" [disabled]="!canPublish" (click)="publishDraft()">
+            Mark Published
+          </button>
+          <button type="button" class="btn btn-ghost" (click)="save()">Save Now</button>
+        </div>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'dev'">
+        <app-selection-summary-card
+          [containerId]="containerForm.containerId || proposedContainerId"
+          [passageUnitId]="containerForm.unitId || proposedPassageUnitId"
+        />
+
+        <app-raw-json-editor
+          [value]="lessonJson"
+          [error]="jsonError"
+          (apply)="lessonJson = $event; applyFullJson()"
+        />
+      </ng-container>
+        </ng-container>
+      </section>
+    </section>
   </div>
 </section>
 
 <ng-template #loadingTpl>
-  <div class="loading text-muted">Loading lesson…</div>
+  <section class="lesson-builder lesson-builder--loading">
+    <div class="loading">Loading lesson...</div>
+  </section>
 </ng-template>

@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from '../services/auth.guard';
-import { RootRedirectGuard } from '../services/root-redirect.guard';
 
 export const routes: Routes = [
   // 👇 Root entry decision
@@ -23,6 +22,11 @@ export const routes: Routes = [
       import('./core/layout').then(m => m.DefaultLayoutComponent),
     canActivate: [AuthGuard],
     children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard',
+      },
       {
         path: 'dashboard',
         loadChildren: () =>

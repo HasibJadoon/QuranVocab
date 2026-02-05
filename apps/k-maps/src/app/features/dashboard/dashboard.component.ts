@@ -9,8 +9,6 @@ import {
   RowComponent
 } from '@coreui/angular';
 
-import { IconComponent } from '@coreui/icons-angular';
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -21,8 +19,7 @@ import { IconComponent } from '@coreui/icons-angular';
     CardComponent,
     CardBodyComponent,
     RowComponent,
-    ColComponent,
-    IconComponent
+    ColComponent
   ]
 })
 export class DashboardComponent {
@@ -36,7 +33,8 @@ export class DashboardComponent {
           title: 'Lessons',
           description: 'Lesson editor + view',
           route: '/arabic/lessons',
-          icon: 'cilBookmark',
+          image: '/assets/images/app-icons/dashboard/card-arabic.svg',
+          imageAlt: '/assets/images/app-icons/dashboard/arabic-lesson-card.png',
           theme: 'theme-arabic',
         },
         {
@@ -44,7 +42,8 @@ export class DashboardComponent {
           title: 'Roots',
           description: 'Quranic roots + cards',
           route: '/arabic/roots',
-          icon: 'cilList',
+          image: '/assets/images/app-icons/dashboard/card-roots.svg',
+          imageAlt: '/assets/images/app-icons/dashboard/arabic-root-card.png',
           theme: 'theme-roots',
         },
         {
@@ -52,7 +51,8 @@ export class DashboardComponent {
           title: 'Lexicon',
           description: 'Idioms, poetry, wv_concepts',
           route: '/arabic/lexicon',
-          icon: 'cilDescription',
+          image: '/assets/images/app-icons/dashboard/card-lexicon.svg',
+          imageAlt: '/assets/images/app-icons/dashboard/arabic-lexicon-card.png',
           theme: 'theme-lexicon',
         },
         {
@@ -60,7 +60,8 @@ export class DashboardComponent {
           title: 'Memory',
           description: 'Spaced review sessions',
           route: '/arabic/memory',
-          icon: 'cilTask',
+          image: '/assets/images/app-icons/dashboard/card-memory.svg',
+          imageAlt: '/assets/images/app-icons/dashboard/arabic-memory-card.png',
           theme: 'theme-memory',
         },
       ],
@@ -74,7 +75,8 @@ export class DashboardComponent {
           title: 'Worldview Lessons',
           description: 'Lessons + sources',
           route: '/worldview/lessons',
-          icon: 'cilMap',
+          image: '/assets/images/app-icons/dashboard/card-worldview.svg',
+          imageAlt: '/assets/images/app-icons/dashboard/image.png',
           theme: 'theme-worldview',
         },
       ],
@@ -88,7 +90,8 @@ export class DashboardComponent {
           title: 'Cross References',
           description: 'Quran vs other sources',
           route: '/crossref',
-          icon: 'cilShareAll',
+          image: '/assets/images/app-icons/dashboard/card-crossref.svg',
+          imageAlt: '/assets/images/app-icons/dashboard/icons.webp',
           theme: 'theme-crossref',
         },
       ],
@@ -102,7 +105,8 @@ export class DashboardComponent {
           title: 'Podcast',
           description: 'Episodes + outlines',
           route: '/podcast',
-          icon: 'cilMediaPlay',
+          image: '/assets/images/app-icons/dashboard/card-podcast.svg',
+          imageAlt: '/assets/images/app-icons/dashboard/vue.jpg',
           theme: 'theme-podcast',
         },
       ],
@@ -116,7 +120,8 @@ export class DashboardComponent {
           title: 'Weekly Planner',
           description: 'Plans + tasks',
           route: '/planner',
-          icon: 'cilCalendar',
+          image: '/assets/images/app-icons/dashboard/card-planner.svg',
+          imageAlt: '/assets/images/app-icons/dashboard/react.jpg',
           theme: 'theme-planner',
         },
       ],
@@ -149,7 +154,8 @@ interface DashboardCard {
   title: string;
   description: string;
   route: string;
-  icon: string;
+  image: string;
+  imageAlt?: string;
   theme:
     | 'theme-arabic'
     | 'theme-roots'

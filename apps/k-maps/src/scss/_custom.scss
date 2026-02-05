@@ -830,3 +830,46 @@ body {
     font-weight: 600;
   }
 }
+
+.lesson-builder--workflow {
+  .workflow-strip-host {
+    border: 1px solid rgba(121, 151, 209, 0.26);
+    border-radius: 12px;
+    background: linear-gradient(165deg, rgba(9, 16, 32, 0.95), rgba(7, 13, 25, 0.98));
+    padding: 0.3rem 0.36rem;
+  }
+
+  .builder-workspace {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 0.8rem;
+    align-items: start;
+  }
+
+  .builder-main {
+    min-width: 0;
+    display: grid;
+    gap: 0.72rem;
+  }
+
+  .builder-workflow-rail {
+    position: sticky;
+    top: 5.1rem;
+    align-self: start;
+    border: 1px solid rgba(121, 151, 209, 0.26);
+    border-radius: 14px;
+    background: linear-gradient(175deg, rgba(9, 16, 32, 0.95), rgba(7, 13, 25, 0.98));
+    padding: 0.62rem;
+    box-shadow: 0 0 0 1px rgba(81, 119, 208, 0.12), inset 0 0 0 1px rgba(59, 90, 163, 0.1);
+  }
+}
+
+@media (max-width: 1280px) {
+  .lesson-builder--workflow .builder-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-builder--workflow .builder-workflow-rail {
+    position: static;
+  }
+}

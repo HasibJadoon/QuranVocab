@@ -8,12 +8,9 @@
     [value]="q"
     [primaryLabel]="'Add'"
     [secondaryLabel]="'Refresh'"
-    [pagination]="headerPagination"
     (search)="onHeaderSearchInput($event)"
     (primary)="openCreate()"
     (secondary)="refresh()"
-    (pageChange)="onHeaderPageChange($event)"
-    (pageSizeChange)="onHeaderPageSizeChange($event)"
   />
 
   <div *ngIf="error" class="alert alert-danger py-2 my-3">
@@ -30,6 +27,15 @@
     [emptyMessage]="'No roots found.'"
     (action)="onTableAction($event)"
   ></app-crud-table>
+
+  <app-headerbar
+    class="roots-pagination-footer"
+    [showTitle]="false"
+    [showSearch]="false"
+    [pagination]="headerPagination"
+    (pageChange)="onHeaderPageChange($event)"
+    (pageSizeChange)="onHeaderPageSizeChange($event)"
+  />
 
   <div *ngIf="!loading && (!rows || !rows.length)" class="text-body-secondary my-3">
     No roots found.
