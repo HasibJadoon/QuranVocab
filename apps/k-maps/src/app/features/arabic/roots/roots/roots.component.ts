@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,12 +6,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CardsComponent } from '../root-cards/cards/cards.component';
 import { AuthService } from '../../../../shared/services/AuthService';
 import { ToastService } from '../../../../shared/services/toast.service';
-import { PageHeaderPaginationService } from '../../../../shared/services/page-header-pagination.service';
 import { API_BASE } from '../../../../shared/api-base';
 import { RootCard } from '../../../../shared/models/arabic/root-card.model';
 import { RootRow, RootsApiResponse } from '../../../../shared/models/arabic/root-row.model';
 import {
   AppCrudTableComponent,
+  AppHeaderbarComponent,
+  AppHeaderbarPagination,
   CrudTableAction,
   CrudTableActionEvent,
   CrudTableColumn
@@ -21,7 +22,7 @@ import {
 @Component({
   selector: 'app-roots',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardsComponent, AppCrudTableComponent],
+  imports: [CommonModule, FormsModule, CardsComponent, AppCrudTableComponent, AppHeaderbarComponent],
   templateUrl: './roots.component.html',
   styleUrls: ['./roots.component.scss'],
 })
@@ -79,9 +80,7 @@ export class RootsComponent implements OnInit, OnDestroy {
   loading = false;
   error = '';
 
-  private debounce: any;
   private abort?: AbortController;
-  private readonly pageHeaderPagination = inject(PageHeaderPaginationService);
 
   // ---------------- endpoints ----------------
   private readonly listEndpoint = `${API_BASE}/lexicon_roots`;
@@ -120,6 +119,16 @@ export class RootsComponent implements OnInit, OnDestroy {
     private toast: ToastService
   ) {}
 
+  get headerPagination(): AppHeaderbarPagination {
+    return {
+      page: this.page,
+      pageSize: this.pageSize,
+      total: this.total,
+      hideIfSinglePage: true,
+      pageSizeOptions: this.pageSizeOptions,
+    };
+  }
+
   // =====================================================
   // lifecycle
   // =====================================================
@@ -136,8 +145,6 @@ export class RootsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.abort?.abort();
-    if (this.debounce) clearTimeout(this.debounce);
-    this.pageHeaderPagination.clearConfig();
     // no-op: toast service handles its own timers
   }
 
@@ -156,6 +163,30 @@ export class RootsComponent implements OnInit, OnDestroy {
 
   private showToast(msg: string, type: 'success' | 'error' = 'success') {
     this.toast.show(msg, type === 'success' ? 'success' : 'error');
+  }
+
+  onHeaderSearchInput(value: string) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: value || null, page: 1, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderPageChange(page: number) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { page, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderPageSizeChange(pageSize: number) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { pageSize, page: 1, offset: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   onViewRow(row: RootRow) {
@@ -233,11 +264,6 @@ export class RootsComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSearchInput() {
-    if (this.debounce) clearTimeout(this.debounce);
-    this.debounce = setTimeout(() => this.load(), 250);
-  }
-
   // =====================================================
   // load roots
   // =====================================================
@@ -279,19 +305,11 @@ export class RootsComponent implements OnInit, OnDestroy {
       this.total = Number(data?.total ?? this.rows.length);
       this.page = this.parseIntParam(String(data?.page ?? this.page), this.page, 1);
       this.pageSize = this.parseIntParam(String(data?.pageSize ?? this.pageSize), this.pageSize, 1, 500);
-      this.pageHeaderPagination.setConfig({
-        page: this.page,
-        pageSize: this.pageSize,
-        total: this.total,
-        hideIfSinglePage: true,
-        pageSizeOptions: this.pageSizeOptions,
-      });
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
         this.error = e?.message ?? 'Failed to load roots';
         this.rows = [];
         this.total = 0;
-        this.pageHeaderPagination.clearConfig();
       }
     } finally {
       this.loading = false;

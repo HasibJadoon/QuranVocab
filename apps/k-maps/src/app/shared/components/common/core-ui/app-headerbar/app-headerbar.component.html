@@ -1,5 +1,5 @@
 <div class="app-headerbar">
-  <div class="app-headerbar-main">
+  <div class="app-headerbar-main" *ngIf="showTitle || showSearch">
     <div *ngIf="showTitle && title" class="app-headerbar-title-wrap">
       <h1 class="app-headerbar-title">{{ title }}</h1>
     </div>
@@ -19,74 +19,96 @@
     </div>
   </div>
 
-  <div *ngIf="shouldShowPagination && pagination" class="app-headerbar-pagination">
-    <div class="app-headerbar-pagination-left">
-      <div class="app-headerbar-filters" *ngIf="filters.length">
-        <select
-          *ngFor="let filter of filters"
-          class="form-select app-headerbar-select"
-          [value]="filter.value"
-          (change)="onFilterInput(filter, $event)"
-        >
-          <option *ngFor="let option of filter.options" [value]="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
-
+  <div *ngIf="shouldShowPagination || filters.length" class="app-headerbar-pagination">
+    <div class="app-headerbar-filters" *ngIf="filters.length">
       <select
-        *ngIf="pagination.pageSizeOptions?.length"
+        *ngFor="let filter of filters"
         class="form-select app-headerbar-select"
-        [value]="pagination.pageSize"
-        (change)="onPageSizeInput($event)"
+        [value]="filter.value"
+        (change)="onFilterInput(filter, $event)"
       >
-        <option *ngFor="let size of pagination.pageSizeOptions" [value]="size">
-          {{ size }} / page
+        <option *ngFor="let option of filter.options" [value]="option.value">
+          {{ option.label }}
         </option>
       </select>
     </div>
 
-    <span class="app-headerbar-page-meta">
-      Page {{ pagination.page }} of {{ totalPages }}
-    </span>
-
-    <div class="btn-group" *ngIf="totalPages > 1">
-      <button
-        class="btn btn-sm btn-outline-secondary"
-        type="button"
-        [disabled]="pagination.page <= 1"
-        (click)="onPrevPage()"
-      >
-        Prev
-      </button>
-      <button
-        class="btn btn-sm btn-outline-secondary"
-        type="button"
-        [disabled]="pagination.page >= totalPages"
-        (click)="onNextPage()"
-      >
-        Next
-      </button>
-    </div>
-  </div>
-
-  <div *ngIf="!shouldShowPagination && filters.length" class="app-headerbar-pagination">
-    <div class="app-headerbar-pagination-left">
-      <div class="app-headerbar-filters">
-        <select
-          *ngFor="let filter of filters"
-          class="form-select app-headerbar-select"
-          [value]="filter.value"
-          (change)="onFilterInput(filter, $event)"
+    <ul
+      *ngIf="shouldShowPagination && pagination"
+      class="pagination justify-content-end m-0 app-headerbar-pager"
+    >
+      <li class="page-item" [class.disabled]="currentPage <= 1">
+        <button
+          type="button"
+          class="page-link"
+          aria-label="First page"
+          [disabled]="currentPage <= 1"
+          (click)="onFirstPage()"
         >
-          <option *ngFor="let option of filter.options" [value]="option.value">
-            {{ option.label }}
+          &laquo;
+        </button>
+      </li>
+
+      <li class="page-item" [class.disabled]="currentPage <= 1">
+        <button
+          type="button"
+          class="page-link"
+          aria-label="Previous page"
+          [disabled]="currentPage <= 1"
+          (click)="onPrevPage()"
+        >
+          &lsaquo;
+        </button>
+      </li>
+
+      <ng-container *ngFor="let pageItem of visiblePageItems; trackBy: trackByPageItem">
+        <li *ngIf="isPageNumber(pageItem); else ellipsisItem" class="page-item" [class.active]="pageItem === currentPage">
+          <button type="button" class="page-link" (click)="goToPage(pageItem)">
+            {{ pageItem }}
+          </button>
+        </li>
+        <ng-template #ellipsisItem>
+          <li class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+        </ng-template>
+      </ng-container>
+
+      <li class="page-item" [class.disabled]="currentPage >= totalPages">
+        <button
+          type="button"
+          class="page-link"
+          aria-label="Next page"
+          [disabled]="currentPage >= totalPages"
+          (click)="onNextPage()"
+        >
+          &rsaquo;
+        </button>
+      </li>
+
+      <li class="page-item" [class.disabled]="currentPage >= totalPages">
+        <button
+          type="button"
+          class="page-link"
+          aria-label="Last page"
+          [disabled]="currentPage >= totalPages"
+          (click)="onLastPage()"
+        >
+          &raquo;
+        </button>
+      </li>
+
+      <li *ngIf="pagination.pageSizeOptions?.length" class="page-item app-page-size-item">
+        <select class="page-link app-page-size-select" [value]="pagination.pageSize" (change)="onPageSizeInput($event)">
+          <option *ngFor="let size of pagination.pageSizeOptions" [value]="size">
+            {{ size }} / page
           </option>
         </select>
-      </div>
-    </div>
-    <span class="app-headerbar-page-meta">
-      &nbsp;
+      </li>
+    </ul>
+
+    <span class="app-headerbar-page-meta" *ngIf="shouldShowPagination && pagination">
+      {{ pagination.total }} records
     </span>
   </div>
 </div>

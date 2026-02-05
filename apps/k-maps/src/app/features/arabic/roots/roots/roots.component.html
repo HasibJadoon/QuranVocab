@@ -1,4 +1,21 @@
 <div class="roots-page">
+  <app-headerbar
+    class="roots-toolbar"
+    [title]="'All Roots'"
+    [showTitle]="true"
+    [showSearch]="true"
+    [placeholder]="'Search root'"
+    [value]="q"
+    [primaryLabel]="'Add'"
+    [secondaryLabel]="'Refresh'"
+    [pagination]="headerPagination"
+    (search)="onHeaderSearchInput($event)"
+    (primary)="openCreate()"
+    (secondary)="refresh()"
+    (pageChange)="onHeaderPageChange($event)"
+    (pageSizeChange)="onHeaderPageSizeChange($event)"
+  />
+
   <div *ngIf="error" class="alert alert-danger py-2 my-3">
     {{ error }}
   </div>

@@ -1,6 +1,6 @@
 <div class="header-search">
   <input
-    class="form-control form-control-sm header-search-input"
+    class="form-control header-search-input"
     type="search"
     [placeholder]="placeholder"
     [value]="value"
@@ -8,7 +8,7 @@
   />
   <button
     *ngIf="secondaryLabel"
-    class="btn btn-sm btn-outline-secondary"
+    class="btn btn-outline-secondary app-header-search-btn"
     type="button"
     (click)="secondary.emit()"
   >
@@ -16,7 +16,7 @@
   </button>
   <button
     *ngIf="tertiaryLabel"
-    class="btn btn-sm btn-outline-info"
+    class="btn btn-outline-info app-header-search-btn"
     type="button"
     (click)="tertiary.emit()"
   >
@@ -24,7 +24,7 @@
   </button>
   <button
     *ngIf="primaryLabel"
-    class="btn btn-sm btn-primary"
+    class="btn btn-primary app-header-search-btn"
     type="button"
     (click)="primary.emit()"
   >

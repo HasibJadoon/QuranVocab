@@ -1,34 +1,24 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
-        <div class="lesson-tabs btn-group" role="group" aria-label="Lesson type tabs">
-          <button
-            type="button"
-            class="btn btn-sm"
-            [ngClass]="{ 'btn-primary': lessonTypeFilter === 'quran', 'btn-outline-secondary': lessonTypeFilter !== 'quran' }"
-            (click)="selectLessonType('quran')"
-          >
-            Quran lessons
-          </button>
-          <button
-            type="button"
-            class="btn btn-sm"
-            [ngClass]="{ 'btn-primary': lessonTypeFilter === 'other', 'btn-outline-secondary': lessonTypeFilter !== 'other' }"
-            (click)="selectLessonType('other')"
-          >
-            Other literature
-          </button>
-          <button
-            type="button"
-            class="btn btn-sm"
-            [ngClass]="{ 'btn-primary': lessonTypeFilter === 'all', 'btn-outline-secondary': lessonTypeFilter !== 'all' }"
-            (click)="selectLessonType('all')"
-          >
-            All lessons
-          </button>
-        </div>
-      </div>
+      <app-headerbar
+        class="lessons-toolbar"
+        [title]="'Arabic Lessons'"
+        [showTitle]="true"
+        [showSearch]="true"
+        [placeholder]="'Search title or source'"
+        [value]="q"
+        [primaryLabel]="'Add'"
+        [secondaryLabel]="'Refresh'"
+        [filters]="headerFilters"
+        [pagination]="headerPagination"
+        (search)="onHeaderSearchInput($event)"
+        (primary)="onHeaderAddClick()"
+        (secondary)="refresh()"
+        (filterChange)="onHeaderFilterChange($event)"
+        (pageChange)="onHeaderPageChange($event)"
+        (pageSizeChange)="onHeaderPageSizeChange($event)"
+      />
       <div *ngIf="error" class="alert alert-danger py-2">{{ error }}</div>
       <div *ngIf="loading" class="text-muted">Loading…</div>
 

@@ -1,24 +1,31 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TokensService } from '../../../shared/services/tokens.service';
-import { PageHeaderSearchService } from '../../../shared/services/page-header-search.service';
-import { PageHeaderPaginationService } from '../../../shared/services/page-header-pagination.service';
+import { ToastService } from '../../../shared/services/toast.service';
 import { TokenRow } from '../../../shared/models/arabic/token.model';
-import { AppCrudTableComponent, CrudTableColumn } from '../../../shared/components';
+import {
+  PageHeaderFilterChangeEvent,
+  PageHeaderFilterConfig,
+} from '../../../shared/models/core/page-header.model';
+import {
+  AppCrudTableComponent,
+  AppHeaderbarComponent,
+  AppHeaderbarPagination,
+  CrudTableColumn
+} from '../../../shared/components';
 
 @Component({
   selector: 'app-tokens',
   standalone: true,
-  imports: [CommonModule, AppCrudTableComponent],
+  imports: [CommonModule, AppCrudTableComponent, AppHeaderbarComponent],
   templateUrl: './tokens.component.html',
   styleUrls: ['./tokens.component.scss'],
 })
 export class TokensComponent implements OnInit, OnDestroy {
+  private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly pageHeaderSearch = inject(PageHeaderSearchService);
-  private readonly pageHeaderPagination = inject(PageHeaderPaginationService);
   private readonly subs = new Subscription();
 
   readonly posOptions = ['verb', 'noun', 'adj', 'particle', 'phrase'];
@@ -72,7 +79,38 @@ export class TokensComponent implements OnInit, OnDestroy {
   loading = false;
   error = '';
 
-  constructor(private tokensService: TokensService) {}
+  constructor(
+    private tokensService: TokensService,
+    private toast: ToastService
+  ) {}
+
+  get headerFilters(): PageHeaderFilterConfig[] {
+    return [
+      {
+        id: 'pos',
+        queryParamKey: 'pos',
+        value: this.pos,
+        options: [
+          { value: '', label: 'All POS' },
+          ...this.posOptions.map((option) => ({
+            value: option,
+            label: option.charAt(0).toUpperCase() + option.slice(1),
+          })),
+        ],
+        resetPageOnChange: true,
+      },
+    ];
+  }
+
+  get headerPagination(): AppHeaderbarPagination {
+    return {
+      page: this.page,
+      pageSize: this.pageSize,
+      total: this.total,
+      hideIfSinglePage: true,
+      pageSizeOptions: this.pageSizeOptions,
+    };
+  }
 
   ngOnInit() {
     this.subs.add(
@@ -81,7 +119,6 @@ export class TokensComponent implements OnInit, OnDestroy {
         this.pos = params.get('pos') ?? '';
         this.page = this.parseIntParam(params.get('page'), 1, 1);
         this.pageSize = this.parseIntParam(params.get('pageSize'), 50, 25, 200);
-        this.syncHeaderConfig();
         this.load();
       })
     );
@@ -89,8 +126,6 @@ export class TokensComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subs.unsubscribe();
-    this.pageHeaderSearch.clearConfig();
-    this.pageHeaderPagination.clearConfig();
   }
 
   async load() {
@@ -107,20 +142,53 @@ export class TokensComponent implements OnInit, OnDestroy {
       this.total = response.total;
       this.page = this.parseIntParam(String(response.page ?? this.page), this.page, 1);
       this.pageSize = this.parseIntParam(String(response.pageSize ?? this.pageSize), this.pageSize, 25, 200);
-      this.pageHeaderPagination.setConfig({
-        page: this.page,
-        pageSize: this.pageSize,
-        total: this.total,
-        hideIfSinglePage: true,
-        pageSizeOptions: this.pageSizeOptions,
-      });
     } catch (err: any) {
       console.error('tokens load failed', err);
       this.error = err?.message ?? 'Unable to fetch tokens.';
-      this.pageHeaderPagination.clearConfig();
     } finally {
       this.loading = false;
     }
+  }
+
+  onHeaderSearchInput(value: string) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: value || null, page: 1, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderFilterChange(event: PageHeaderFilterChangeEvent) {
+    if (event.id !== 'pos') return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { pos: event.value || null, page: 1, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderPageChange(page: number) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { page, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderPageSizeChange(pageSize: number) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { pageSize, page: 1, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderAddClick() {
+    this.toast.show('Token creation form will be added next.', 'success');
+  }
+
+  refresh() {
+    this.load();
   }
 
   trackByToken(_index: number, token: TokenRow) {
@@ -154,25 +222,4 @@ export class TokensComponent implements OnInit, OnDestroy {
     return Math.min(max, clampedMin);
   }
 
-  private syncHeaderConfig() {
-    this.pageHeaderSearch.setConfig({
-      placeholder: 'Search lemma, root, or canonical input',
-      queryParamKey: 'q',
-      filters: [
-        {
-          id: 'pos',
-          queryParamKey: 'pos',
-          value: this.pos,
-          options: [
-            { value: '', label: 'All POS' },
-            ...this.posOptions.map((option) => ({
-              value: option,
-              label: option.charAt(0).toUpperCase() + option.slice(1),
-            })),
-          ],
-          resetPageOnChange: true,
-        },
-      ],
-    });
-  }
 }

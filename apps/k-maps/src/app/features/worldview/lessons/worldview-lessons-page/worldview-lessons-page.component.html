@@ -1,5 +1,17 @@
 <div class="card worldview-card">
   <div class="card-body">
+    <app-headerbar
+      class="worldview-toolbar"
+      [title]="'Worldview Lessons'"
+      [showTitle]="true"
+      [showSearch]="true"
+      [placeholder]="'Search title, creator, or summary'"
+      [value]="q"
+      [primaryLabel]="'Add'"
+      (search)="onHeaderSearchInput($event)"
+      (primary)="openCapture()"
+    />
+
     <div *ngIf="rows.length === 0" class="text-medium-emphasis">No entries yet.</div>
 
     <div class="list-group worldview-list" *ngIf="rows.length">

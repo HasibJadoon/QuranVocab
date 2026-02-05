@@ -1,13 +1,17 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { ArLessonsService } from '../../../../shared/services/ar-lessons.service';
-import { PageHeaderSearchService } from '../../../../shared/services/page-header-search.service';
-import { PageHeaderPaginationService } from '../../../../shared/services/page-header-pagination.service';
 import { ArLessonRow } from '../../../../shared/models/arabic/lesson-row.model';
 import {
+  PageHeaderFilterChangeEvent,
+  PageHeaderFilterConfig,
+} from '../../../../shared/models/core/page-header.model';
+import {
   AppCrudTableComponent,
+  AppHeaderbarComponent,
+  AppHeaderbarPagination,
   CrudTableAction,
   CrudTableActionEvent,
   CrudTableColumn
@@ -16,17 +20,20 @@ import {
 @Component({
   selector: 'app-ar-lessons-page',
   standalone: true,
-  imports: [CommonModule, AppCrudTableComponent],
+  imports: [CommonModule, AppCrudTableComponent, AppHeaderbarComponent],
   templateUrl: './ar-lessons-page.component.html',
   styleUrls: ['./ar-lessons-page.component.scss']
 })
-export class ArLessonsPageComponent implements OnInit, OnDestroy {
+export class ArLessonsPageComponent implements OnInit {
   readonly pageSizeOptions = [50, 100, 200];
+  readonly lessonTypeOptions: Array<{ value: string; label: string }> = [
+    { value: '', label: 'All lessons' },
+    { value: 'quran', label: 'Quran lessons' },
+    { value: 'other', label: 'Other literature' },
+  ];
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private lessons = inject(ArLessonsService);
-  private pageHeaderSearch = inject(PageHeaderSearchService);
-  private pageHeaderPagination = inject(PageHeaderPaginationService);
 
   q = '';
   page = 1;
@@ -67,14 +74,30 @@ export class ArLessonsPageComponent implements OnInit, OnDestroy {
         typeParam === 'other' ? 'other' : typeParam === 'all' ? 'all' : 'quran';
       this.page = this.parseIntParam(params.get('page'), 1, 1);
       this.pageSize = this.parseIntParam(params.get('pageSize'), 100, 1, 200);
-      this.syncPageHeaderSearch();
       this.load();
     });
   }
 
-  ngOnDestroy() {
-    this.pageHeaderSearch.clearConfig();
-    this.pageHeaderPagination.clearConfig();
+  get headerFilters(): PageHeaderFilterConfig[] {
+    return [
+      {
+        id: 'lesson_type',
+        queryParamKey: 'lesson_type',
+        value: this.lessonTypeFilter === 'all' ? '' : this.lessonTypeFilter,
+        options: this.lessonTypeOptions,
+        resetPageOnChange: true,
+      },
+    ];
+  }
+
+  get headerPagination(): AppHeaderbarPagination {
+    return {
+      page: this.page,
+      pageSize: this.pageSize,
+      total: this.total,
+      hideIfSinglePage: true,
+      pageSizeOptions: this.pageSizeOptions,
+    };
   }
 
   async load() {
@@ -101,30 +124,57 @@ export class ArLessonsPageComponent implements OnInit, OnDestroy {
       this.total = Number(data?.total ?? this.rows.length);
       this.page = this.parseIntParam(String(data?.page ?? this.page), this.page, 1);
       this.pageSize = this.parseIntParam(String(data?.pageSize ?? this.pageSize), this.pageSize, 1, 200);
-      this.pageHeaderPagination.setConfig({
-        page: this.page,
-        pageSize: this.pageSize,
-        total: this.total,
-        hideIfSinglePage: true,
-        pageSizeOptions: this.pageSizeOptions,
-      });
     } catch (err: any) {
       this.error = err?.message ?? 'Failed to load lessons';
       this.rows = [];
       this.total = 0;
-      this.pageHeaderPagination.clearConfig();
     } finally {
       this.loading = false;
     }
   }
 
-  selectLessonType(type: 'all' | 'quran' | 'other') {
+  onHeaderSearchInput(value: string) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: value || null, page: 1, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderFilterChange(event: PageHeaderFilterChangeEvent) {
+    if (event.id !== 'lesson_type') return;
+    const type = event.value === 'quran' || event.value === 'other' ? event.value : 'all';
     if (this.lessonTypeFilter === type) return;
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { lesson_type: type === 'all' ? null : type, page: 1 },
+      queryParams: { lesson_type: type === 'all' ? null : type, page: 1, offset: null },
       queryParamsHandling: 'merge',
     });
+  }
+
+  onHeaderPageChange(page: number) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { page, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderPageSizeChange(pageSize: number) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { pageSize, page: 1, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderAddClick() {
+    const target = this.lessonTypeFilter === 'other' ? 'literature' : 'quran';
+    this.router.navigate(['/arabic/lessons', target, 'new']);
+  }
+
+  refresh() {
+    this.load();
   }
 
   view(id: number, type: string) {
@@ -180,18 +230,6 @@ export class ArLessonsPageComponent implements OnInit, OnDestroy {
 
   private getLessonPrefix(type?: string): 'quran' | 'literature' {
     return type?.toLowerCase() === 'quran' ? 'quran' : 'literature';
-  }
-
-  private syncPageHeaderSearch() {
-    const target = this.lessonTypeFilter === 'other' ? 'literature' : 'quran';
-    this.pageHeaderSearch.setConfig({
-      placeholder: 'Search title or source',
-      queryParamKey: 'q',
-      primaryAction: {
-        label: 'Add',
-        commands: ['/arabic/lessons', target, 'new'],
-      },
-    });
   }
 
   statusBadgeClass(status: string) {

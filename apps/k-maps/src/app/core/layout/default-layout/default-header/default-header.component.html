@@ -28,50 +28,8 @@
 
     <ng-template #defaultBreadcrumb>
       <div class="header-breadcrumb">
-        <div class="header-breadcrumb-row">
-          <div class="header-breadcrumb-left" *ngIf="!showHeaderTitle">
-            <div class="breadcrumb-row">
-              <c-breadcrumb-router [items]="filteredBreadcrumbs()" />
-            </div>
-          </div>
-
-          <div
-            class="header-breadcrumb-search"
-            *ngIf="showHeaderTitle || pageHeaderSearch() || showHeaderSearch || showDiscourseFilters"
-          >
-            <app-headerbar
-              [title]="headerTitle"
-              [showTitle]="showHeaderTitle"
-              [showSearch]="!!(pageHeaderSearch() || showHeaderSearch)"
-              [placeholder]="resolvedHeaderPlaceholder()"
-              [value]="resolvedHeaderValue()"
-              [primaryLabel]="resolvedPrimaryLabel()"
-              [secondaryLabel]="resolvedSecondaryLabel()"
-              [tertiaryLabel]="resolvedTertiaryLabel()"
-              [filters]="resolvedHeaderFilters()"
-              [pagination]="pageHeaderPagination()"
-              (search)="onHeaderSearchInput($event)"
-              (filterChange)="onHeaderFilterChange($event)"
-              (primary)="onHeaderActionClick()"
-              (secondary)="onHeaderSecondaryClick()"
-              (tertiary)="onHeaderTertiaryClick()"
-              (pageChange)="onHeaderPageChange($event)"
-              (pageSizeChange)="onHeaderPageSizeChange($event)"
-            />
-
-            <div class="header-filter-row" *ngIf="showDiscourseFilters">
-              <button
-                class="btn btn-sm header-filter-pill"
-                [class.btn-outline-secondary]="!discourseFilterActive(filter.key)"
-                [class.btn-secondary]="discourseFilterActive(filter.key)"
-                type="button"
-                *ngFor="let filter of discourseFilters"
-                (click)="toggleDiscourseFilter(filter.key)"
-              >
-                {{ filter.label }}
-              </button>
-            </div>
-          </div>
+        <div class="breadcrumb-row">
+          <c-breadcrumb-router [items]="filteredBreadcrumbs()" />
         </div>
       </div>
     </ng-template>
