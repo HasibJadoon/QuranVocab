@@ -7,14 +7,6 @@ interface Env {
   JWT_SECRET: string;
 }
 
-type RootCard = {
-  card_id: string;
-  card_type: string;
-  front: string;
-  back: string;
-  tags: string[];
-};
-
 const jsonHeaders = {
   'content-type': 'application/json; charset=utf-8',
   'access-control-allow-origin': '*',
@@ -28,21 +20,6 @@ function safeJsonParse<T>(value: string | null | undefined): T | null {
   } catch {
     return null;
   }
-}
-
-function parseMeta(row: any) {
-  return safeJsonParse<Record<string, unknown>>(row.meta_json) ?? {};
-}
-
-function mapArURoot(row: any) {
-  const meta = parseMeta(row);
-  return {
-    ...row,
-    cards: [],
-    meta,
-    alt_latn_json: safeJsonParse<string[]>(row.alt_latn_json),
-    romanization_sources_json: safeJsonParse<Record<string, unknown>>(row.romanization_sources_json),
-  };
 }
 
 function parseArrayField(value: unknown): unknown[] | null {
@@ -79,6 +56,21 @@ function parseObjectField(value: unknown): Record<string, unknown> | null {
     }
   }
   return null;
+}
+
+function parseMeta(row: any) {
+  return safeJsonParse<Record<string, unknown>>(row.meta_json) ?? {};
+}
+
+function mapArURoot(row: any) {
+  const meta = parseMeta(row);
+  const { meta_json, ...rest } = row;
+  return {
+    ...rest,
+    cards: [],
+    meta,
+    alt_latn_json: safeJsonParse<string[]>(row.alt_latn_json),
+  };
 }
 
 function generateSearchKeys(
@@ -148,7 +140,6 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         root_latn,
         root_norm,
         alt_latn_json,
-        romanization_sources_json,
         search_keys_norm,
         status,
         difficulty,
@@ -175,7 +166,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
           ORDER BY root ASC
           LIMIT ?4
         `
-      )
+        )
         .bind(rootParam, canonicalRoot, pattern, exactLimit)
         .all();
 
@@ -197,7 +188,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       const like = `%${q}%`;
 
       countStmt = ctx.env.DB.prepare(
-      `
+        `
         SELECT COUNT(*) AS total
         FROM ar_u_roots
         WHERE root LIKE ?1 OR search_keys_norm LIKE ?1
@@ -317,7 +308,6 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     const rootLatn = typeof body?.root_latn === 'string' ? body.root_latn.trim() : null;
     const rootNorm = typeof body?.root_norm === 'string' ? body.root_norm.trim() : root;
     const altLatn = parseArrayField(body?.alt_latn_json);
-    const romanizationSources = parseObjectField(body?.romanization_sources_json);
     const searchKeysCandidate =
       typeof body?.search_keys_norm === 'string' ? body.search_keys_norm.trim() : '';
     const searchKeys =

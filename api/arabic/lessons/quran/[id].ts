@@ -25,6 +25,28 @@ function safeParseJsonRecord(text: string | null) {
   return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
 }
 
+function normalizeLessonJson(input: unknown): Record<string, unknown> {
+  if (!input || typeof input !== 'object') return {};
+  if (Array.isArray(input)) return {};
+  return input as Record<string, unknown>;
+}
+
+function toInt(value: unknown, fallback: number | null = null) {
+  if (typeof value !== 'number') return fallback;
+  if (!Number.isFinite(value)) return fallback;
+  return Math.trunc(value);
+}
+
+function normLower(value: unknown, fallback: string) {
+  const s = typeof value === 'string' ? value.trim() : '';
+  return (s || fallback).toLowerCase();
+}
+
+function normStr(value: unknown) {
+  const s = typeof value === 'string' ? value.trim() : '';
+  return s || null;
+}
+
 function parseSurahFromUnitId(unitId: string | null): number | null {
   if (!unitId) return null;
   const parts = unitId.split(':');

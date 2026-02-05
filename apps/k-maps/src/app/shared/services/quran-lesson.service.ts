@@ -172,10 +172,15 @@ export class QuranLessonService {
     );
 
     const lessonReference = lessonJson['reference'] as QuranLessonReference | undefined;
-    const lessonComprehension = lessonJson['comprehension'] as QuranLesson['comprehension'] | undefined;
+    const lessonComprehensionRaw = this.asRecord(lessonJson['comprehension']) ?? {};
+    if (!('mcqs' in lessonComprehensionRaw) && Array.isArray(lessonComprehensionRaw['Mcqs'])) {
+      lessonComprehensionRaw['mcqs'] = lessonComprehensionRaw['Mcqs'];
+    }
+    const lessonComprehension = lessonComprehensionRaw as QuranLesson['comprehension'];
     const lessonVocabLayer = lessonJson['vocab_layer'] as QuranLesson['vocab_layer'] | undefined;
     const lessonPassageLayers = lessonJson['passage_layers'] as QuranLesson['passage_layers'] | undefined;
     const lessonNotes = lessonJson['_notes'] as QuranLessonNotes | undefined;
+    const lessonNotesLegacy = lessonJson['notes'];
     const analysisOverride = this.asRecord(lessonJson['analysis']);
     const analysisTokens = this.asArray<QuranLessonTokenV2>(analysisOverride?.['tokens']);
     const analysisSpans = this.asArray<QuranLessonSpanV2>(analysisOverride?.['spans']);
@@ -185,7 +190,7 @@ export class QuranLessonService {
         ? (lessonJson['source'] as string)
         : data.lesson_row.source ?? null;
 
-    const lesson: QuranLesson = {
+    const lesson: QuranLesson & Record<string, unknown> = {
       lesson_type: 'quran',
       id: `${data.lesson_row.id}`,
       title: data.lesson_row.title,
@@ -211,6 +216,9 @@ export class QuranLessonService {
         vocab: analysisVocab ?? (data.vocab as QuranLessonVocabBuckets),
       },
     };
+    if (lessonNotesLegacy !== undefined) {
+      lesson['notes'] = lessonNotesLegacy;
+    }
     return lesson;
   }
 

@@ -136,20 +136,10 @@ function stableLemmaId(input: string) {
   return Math.max(1, normalized);
 }
 
-async function withTransaction<T>(db: D1Database, fn: () => Promise<T>) {
-  await db.exec('BEGIN IMMEDIATE');
-  try {
-    const result = await fn();
-    await db.exec('COMMIT');
-    return result;
-  } catch (error) {
-    try {
-      await db.exec('ROLLBACK');
-    } catch {
-      // Ignore rollback failure; we still return the original error.
-    }
-    throw error;
-  }
+async function withTransaction<T>(_db: D1Database, fn: () => Promise<T>) {
+  // D1 on this Pages setup rejects explicit BEGIN/COMMIT statements.
+  // Run step writes sequentially; each statement is still committed safely.
+  return fn();
 }
 
 function buildCommitId(parts: Array<string | number | null | undefined>) {

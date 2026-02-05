@@ -246,6 +246,9 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
   occurrenceFeedback: string | null = null;
   saveStatusMessage: string | null = null;
   saveStatusTone: SaveStatusTone = 'info';
+  metaComprehensionJson = '{}';
+  metaNotesJson = '[]';
+  metaJsonError: string | null = null;
   jsonError = '';
 
   ngOnInit() {
@@ -441,6 +444,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       parsed.lesson_type = 'quran';
       this.lesson = parsed;
       this.ensureDefaults();
+      this.syncMetaJsonInputs();
       this.onLessonEdited();
       this.jsonError = '';
     } catch (error: unknown) {
@@ -453,6 +457,39 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     this.syncBuilderExtrasToLesson();
     this.lessonJson = JSON.stringify(this.lesson, null, 2);
     this.saveDraftLocal();
+  }
+
+  onMetaComprehensionJsonChange(value: string) {
+    this.metaComprehensionJson = value;
+    if (!this.lesson) return;
+    try {
+      const parsed = JSON.parse(value || '{}');
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('Comprehension must be a JSON object.');
+      }
+      this.lesson.comprehension = parsed as QuranLesson['comprehension'];
+      this.metaJsonError = null;
+      this.onLessonEdited();
+    } catch (error: unknown) {
+      this.metaJsonError = error instanceof Error ? error.message : 'Invalid comprehension JSON.';
+    }
+  }
+
+  onMetaNotesJsonChange(value: string) {
+    this.metaNotesJson = value;
+    if (!this.lesson) return;
+    try {
+      const parsed = JSON.parse(value || '[]');
+      const lessonAny = this.lesson as unknown as Record<string, unknown>;
+      lessonAny['notes'] = parsed;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        this.lesson._notes = parsed as Record<string, string | null>;
+      }
+      this.metaJsonError = null;
+      this.onLessonEdited();
+    } catch (error: unknown) {
+      this.metaJsonError = error instanceof Error ? error.message : 'Invalid notes JSON.';
+    }
   }
 
   get safeReference(): NonNullable<QuranLesson['reference']> {
@@ -1901,9 +1938,19 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
 
     this.ensureAnalysis();
     this.ensureComprehension();
+    this.syncMetaJsonInputs();
     this.loadBuilderExtrasFromLesson();
     this.syncSelectionFromLesson();
     this.syncContextSelections();
+  }
+
+  private syncMetaJsonInputs() {
+    if (!this.lesson) return;
+    this.metaComprehensionJson = JSON.stringify(this.lesson.comprehension ?? {}, null, 2);
+    const lessonAny = this.lesson as unknown as Record<string, unknown>;
+    const notesValue = lessonAny['notes'] ?? this.lesson._notes ?? [];
+    this.metaNotesJson = JSON.stringify(notesValue, null, 2);
+    this.metaJsonError = null;
   }
 
   private ensureAnalysis() {

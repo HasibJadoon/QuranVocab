@@ -24,10 +24,6 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     )
   );
 
-  if (unique.length === 0) {
-    return Response.json({ existing: [], new: [] });
-  }
-
   if (normalized.length === 0) {
     return Response.json({ existing: [], new: [] });
   }

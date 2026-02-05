@@ -149,16 +149,11 @@
 
 .lesson-builder .save-status {
   margin: 0;
-  border: 1px solid rgba(118, 149, 205, 0.26);
-  border-radius: 9px;
-  padding: 0.48rem 0.58rem;
-  font-size: 0.78rem;
-  background: rgba(12, 20, 36, 0.94);
+  font-size: 0.77rem;
   color: var(--tm);
 }
 
 .lesson-builder .save-status.save-status--loading {
-  border-color: rgba(124, 153, 211, 0.4);
   color: rgba(220, 231, 255, 0.95);
 }
 

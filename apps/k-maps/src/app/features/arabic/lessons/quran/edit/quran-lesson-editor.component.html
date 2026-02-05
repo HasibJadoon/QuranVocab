@@ -54,6 +54,26 @@
           [reference]="safeReference"
           (changed)="onLessonEdited()"
         />
+
+        <label>
+          <span>Comprehension (JSON)</span>
+          <textarea
+            rows="12"
+            [ngModel]="metaComprehensionJson"
+            (ngModelChange)="onMetaComprehensionJsonChange($event)"
+          ></textarea>
+        </label>
+
+        <label>
+          <span>Notes (JSON)</span>
+          <textarea
+            rows="8"
+            [ngModel]="metaNotesJson"
+            (ngModelChange)="onMetaNotesJsonChange($event)"
+          ></textarea>
+        </label>
+
+        <p class="feedback" *ngIf="metaJsonError">{{ metaJsonError }}</p>
       </ng-container>
 
       <ng-container *ngSwitchCase="'verses'">
