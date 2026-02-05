@@ -86,6 +86,8 @@ type SentenceTreeState = {
   edges: SentenceTreeEdge[];
 };
 
+type SaveStatusTone = 'info' | 'success' | 'error';
+
 const BUILDER_TABS: BuilderTab[] = [
   { id: 'meta', label: 'Lesson Info', intent: 'Create lesson envelope first' },
   { id: 'verses', label: 'Select Verses', intent: 'Pick surah + ayah range and preview' },
@@ -242,6 +244,8 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
   selectedVerseUnitId = '';
 
   occurrenceFeedback: string | null = null;
+  saveStatusMessage: string | null = null;
+  saveStatusTone: SaveStatusTone = 'info';
   jsonError = '';
 
   ngOnInit() {
@@ -363,36 +367,54 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     this.normalizeBeforeSave();
     this.saveDraftLocal();
+    this.setSaveStatus('Saving draft locally...', 'info');
 
     try {
       if (this.isNewLesson) {
         const title = this.lesson.title?.trim() ?? '';
         if (!title) {
-          this.occurrenceFeedback = 'Saved locally. Add title to create the lesson row.';
+          const message = 'Saved locally. Add title to create the lesson row.';
+          this.occurrenceFeedback = message;
+          this.setSaveStatus(message, 'success');
           return;
         }
 
+        this.setSaveStatus('Saving lesson row to backend via API...', 'info');
         const payload = this.buildCreatePayload();
         const createdLesson = await firstValueFrom(this.service.createLesson(payload));
         const createdId = String((createdLesson as { id?: string | number })?.id ?? '');
         if (!createdId) {
-          this.occurrenceFeedback = 'Lesson created, but id is missing in response.';
+          const message = 'Lesson created, but id is missing in response.';
+          this.occurrenceFeedback = message;
+          this.setSaveStatus(message, 'error');
           return;
         }
+        this.setSaveStatus('Saved successfully. Opening lesson editor...', 'success');
         this.clearDraftForLesson('new');
         await this.router.navigate(['/arabic/lessons/quran', createdId, 'edit']);
         return;
       }
 
       if (this.lesson.title.trim()) {
-        await firstValueFrom(this.service.updateLesson(this.lesson.id, this.lesson));
+        this.setSaveStatus('Saving lesson JSON to backend via API...', 'info');
+        try {
+          await firstValueFrom(this.service.updateLesson(this.lesson.id, this.lesson));
+        } catch (error: unknown) {
+          const jsonSaveError = this.readCommitError(error);
+          this.setSaveStatus(
+            `Lesson JSON sync failed (${jsonSaveError}). Continuing step save...`,
+            'error'
+          );
+        }
       }
 
-      const commitMessage = await this.saveCurrentStep(this.activeTabId);
-      this.occurrenceFeedback = commitMessage;
+      const saveResult = await this.saveCurrentStep(this.activeTabId);
+      this.occurrenceFeedback = saveResult.message;
+      this.setSaveStatus(saveResult.message, saveResult.tone);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Save failed';
       this.occurrenceFeedback = `Save failed: ${message}`;
+      this.setSaveStatus(`Save failed: ${message}`, 'error');
     } finally {
       this.isSaving = false;
     }
@@ -1343,20 +1365,32 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     });
   }
 
-  private async saveCurrentStep(tabId: BuilderTabId) {
+  private async saveCurrentStep(tabId: BuilderTabId): Promise<{
+    message: string;
+    tone: SaveStatusTone;
+  }> {
     const lessonId = this.getLessonId();
     if (!lessonId) {
-      return 'Saved locally. Create lesson row first.';
+      return {
+        message: 'Saved locally. Create lesson row first.',
+        tone: 'success',
+      };
     }
 
     const step = COMMIT_STEP_BY_TAB[tabId];
     if (!step) {
-      return 'Saved locally. This tab does not commit server rows.';
+      return {
+        message: 'Saved locally. This tab does not commit server rows.',
+        tone: 'success',
+      };
     }
 
     const eligibility = this.getStepSaveEligibility(step);
     if (!eligibility.ok) {
-      return `Saved locally. ${eligibility.reason}`;
+      return {
+        message: `Saved locally. ${eligibility.reason}`,
+        tone: 'success',
+      };
     }
 
     let response:
@@ -1364,14 +1398,21 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       | null = null;
 
     try {
+      this.setSaveStatus(`Saving '${step}' step to backend via API...`, 'info');
       const commitPayload = this.buildCommitPayload(step);
       response = await firstValueFrom(this.service.commitStep(lessonId, commitPayload));
     } catch (error: unknown) {
-      return `Saved locally. ${this.readCommitError(error)}`;
+      return {
+        message: `Saved locally. ${this.readCommitError(error)}`,
+        tone: 'error',
+      };
     }
 
     if (!response?.ok) {
-      return 'Saved locally. Server step commit failed.';
+      return {
+        message: 'Saved locally. Server step commit failed.',
+        tone: 'error',
+      };
     }
 
     if (response.result?.container_id) {
@@ -1382,9 +1423,12 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     }
 
     const tableCount = Object.keys(response.result?.counts ?? {}).length;
-    return tableCount
-      ? `Saved locally + committed '${step}' (${tableCount} table updates).`
-      : `Saved locally + committed '${step}'.`;
+    return {
+      message: tableCount
+        ? `Saved successfully. '${step}' committed (${tableCount} table updates).`
+        : `Saved successfully. '${step}' committed.`,
+      tone: 'success',
+    };
   }
 
   private readCommitError(error: unknown) {
@@ -1769,6 +1813,11 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
   private getDraftKey(lessonKey?: string) {
     const key = lessonKey ?? (this.isNewLesson ? 'new' : String(this.lesson?.id ?? 'new'));
     return `${DRAFT_KEY_PREFIX}:${key}`;
+  }
+
+  private setSaveStatus(message: string, tone: SaveStatusTone) {
+    this.saveStatusMessage = message;
+    this.saveStatusTone = tone;
   }
 
   private saveDraftLocal() {

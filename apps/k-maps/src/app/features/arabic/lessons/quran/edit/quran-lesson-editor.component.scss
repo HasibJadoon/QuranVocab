@@ -147,6 +147,31 @@
   font-size: 0.77rem;
 }
 
+.lesson-builder .save-status {
+  margin: 0;
+  border: 1px solid rgba(118, 149, 205, 0.26);
+  border-radius: 9px;
+  padding: 0.48rem 0.58rem;
+  font-size: 0.78rem;
+  background: rgba(12, 20, 36, 0.94);
+  color: var(--tm);
+}
+
+.lesson-builder .save-status.save-status--loading {
+  border-color: rgba(124, 153, 211, 0.4);
+  color: rgba(220, 231, 255, 0.95);
+}
+
+.lesson-builder .save-status.save-status--success {
+  border-color: rgba(76, 193, 149, 0.42);
+  color: rgba(188, 248, 224, 0.97);
+}
+
+.lesson-builder .save-status.save-status--error {
+  border-color: rgba(224, 92, 92, 0.45);
+  color: rgba(255, 206, 206, 0.97);
+}
+
 .lesson-builder .verse-card,
 .lesson-builder .sentence-card,
 .lesson-builder .mcq-card,

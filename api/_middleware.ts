@@ -32,6 +32,13 @@ const withCors = (response: Response, origin: string | null) => {
   const headers = new Headers(response.headers);
   const cors = corsHeaders(origin);
   cors.forEach((value, key) => headers.set(key, value));
+
+  const contentType = headers.get('content-type') ?? '';
+  // Keep shell HTML fresh to avoid stale chunk references after deploy.
+  if (contentType.includes('text/html')) {
+    headers.set('cache-control', 'no-store, no-cache, must-revalidate');
+  }
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,

@@ -34,6 +34,16 @@
         (next)="goNextTab()"
       />
 
+      <p
+        class="save-status"
+        *ngIf="saveStatusMessage"
+        [class.save-status--loading]="isSaving && saveStatusTone === 'info'"
+        [class.save-status--success]="saveStatusTone === 'success'"
+        [class.save-status--error]="saveStatusTone === 'error'"
+      >
+        {{ saveStatusMessage }}
+      </p>
+
       <section class="builder-panel">
         <app-tab-lock-banner [message]="activeTabLockMessage" />
 

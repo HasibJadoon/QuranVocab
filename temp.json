@@ -1,0 +1,60 @@
+{
+    "schema_version": 1,
+    "container_id": "C:QURAN",
+    "unit_id": "U:QURAN:12:1-7",
+    "steps": [
+      { "id": "read", "label": "Reading" },
+      { "id": "sentences", "label": "Sentence Structure" },
+      { "id": "vocab", "label": "Vocabulary" },
+      { "id": "grammar", "label": "Grammar: Concepts" },
+      { "id": "translations", "label": "Translations" },
+      { "id": "comprehension", "label": "Comprehension" },
+      { "id": "passage_structures", "label": "Passage Structures" },
+      { "id": "notes", "label": "Notes" }
+    ],
+    "comprehension":{
+        "questions": [
+            { "id": "q1", "question": "What is the main theme of these verses?" },
+            { "id": "q2", "question": "Identify any key vocabulary words and their meanings." },
+            { "id": "q3", "question": "How do the grammar concepts in these verses relate to their meaning?" }
+        ],
+        "answers": {
+            "q1": "The main theme of these verses is the story of the creation of Adam and the command given to the angels to prostrate before him.",
+            "q2": {
+                "Adam": "The first human created by Allah.",
+                "prostrate": "To bow down in submission or worship."
+            },
+            "q3": {
+                "grammar": "The grammar concepts in these verses highlight the importance of obedience and submission to Allah's will."
+            }
+        },
+        "Mcqs": [
+            {
+                "id": "mcq1",
+                "question": "Who was commanded to prostrate before Adam?",
+                "options": [
+                    { "id": "o1", "text": "The angels" },
+                    { "id": "o2", "text": "The jinn" },
+                    { "id": "o3", "text": "The prophets" }
+                ],
+                "correct_option_id": "o1"
+            },
+            {
+                "id": "mcq2",
+                "question": "What does 'prostrate' mean in the context of these verses?",
+                "options": [
+                    { "id": "o1", "text": "To stand in respect" },
+                    { "id": "o2", "text": "To bow down in submission or worship" },
+                    { "id": "o3", "text": "To sit in contemplation" }
+                ],
+                "correct_option_id": "o2"
+            }
+        ]
+    },
+    "policies": [
+      { "id": "canonical_text_lock", "rule": "Arabic text must match canonical container units exactly." },
+      { "id": "tokenization_prefix_split", "rule": "Split prefixes (و/ف/ب/ك/ل/س) into token.prefixes[] and keep surface_ar without them." },
+      { "id": "grammar_external", "rule": "Grammar concepts live in separate tables; lesson stores references only." }
+    ],
+    "notes": []
+}
