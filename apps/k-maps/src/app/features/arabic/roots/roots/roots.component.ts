@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CardsComponent } from '../root-cards/cards/cards.component';
 import { AuthService } from '../../../../shared/services/AuthService';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { PageHeaderPaginationService } from '../../../../shared/services/page-header-pagination.service';
 import { API_BASE } from '../../../../shared/api-base';
 import { RootCard } from '../../../../shared/models/arabic/root-card.model';
 import { RootRow, RootsApiResponse } from '../../../../shared/models/arabic/root-row.model';
@@ -25,10 +26,13 @@ import {
   styleUrls: ['./roots.component.scss'],
 })
 export class RootsComponent implements OnInit, OnDestroy {
+  readonly pageSizeOptions = [50, 100, 200];
   q = '';
-  limit = 100;
+  page = 1;
+  pageSize = 100;
 
   rows: RootRow[] = [];
+  total = 0;
   tableColumns: CrudTableColumn[] = [
     {
       key: 'root',
@@ -77,6 +81,7 @@ export class RootsComponent implements OnInit, OnDestroy {
 
   private debounce: any;
   private abort?: AbortController;
+  private readonly pageHeaderPagination = inject(PageHeaderPaginationService);
 
   // ---------------- endpoints ----------------
   private readonly listEndpoint = `${API_BASE}/lexicon_roots`;
@@ -122,6 +127,8 @@ export class RootsComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.route.queryParamMap.subscribe((params) => {
       this.q = params.get('q') ?? '';
+      this.page = this.parseIntParam(params.get('page'), 1, 1);
+      this.pageSize = this.parseIntParam(params.get('pageSize'), 100, 1, 500);
       this.showCreate = params.has('new');
       this.load();
     });
@@ -130,6 +137,7 @@ export class RootsComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.abort?.abort();
     if (this.debounce) clearTimeout(this.debounce);
+    this.pageHeaderPagination.clearConfig();
     // no-op: toast service handles its own timers
   }
 
@@ -234,56 +242,6 @@ export class RootsComponent implements OnInit, OnDestroy {
   // load roots
   // =====================================================
 
-  private rowsContainRoot(term: string) {
-    const normalized = term.trim();
-    if (!normalized) return true;
-    const lower = normalized.toLowerCase();
-    return this.rows.some((row) => {
-      if (!row) return false;
-      if (row.root === normalized) return true;
-      const rootNorm = (row.root_norm ?? '').toLowerCase();
-      if (rootNorm && rootNorm === lower) return true;
-      const searchKeys = (row.search_keys_norm ?? '').toLowerCase();
-      return searchKeys.includes(lower);
-    });
-  }
-
-  private async fetchExactRoot(term: string): Promise<RootRow | null> {
-    if (!term.trim()) return null;
-    try {
-      const params = new URLSearchParams({ root: term.trim(), limit: '1' });
-      const res = await fetch(`${this.listEndpoint}?${params.toString()}`, {
-        signal: this.abort?.signal,
-        headers: {
-          ...this.authHeaders(),
-        },
-      });
-
-      if (res.status === 401) this.handle401();
-      if (!res.ok) return null;
-
-      const data = (await res.json()) as RootsApiResponse;
-      if (data?.ok && Array.isArray(data.results) && data.results.length) {
-        return data.results[0];
-      }
-      return null;
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        console.error('Root lookup failed', err);
-      }
-      return null;
-    }
-  }
-
-  private async ensureExactRootPresent(term: string) {
-    const trimmed = term.trim();
-    if (!trimmed || this.rowsContainRoot(trimmed)) return;
-    const found = await this.fetchExactRoot(trimmed);
-    if (found && !this.rowsContainRoot(trimmed)) {
-      this.rows = [found, ...this.rows];
-    }
-  }
-
   async load() {
     this.loading = true;
     this.error = '';
@@ -295,7 +253,8 @@ export class RootsComponent implements OnInit, OnDestroy {
       const searchTerm = this.q.trim();
       const params = new URLSearchParams();
       if (searchTerm) params.set('q', searchTerm);
-      params.set('limit', String(this.limit));
+      params.set('page', String(this.page));
+      params.set('pageSize', String(this.pageSize));
 
       const res = await fetch(
         `${this.listEndpoint}?${params.toString()}`,
@@ -317,13 +276,22 @@ export class RootsComponent implements OnInit, OnDestroy {
       }
 
       this.rows = Array.isArray(data?.results) ? data.results : [];
-      if (searchTerm) {
-        await this.ensureExactRootPresent(searchTerm);
-      }
+      this.total = Number(data?.total ?? this.rows.length);
+      this.page = this.parseIntParam(String(data?.page ?? this.page), this.page, 1);
+      this.pageSize = this.parseIntParam(String(data?.pageSize ?? this.pageSize), this.pageSize, 1, 500);
+      this.pageHeaderPagination.setConfig({
+        page: this.page,
+        pageSize: this.pageSize,
+        total: this.total,
+        hideIfSinglePage: true,
+        pageSizeOptions: this.pageSizeOptions,
+      });
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
         this.error = e?.message ?? 'Failed to load roots';
         this.rows = [];
+        this.total = 0;
+        this.pageHeaderPagination.clearConfig();
       }
     } finally {
       this.loading = false;
@@ -610,5 +578,18 @@ export class RootsComponent implements OnInit, OnDestroy {
       .map((part) => (part ?? '').toLowerCase().trim())
       .filter((part) => part.length > 0);
     return parts.join(' ');
+  }
+
+  private parseIntParam(
+    value: string | null,
+    fallback: number,
+    min: number,
+    max?: number
+  ) {
+    const parsed = Number.parseInt(String(value ?? ''), 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    const clampedMin = Math.max(min, parsed);
+    if (typeof max !== 'number') return clampedMin;
+    return Math.min(max, clampedMin);
   }
 }

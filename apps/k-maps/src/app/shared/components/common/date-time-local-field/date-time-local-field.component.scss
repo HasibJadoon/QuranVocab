@@ -1,0 +1,12 @@
+@import '../../../variables.scss';
+
+.is-invalid {
+    border-color: $rouge-assistance !important;
+}
+
+.greyed-out{
+    input{
+        background-color: #e9ecef;
+        pointer-events: none;
+    }
+}

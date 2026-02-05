@@ -1,23 +1,5 @@
 <div class="tokens-page">
-  <header class="tokens-header">
-    <div class="tokens-title">
-      <h1 class="h5 mb-0">Tokens</h1>
-      <p class="text-muted mb-0">Browse the canonical ar_u_tokens layer linked to roots.</p>
-    </div>
-    <div class="tokens-controls">
-      <div class="tokens-filters">
-        <select class="form-select" [(ngModel)]="pos" (change)="load()">
-          <option value="">All POS</option>
-          <option *ngFor="let posOption of posOptions" [value]="posOption">
-            {{ posOption | titlecase }}
-          </option>
-        </select>
-        <select class="form-select" [(ngModel)]="pageSize" (change)="setPageSize(pageSize)">
-          <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }} / page</option>
-        </select>
-      </div>
-    </div>
-  </header>
+  <p class="tokens-description text-muted">Browse the canonical ar_u_tokens layer linked to roots.</p>
 
   <section *ngIf="error" class="alert alert-danger" role="alert">
     {{ error }}
@@ -35,28 +17,4 @@
     [rows]="tokens"
     [showActions]="false"
   ></app-crud-table>
-
-  <footer *ngIf="tokens.length" class="tokens-pagination">
-    <div>
-      Showing {{ tokens.length }} of {{ total }} tokens (Page {{ page }} of {{ totalPages }})
-    </div>
-    <div class="btn-group">
-      <button
-        class="btn btn-outline-secondary btn-sm"
-        type="button"
-        (click)="changePage('prev')"
-        [disabled]="page <= 1"
-      >
-        Prev
-      </button>
-      <button
-        class="btn btn-outline-secondary btn-sm"
-        type="button"
-        (click)="changePage('next')"
-        [disabled]="page >= totalPages"
-      >
-        Next
-      </button>
-    </div>
-  </footer>
 </div>

@@ -26,10 +26,39 @@ export interface PageHeaderSearchAction {
   queryParams?: Params;
 }
 
+export interface PageHeaderFilterOption {
+  value: string;
+  label: string;
+}
+
+export interface PageHeaderFilterConfig {
+  id: string;
+  queryParamKey: string;
+  value: string;
+  options: PageHeaderFilterOption[];
+  resetPageOnChange?: boolean;
+}
+
+export interface PageHeaderFilterChangeEvent {
+  id: string;
+  queryParamKey: string;
+  value: string;
+  resetPageOnChange?: boolean;
+}
+
 export interface PageHeaderSearchConfig {
   placeholder: string;
   queryParamKey?: string;
   primaryAction?: PageHeaderSearchAction;
   secondaryAction?: PageHeaderSearchAction;
   tertiaryAction?: PageHeaderSearchAction;
+  filters?: PageHeaderFilterConfig[];
+}
+
+export interface PageHeaderPaginationConfig {
+  page: number;
+  pageSize: number;
+  total: number;
+  hideIfSinglePage?: boolean;
+  pageSizeOptions?: number[];
 }

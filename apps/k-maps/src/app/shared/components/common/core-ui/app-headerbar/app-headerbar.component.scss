@@ -1,0 +1,112 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.app-headerbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.app-headerbar-main {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+}
+
+.app-headerbar-title-wrap {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-headerbar-search-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.app-headerbar-search-wrap app-header-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+}
+
+.app-headerbar-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--km-core-text, rgba(241, 246, 255, 0.95));
+  white-space: nowrap;
+  text-align: left;
+}
+
+.app-headerbar-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.app-headerbar-pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.app-headerbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.app-headerbar-select {
+  min-width: 190px;
+  height: 66px;
+  border-radius: 12px;
+  border: 1px solid var(--km-core-border, rgba(133, 160, 214, 0.2));
+  background: var(--km-core-surface-3, rgba(14, 24, 42, 0.94));
+  color: var(--km-core-text, rgba(241, 246, 255, 0.95));
+  font-weight: 600;
+  font-size: 0.98rem;
+  padding-inline: 1rem 2.5rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.app-headerbar-select:focus {
+  border-color: var(--km-core-border-strong, rgba(133, 160, 214, 0.34));
+  box-shadow: 0 0 0 0.2rem var(--km-core-ring, rgba(80, 118, 224, 0.22));
+}
+
+.app-headerbar-page-meta {
+  font-size: 0.8rem;
+  color: var(--km-core-text-muted, rgba(184, 200, 230, 0.86));
+}
+
+@media (max-width: 700px) {
+  .app-headerbar-main {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .app-headerbar-title-wrap,
+  .app-headerbar-search-wrap {
+    width: 100%;
+  }
+
+  .app-headerbar-select {
+    min-width: 170px;
+    height: 56px;
+  }
+}

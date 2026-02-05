@@ -21,6 +21,9 @@ export interface RootRow {
 
 export interface RootsApiResponse {
   ok?: boolean;
+  total?: number;
+  page?: number;
+  pageSize?: number;
   results?: RootRow[];
   error?: string;
 }

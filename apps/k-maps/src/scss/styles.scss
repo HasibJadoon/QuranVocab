@@ -17,6 +17,9 @@
 // If you want to add custom CSS you can put it here.
 @use "custom";
 
+// Shared Core UI theme tokens (dark/light).
+@use "../app/shared/components/common/core-ui/theme" as core-ui-theme;
+
 // Global styles for the settings panel dropdown.
 @use "settings-panel";
 

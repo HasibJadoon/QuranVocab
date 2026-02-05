@@ -1,23 +1,24 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TokensService } from '../../../shared/services/tokens.service';
 import { PageHeaderSearchService } from '../../../shared/services/page-header-search.service';
+import { PageHeaderPaginationService } from '../../../shared/services/page-header-pagination.service';
 import { TokenRow } from '../../../shared/models/arabic/token.model';
 import { AppCrudTableComponent, CrudTableColumn } from '../../../shared/components';
 
 @Component({
   selector: 'app-tokens',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppCrudTableComponent],
+  imports: [CommonModule, AppCrudTableComponent],
   templateUrl: './tokens.component.html',
   styleUrls: ['./tokens.component.scss'],
 })
 export class TokensComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly pageHeaderSearch = inject(PageHeaderSearchService);
+  private readonly pageHeaderPagination = inject(PageHeaderPaginationService);
   private readonly subs = new Subscription();
 
   readonly posOptions = ['verb', 'noun', 'adj', 'particle', 'phrase'];
@@ -60,8 +61,9 @@ export class TokensComponent implements OnInit, OnDestroy {
     {
       key: 'meta',
       label: 'Meta',
-      value: (row) => this.metaSummary(row as TokenRow),
-      cellClass: () => 'app-table-english',
+      type: 'json',
+      value: (row) => this.metaPayload(row as TokenRow),
+      jsonTitle: 'Token metadata',
     },
   ];
 
@@ -73,14 +75,13 @@ export class TokensComponent implements OnInit, OnDestroy {
   constructor(private tokensService: TokensService) {}
 
   ngOnInit() {
-    this.pageHeaderSearch.setConfig({
-      placeholder: 'Search lemma, root, or canonical input',
-      queryParamKey: 'q',
-    });
     this.subs.add(
       this.route.queryParamMap.subscribe((params) => {
         this.q = params.get('q') ?? '';
-        this.page = 1;
+        this.pos = params.get('pos') ?? '';
+        this.page = this.parseIntParam(params.get('page'), 1, 1);
+        this.pageSize = this.parseIntParam(params.get('pageSize'), 50, 25, 200);
+        this.syncHeaderConfig();
         this.load();
       })
     );
@@ -89,10 +90,7 @@ export class TokensComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.subs.unsubscribe();
     this.pageHeaderSearch.clearConfig();
-  }
-
-  get totalPages() {
-    return Math.max(1, Math.ceil(this.total / this.pageSize));
+    this.pageHeaderPagination.clearConfig();
   }
 
   async load() {
@@ -107,28 +105,21 @@ export class TokensComponent implements OnInit, OnDestroy {
       });
       this.tokens = response.results;
       this.total = response.total;
+      this.page = this.parseIntParam(String(response.page ?? this.page), this.page, 1);
+      this.pageSize = this.parseIntParam(String(response.pageSize ?? this.pageSize), this.pageSize, 25, 200);
+      this.pageHeaderPagination.setConfig({
+        page: this.page,
+        pageSize: this.pageSize,
+        total: this.total,
+        hideIfSinglePage: true,
+        pageSizeOptions: this.pageSizeOptions,
+      });
     } catch (err: any) {
       console.error('tokens load failed', err);
       this.error = err?.message ?? 'Unable to fetch tokens.';
+      this.pageHeaderPagination.clearConfig();
     } finally {
       this.loading = false;
-    }
-  }
-
-  setPageSize(size: number) {
-    this.pageSize = size;
-    this.page = 1;
-    this.load();
-  }
-
-  changePage(direction: 'prev' | 'next') {
-    if (direction === 'prev' && this.page > 1) {
-      this.page -= 1;
-      this.load();
-    }
-    if (direction === 'next' && this.page < this.totalPages) {
-      this.page += 1;
-      this.load();
     }
   }
 
@@ -143,10 +134,45 @@ export class TokensComponent implements OnInit, OnDestroy {
     return token.root_norm;
   }
 
-  metaSummary(token: TokenRow) {
-    const parts: string[] = [];
-    if (token.meta && Object.keys(token.meta).length) parts.push('meta');
-    if (token.root_meta && Object.keys(token.root_meta).length) parts.push('root meta');
-    return parts.length ? parts.join(', ') : '—';
+  metaPayload(token: TokenRow) {
+    return {
+      token_meta: token.meta ?? {},
+      root_meta: token.root_meta ?? {},
+    };
+  }
+
+  private parseIntParam(
+    value: string | null,
+    fallback: number,
+    min: number,
+    max?: number
+  ) {
+    const parsed = Number.parseInt(String(value ?? ''), 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    const clampedMin = Math.max(min, parsed);
+    if (typeof max !== 'number') return clampedMin;
+    return Math.min(max, clampedMin);
+  }
+
+  private syncHeaderConfig() {
+    this.pageHeaderSearch.setConfig({
+      placeholder: 'Search lemma, root, or canonical input',
+      queryParamKey: 'q',
+      filters: [
+        {
+          id: 'pos',
+          queryParamKey: 'pos',
+          value: this.pos,
+          options: [
+            { value: '', label: 'All POS' },
+            ...this.posOptions.map((option) => ({
+              value: option,
+              label: option.charAt(0).toUpperCase() + option.slice(1),
+            })),
+          ],
+          resetPageOnChange: true,
+        },
+      ],
+    });
   }
 }

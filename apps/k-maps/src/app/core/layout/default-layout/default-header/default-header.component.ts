@@ -1,39 +1,40 @@
-import { NgFor, NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import {
   ActivatedRouteSnapshot,
   NavigationEnd,
   Router,
   RouterLink,
-  RouterLinkActive
+  RouterLinkActive,
 } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
 import {
-  AvatarComponent,
-  BadgeComponent,
   BreadcrumbRouterComponent,
   BreadcrumbRouterService,
   ContainerComponent,
-  DropdownComponent,
-  DropdownMenuDirective,
-  DropdownToggleDirective,
   HeaderComponent,
   HeaderNavComponent,
   HeaderTogglerDirective,
   IBreadcrumbItem,
-  SidebarToggleDirective
+  SidebarToggleDirective,
 } from '@coreui/angular';
 
 import { IconDirective } from '@coreui/icons-angular';
-import { AuthService } from '../../../../shared/services/AuthService';
-import { AppPageHeaderTabsComponent, HeaderSearchComponent } from '../../../../shared/components';
+import {
+  AppHeaderSettingsDropdownComponent,
+  AppHeaderbarComponent,
+  AppPageHeaderTabsComponent,
+} from '../../../../shared/components';
 import { PageHeaderService } from '../../../../shared/services/page-header.service';
 import { PageHeaderSearchService } from '../../../../shared/services/page-header-search.service';
+import { PageHeaderPaginationService } from '../../../../shared/services/page-header-pagination.service';
 import {
+  PageHeaderFilterChangeEvent,
+  PageHeaderPaginationConfig,
   PageHeaderSearchAction,
   PageHeaderSearchConfig,
-  PageHeaderTabsConfig
+  PageHeaderTabsConfig,
 } from '../../../../shared/models/core/page-header.model';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -49,41 +50,41 @@ const SKIPPED_BREADCRUMB_LABELS = new Set(['Arabic Lessons', 'Quran Lessons']);
     SidebarToggleDirective,
     IconDirective,
     HeaderNavComponent,
-    NgTemplateOutlet,
     NgIf,
     NgFor,
-    NgSwitch,
-    NgSwitchCase,
     RouterLink,
     RouterLinkActive,
     BreadcrumbRouterComponent,
-    DropdownComponent,
-    DropdownToggleDirective,
-    DropdownMenuDirective,
-    HeaderSearchComponent,
-    AppPageHeaderTabsComponent
-  ]
+    AppHeaderbarComponent,
+    AppPageHeaderTabsComponent,
+    AppHeaderSettingsDropdownComponent,
+  ],
 })
 export class DefaultHeaderComponent extends HeaderComponent {
-  private auth = inject(AuthService);
-  private router = inject(Router);
-  private pageHeaderService = inject(PageHeaderService);
-  private pageHeaderSearchService = inject(PageHeaderSearchService);
-  private breadcrumbService = inject(BreadcrumbRouterService);
-  private breadcrumbsSignal = toSignal(this.breadcrumbService.breadcrumbs$, {
+  private readonly router = inject(Router);
+  private readonly pageHeaderService = inject(PageHeaderService);
+  private readonly pageHeaderSearchService = inject(PageHeaderSearchService);
+  private readonly pageHeaderPaginationService = inject(PageHeaderPaginationService);
+  private readonly breadcrumbService = inject(BreadcrumbRouterService);
+
+  private readonly breadcrumbsSignal = toSignal(this.breadcrumbService.breadcrumbs$, {
     initialValue: [],
   });
+
   pageHeaderTabs = toSignal(this.pageHeaderService.tabs$, {
     initialValue: null as PageHeaderTabsConfig | null,
   });
+
   pageHeaderSearch = toSignal(this.pageHeaderSearchService.config$, {
     initialValue: null as PageHeaderSearchConfig | null,
   });
 
+  pageHeaderPagination = toSignal(this.pageHeaderPaginationService.config$, {
+    initialValue: null as PageHeaderPaginationConfig | null,
+  });
+
   sidebarId = input('sidebar1');
 
-  fontSize = 16;
-  arabicFontSize = 23;
   currentUrl = '';
   showHeaderSearch = false;
   headerQuery = '';
@@ -103,35 +104,17 @@ export class DefaultHeaderComponent extends HeaderComponent {
   ];
   activeDiscourseFilters = new Set<string>();
   private currentPath = '';
+
   headerTitle = 'k-maps';
   showHeaderTitle = false;
+  lessonHeaderTarget: 'quran' | 'literature' = 'quran';
+
   filteredBreadcrumbs = computed<IBreadcrumbItem[]>(() =>
     this.breadcrumbsSignal().filter((item) => !SKIPPED_BREADCRUMB_LABELS.has(item?.label ?? ''))
   );
-  lessonHeaderTarget: 'quran' | 'literature' = 'quran';
-
-  readonly scriptModes = ['Uthmani', 'IndoPak', 'Tajweed'];
-  readonly fontStyles = ['Uthmanic Hafs'];
-  readonly reciters = [
-    { id: 'afasy', name: 'Mishari Rashid al-ʿAfasy', detail: 'Mecca · Hafs' },
-    { id: 'abdulbasit', name: 'Abdulbasit Abdulsamad', detail: 'Madinah · Warsh' },
-    { id: 'alhubayshi', name: 'Mansour al-Hubayshi', detail: 'Medina · Qaloon' },
-  ];
-
-  selectedScriptMode = this.scriptModes[0];
-  selectedFontStyle = this.fontStyles[0];
-  selectedReciter = this.reciters[0];
-  activePreviewTab: 'arabic' | 'english' | 'system' = 'arabic';
-  englishFontSize = 22;
-  menuTextSize = 15;
-  headerTextSize = 15;
-  footerTextSize = 14;
 
   constructor() {
     super();
-    this.loadFontSize();
-    this.loadArabicFontSize();
-    this.loadSystemTextSizes();
     this.currentUrl = this.router.url;
     this.updateHeaderContext();
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
@@ -140,34 +123,11 @@ export class DefaultHeaderComponent extends HeaderComponent {
     });
   }
 
-  onFontSizeInput(event: Event) {
-    const target = event.target as { value?: string } | null;
-    if (!target?.value) return;
-    const value = Number(target.value);
-    if (!Number.isFinite(value)) return;
-    this.fontSize = value;
-    this.applyFontSize(value);
-  }
-
-  onArabicFontSizeInput(event: Event) {
-    const target = event.target as { value?: string } | null;
-    if (!target?.value) return;
-    const value = Number(target.value);
-    if (!Number.isFinite(value)) return;
-    this.arabicFontSize = value;
-    this.applyArabicFontSize(value);
-  }
-
-  logout() {
-    this.auth.logout();
-    this.router.navigate(['/login']);
-  }
-
   onHeaderSearchInput(value: string) {
     const key = this.pageHeaderSearch()?.queryParamKey ?? 'q';
     if (key === 'q') this.headerQuery = value;
     this.router.navigate([], {
-      queryParams: { [key]: value || null },
+      queryParams: { [key]: value || null, page: 1, offset: null },
       queryParamsHandling: 'merge',
     });
   }
@@ -235,6 +195,38 @@ export class DefaultHeaderComponent extends HeaderComponent {
     return this.pageHeaderSearch()?.tertiaryAction?.label ?? '';
   }
 
+  resolvedHeaderFilters() {
+    return this.pageHeaderSearch()?.filters ?? [];
+  }
+
+  onHeaderPageChange(page: number) {
+    this.router.navigate([], {
+      queryParams: { page, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderPageSizeChange(pageSize: number) {
+    this.router.navigate([], {
+      queryParams: { pageSize, page: 1, offset: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  onHeaderFilterChange(event: PageHeaderFilterChangeEvent) {
+    const queryParams: Record<string, string | number | null> = {
+      [event.queryParamKey]: event.value || null,
+      offset: null,
+    };
+    if (event.resetPageOnChange !== false) {
+      queryParams['page'] = 1;
+    }
+    this.router.navigate([], {
+      queryParams,
+      queryParamsHandling: 'merge',
+    });
+  }
+
   toggleDiscourseFilter(key: string) {
     if (this.activeDiscourseFilters.has(key)) {
       this.activeDiscourseFilters.delete(key);
@@ -258,8 +250,7 @@ export class DefaultHeaderComponent extends HeaderComponent {
     const path = segments.map((s) => s.path).join('/') ?? '';
     this.currentPath = `/${path}`;
     this.showHeaderTitle = segments.length > 1;
-    this.headerTitle =
-      this.resolveActiveTitle(this.router.routerState.snapshot.root) || 'k-maps';
+    this.headerTitle = this.resolveActiveTitle(this.router.routerState.snapshot.root) || 'k-maps';
     this.headerQuery = String(url.queryParams['q'] ?? '');
 
     this.showHeaderSearch = false;
@@ -297,7 +288,7 @@ export class DefaultHeaderComponent extends HeaderComponent {
     if (this.currentPath === '/arabic/roots') {
       this.showHeaderSearch = true;
       this.headerPlaceholder = 'Search root';
-      this.headerActionLabel = 'New Root';
+      this.headerActionLabel = 'Add';
       this.headerActionKind = 'roots-new';
       this.headerSecondaryLabel = 'Refresh';
       this.headerSecondaryKind = 'refresh';
@@ -354,216 +345,4 @@ export class DefaultHeaderComponent extends HeaderComponent {
       queryParamsHandling: 'merge',
     });
   }
-
-  private applyFontSize(value: number) {
-    const doc = (globalThis as any)?.document as any;
-    if (!doc?.documentElement) return;
-    doc.documentElement.style.setProperty('--app-body-font-size', `${value}px`);
-    try {
-      (globalThis as any)?.localStorage?.setItem('app_body_font_size', String(value));
-    } catch {
-      // ignore storage errors
-    }
-  }
-
-  private applyArabicFontSize(value: number) {
-    const doc = (globalThis as any)?.document as any;
-    if (!doc?.documentElement) return;
-    doc.documentElement.style.setProperty('--app-ar-font-size', `${value}px`);
-    try {
-      (globalThis as any)?.localStorage?.setItem('app_ar_font_size', String(value));
-    } catch {
-      // ignore storage errors
-    }
-  }
-
-  private loadFontSize() {
-    const doc = (globalThis as any)?.document as any;
-    if (!doc?.documentElement) return;
-    let value = 16;
-    try {
-      const storage = (globalThis as any)?.localStorage;
-      const storedBody = Number(storage?.getItem('app_body_font_size'));
-      const storedLegacy = Number(storage?.getItem('app_font_size'));
-      const stored = Number.isFinite(storedBody) ? storedBody : storedLegacy;
-      if (Number.isFinite(stored)) {
-        value = Math.min(74, Math.max(12, stored));
-      }
-    } catch {
-      // ignore storage errors
-    }
-    this.fontSize = value;
-    this.englishFontSize = value;
-    this.applyFontSize(value);
-  }
-
-  private loadArabicFontSize() {
-    const doc = (globalThis as any)?.document as any;
-    if (!doc?.documentElement) return;
-    let value = 20;
-    try {
-      const stored = Number((globalThis as any)?.localStorage?.getItem('app_ar_font_size'));
-      if (Number.isFinite(stored)) value = Math.min(74, Math.max(14, stored));
-    } catch {
-      // ignore storage errors
-    }
-    this.arabicFontSize = value;
-    this.applyArabicFontSize(value);
-  }
-
-  get previewArabicText(): string {
-    return 'الر تلك آيات الكتاب المبين';
-  }
-
-  get previewTranslationText(): string {
-    return 'In the Name of Allah—the Most Compassionate, Most Merciful.';
-  }
-
-  get previewTranslationFontSize(): number {
-    return this.englishFontSize;
-  }
-
-  selectScriptMode(mode: string) {
-    this.selectedScriptMode = mode;
-  }
-
-  selectFontStyle(event: Event) {
-    const target = event.target as { value?: string } | null;
-    if (!target?.value) return;
-    this.selectedFontStyle = target.value;
-  }
-
-  resetAppearance() {
-    this.selectedScriptMode = this.scriptModes[0];
-    this.selectedFontStyle = this.fontStyles[0];
-    this.selectedReciter = this.reciters[0];
-    this.loadFontSize();
-    this.loadArabicFontSize();
-    this.loadSystemTextSizes();
-    this.activePreviewTab = 'arabic';
-  }
-
-  setPreviewTab(tab: 'arabic' | 'english' | 'system') {
-    this.activePreviewTab = tab;
-  }
-
-  onEnglishFontSizeInput(event: Event) {
-    const target = event.target as { value?: string } | null;
-    if (!target?.value) return;
-    const value = Number(target.value);
-    if (!Number.isFinite(value)) return;
-    this.englishFontSize = value;
-    this.fontSize = value;
-    this.applyFontSize(value);
-  }
-
-  onMenuTextSizeInput(event: Event) {
-    const target = event.target as { value?: string } | null;
-    if (!target?.value) return;
-    const value = Number(target.value);
-    if (!Number.isFinite(value)) return;
-    this.menuTextSize = value;
-    this.applyMenuTextSize(value);
-  }
-
-  onHeaderTextSizeInput(event: Event) {
-    const target = event.target as { value?: string } | null;
-    if (!target?.value) return;
-    const value = Number(target.value);
-    if (!Number.isFinite(value)) return;
-    this.headerTextSize = value;
-    this.applyHeaderTextSize(value);
-  }
-
-  onFooterTextSizeInput(event: Event) {
-    const target = event.target as { value?: string } | null;
-    if (!target?.value) return;
-    const value = Number(target.value);
-    if (!Number.isFinite(value)) return;
-    this.footerTextSize = value;
-    this.applyFooterTextSize(value);
-  }
-
-  private loadSystemTextSizes() {
-    this.loadMenuTextSize();
-    this.loadHeaderTextSize();
-    this.loadFooterTextSize();
-  }
-
-  private applyMenuTextSize(value: number) {
-    const doc = (globalThis as any)?.document as any;
-    if (!doc?.documentElement) return;
-    doc.documentElement.style.setProperty('--app-menu-font-size', `${value}px`);
-    try {
-      (globalThis as any)?.localStorage?.setItem('app_menu_text_size', String(value));
-    } catch {
-      // ignore storage errors
-    }
-  }
-
-  private applyHeaderTextSize(value: number) {
-    const doc = (globalThis as any)?.document as any;
-    if (!doc?.documentElement) return;
-    doc.documentElement.style.setProperty('--app-header-font-size', `${value}px`);
-    doc.documentElement.style.setProperty('--app-header-title-size', `${value + 2}px`);
-    try {
-      (globalThis as any)?.localStorage?.setItem('app_header_text_size', String(value));
-    } catch {
-      // ignore storage errors
-    }
-  }
-
-  private applyFooterTextSize(value: number) {
-    const doc = (globalThis as any)?.document as any;
-    if (!doc?.documentElement) return;
-    doc.documentElement.style.setProperty('--app-footer-font-size', `${value}px`);
-    try {
-      (globalThis as any)?.localStorage?.setItem('app_footer_text_size', String(value));
-    } catch {
-      // ignore storage errors
-    }
-  }
-
-  private loadMenuTextSize() {
-    let value = 15;
-    try {
-      const stored = Number((globalThis as any)?.localStorage?.getItem('app_menu_text_size'));
-      if (Number.isFinite(stored)) {
-        value = Math.min(28, Math.max(12, stored));
-      }
-    } catch {
-      // ignore storage errors
-    }
-    this.menuTextSize = value;
-    this.applyMenuTextSize(value);
-  }
-
-  private loadHeaderTextSize() {
-    let value = 15;
-    try {
-      const stored = Number((globalThis as any)?.localStorage?.getItem('app_header_text_size'));
-      if (Number.isFinite(stored)) {
-        value = Math.min(28, Math.max(12, stored));
-      }
-    } catch {
-      // ignore storage errors
-    }
-    this.headerTextSize = value;
-    this.applyHeaderTextSize(value);
-  }
-
-  private loadFooterTextSize() {
-    let value = 14;
-    try {
-      const stored = Number((globalThis as any)?.localStorage?.getItem('app_footer_text_size'));
-      if (Number.isFinite(stored)) {
-        value = Math.min(28, Math.max(11, stored));
-      }
-    } catch {
-      // ignore storage errors
-    }
-    this.footerTextSize = value;
-    this.applyFooterTextSize(value);
-  }
-
 }

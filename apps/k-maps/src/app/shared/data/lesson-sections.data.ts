@@ -2,37 +2,45 @@ import { LessonSection } from '../models/arabic/lesson-section.model';
 
 export const SECTION_DATA: LessonSection[] = [
   {
-    id: 'reading',
-    title: 'Reading Passage',
-    description: 'Original Arabic text with verse-by-verse navigation.',
+    id: 'quran-reading',
+    title: 'Reading',
+    description: 'Read the ayat with guided markers and pronunciation support.',
+    feature: 'quran',
     mode: 'original',
-    feature: 'quran'
   },
   {
-    id: 'sentences',
-    title: 'Sentence Drill',
-    description: 'Sentence decomposition with translations and notes.',
+    id: 'quran-memory',
+    title: 'Memory',
+    description: 'Memorization-focused sequence for ayat and sentence chunks.',
+    feature: 'quran',
     mode: 'mixed',
-    feature: 'quran'
   },
   {
-    id: 'comprehension',
-    title: 'Comprehension Practice',
-    description: 'Reflective + analytical questions for the passage.',
+    id: 'quran-mcq',
+    title: 'MCQ',
+    description: 'Multiple-choice checks for comprehension and grammar.',
+    feature: 'quran',
     mode: 'mixed',
-    feature: 'quran'
   },
   {
-    id: 'mcq',
-    title: 'MCQ Drill',
-    description: 'Multiple choice questions to reinforce vocabulary.',
-    mode: 'edited',
-    feature: 'quran'
+    id: 'quran-passage',
+    title: 'Passage',
+    description: 'Reflection and passage-level comprehension prompts.',
+    feature: 'quran',
+    mode: 'mixed',
   },
   {
-    id: 'literature-coming-soon',
-    title: 'Sections Coming Soon',
-    description: 'We are rolling out literature sections soon.',
-    feature: 'literature'
-  }
+    id: 'literature-reading',
+    title: 'Reading',
+    description: 'Read literature excerpts with guided understanding.',
+    feature: 'literature',
+    mode: 'original',
+  },
+  {
+    id: 'literature-analysis',
+    title: 'Analysis',
+    description: 'Analyze literary structure, themes, and rhetoric.',
+    feature: 'literature',
+    mode: 'mixed',
+  },
 ];

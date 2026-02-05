@@ -57,8 +57,17 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     const q = (url.searchParams.get('q') ?? '').trim();
     const lessonType = (url.searchParams.get('lesson_type') ?? '').trim().toLowerCase();
 
-    const limit = Math.min(200, Math.max(1, toInt(url.searchParams.get('limit'), 50)));
-    const offset = Math.max(0, toInt(url.searchParams.get('offset'), 0));
+    const requestedPage = Math.max(1, toInt(url.searchParams.get('page'), 1));
+    const requestedPageSize = Math.min(200, Math.max(1, toInt(url.searchParams.get('pageSize'), 50)));
+    const hasOffsetPagination =
+      url.searchParams.get('limit') !== null || url.searchParams.get('offset') !== null;
+
+    let limit = requestedPageSize;
+    let offset = (requestedPage - 1) * requestedPageSize;
+    if (hasOffsetPagination) {
+      limit = Math.min(200, Math.max(1, toInt(url.searchParams.get('limit'), requestedPageSize)));
+      offset = Math.max(0, toInt(url.searchParams.get('offset'), 0));
+    }
 
     const where: string[] = [];
     const params: (string | number)[] = [];
@@ -108,6 +117,9 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const countRes = (await countStmt.first()) as { total?: number } | null;
     const total = Number(countRes?.total ?? 0);
+    const pageSize = limit;
+    const page = Math.max(1, Math.floor(offset / pageSize) + 1);
+    const pages = Math.max(1, Math.ceil(total / pageSize));
 
     const dataRes = (await dataStmt.all()) as { results?: any[] };
 
@@ -115,6 +127,10 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       JSON.stringify({
         ok: true,
         total,
+        page,
+        pageSize,
+        pages,
+        hasMore: offset + ((dataRes?.results ?? []).length) < total,
         limit,
         offset,
         results: dataRes?.results ?? [],

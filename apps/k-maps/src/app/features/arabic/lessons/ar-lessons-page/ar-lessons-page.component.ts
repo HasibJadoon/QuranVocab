@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { ArLessonsService } from '../../../../shared/services/ar-lessons.service';
 import { PageHeaderSearchService } from '../../../../shared/services/page-header-search.service';
+import { PageHeaderPaginationService } from '../../../../shared/services/page-header-pagination.service';
 import { ArLessonRow } from '../../../../shared/models/arabic/lesson-row.model';
 import {
   AppCrudTableComponent,
@@ -20,12 +21,17 @@ import {
   styleUrls: ['./ar-lessons-page.component.scss']
 })
 export class ArLessonsPageComponent implements OnInit, OnDestroy {
+  readonly pageSizeOptions = [50, 100, 200];
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private lessons = inject(ArLessonsService);
   private pageHeaderSearch = inject(PageHeaderSearchService);
+  private pageHeaderPagination = inject(PageHeaderPaginationService);
 
   q = '';
+  page = 1;
+  pageSize = 100;
+  total = 0;
   rows: ArLessonRow[] = [];
 
   loading = false;
@@ -35,14 +41,16 @@ export class ArLessonsPageComponent implements OnInit, OnDestroy {
     {
       key: 'title',
       label: 'Title',
-      cellClass: (row) => (this.isArabicText(String(row['title'] ?? '')) ? 'app-table-arabic' : ''),
+      cellClass: (row: Record<string, unknown>) =>
+        this.isArabicText(String(row['title'] ?? '')) ? 'app-table-arabic' : '',
     },
     { key: 'lesson_type', label: 'Type' },
     {
       key: 'status',
       label: 'Status',
       type: 'badge',
-      badgeClass: (row) => this.statusBadgeClass(String(row['status'] ?? '')),
+      badgeClass: (row: Record<string, unknown>) =>
+        this.statusBadgeClass(String(row['status'] ?? '')),
     },
   ];
   tableActions: CrudTableAction[] = [
@@ -57,6 +65,8 @@ export class ArLessonsPageComponent implements OnInit, OnDestroy {
       const typeParam = params.get('lesson_type');
       this.lessonTypeFilter =
         typeParam === 'other' ? 'other' : typeParam === 'all' ? 'all' : 'quran';
+      this.page = this.parseIntParam(params.get('page'), 1, 1);
+      this.pageSize = this.parseIntParam(params.get('pageSize'), 100, 1, 200);
       this.syncPageHeaderSearch();
       this.load();
     });
@@ -64,24 +74,45 @@ export class ArLessonsPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.pageHeaderSearch.clearConfig();
+    this.pageHeaderPagination.clearConfig();
   }
 
   async load() {
     this.loading = true;
     this.error = '';
     try {
-      const params: Record<string, string> = { limit: '100' };
+      const params: Record<string, string> = {
+        page: String(this.page),
+        pageSize: String(this.pageSize),
+      };
       if (this.q) params['q'] = this.q;
       if (this.lessonTypeFilter === 'quran') {
         params['lesson_type'] = 'quran';
       } else if (this.lessonTypeFilter === 'other') {
         params['lesson_type'] = 'other';
       }
-      const data = await this.lessons.list(params);
-      this.rows = Array.isArray((data as any)?.results) ? (data as any).results : [];
+      const data = (await this.lessons.list(params)) as {
+        results?: ArLessonRow[];
+        total?: number;
+        page?: number;
+        pageSize?: number;
+      };
+      this.rows = Array.isArray(data?.results) ? data.results : [];
+      this.total = Number(data?.total ?? this.rows.length);
+      this.page = this.parseIntParam(String(data?.page ?? this.page), this.page, 1);
+      this.pageSize = this.parseIntParam(String(data?.pageSize ?? this.pageSize), this.pageSize, 1, 200);
+      this.pageHeaderPagination.setConfig({
+        page: this.page,
+        pageSize: this.pageSize,
+        total: this.total,
+        hideIfSinglePage: true,
+        pageSizeOptions: this.pageSizeOptions,
+      });
     } catch (err: any) {
       this.error = err?.message ?? 'Failed to load lessons';
       this.rows = [];
+      this.total = 0;
+      this.pageHeaderPagination.clearConfig();
     } finally {
       this.loading = false;
     }
@@ -91,7 +122,7 @@ export class ArLessonsPageComponent implements OnInit, OnDestroy {
     if (this.lessonTypeFilter === type) return;
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { lesson_type: type === 'all' ? null : type },
+      queryParams: { lesson_type: type === 'all' ? null : type, page: 1 },
       queryParamsHandling: 'merge',
     });
   }
@@ -183,5 +214,18 @@ export class ArLessonsPageComponent implements OnInit, OnDestroy {
 
   isArabicText(text: string) {
     return /[\u0600-\u06FF]/.test(text ?? '');
+  }
+
+  private parseIntParam(
+    value: string | null,
+    fallback: number,
+    min: number,
+    max?: number
+  ) {
+    const parsed = Number.parseInt(String(value ?? ''), 10);
+    if (!Number.isFinite(parsed)) return fallback;
+    const clampedMin = Math.max(min, parsed);
+    if (typeof max !== 'number') return clampedMin;
+    return Math.min(max, clampedMin);
   }
 }

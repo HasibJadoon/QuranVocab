@@ -1,0 +1,1 @@
+{{ columnConfig | columngetorfn : 'currency.value' : item : index | async | currency : (columnConfig | columnstringorfn : 'currency.symbol' : item : index) }}

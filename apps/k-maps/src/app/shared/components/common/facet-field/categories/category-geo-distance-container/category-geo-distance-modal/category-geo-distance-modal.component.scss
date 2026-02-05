@@ -1,0 +1,13 @@
+@import '../../../../../../variables';
+
+.my-panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  .my-name {
+    color: $white;
+    background-color: rgba($black, .75);
+  }
+}
