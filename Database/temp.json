@@ -1,0 +1,287 @@
+Your UI/workflow tabs are solid — the messy part now is how data moves + when it’s committed so you can store/restore/edit cleanly without “half-written rows” or tangled coupling between UI state and DB rows.
+
+Below is a “clean, professional” architecture that fits Cloudflare Pages + D1, supports Create + Edit, and lets you commit per step safely.
+
+1) The core change: separate “Draft (staging)” from “Published tables”
+
+Right now you’re mixing:
+
+local draft (localStorage)
+
+lesson JSON sync
+
+step commits that upsert multiple tables
+
+That’s why it feels hard to reason about.
+
+Clean model
+
+You want 3 layers:
+
+UI state (client)
+
+always editable, immediate
+
+autosave locally (fine)
+
+Draft state (server staging / snapshot)
+
+a single source of truth for “current draft”
+
+supports collaboration later
+
+supports resuming on any device
+
+Materialized relational tables (your ar_* tables)
+
+only updated when a step is committed
+
+can be rebuilt from draft if needed
+
+So:
+✅ UI edits → save draft snapshot
+✅ “Commit Step” → validate draft subset → write relational rows for that step
+
+2) Recommended DB additions (minimal + clean)
+A. Add a staging table (the main win)
+
+Create a single table like:
+
+ar_lesson_drafts
+
+lesson_id (nullable for “new”)
+
+user_id
+
+status (draft/published/archived)
+
+active_step
+
+draft_json (full builder state)
+
+version (integer) or updated_at
+
+locked_by / lock_until (optional)
+
+This lets you store everything the builder needs (including builder_extras, grammarLinks, sentenceTrees, etc.) without forcing relational writes.
+
+B. Add a commit log table (optional but very professional)
+
+ar_lesson_commits
+
+lesson_id
+
+user_id
+
+step
+
+draft_version
+
+result_counts_json
+
+created_at
+
+error (nullable)
+
+This gives you auditability and debugging.
+
+C. Keep ar_lessons.lesson_json either:
+
+Option 1 (cleaner): remove reliance on lesson_json as working state; treat it as “published snapshot” only.
+
+Option 2: keep it but only update on explicit “Save Draft Snapshot” or “Publish”.
+
+I recommend Option 1: drafts go into ar_lesson_drafts, and ar_lessons.lesson_json is a published snapshot.
+
+3) API design: stop mixing “update lesson JSON” with “commit step”
+
+Make two clear endpoints:
+
+1) Draft save (staging)
+
+PUT /arabic/lessons/quran/:id/draft
+
+stores full builder draft_json
+
+no relational writes
+
+returns new draft_version
+
+For new lesson:
+POST /arabic/lessons/quran/draft
+
+creates a draft row with temp id (or lesson_id null + draft_id uuid)
+
+2) Commit a step (materialize relational rows)
+
+POST /arabic/lessons/quran/:id/commit
+Payload:
+
+step
+
+draft_version (important for concurrency!)
+
+optionally mode: "strict" | "best_effort"
+
+Server does:
+
+load draft_json
+
+validate only what the step needs
+
+upsert rows for that step
+
+update commit log
+
+returns counts
+
+This is much easier to reason about than “update JSON then commit step then maybe create row”.
+
+4) Step boundaries: what each commit should write
+
+You already have COMMIT_STEP_BY_TAB. Tighten it:
+
+meta commit writes:
+
+ar_lessons row (create if missing)
+
+minimal fields: title/title_ar/subtype/status/difficulty/source
+
+optionally: published_snapshot_json only on publish, not on meta
+
+verses commit writes:
+
+You have two choices:
+
+Cleaner: verses are derived from container_units + quran tables, so you don’t store verses at all (except notes/lemmas).
+So verses step just stores in draft_json and maybe creates units later.
+
+container commit writes:
+
+ar_containers upsert
+
+passage unit upsert
+
+ayah units may be created here OR in units
+
+units commit writes:
+
+ensure ayah units exist for range
+
+store order_index and meta_json labels
+
+tokens commit writes:
+
+universal tokens (if you truly need them)
+
+occurrence tokens
+
+token-lexicon links
+
+lemma locations
+
+spans commit writes:
+
+universal spans
+
+occurrence spans
+
+sentences commit writes:
+
+universal sentence
+
+occurrence sentence
+
+grammar commit writes:
+
+grammar universal concepts (if not pre-defined)
+
+occurrence grammar links
+
+tree commit writes:
+
+do NOT explode tree into relational tables unless you need querying
+
+store it in draft_json OR a dedicated json column table keyed by sentence_occ_id
+
+Key principle: relational tables only for data you need to query/report; otherwise keep JSON.
+
+5) “Should I use a queue?” (Cloudflare)
+
+For your workload: No, not initially.
+D1 writes are fast enough for a single user committing a step.
+
+Use a queue only if:
+
+commit step does heavy backfilling (hundreds/thousands of rows)
+
+you want background enrichment (morphology, embeddings, etc.)
+
+you need retries across external services
+
+What to do instead (simple and robust)
+
+Use a staging table + synchronous commit
+
+Use idempotent upserts (you mostly do already)
+
+Use draft_version optimistic concurrency
+
+if the client commits an older version, return 409 and ask it to refresh draft
+
+6) Fix one important bug in your current code (commit IDs)
+
+In your server code you have:
+
+const linkId = hash(`${targetType}|${targetId}|${grammarId}`);
+
+
+hash is async, but you didn’t await it. That means you’re binding a Promise into SQL.
+
+It must be:
+
+const linkId = await hash(`${targetType}|${targetId}|${grammarId}`);
+
+
+This kind of subtle bug is exactly why “commit step” needs to be clean and testable.
+
+7) Recommended “clean” user flow (Create + Edit)
+Create new
+
+UI starts with local draft
+
+user types title → PUT draft
+
+user clicks Save / Commit Meta → server:
+
+creates ar_lessons row if missing
+
+associates draft row with lesson_id
+
+No navigation hacks needed.
+
+Edit existing
+
+load GET lesson + draft
+
+UI edits → PUT draft frequently
+
+user commits per step → writes relational for step only
+
+8) Practical “minimum changes” you can do now
+
+If you want the best ROI with minimal refactor:
+
+Add ar_lesson_drafts table
+
+Add PUT /:id/draft endpoint
+
+Change your UI saveDraftLocal() to also call server draft save (debounced)
+
+Change save() to:
+
+always save draft first
+
+then commit step (no more “update lesson_json then commit”)
+
+Everything else can remain close to your current code.

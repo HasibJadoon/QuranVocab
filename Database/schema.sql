@@ -215,6 +215,63 @@ CREATE INDEX IF NOT EXISTS idx_ar_lesson_unit_link_lesson_order
 CREATE INDEX IF NOT EXISTS idx_ar_lesson_unit_link_container
   ON ar_lesson_unit_link(container_id);
 
+CREATE TABLE ar_lesson_drafts (
+  draft_id      TEXT PRIMARY KEY,
+  lesson_id     INTEGER,
+  user_id       INTEGER NOT NULL,
+  lesson_type   TEXT NOT NULL,
+  status        TEXT NOT NULL DEFAULT 'draft',
+  active_step   TEXT,
+  draft_version INTEGER NOT NULL DEFAULT 1,
+  draft_json    JSON NOT NULL CHECK (json_valid(draft_json)),
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT,
+  FOREIGN KEY (lesson_id) REFERENCES ar_lessons(id) ON DELETE SET NULL,
+  FOREIGN KEY (user_id)   REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_ar_lesson_drafts_user_updated
+  ON ar_lesson_drafts(user_id, updated_at);
+CREATE INDEX idx_ar_lesson_drafts_lesson
+  ON ar_lesson_drafts(lesson_id);
+CREATE INDEX idx_ar_lesson_drafts_status
+  ON ar_lesson_drafts(status);
+
+CREATE TABLE ar_lesson_commits (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  draft_id      TEXT NOT NULL,
+  lesson_id     INTEGER,
+  user_id       INTEGER NOT NULL,
+  step          TEXT NOT NULL,
+  draft_version INTEGER NOT NULL,
+  result_json   JSON CHECK (result_json IS NULL OR json_valid(result_json)),
+  error         TEXT,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (draft_id, step, draft_version),
+  FOREIGN KEY (draft_id) REFERENCES ar_lesson_drafts(draft_id) ON DELETE CASCADE,
+  FOREIGN KEY (lesson_id) REFERENCES ar_lessons(id) ON DELETE SET NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_ar_lesson_commits_draft
+  ON ar_lesson_commits(draft_id, step);
+CREATE INDEX idx_ar_lesson_commits_user
+  ON ar_lesson_commits(user_id, created_at);
+
+CREATE TABLE ar_lesson_sentence_link (
+  lesson_id          INTEGER NOT NULL,
+  ar_sentence_occ_id TEXT NOT NULL,
+  unit_id            TEXT NOT NULL,
+  sentence_order     INTEGER NOT NULL DEFAULT 0,
+  created_at         TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (lesson_id, ar_sentence_occ_id),
+  FOREIGN KEY (lesson_id) REFERENCES ar_lessons(id) ON DELETE CASCADE,
+  FOREIGN KEY (ar_sentence_occ_id) REFERENCES ar_occ_sentence(ar_sentence_occ_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_ar_lesson_sentence_link_unit
+  ON ar_lesson_sentence_link(lesson_id, unit_id, sentence_order);
+
 -- =====================================================================================
 -- 1b) USER LESSON LAYER (empty placeholders removed earlier; add minimal tables here)
 -- =====================================================================================
