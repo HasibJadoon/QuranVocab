@@ -24,34 +24,47 @@
       <div class="study-grid">
         <article class="study-card">
           <div class="study-card-heading">
-            <h4>Text</h4>
-            <div class="view-toggle">
-              <button
-                type="button"
-                class="view-toggle-btn"
-                [class.active]="viewMode === 'verse'"
-                (click)="setViewMode('verse')"
-              >
-                <span class="toggle-icon">≡</span>
-                Verse by Verse
-              </button>
-              <button
-                type="button"
-                class="view-toggle-btn"
-                [class.active]="viewMode === 'reading'"
-                (click)="setViewMode('reading')"
-              >
-                <span class="toggle-icon">▤</span>
-                Reading
-              </button>
+            <div class="study-card-title">
+              <h4>Text</h4>
+              <h4 class="study-card-mode">Surah {{ surah.surah }}</h4>
             </div>
-            <h4 class="study-card-mode">Surah {{ surah.surah }}</h4>
+            <div class="view-controls">
+              <div class="toggle-group">
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  [class.active]="showVerse"
+                  (click)="toggleSection('verse')"
+                >
+                  <span class="toggle-icon">≡</span>
+                  Verse by Verse
+                </button>
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  [class.active]="showReading"
+                  (click)="toggleSection('reading')"
+                >
+                  <span class="toggle-icon">▤</span>
+                  Reading
+                </button>
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  [class.active]="showTranslation"
+                  (click)="toggleSection('translation')"
+                >
+                  <span class="toggle-icon">A</span>
+                  Translation
+                </button>
+              </div>
+            </div>
           </div>
           <hr class="study-card-divider" />
 
           <div class="bismillah-block" *ngIf="shouldShowBismillah">
-            <div class="bismillah">{{ bismillah }}</div>
-            <div class="bismillah-translation">{{ bismillahTranslation }}</div>
+            <div class="bismillah" *ngIf="showVerse || showReading">{{ bismillah }}</div>
+            <div class="bismillah-translation" *ngIf="showTranslation">{{ bismillahTranslation }}</div>
           </div>
 
           <div *ngIf="loadingAyahs" class="text-body-secondary">Loading ayahs…</div>
@@ -61,40 +74,35 @@
             class="arabic-passage"
             [class.arabic-passage--reading]="viewMode === 'reading'"
           >
-            <ng-container *ngIf="viewMode === 'reading'; else verseByVerse">
-              <div *ngIf="loadingLemmaTokens" class="text-body-secondary">Loading lemma tokens…</div>
-              <div *ngIf="lemmaTokensError" class="alert alert-danger py-2">{{ lemmaTokensError }}</div>
-              <div *ngIf="!loadingLemmaTokens && readingText" class="reading-text text-arabic">
-                {{ readingText }}
+            <div *ngIf="showReading && readingText" class="reading-text text-arabic passage-section">
+              {{ readingText }}
+            </div>
+            <div *ngIf="showTranslation && readingTranslation" class="reading-translation passage-section">
+              {{ readingTranslation }}
+            </div>
+
+            <ng-container *ngIf="showVerse">
+              <div *ngFor="let ayah of ayahs; trackBy: trackByAyah" class="arabic-verse-row">
+                <div class="verse-text text-arabic">
+                  <ng-container *ngIf="(ayah.words?.length ?? 0) > 0; else versePlainText">
+                    <ng-container *ngFor="let word of ayah.words; let isLast = last; trackBy: trackByAyahWord">
+                      <span
+                        class="quran-word quran-word--interactive"
+                        [attr.data-word-location]="word.word_location || word.location || null"
+                        [attr.title]="word.word_location || word.location || null"
+                      >
+                        {{ getWordText(word) }}
+                      </span>
+                      <span *ngIf="!isLast"> </span>
+                    </ng-container>
+                  </ng-container>
+
+                  <ng-template #versePlainText>{{ ayah.text_uthmani || ayah.text }}</ng-template>
+                  <span class="verse-number-inline">{{ formatAyahNumber(ayah.ayah) }}</span>
+                </div>
+                <div class="verse-translation" *ngIf="false"></div>
               </div>
             </ng-container>
-
-            <ng-template #verseByVerse>
-              <div *ngFor="let ayah of ayahs; trackBy: trackByAyah" class="arabic-verse-row">
-                <div class="verse-meta">
-                  <span class="verse-number">{{ ayah.ayah }}</span>
-                </div>
-                <div class="verse-content">
-                  <div class="verse-text text-arabic">
-                    <ng-container *ngIf="(ayah.words?.length ?? 0) > 0; else versePlainText">
-                      <ng-container *ngFor="let word of ayah.words; let isLast = last; trackBy: trackByAyahWord">
-                        <span
-                          class="quran-word quran-word--interactive"
-                          [attr.data-word-location]="word.word_location || word.location || null"
-                          [attr.title]="word.word_location || word.location || null"
-                        >
-                          {{ getWordText(word) }}
-                        </span>
-                        <span *ngIf="!isLast"> </span>
-                      </ng-container>
-                    </ng-container>
-
-                    <ng-template #versePlainText>{{ ayah.text_uthmani || ayah.text }}</ng-template>
-                  </div>
-                  <div class="verse-marker">{{ getAyahMark(ayah) }}</div>
-                </div>
-              </div>
-            </ng-template>
           </div>
 
           <ng-template #noArabic>

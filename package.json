@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260120.0",
+    "pdfjs-dist": "^5.4.624",
     "typescript": "^5.9.3",
     "wrangler": "^4.42.2"
   }

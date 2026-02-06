@@ -50,6 +50,8 @@ export interface QuranAyah {
 export interface QuranAyahListResponse {
   ok: boolean;
   surah?: QuranSurah;
+  translation_source?: QuranTranslationSource | null;
+  translation_passages?: QuranTranslationPassage[];
   total: number;
   page: number;
   pageSize: number;
@@ -99,6 +101,33 @@ export interface QuranAyahTranslations {
   usmani?: string | null;
   footnotes_sahih?: string | null;
   footnotes_usmani?: string | null;
+  meta?: Record<string, unknown> | null;
+}
+
+export interface QuranTranslationSource {
+  source_key: string;
+  title: string;
+  translator?: string | null;
+  language?: string | null;
+  publisher?: string | null;
+  year?: number | null;
+  isbn?: string | null;
+  edition?: string | null;
+  rights?: string | null;
+  source_path?: string | null;
+  meta?: Record<string, unknown> | null;
+}
+
+export interface QuranTranslationPassage {
+  id: number;
+  source_key: string;
+  surah: number;
+  ayah_from: number;
+  ayah_to: number;
+  passage_index: number;
+  page_pdf?: number | null;
+  page_book?: number | null;
+  text?: string | null;
   meta?: Record<string, unknown> | null;
 }
 

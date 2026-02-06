@@ -5,7 +5,12 @@ import { Subscription } from 'rxjs';
 
 import { AppHeaderbarComponent } from '../../../../../shared/components';
 import { QuranDataService } from '../../../../../shared/services/quran-data.service';
-import { QuranAyah, QuranAyahWord, QuranSurah } from '../../../../../shared/models/arabic/quran-data.model';
+import {
+  QuranAyah,
+  QuranAyahWord,
+  QuranSurah,
+  QuranTranslationPassage,
+} from '../../../../../shared/models/arabic/quran-data.model';
 
 type QuranAyahWithPage = QuranAyah & { page?: number | null };
 type ReadingToken = { text: string; type: 'word' | 'mark' };
@@ -23,6 +28,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly dataService = inject(QuranDataService);
   private readonly subs = new Subscription();
+  private readonly arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 
   readonly bismillah = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
   readonly bismillahTranslation = 'In the Name of Allah—the Most Compassionate, Most Merciful';
@@ -30,13 +36,17 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   surahId: number | null = null;
   surah: QuranSurah | null = null;
   ayahs: QuranAyahWithPage[] = [];
-  viewMode: 'verse' | 'reading' = 'verse';
+  translationPassages: QuranTranslationPassage[] = [];
+  showVerse = true;
+  showReading = false;
+  showTranslation = false;
   lemmaTokensByAyah = new Map<number, string[]>();
   lemmaTokensLoaded = false;
   loadingLemmaTokens = false;
   lemmaTokensError = '';
   readingPages: ReadingPage[] = [];
   readingText = '';
+  readingTranslation = '';
 
   loadingSurah = false;
   loadingAyahs = false;
@@ -85,9 +95,10 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     try {
       const response = await this.dataService.listAyahs({ surah, pageSize: 400 });
       this.surah = response.surah ?? this.surah;
+      this.translationPassages = response.translation_passages ?? [];
       this.ayahs = response.verses ?? response.results ?? [];
       this.hydrateLemmaTokensFromAyahs();
-      if (this.viewMode === 'reading' && this.lemmaTokensLoaded) {
+      if (this.showReading || this.showTranslation) {
         this.buildReadingPages();
       }
     } catch (err: any) {
@@ -135,11 +146,16 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     return `${this.surah.surah}. ${englishName}`;
   }
 
-  setViewMode(mode: 'verse' | 'reading') {
-    this.viewMode = mode;
-    if (mode === 'reading' && this.surahId && !this.lemmaTokensLoaded && !this.loadingLemmaTokens) {
-      void this.loadLemmaTokens(this.surahId);
-    } else if (mode === 'reading') {
+  toggleSection(section: 'verse' | 'reading' | 'translation') {
+    if (section === 'verse') this.showVerse = !this.showVerse;
+    if (section === 'reading') this.showReading = !this.showReading;
+    if (section === 'translation') this.showTranslation = !this.showTranslation;
+
+    if (!this.showVerse && !this.showReading && !this.showTranslation) {
+      this.showVerse = true;
+    }
+
+    if (this.showReading || this.showTranslation) {
       this.buildReadingPages();
     }
   }
@@ -161,7 +177,20 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   }
 
   getAyahMark(ayah: QuranAyahWithPage) {
-    return ayah.verse_mark || `(${ayah.ayah})`;
+    return this.formatAyahNumber(ayah.ayah);
+  }
+
+  getTranslationText(ayah: QuranAyahWithPage) {
+    return (
+      ayah.translations?.haleem ||
+      ayah.translation ||
+      ''
+    );
+  }
+
+  formatAyahNumber(value: number | null | undefined) {
+    if (value == null) return '';
+    return String(value).replace(/\d/g, (digit) => this.arabicDigits[Number(digit)] || digit);
   }
 
   getWordText(word: QuranAyahWord) {
@@ -226,6 +255,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     const pages: ReadingPage[] = [];
     const pageMap = new Map<number, ReadingPage>();
     const tokens: string[] = [];
+    const translationParts: string[] = [];
 
     for (const ayah of this.ayahs) {
       const pageKey = ayah.page ?? 0;
@@ -246,9 +276,20 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
         page.tokens.push({ text: marker, type: 'mark' });
         tokens.push(marker);
       }
+
+      const translation = this.getTranslationText(ayah);
+      if (translation) {
+        translationParts.push(translation.trim());
+      }
     }
 
     this.readingPages = pages;
     this.readingText = tokens.join(' ').replace(/\s+/g, ' ').trim();
+    const passageText = this.translationPassages
+      .map((passage) => passage.text ?? '')
+      .map((text) => text.trim())
+      .filter(Boolean)
+      .join('\n\n');
+    this.readingTranslation = passageText || translationParts.join(' ').replace(/\s+/g, ' ').trim();
   }
 }

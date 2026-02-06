@@ -92,6 +92,33 @@ type TranslationRow = {
   meta_json: unknown;
 };
 
+type TranslationSourceRow = {
+  source_key: string;
+  title: string;
+  translator: string | null;
+  language: string | null;
+  publisher: string | null;
+  year: number | null;
+  isbn: string | null;
+  edition: string | null;
+  rights: string | null;
+  source_path: string | null;
+  meta_json: unknown;
+};
+
+type TranslationPassageRow = {
+  id: number;
+  source_key: string;
+  surah: number;
+  ayah_from: number;
+  ayah_to: number;
+  passage_index: number;
+  page_pdf: number | null;
+  page_book: number | null;
+  text: string | null;
+  meta_json: unknown;
+};
+
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   const user = await requireAuth(ctx);
   if (!user) {
@@ -273,6 +300,80 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     const trByAyah = new Map<number, TranslationRow>();
     for (const t of trRows) trByAyah.set(t.ayah, t);
 
+    const translationSourceKey = 'haleem-2004';
+    const sourceStmt = ctx.env.DB.prepare(
+      `
+      SELECT
+        source_key,
+        title,
+        translator,
+        language,
+        publisher,
+        year,
+        isbn,
+        edition,
+        rights,
+        source_path,
+        meta_json
+      FROM ar_quran_translation_sources
+      WHERE source_key = ?1
+    `
+    );
+    const sourceRow = (await sourceStmt.bind(translationSourceKey).first()) as TranslationSourceRow | null;
+
+    const passageStmt = ctx.env.DB.prepare(
+      `
+      SELECT
+        id,
+        source_key,
+        surah,
+        ayah_from,
+        ayah_to,
+        passage_index,
+        page_pdf,
+        page_book,
+        text,
+        meta_json
+      FROM ar_quran_translation_passages
+      WHERE source_key = ?1
+        AND surah = ?2
+      ORDER BY passage_index ASC
+    `
+    );
+    const { results: passageRowsRaw = [] } = await passageStmt
+      .bind(translationSourceKey, surah)
+      .all<TranslationPassageRow>();
+    const passageRows = (passageRowsRaw ?? []) as TranslationPassageRow[];
+
+    const translationSource = sourceRow
+      ? {
+          source_key: sourceRow.source_key,
+          title: sourceRow.title,
+          translator: sourceRow.translator ?? null,
+          language: sourceRow.language ?? null,
+          publisher: sourceRow.publisher ?? null,
+          year: sourceRow.year ?? null,
+          isbn: sourceRow.isbn ?? null,
+          edition: sourceRow.edition ?? null,
+          rights: sourceRow.rights ?? null,
+          source_path: sourceRow.source_path ?? null,
+          meta: safeJson(sourceRow.meta_json),
+        }
+      : null;
+
+    const translationPassages = passageRows.map((row) => ({
+      id: row.id,
+      source_key: row.source_key,
+      surah: row.surah,
+      ayah_from: row.ayah_from,
+      ayah_to: row.ayah_to,
+      passage_index: row.passage_index,
+      page_pdf: row.page_pdf ?? null,
+      page_book: row.page_book ?? null,
+      text: row.text ?? null,
+      meta: safeJson(row.meta_json),
+    }));
+
     // 6) Build final envelope
     const verses = ayahRows.map((v) => {
       const t = trByAyah.get(v.ayah) ?? null;
@@ -352,6 +453,8 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
           ayah_count: surahRow.ayah_count ?? null,
           meta: safeJson(surahRow.meta_json),
         },
+        translation_source: translationSource,
+        translation_passages: translationPassages,
         total,
         page,
         pageSize: limit,
