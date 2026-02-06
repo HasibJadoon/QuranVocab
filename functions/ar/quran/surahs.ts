@@ -61,7 +61,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
 
   try {
-    const countStmt = ctx.env.DB.prepare(`SELECT COUNT(*) AS total FROM ar_surahs ${whereClause}`);
+    const countStmt = ctx.env.DB.prepare(`SELECT COUNT(*) AS total FROM ar_quran_surahs ${whereClause}`);
     const countRes = await countStmt.bind(...binds).first();
     const total = Number(countRes?.total ?? 0);
 
@@ -72,7 +72,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         name_en,
         ayah_count,
         meta_json
-      FROM ar_surahs
+      FROM ar_quran_surahs
       ${whereClause}
       ORDER BY surah ASC
       LIMIT ?

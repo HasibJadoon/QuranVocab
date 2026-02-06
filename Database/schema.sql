@@ -72,7 +72,7 @@ CREATE TABLE user_activity_logs (
 --------------------------------------------------------------------------------
 -- 1) CONTAINER LAYER (Arabic sources + registry)
 --------------------------------------------------------------------------------
-CREATE TABLE ar_surahs (
+CREATE TABLE ar_quran_surahs (
   surah        INTEGER PRIMARY KEY,
   name_ar      TEXT NOT NULL,
   name_en      TEXT,
@@ -82,7 +82,7 @@ CREATE TABLE ar_surahs (
   updated_at   TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_ar_surahs_name_ar ON ar_surahs(name_ar);
+CREATE INDEX IF NOT EXISTS idx_ar_quran_surahs_name_ar ON ar_quran_surahs(name_ar);
 
 CREATE TABLE ar_containers (
   id             TEXT PRIMARY KEY,
@@ -136,7 +136,7 @@ CREATE TABLE ar_quran_ayah (
   verse_full        TEXT,
   created_at        TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at        TEXT,
-  FOREIGN KEY (surah) REFERENCES ar_surahs(surah) ON DELETE RESTRICT,
+  FOREIGN KEY (surah) REFERENCES ar_quran_surahs(surah) ON DELETE RESTRICT,
   UNIQUE (surah, ayah)
 );
 
@@ -144,7 +144,7 @@ CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_surah_ayah ON ar_quran_ayah(surah, 
 CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_page ON ar_quran_ayah(page);
 CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_juz ON ar_quran_ayah(juz);
 
-CREATE TABLE ar_surah_ayah_meta (
+CREATE TABLE ar_quran_surah_ayah_meta (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   surah_ayah      INTEGER NOT NULL UNIQUE,
   theme           TEXT,
@@ -157,7 +157,7 @@ CREATE TABLE ar_surah_ayah_meta (
   FOREIGN KEY (surah_ayah) REFERENCES ar_quran_ayah(surah_ayah) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_ar_surah_ayah_meta_theme ON ar_surah_ayah_meta(theme);
+CREATE INDEX IF NOT EXISTS idx_ar_quran_surah_ayah_meta_theme ON ar_quran_surah_ayah_meta(theme);
 
 CREATE TABLE ar_quran_translations (
   surah              INTEGER NOT NULL,
@@ -489,6 +489,7 @@ CREATE TABLE ar_u_roots (
   root             TEXT NOT NULL,
   root_norm        TEXT NOT NULL UNIQUE,
 
+  family            TEXT,
   arabic_trilateral TEXT,
   english_trilateral TEXT,
   root_latn         TEXT,
@@ -496,6 +497,7 @@ CREATE TABLE ar_u_roots (
   alt_latn_json     JSON CHECK (alt_latn_json IS NULL OR json_valid(alt_latn_json)),
   search_keys_norm  TEXT,
 
+  cards_json        JSON CHECK (cards_json IS NULL OR json_valid(cards_json)),
   status            TEXT NOT NULL DEFAULT 'active',
   difficulty        INTEGER,
   frequency         TEXT,
@@ -871,8 +873,10 @@ CREATE TABLE quran_ayah_lemmas (
   lemma_text_clean         TEXT NOT NULL,
   words_count              INTEGER,
   uniq_words_count         INTEGER,
+  primary_ar_token_occ_id  TEXT,
   primary_ar_u_token       TEXT,
   created_at               TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (primary_ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id),
   FOREIGN KEY (primary_ar_u_token) REFERENCES ar_u_tokens(ar_u_token)
 );
 

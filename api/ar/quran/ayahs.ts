@@ -32,6 +32,66 @@ function safeJson(value: unknown) {
   return null;
 }
 
+type SurahRow = {
+  surah: number;
+  name_ar: string;
+  name_en: string | null;
+  ayah_count: number | null;
+  meta_json: unknown;
+};
+
+type AyahRow = {
+  id: number;
+  surah: number;
+  ayah: number;
+  surah_ayah: number;
+  page: number | null;
+  juz: number | null;
+  hizb: number | null;
+  ruku: number | null;
+
+  surah_name_ar: string | null;
+  surah_name_en: string | null;
+
+  text: string;
+  text_simple: string | null;
+  text_normalized: string | null;
+
+  text_diacritics: string | null;
+  text_no_diacritics: string | null;
+
+  verse_mark: string | null;
+  verse_full: string | null;
+
+  word_count: number | null;
+  char_count: number | null;
+};
+
+type WordRow = {
+  id: number;
+  surah: number;
+  ayah: number;
+  token_index: number;
+  word_location: string;
+  word_simple: string | null;
+  word_diacritic: string | null;
+  lemma_id: number | null;
+  ar_u_token: string | null;
+  ar_token_occ_id: string | null;
+};
+
+type TranslationRow = {
+  surah: number;
+  ayah: number;
+  translation_haleem: string | null;
+  translation_asad: string | null;
+  translation_sahih: string | null;
+  translation_usmani: string | null;
+  footnotes_sahih: string | null;
+  footnotes_usmani: string | null;
+  meta_json: unknown;
+};
+
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   const user = await requireAuth(ctx);
   if (!user) {
@@ -51,22 +111,46 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   }
 
   const page = Math.max(1, toInt(url.searchParams.get('page'), 1));
-  const pageSize = Math.min(500, Math.max(25, toInt(url.searchParams.get('pageSize'), 300)));
-  let limit = pageSize;
-  let offset = (page - 1) * pageSize;
+  const pageSizeDefault = Math.min(500, Math.max(25, toInt(url.searchParams.get('pageSize'), 300)));
+
+  let limit = pageSizeDefault;
+  let offset = (page - 1) * pageSizeDefault;
+
   const offsetParam = url.searchParams.get('offset');
   const limitParam = url.searchParams.get('limit');
   if (offsetParam !== null || limitParam !== null) {
-    limit = Math.min(500, Math.max(1, toInt(limitParam, pageSize)));
+    limit = Math.min(500, Math.max(1, toInt(limitParam, pageSizeDefault)));
     offset = Math.max(0, toInt(offsetParam, 0));
   }
 
   try {
+    // 1) Surah header (top envelope)
+    const surahStmt = ctx.env.DB
+      .prepare(
+        `
+        SELECT surah, name_ar, name_en, ayah_count, meta_json
+        FROM ar_quran_surahs
+        WHERE surah = ?1
+      `
+      )
+      .bind(surah);
+
+    const surahRow = (await surahStmt.first()) as SurahRow | null;
+    if (!surahRow) {
+      return new Response(JSON.stringify({ ok: false, error: `Surah ${surah} not found.` }), {
+        status: 404,
+        headers: jsonHeaders,
+      });
+    }
+
+    // 2) Total verses count (for pagination UI)
     const countStmt = ctx.env.DB.prepare(`SELECT COUNT(*) AS total FROM ar_quran_ayah WHERE surah = ?1`).bind(surah);
     const countRes = await countStmt.first();
     const total = Number(countRes?.total ?? 0);
 
-    const dataStmt = ctx.env.DB.prepare(`
+    // 3) Fetch the verse window
+    const ayahStmt = ctx.env.DB.prepare(
+      `
       SELECT
         id,
         surah,
@@ -76,136 +160,184 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         juz,
         hizb,
         ruku,
+        surah_name_ar,
+        surah_name_en,
         text,
         text_simple,
         text_normalized,
+        text_diacritics,
+        text_no_diacritics,
         verse_mark,
         verse_full,
         word_count,
-        char_count,
-        surah_name_ar,
-        surah_name_en
+        char_count
       FROM ar_quran_ayah
       WHERE surah = ?1
       ORDER BY ayah ASC
       LIMIT ?2
       OFFSET ?3
-    `);
+    `
+    );
 
-    const { results = [] } = await dataStmt.bind(surah, limit, offset).all();
+    const { results: ayahRowsRaw = [] } = await ayahStmt.bind(surah, limit, offset).all<AyahRow>();
+    const ayahRows = (ayahRowsRaw ?? []) as AyahRow[];
 
-    const ayahList = (results as any[]).map((row) => row.ayah).filter((value) => Number.isFinite(value));
-    const lemmaMap = new Map<number, any[]>();
-    const translationMap = new Map<number, any>();
-    if (ayahList.length) {
-      const chunkSize = 80;
-      for (let i = 0; i < ayahList.length; i += chunkSize) {
-        const chunk = ayahList.slice(i, i + chunkSize);
-        const placeholders = chunk.map(() => '?').join(', ');
-        const lemmaStmt = ctx.env.DB.prepare(
-          `
-          SELECT
-            loc.id,
-            loc.surah,
-            loc.ayah,
-            loc.word_location,
-            loc.token_index,
-            loc.ar_token_occ_id,
-            loc.ar_u_token,
-            loc.word_simple,
-            loc.word_diacritic,
-            l.lemma_id,
-            l.lemma_text,
-            l.lemma_text_clean,
-            l.words_count,
-            l.uniq_words_count
-          FROM quran_ayah_lemma_location loc
-          JOIN quran_ayah_lemmas l ON l.lemma_id = loc.lemma_id
-          WHERE loc.surah = ?1 AND loc.ayah IN (${placeholders})
-          ORDER BY loc.ayah ASC, loc.token_index ASC, l.lemma_text ASC
-        `
-        );
-        const lemmaRows = (await lemmaStmt.bind(surah, ...chunk).all()) as { results?: any[] };
-        for (const row of lemmaRows?.results ?? []) {
-          const bucket = lemmaMap.get(row.ayah) ?? [];
-          bucket.push(row);
-          lemmaMap.set(row.ayah, bucket);
-        }
-
-        const translationStmt = ctx.env.DB.prepare(
-          `
-          SELECT
-            surah,
-            ayah,
-            translation_haleem,
-            translation_asad,
-            translation_sahih,
-            translation_usmani,
-            footnotes_sahih,
-            footnotes_usmani,
-            meta_json
-          FROM ar_quran_translations
-          WHERE surah = ?1 AND ayah IN (${placeholders})
-          ORDER BY ayah ASC
-        `
-        );
-        const translationRows = (await translationStmt.bind(surah, ...chunk).all()) as { results?: any[] };
-        for (const row of translationRows?.results ?? []) {
-          translationMap.set(row.ayah, row);
-        }
-      }
+    // If no verses, still return envelope
+    if (!ayahRows.length) {
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          surah: {
+            surah: surahRow.surah,
+            name_ar: surahRow.name_ar,
+            name_en: surahRow.name_en ?? null,
+            ayah_count: surahRow.ayah_count ?? null,
+            meta: safeJson(surahRow.meta_json),
+          },
+          total,
+          page,
+          pageSize: limit,
+          verses: [],
+        }),
+        { headers: jsonHeaders }
+      );
     }
 
-    const enriched = (results as any[]).map((row) => {
-      const lemmas = lemmaMap.get(row.ayah) ?? [];
-      const translationsRow = translationMap.get(row.ayah) ?? null;
-      const translations = translationsRow
+    // Compute min/max ayah in the window so we can fetch words+translations by range
+    let minAyah = ayahRows[0]!.ayah;
+    let maxAyah = ayahRows[ayahRows.length - 1]!.ayah;
+
+    // 4) Fetch words for all ayahs in the window (diacritic + non-diacritic)
+    const wordsStmt = ctx.env.DB.prepare(
+      `
+      SELECT
+        id,
+        surah,
+        ayah,
+        token_index,
+        word_location,
+        word_simple,
+        word_diacritic,
+        lemma_id,
+        ar_u_token,
+        ar_token_occ_id
+      FROM quran_ayah_lemma_location
+      WHERE surah = ?1
+        AND ayah BETWEEN ?2 AND ?3
+      ORDER BY ayah ASC, token_index ASC
+    `
+    );
+
+    const { results: wordRowsRaw = [] } = await wordsStmt.bind(surah, minAyah, maxAyah).all<WordRow>();
+    const wordRows = (wordRowsRaw ?? []) as WordRow[];
+
+    // Group words by ayah
+    const wordsByAyah = new Map<number, any[]>();
+    for (const w of wordRows) {
+      const bucket = wordsByAyah.get(w.ayah) ?? [];
+      bucket.push({
+        token_index: w.token_index,
+        word_location: w.word_location,
+        word_simple: w.word_simple ?? null,
+        word_diacritic: w.word_diacritic ?? null,
+        lemma_id: w.lemma_id ?? null,
+        ar_u_token: w.ar_u_token ?? null,
+        ar_token_occ_id: w.ar_token_occ_id ?? null,
+      });
+      wordsByAyah.set(w.ayah, bucket);
+    }
+
+    // 5) Fetch translations for the window
+    const trStmt = ctx.env.DB.prepare(
+      `
+      SELECT
+        surah,
+        ayah,
+        translation_haleem,
+        translation_asad,
+        translation_sahih,
+        translation_usmani,
+        footnotes_sahih,
+        footnotes_usmani,
+        meta_json
+      FROM ar_quran_translations
+      WHERE surah = ?1
+        AND ayah BETWEEN ?2 AND ?3
+      ORDER BY ayah ASC
+    `
+    );
+
+    const { results: trRowsRaw = [] } = await trStmt.bind(surah, minAyah, maxAyah).all<TranslationRow>();
+    const trRows = (trRowsRaw ?? []) as TranslationRow[];
+
+    const trByAyah = new Map<number, TranslationRow>();
+    for (const t of trRows) trByAyah.set(t.ayah, t);
+
+    // 6) Build final envelope
+    const verses = ayahRows.map((v) => {
+      const t = trByAyah.get(v.ayah) ?? null;
+
+      const translations = t
         ? {
-            haleem: translationsRow.translation_haleem ?? null,
-            asad: translationsRow.translation_asad ?? null,
-            sahih: translationsRow.translation_sahih ?? null,
-            usmani: translationsRow.translation_usmani ?? null,
-            footnotes_sahih: translationsRow.footnotes_sahih ?? null,
-            footnotes_usmani: translationsRow.footnotes_usmani ?? null,
-            meta: safeJson(translationsRow.meta_json),
+            haleem: t.translation_haleem ?? null,
+            asad: t.translation_asad ?? null,
+            sahih: t.translation_sahih ?? null,
+            usmani: t.translation_usmani ?? null,
+            footnotes_sahih: t.footnotes_sahih ?? null,
+            footnotes_usmani: t.footnotes_usmani ?? null,
+            meta: safeJson(t.meta_json),
           }
         : null;
+
       const translation =
-        translationsRow?.translation_haleem ??
-        translationsRow?.translation_asad ??
-        translationsRow?.translation_sahih ??
-        translationsRow?.translation_usmani ??
+        t?.translation_haleem ??
+        t?.translation_asad ??
+        t?.translation_sahih ??
+        t?.translation_usmani ??
         null;
-      const words = lemmas.map((lemma) => ({
-        id: lemma.id,
-        position: lemma.token_index,
-        location: lemma.word_location,
-        text_uthmani: lemma.word_diacritic ?? null,
-        text_imlaei_simple: lemma.word_simple ?? null,
-        lemma_id: lemma.lemma_id,
-        lemma_text: lemma.lemma_text,
-        lemma_text_clean: lemma.lemma_text_clean,
-        words_count: lemma.words_count ?? null,
-        uniq_words_count: lemma.uniq_words_count ?? null,
-        word_simple: lemma.word_simple ?? null,
-        word_diacritic: lemma.word_diacritic ?? null,
-        ar_u_token: lemma.ar_u_token ?? null,
-        ar_token_occ_id: lemma.ar_token_occ_id ?? null,
-      }));
+
+      const words = wordsByAyah.get(v.ayah) ?? [];
+
       return {
-        ...row,
-        verse_key: `${row.surah}:${row.ayah}`,
-        verse_number: row.ayah,
-        chapter_id: row.surah,
-        text_uthmani: row.text,
-        text_imlaei_simple: row.text_simple ?? null,
-        page_number: row.page ?? null,
-        juz_number: row.juz ?? null,
-        hizb_number: row.hizb ?? null,
-        ruku_number: row.ruku ?? null,
+        id: v.id,
+        surah: v.surah,
+        ayah: v.ayah,
+        surah_ayah: v.surah_ayah,
+
+        page: v.page ?? null,
+        juz: v.juz ?? null,
+        hizb: v.hizb ?? null,
+        ruku: v.ruku ?? null,
+
+        surah_name_ar: v.surah_name_ar ?? surahRow.name_ar,
+        surah_name_en: v.surah_name_en ?? surahRow.name_en ?? null,
+
+        text: v.text,
+        text_simple: v.text_simple ?? null,
+        text_normalized: v.text_normalized ?? null,
+        text_diacritics: v.text_diacritics ?? null,
+        text_no_diacritics: v.text_no_diacritics ?? null,
+
+        verse_mark: v.verse_mark ?? null,
+        verse_full: v.verse_full ?? null,
+
+        word_count: v.word_count ?? null,
+        char_count: v.char_count ?? null,
+
+        verse_key: `${v.surah}:${v.ayah}`,
+        verse_number: v.ayah,
+        chapter_id: v.surah,
+
+        text_uthmani: v.text,
+        text_imlaei_simple: v.text_simple ?? null,
+
+        page_number: v.page ?? null,
+        juz_number: v.juz ?? null,
+        hizb_number: v.hizb ?? null,
+        ruku_number: v.ruku ?? null,
+
         translation,
         translations,
-        lemmas,
         words,
       };
     });
@@ -213,17 +345,23 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     return new Response(
       JSON.stringify({
         ok: true,
+        surah: {
+          surah: surahRow.surah,
+          name_ar: surahRow.name_ar,
+          name_en: surahRow.name_en ?? null,
+          ayah_count: surahRow.ayah_count ?? null,
+          meta: safeJson(surahRow.meta_json),
+        },
         total,
         page,
         pageSize: limit,
-        results: enriched,
-        verses: enriched,
+        verses,
       }),
       { headers: jsonHeaders }
     );
   } catch (err) {
-    console.error('ayah list error', err);
-    return new Response(JSON.stringify({ ok: false, error: 'Failed to load ayahs' }), {
+    console.error('surah envelope error', err);
+    return new Response(JSON.stringify({ ok: false, error: 'Failed to load surah envelope' }), {
       status: 500,
       headers: jsonHeaders,
     });

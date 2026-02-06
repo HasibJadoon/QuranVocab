@@ -70,25 +70,30 @@
             </ng-container>
 
             <ng-template #verseByVerse>
-              <span *ngFor="let ayah of ayahs; trackBy: trackByAyah" class="arabic-verse">
-                <span class="verse-text text-arabic">
-                  <ng-container *ngIf="(ayah.words?.length ?? 0) > 0; else versePlainText">
-                    <ng-container *ngFor="let word of ayah.words; let isLast = last; trackBy: trackByAyahWord">
-                      <span
-                        class="quran-word quran-word--interactive"
-                        [attr.data-word-location]="word.location || null"
-                        [attr.title]="word.location || null"
-                      >
-                        {{ getWordText(word) }}
-                      </span>
-                      <span *ngIf="!isLast"> </span>
+              <div *ngFor="let ayah of ayahs; trackBy: trackByAyah" class="arabic-verse-row">
+                <div class="verse-meta">
+                  <span class="verse-number">{{ ayah.ayah }}</span>
+                </div>
+                <div class="verse-content">
+                  <div class="verse-text text-arabic">
+                    <ng-container *ngIf="(ayah.words?.length ?? 0) > 0; else versePlainText">
+                      <ng-container *ngFor="let word of ayah.words; let isLast = last; trackBy: trackByAyahWord">
+                        <span
+                          class="quran-word quran-word--interactive"
+                          [attr.data-word-location]="word.word_location || word.location || null"
+                          [attr.title]="word.word_location || word.location || null"
+                        >
+                          {{ getWordText(word) }}
+                        </span>
+                        <span *ngIf="!isLast"> </span>
+                      </ng-container>
                     </ng-container>
-                  </ng-container>
 
-                  <ng-template #versePlainText>{{ ayah.text_uthmani || ayah.text }}</ng-template>
-                </span>
-                <span class="verse-marker">{{ getAyahMark(ayah) }}</span>
-              </span>
+                    <ng-template #versePlainText>{{ ayah.text_uthmani || ayah.text }}</ng-template>
+                  </div>
+                  <div class="verse-marker">{{ getAyahMark(ayah) }}</div>
+                </div>
+              </div>
             </ng-template>
           </div>
 

@@ -17,8 +17,8 @@ const themesDb = path.join(metaDir, 'ayah-themes.db');
 const matchingDb = path.join(metaDir, 'matching-ayah.db');
 
 const outQuranSql = path.join(__dirname, '..', 'database', 'migrations', 'seed-ar_quran_ayah.sql');
-const outSurahSql = path.join(__dirname, '..', 'database', 'migrations', 'seed-ar_surahs.sql');
-const outMetaSql = path.join(__dirname, '..', 'database', 'migrations', 'seed-ar_surah_ayah_meta.sql');
+const outSurahSql = path.join(__dirname, '..', 'database', 'migrations', 'seed-ar_quran_surahs.sql');
+const outMetaSql = path.join(__dirname, '..', 'database', 'migrations', 'seed-ar_quran_surah_ayah_meta.sql');
 
 const tmpDir = path.join(os.tmpdir(), 'kmap-quran');
 fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -350,7 +350,7 @@ CREATE TABLE quran_text (
 
   const surahStatements = surahRows
     .map((row) =>
-      `INSERT INTO ar_surahs (surah, name_ar, name_en, ayah_count, meta_json) VALUES (${[
+      `INSERT INTO ar_quran_surahs (surah, name_ar, name_en, ayah_count, meta_json) VALUES (${[
         escapeValue(row.surah),
         escapeValue(row.name_ar),
         escapeValue(row.name_en),
@@ -360,7 +360,7 @@ CREATE TABLE quran_text (
     )
     .join('\n');
 
-  const surahSql = `DELETE FROM ar_surahs;\n${surahStatements}\n`;
+  const surahSql = `DELETE FROM ar_quran_surahs;\n${surahStatements}\n`;
   fs.writeFileSync(outSurahSql, surahSql);
   console.log(`Wrote ${surahRows.length} rows to ${outSurahSql}`);
 
@@ -382,7 +382,7 @@ CREATE TABLE quran_text (
         matchingCount: matchList.length,
         matchingScoreAvg,
       };
-      return `INSERT INTO ar_surah_ayah_meta (surah_ayah, theme, keywords, theme_json, matching_json, extra_json) VALUES (${[
+      return `INSERT INTO ar_quran_surah_ayah_meta (surah_ayah, theme, keywords, theme_json, matching_json, extra_json) VALUES (${[
         escapeValue(row.surah_ayah),
         escapeValue(themeNames.length ? themeNames.join(' | ') : null),
         escapeValue(keywords || null),
@@ -393,7 +393,7 @@ CREATE TABLE quran_text (
     })
     .join('\n');
 
-  const metaSql = `DELETE FROM ar_surah_ayah_meta;\n${metaStatements}\n`;
+  const metaSql = `DELETE FROM ar_quran_surah_ayah_meta;\n${metaStatements}\n`;
   fs.writeFileSync(outMetaSql, metaSql);
   console.log(`Wrote ${enrichedRows.length} rows to ${outMetaSql}`);
 };

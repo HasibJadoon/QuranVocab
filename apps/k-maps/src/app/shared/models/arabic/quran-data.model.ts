@@ -49,6 +49,7 @@ export interface QuranAyah {
 
 export interface QuranAyahListResponse {
   ok: boolean;
+  surah?: QuranSurah;
   total: number;
   page: number;
   pageSize: number;
@@ -105,6 +106,8 @@ export interface QuranAyahWord {
   id?: number;
   position?: number;
   location?: string | null;
+  word_location?: string | null;
+  token_index?: number;
   text_uthmani?: string | null;
   text_imlaei_simple?: string | null;
   lemma_id?: number;

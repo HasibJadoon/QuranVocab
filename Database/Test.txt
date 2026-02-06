@@ -1,0 +1,102 @@
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- 1) CONTAINER LAYER (Arabic sources + registry)
+--------------------------------------------------------------------------------
+CREATE TABLE ar_quran_surahs (
+  surah        INTEGER PRIMARY KEY,
+  name_ar      TEXT NOT NULL,
+  name_en      TEXT,
+  ayah_count   INTEGER,
+  meta_json    JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at   TEXT
+);
+
+CREATE TABLE ar_quran_surah_ayah_meta (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  surah_ayah      INTEGER NOT NULL UNIQUE,
+  theme           TEXT,
+  keywords        TEXT,
+  theme_json      JSON CHECK (theme_json IS NULL OR json_valid(theme_json)),
+  matching_json   JSON CHECK (matching_json IS NULL OR json_valid(matching_json)),
+  extra_json      JSON CHECK (extra_json IS NULL OR json_valid(extra_json)),
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT,
+  FOREIGN KEY (surah_ayah) REFERENCES ar_quran_ayah(surah_ayah) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_quran_surah_ayah_meta_theme ON ar_quran_surah_ayah_meta(theme);
+
+
+
+CREATE TABLE ar_quran_ayah (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  surah             INTEGER NOT NULL,
+  ayah              INTEGER NOT NULL,
+  surah_ayah        INTEGER NOT NULL UNIQUE,
+  page              INTEGER,
+  juz               INTEGER,
+  hizb              INTEGER,
+  ruku              INTEGER,
+  surah_name_ar     TEXT,
+  surah_name_en     TEXT,
+  text              TEXT NOT NULL,
+  text_simple       TEXT NOT NULL,
+  text_normalized   TEXT NOT NULL,
+  text_diacritics   TEXT,
+  text_no_diacritics TEXT,
+  first_word        TEXT,
+  last_word         TEXT,
+  word_count        INTEGER,
+  char_count        INTEGER,
+  verse_mark        TEXT,
+  verse_full        TEXT,
+  created_at        TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at        TEXT,
+  FOREIGN KEY (surah) REFERENCES ar_surahs(surah) ON DELETE RESTRICT,
+  UNIQUE (surah, ayah)
+)
+
+CREATE TABLE ar_quran_translations (
+  surah INTEGER NOT NULL,
+  ayah INTEGER NOT NULL,
+  translation_haleem TEXT,
+  translation_asad TEXT,
+  translation_sahih TEXT,
+  translation_usmani TEXT,
+  footnotes_sahih TEXT,
+  footnotes_usmani TEXT,
+  meta_json JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT,
+  PRIMARY KEY (surah, ayah)
+)
+
+CREATE TABLE quran_ayah_lemmas (
+  lemma_id                 INTEGER PRIMARY KEY,
+  lemma_text               TEXT NOT NULL,
+  lemma_text_clean         TEXT NOT NULL,
+  words_count              INTEGER,
+  uniq_words_count         INTEGER,
+  primary_ar_u_token       TEXT,
+  created_at               TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (primary_ar_u_token) REFERENCES ar_u_tokens(ar_u_token)
+);
+
+CREATE TABLE quran_ayah_lemma_location (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  lemma_id       INTEGER NOT NULL REFERENCES quran_ayah_lemmas(lemma_id) ON DELETE CASCADE,
+  word_location  TEXT NOT NULL,
+  surah          INTEGER NOT NULL,
+  ayah           INTEGER NOT NULL,
+  token_index    INTEGER NOT NULL,
+  ar_token_occ_id TEXT,
+  ar_u_token     TEXT,
+  word_simple    TEXT,
+  word_diacritic TEXT,
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id),
+  FOREIGN KEY (ar_u_token) REFERENCES ar_u_tokens(ar_u_token)
+);
+

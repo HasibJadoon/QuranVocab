@@ -67,15 +67,6 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     this.loadingSurah = true;
     this.error = '';
     try {
-      const response = await this.dataService.listSurahs();
-      const match = (response.results ?? []).find((row) => row.surah === id) || null;
-      if (!match) {
-        this.error = 'Surah not found.';
-        this.surah = null;
-        this.ayahs = [];
-        return;
-      }
-      this.surah = match;
       await this.loadAyahs(id);
       this.lemmaTokensByAyah.clear();
       this.lemmaTokensLoaded = false;
@@ -93,6 +84,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     this.ayahs = [];
     try {
       const response = await this.dataService.listAyahs({ surah, pageSize: 400 });
+      this.surah = response.surah ?? this.surah;
       this.ayahs = response.verses ?? response.results ?? [];
       this.hydrateLemmaTokensFromAyahs();
       if (this.viewMode === 'reading' && this.lemmaTokensLoaded) {
@@ -158,7 +150,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
 
   trackByAyah = (_: number, ayah: QuranAyahWithPage) => `${ayah.surah}:${ayah.ayah}`;
   trackByAyahWord = (_: number, word: QuranAyahWord) =>
-    word.location || word.id || word.lemma_id || word.position || _;
+    word.word_location || word.location || word.id || word.lemma_id || word.token_index || word.position || _;
 
   showPageDivider(index: number) {
     if (index <= 0) return false;
