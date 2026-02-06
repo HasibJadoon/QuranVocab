@@ -2,25 +2,30 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
-    path: 'lessons',
-    loadChildren: () => import('./lessons/routes').then(m => m.routes),
-    data: { title: 'Arabic Lessons' }
+    path: 'quran',
+    loadChildren: () => import('./quran/routes').then(m => m.routes),
+    data: { title: 'Quran' }
   },
   {
-    path: 'memory',
-    loadChildren: () => import('./memory/routes').then(m => m.routes),
-    data: { title: 'Arabic Memory' }
+    path: 'literature',
+    loadChildren: () => import('./literature/routes').then(m => m.routes),
+    data: { title: 'Literature' }
   },
   {
-    path: 'lexicon',
-    loadChildren: () => import('./lexicon/routes').then(m => m.routes),
-    data: { title: 'Arabic Lexicon' }
+    path: 'grammar',
+    loadChildren: () => import('./grammar/routes').then(m => m.routes),
+    data: { title: 'Grammar' }
   },
   {
     path: 'tokens',
     loadComponent: () =>
       import('./tokens/tokens.component').then(m => m.TokensComponent),
     data: { title: 'Arabic Tokens' }
+  },
+  {
+    path: 'sentences',
+    loadChildren: () => import('./sentences/routes').then(m => m.routes),
+    data: { title: 'Sentences' }
   },
   {
     path: 'roots',

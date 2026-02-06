@@ -5,7 +5,7 @@ import { API_BASE } from '../api-base';
 @Injectable({ providedIn: 'root' })
 export class GrammarNotesService {
   private auth = inject(AuthService);
-  private readonly baseUrl = `${API_BASE}/arabic/grammar_notes`;
+  private readonly baseUrl = `${API_BASE}/ar/grammar/notes`;
 
   async list(lessonId: number | string) {
     return this.request(`${this.baseUrl}?lesson_id=${lessonId}`);

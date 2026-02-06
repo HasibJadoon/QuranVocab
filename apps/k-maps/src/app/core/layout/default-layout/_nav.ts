@@ -11,19 +11,19 @@ export const navItems: INavData[] = [
     iconComponent: { name: 'cilBookmark' },
     children: [
       {
-        name: 'Lessons',
-        url: '/arabic/lessons',
+        name: 'Quran',
+        url: '/arabic/quran/lessons',
         iconComponent: { name: 'cilBookmark' }
       },
       {
-        name: 'Roots',
-        url: '/arabic/roots',
-        iconComponent: { name: 'cilList' }
+        name: 'Literature',
+        url: '/arabic/literature/lessons',
+        iconComponent: { name: 'cilDescription' }
       },
       {
-        name: 'Lexicon',
-        url: '/arabic/lexicon',
-        iconComponent: { name: 'cilDescription' }
+        name: 'Grammar',
+        url: '/arabic/grammar',
+        iconComponent: { name: 'cilNotes' }
       },
       {
         name: 'Tokens',
@@ -31,9 +31,14 @@ export const navItems: INavData[] = [
         iconComponent: { name: 'cilSpeech' }
       },
       {
-        name: 'Memory',
-        url: '/arabic/memory',
-        iconComponent: { name: 'cilTask' }
+        name: 'Sentences',
+        url: '/arabic/sentences',
+        iconComponent: { name: 'cilNotes' }
+      },
+      {
+        name: 'Roots',
+        url: '/arabic/roots',
+        iconComponent: { name: 'cilTags' }
       }
     ]
   },

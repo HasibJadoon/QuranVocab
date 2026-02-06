@@ -27,7 +27,7 @@ export class TokensService {
       params.set('pageSize', String(filters.pageSize));
     }
 
-    const res = await fetch(`${API_BASE}/tokens?${params.toString()}`, {
+    const res = await fetch(`${API_BASE}/ar/tokens?${params.toString()}`, {
       headers: {
         ...this.auth.authHeaders(),
         'content-type': 'application/json',

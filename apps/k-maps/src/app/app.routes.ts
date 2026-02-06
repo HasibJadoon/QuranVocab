@@ -33,11 +33,6 @@ export const routes: Routes = [
           import('./features/dashboard/routes').then(m => m.routes),
       },
       {
-        path: 'roots',
-        loadChildren: () =>
-          import('./features/arabic/roots/routes').then(m => m.routes),
-      },
-      {
         path: 'arabic',
         loadChildren: () =>
           import('./features/arabic/routes').then(m => m.routes),

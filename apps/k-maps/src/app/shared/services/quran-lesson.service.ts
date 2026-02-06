@@ -47,12 +47,34 @@ export interface QuranLessonCommitResult {
   counts: Record<string, number>;
 }
 
+export type QuranLessonDraft = {
+  draft_id: string;
+  lesson_id?: number | null;
+  draft_version: number;
+  status?: string;
+  active_step?: string | null;
+  draft_json: Record<string, unknown>;
+};
+
+export type QuranLessonDraftCommitResponse = {
+  ok: boolean;
+  lesson_id: number;
+  committed_step: string;
+  result_counts?: Record<string, number>;
+};
+
+export type QuranLessonDraftPublishResponse = {
+  ok: boolean;
+  lesson_id: number;
+  status: string;
+};
+
 @Injectable({
   providedIn: 'root'
 })
 export class QuranLessonService {
   private auth = inject(AuthService);
-  private readonly baseUrl = `${API_BASE}/arabic/lessons/quran`;
+  private readonly baseUrl = `${API_BASE}/ar/quran/lessons`;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -283,7 +305,92 @@ export class QuranLessonService {
       ...this.auth.authHeaders(),
     });
     return this.http.post<{ ok: boolean; result: QuranLessonCommitResult }>(
-      `${API_BASE}/arabic/lessons/${id}/commit`,
+      `${API_BASE}/ar/quran/lessons/${id}/commit`,
+      payload,
+      { headers }
+    );
+  }
+
+  createDraft(payload: {
+    lesson_id?: number | string | null;
+    subtype?: string | null;
+    source?: string | null;
+    initial_reference?: Record<string, unknown> | null;
+    active_step?: string | null;
+  }): Observable<QuranLessonDraft> {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+    return this.http
+      .post<{ ok: boolean; draft_id: string; lesson_id?: number | null; draft_version: number; draft_json: Record<string, unknown> }>(
+        `${API_BASE}/ar/quran/lesson-drafts`,
+        payload,
+        { headers }
+      )
+      .pipe(
+        map((res) => ({
+          draft_id: res.draft_id,
+          lesson_id: res.lesson_id ?? null,
+          draft_version: res.draft_version,
+          draft_json: res.draft_json ?? {},
+        }))
+      );
+  }
+
+  getDraft(draftId: string): Observable<QuranLessonDraft> {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+    return this.http
+      .get<{ ok: boolean; draft_id: string; lesson_id?: number | null; draft_version: number; status?: string; active_step?: string | null; draft_json: Record<string, unknown> }>(
+        `${API_BASE}/ar/quran/lesson-drafts/${draftId}`,
+        { headers }
+      )
+      .pipe(
+        map((res) => ({
+          draft_id: res.draft_id,
+          lesson_id: res.lesson_id ?? null,
+          draft_version: res.draft_version,
+          status: res.status ?? 'draft',
+          active_step: res.active_step ?? null,
+          draft_json: res.draft_json ?? {},
+        }))
+      );
+  }
+
+  updateDraft(draftId: string, payload: { draft_json: Record<string, unknown>; active_step?: string | null }) {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+    return this.http.put<{ ok: boolean; draft_version: number }>(
+      `${API_BASE}/ar/quran/lesson-drafts/${draftId}`,
+      payload,
+      { headers }
+    );
+  }
+
+  commitDraft(draftId: string, payload: { step: string; draft_version: number }) {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+    return this.http.post<QuranLessonDraftCommitResponse>(
+      `${API_BASE}/ar/quran/lesson-drafts/${draftId}/commit`,
+      payload,
+      { headers }
+    );
+  }
+
+  publishDraft(draftId: string, payload: { draft_version: number }) {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+    return this.http.post<QuranLessonDraftPublishResponse>(
+      `${API_BASE}/ar/quran/lesson-drafts/${draftId}/publish`,
       payload,
       { headers }
     );

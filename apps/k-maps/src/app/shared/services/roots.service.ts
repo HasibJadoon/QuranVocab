@@ -5,7 +5,7 @@ import { API_BASE } from '../api-base';
 @Injectable({ providedIn: 'root' })
 export class RootsService {
   private auth = inject(AuthService);
-  private readonly baseUrl = `${API_BASE}/arabic/lexicon_roots`;
+  private readonly baseUrl = `${API_BASE}/ar/roots`;
 
   async list(params: Record<string, string> = {}) {
     const query = new URLSearchParams(params).toString();
