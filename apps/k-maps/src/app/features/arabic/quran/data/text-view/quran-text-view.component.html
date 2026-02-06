@@ -7,86 +7,100 @@
     (leading)="goBack()"
   />
 
-  <div class="view-header">
-    <span class="view-meta">Quran Text · Surah {{ surahId || '—' }}</span>
-    <div class="view-toggle">
-      <button
-        type="button"
-        class="view-toggle-btn"
-        [class.active]="viewMode === 'verse'"
-        (click)="setViewMode('verse')"
-      >
-        Verse by Verse
-      </button>
-      <button
-        type="button"
-        class="view-toggle-btn"
-        [class.active]="viewMode === 'reading'"
-        (click)="setViewMode('reading')"
-      >
-        Reading
-      </button>
-    </div>
-  </div>
-
-  <div *ngIf="error" class="alert alert-danger py-2">{{ error }}</div>
-  <div *ngIf="loadingSurah" class="text-body-secondary">Loading surah…</div>
-
-  <div class="surah-preview" *ngIf="surah">
-    <div class="surah-hero">
-      <div class="surah-hero-arabic arabic-text">{{ surah.name_ar }}</div>
-      <div class="surah-hero-title">
-        <span class="surah-hero-number">{{ surah.surah }}.</span>
-        {{ surah.name_en || 'Surah ' + surah.surah }}
-        <span class="surah-info-pill">info</span>
+  <section class="lesson-study">
+    <header class="study-header single-title">
+      <div class="study-title">
+        <h2>{{ headerTitle }}</h2>
+        <h3 *ngIf="surah">{{ surah.meta['english_name_translation'] || '—' }}</h3>
       </div>
-      <div class="surah-hero-translation">
-        {{ surah.meta['english_name_translation'] || '—' }}
-      </div>
-      <div class="surah-hero-meta">
-        {{ surah.ayah_count || '—' }} Ayahs
-      </div>
-    </div>
+      <p class="study-meta" *ngIf="surah">{{ surah.ayah_count || '—' }} Ayahs</p>
+    </header>
 
-    <div class="bismillah-block" *ngIf="shouldShowBismillah">
-      <div class="bismillah arabic-text">{{ bismillah }}</div>
-      <div class="bismillah-translation">{{ bismillahTranslation }}</div>
-    </div>
+    <hr class="study-divider" />
 
-    <div *ngIf="loadingAyahs" class="text-body-secondary">Loading ayahs…</div>
+    <div *ngIf="error" class="alert alert-danger py-2">{{ error }}</div>
 
-    <div class="ayah-list" *ngIf="!loadingAyahs && viewMode === 'verse'">
-      <ng-container *ngFor="let ayah of ayahs; let i = index; trackBy: trackByAyah">
-        <div *ngIf="showPageDivider(i)" class="page-divider">
-          <span class="page-divider-number">{{ ayah.page || '—' }}</span>
-        </div>
-        <div class="ayah-row arabic-verse">
-          <span class="ayah-index">{{ ayah.ayah }}</span>
-          <div class="ayah-text arabic-text verse-text">
-            <ng-container *ngFor="let word of splitAyahWords(ayah.text); let isLast = last">
-              <span class="quran-word quran-word--interactive">{{ word }}</span>
-              <span *ngIf="!isLast"> </span>
-            </ng-container>
+    <ng-container *ngIf="surah; else loadingTpl">
+      <div class="study-grid">
+        <article class="study-card">
+          <div class="study-card-heading">
+            <h4>Text</h4>
+            <div class="view-toggle">
+              <button
+                type="button"
+                class="view-toggle-btn"
+                [class.active]="viewMode === 'verse'"
+                (click)="setViewMode('verse')"
+              >
+                <span class="toggle-icon">≡</span>
+                Verse by Verse
+              </button>
+              <button
+                type="button"
+                class="view-toggle-btn"
+                [class.active]="viewMode === 'reading'"
+                (click)="setViewMode('reading')"
+              >
+                <span class="toggle-icon">▤</span>
+                Reading
+              </button>
+            </div>
+            <h4 class="study-card-mode">Surah {{ surah.surah }}</h4>
           </div>
-        </div>
-      </ng-container>
-    </div>
+          <hr class="study-card-divider" />
 
-    <div class="reading-block arabic-text" *ngIf="!loadingAyahs && viewMode === 'reading'">
-      <div *ngIf="loadingLemmaTokens" class="text-body-secondary">Loading lemma tokens…</div>
-      <div *ngIf="lemmaTokensError" class="alert alert-danger py-2">{{ lemmaTokensError }}</div>
-      <ng-container *ngFor="let page of readingPages; let pageIndex = index">
-        <div *ngIf="pageIndex > 0" class="page-divider">
-          <span class="page-divider-number">{{ page.page || '—' }}</span>
-        </div>
-        <div class="reading-text">
-          <ng-container *ngFor="let token of page.tokens; let isLast = last">
-            <span *ngIf="token.type === 'word'" class="quran-word quran-word--interactive">{{ token.text }}</span>
-            <span *ngIf="token.type === 'mark'" class="reading-ayah-mark">{{ token.text }}</span>
-            <span *ngIf="!isLast"> </span>
-          </ng-container>
-        </div>
-      </ng-container>
-    </div>
-  </div>
+          <div class="bismillah-block" *ngIf="shouldShowBismillah">
+            <div class="bismillah">{{ bismillah }}</div>
+            <div class="bismillah-translation">{{ bismillahTranslation }}</div>
+          </div>
+
+          <div *ngIf="loadingAyahs" class="text-body-secondary">Loading ayahs…</div>
+
+          <div
+            *ngIf="!loadingAyahs && ayahs.length > 0; else noArabic"
+            class="arabic-passage"
+            [class.arabic-passage--reading]="viewMode === 'reading'"
+          >
+            <ng-container *ngIf="viewMode === 'reading'; else verseByVerse">
+              <div *ngIf="loadingLemmaTokens" class="text-body-secondary">Loading lemma tokens…</div>
+              <div *ngIf="lemmaTokensError" class="alert alert-danger py-2">{{ lemmaTokensError }}</div>
+              <div *ngIf="!loadingLemmaTokens && readingText" class="reading-text text-arabic">
+                {{ readingText }}
+              </div>
+            </ng-container>
+
+            <ng-template #verseByVerse>
+              <span *ngFor="let ayah of ayahs; trackBy: trackByAyah" class="arabic-verse">
+                <span class="verse-text text-arabic">
+                  <ng-container *ngIf="(ayah.words?.length ?? 0) > 0; else versePlainText">
+                    <ng-container *ngFor="let word of ayah.words; let isLast = last; trackBy: trackByAyahWord">
+                      <span
+                        class="quran-word quran-word--interactive"
+                        [attr.data-word-location]="word.location || null"
+                        [attr.title]="word.location || null"
+                      >
+                        {{ getWordText(word) }}
+                      </span>
+                      <span *ngIf="!isLast"> </span>
+                    </ng-container>
+                  </ng-container>
+
+                  <ng-template #versePlainText>{{ ayah.text_uthmani || ayah.text }}</ng-template>
+                </span>
+                <span class="verse-marker">{{ getAyahMark(ayah) }}</span>
+              </span>
+            </ng-template>
+          </div>
+
+          <ng-template #noArabic>
+            <p class="text-muted">Arabic text is not available for this surah yet.</p>
+          </ng-template>
+        </article>
+      </div>
+    </ng-container>
+  </section>
+
+  <ng-template #loadingTpl>
+    <div *ngIf="loadingSurah" class="loading text-muted">Loading study data…</div>
+  </ng-template>
 </div>

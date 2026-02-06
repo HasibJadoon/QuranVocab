@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 
 import { AppHeaderbarComponent } from '../../../../../shared/components';
 import { QuranDataService } from '../../../../../shared/services/quran-data.service';
-import { QuranAyah, QuranSurah } from '../../../../../shared/models/arabic/quran-data.model';
+import { QuranAyah, QuranAyahWord, QuranSurah } from '../../../../../shared/models/arabic/quran-data.model';
 
 type QuranAyahWithPage = QuranAyah & { page?: number | null };
 type ReadingToken = { text: string; type: 'word' | 'mark' };
@@ -36,6 +36,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   loadingLemmaTokens = false;
   lemmaTokensError = '';
   readingPages: ReadingPage[] = [];
+  readingText = '';
 
   loadingSurah = false;
   loadingAyahs = false;
@@ -92,7 +93,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     this.ayahs = [];
     try {
       const response = await this.dataService.listAyahs({ surah, pageSize: 400 });
-      this.ayahs = response.results ?? [];
+      this.ayahs = response.verses ?? response.results ?? [];
       this.hydrateLemmaTokensFromAyahs();
       if (this.viewMode === 'reading' && this.lemmaTokensLoaded) {
         this.buildReadingPages();
@@ -109,11 +110,21 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     this.lemmaTokensByAyah.clear();
     let hasLemmaData = false;
     for (const ayah of this.ayahs) {
+      const wordRows = Array.isArray(ayah.words) ? ayah.words : [];
       const lemmas = Array.isArray(ayah.lemmas) ? ayah.lemmas : [];
-      if (!lemmas.length) continue;
+      const source = wordRows.length ? wordRows : lemmas;
+      if (!source.length) continue;
       hasLemmaData = true;
-      const tokens = lemmas
-        .map((lemma) => lemma.word_diacritic || lemma.word_simple || '')
+      const tokens = source
+        .map((lemma) =>
+          'text_uthmani' in lemma || 'text_imlaei_simple' in lemma
+            ? (lemma as QuranAyahWord).text_uthmani ||
+              (lemma as QuranAyahWord).word_diacritic ||
+              (lemma as QuranAyahWord).text_imlaei_simple ||
+              (lemma as QuranAyahWord).word_simple ||
+              ''
+            : (lemma as any).word_diacritic || (lemma as any).word_simple || ''
+        )
         .filter(Boolean);
       if (tokens.length) {
         this.lemmaTokensByAyah.set(ayah.ayah, tokens);
@@ -146,6 +157,8 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   }
 
   trackByAyah = (_: number, ayah: QuranAyahWithPage) => `${ayah.surah}:${ayah.ayah}`;
+  trackByAyahWord = (_: number, word: QuranAyahWord) =>
+    word.location || word.id || word.lemma_id || word.position || _;
 
   showPageDivider(index: number) {
     if (index <= 0) return false;
@@ -157,6 +170,16 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
 
   getAyahMark(ayah: QuranAyahWithPage) {
     return ayah.verse_mark || `(${ayah.ayah})`;
+  }
+
+  getWordText(word: QuranAyahWord) {
+    return (
+      word.text_uthmani ||
+      word.word_diacritic ||
+      word.text_imlaei_simple ||
+      word.word_simple ||
+      ''
+    );
   }
 
   splitAyahWords(text: string) {
@@ -202,12 +225,15 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   }
 
   getReadingTokens(ayah: QuranAyahWithPage): string[] {
-    return this.lemmaTokensByAyah.get(ayah.ayah) ?? [];
+    const tokens = this.lemmaTokensByAyah.get(ayah.ayah);
+    if (tokens && tokens.length) return tokens;
+    return this.splitAyahWords(ayah.text_uthmani || ayah.text || '');
   }
 
   buildReadingPages() {
     const pages: ReadingPage[] = [];
     const pageMap = new Map<number, ReadingPage>();
+    const tokens: string[] = [];
 
     for (const ayah of this.ayahs) {
       const pageKey = ayah.page ?? 0;
@@ -221,13 +247,16 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
       const words = this.getReadingTokens(ayah);
       for (const word of words) {
         page.tokens.push({ text: word, type: 'word' });
+        tokens.push(word);
       }
       const marker = this.getAyahMark(ayah);
       if (marker) {
         page.tokens.push({ text: marker, type: 'mark' });
+        tokens.push(marker);
       }
     }
 
     this.readingPages = pages;
+    this.readingText = tokens.join(' ').replace(/\s+/g, ' ').trim();
   }
 }
