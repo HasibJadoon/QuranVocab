@@ -170,10 +170,7 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
   }
 
   get readingText(): string {
-    const lines = this.verseList.map((verse) => {
-      const marker = verse.marker?.trim();
-      return marker ? `${verse.text} ${marker}` : verse.text;
-    });
+    const lines = this.verseList.map((verse) => verse.text);
     return lines.join(' ');
   }
 

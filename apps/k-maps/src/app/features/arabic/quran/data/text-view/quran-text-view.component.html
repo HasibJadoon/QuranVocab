@@ -9,6 +9,24 @@
 
   <div class="view-header">
     <span class="view-meta">Quran Text · Surah {{ surahId || '—' }}</span>
+    <div class="view-toggle">
+      <button
+        type="button"
+        class="view-toggle-btn"
+        [class.active]="viewMode === 'verse'"
+        (click)="setViewMode('verse')"
+      >
+        Verse by Verse
+      </button>
+      <button
+        type="button"
+        class="view-toggle-btn"
+        [class.active]="viewMode === 'reading'"
+        (click)="setViewMode('reading')"
+      >
+        Reading
+      </button>
+    </div>
   </div>
 
   <div *ngIf="error" class="alert alert-danger py-2">{{ error }}</div>
@@ -37,15 +55,42 @@
 
     <div *ngIf="loadingAyahs" class="text-body-secondary">Loading ayahs…</div>
 
-    <div class="ayah-list" *ngIf="!loadingAyahs">
+    <div class="ayah-list" *ngIf="!loadingAyahs && viewMode === 'verse'">
       <ng-container *ngFor="let ayah of ayahs; let i = index; trackBy: trackByAyah">
         <div *ngIf="showPageDivider(i)" class="page-divider">
           <span class="page-divider-number">{{ ayah.page || '—' }}</span>
         </div>
-        <div class="ayah-row">
+        <div class="ayah-row arabic-verse">
           <span class="ayah-index">{{ ayah.ayah }}</span>
-          <div class="ayah-text arabic-text">{{ ayah.text }}</div>
+          <div class="ayah-text arabic-text verse-text">
+            <ng-container *ngFor="let word of splitAyahWords(ayah.text); let isLast = last">
+              <span class="quran-word quran-word--interactive">{{ word }}</span>
+              <span *ngIf="!isLast"> </span>
+            </ng-container>
+          </div>
         </div>
+      </ng-container>
+    </div>
+
+    <div class="reading-block arabic-text" *ngIf="!loadingAyahs && viewMode === 'reading'">
+      <div *ngIf="loadingLemmaTokens" class="text-body-secondary">Loading lemma tokens…</div>
+      <div *ngIf="lemmaTokensError" class="alert alert-danger py-2">{{ lemmaTokensError }}</div>
+      <ng-container *ngFor="let ayah of ayahs; let i = index; trackBy: trackByAyah">
+        <div *ngIf="showPageDivider(i)" class="page-divider">
+          <span class="page-divider-number">{{ ayah.page || '—' }}</span>
+        </div>
+        <span class="reading-ayah arabic-verse">
+          <span class="verse-text">
+            <ng-container *ngIf="getReadingTokens(ayah).length; else readingFallback">
+              <ng-container *ngFor="let word of getReadingTokens(ayah); let isLast = last">
+                <span class="quran-word quran-word--interactive">{{ word }}</span>
+                <span *ngIf="!isLast"> </span>
+              </ng-container>
+            </ng-container>
+            <ng-template #readingFallback>{{ ayah.text }}</ng-template>
+          </span>
+          <span class="reading-ayah-mark">{{ getAyahMark(ayah) }}</span>
+        </span>
       </ng-container>
     </div>
   </div>

@@ -67,6 +67,37 @@
   color: rgba(255, 216, 0, 0.85);
 }
 
+.lesson-study .view-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(9, 15, 26, 0.7);
+  border: 1px solid rgba(133, 160, 214, 0.25);
+  border-radius: 999px;
+  padding: 0.2rem;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.lesson-study .view-toggle-btn {
+  border: 0;
+  background: transparent;
+  color: rgba(184, 200, 230, 0.86);
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.lesson-study .view-toggle-btn.active {
+  background: rgba(54, 192, 199, 0.2);
+  color: #e9fdff;
+  box-shadow: inset 0 0 0 1px rgba(54, 192, 199, 0.35);
+}
+
 
 
 .arabic-heading-text {

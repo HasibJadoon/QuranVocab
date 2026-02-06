@@ -22,10 +22,10 @@
           </div>
           <hr class="study-card-divider" />
 
-          <div class="reading-toggle">
+          <div class="view-toggle">
             <button
               type="button"
-              class="toggle-pill"
+              class="view-toggle-btn"
               [class.active]="readingMode === 'verse'"
               (click)="readingMode = 'verse'"
             >
@@ -34,7 +34,7 @@
             </button>
             <button
               type="button"
-              class="toggle-pill"
+              class="view-toggle-btn"
               [class.active]="readingMode === 'reading'"
               (click)="readingMode = 'reading'"
             >

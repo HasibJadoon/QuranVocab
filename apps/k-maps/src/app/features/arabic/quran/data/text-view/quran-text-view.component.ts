@@ -29,6 +29,10 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   surah: QuranSurah | null = null;
   ayahs: QuranAyahWithPage[] = [];
   viewMode: 'verse' | 'reading' = 'verse';
+  lemmaTokensByAyah = new Map<number, string[]>();
+  lemmaTokensLoaded = false;
+  loadingLemmaTokens = false;
+  lemmaTokensError = '';
 
   loadingSurah = false;
   loadingAyahs = false;
@@ -69,6 +73,9 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
       }
       this.surah = match;
       await this.loadAyahs(id);
+      this.lemmaTokensByAyah.clear();
+      this.lemmaTokensLoaded = false;
+      this.lemmaTokensError = '';
     } catch (err: any) {
       console.error('surah load error', err);
       this.error = err?.message ?? 'Unable to load surah.';
@@ -103,6 +110,9 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
 
   setViewMode(mode: 'verse' | 'reading') {
     this.viewMode = mode;
+    if (mode === 'reading' && this.surahId && !this.lemmaTokensLoaded && !this.loadingLemmaTokens) {
+      void this.loadLemmaTokens(this.surahId);
+    }
   }
 
   goBack() {
@@ -121,5 +131,49 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
 
   getAyahMark(ayah: QuranAyahWithPage) {
     return ayah.verse_mark || `(${ayah.ayah})`;
+  }
+
+  splitAyahWords(text: string) {
+    return String(text ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+
+  async loadLemmaTokens(surah: number) {
+    this.loadingLemmaTokens = true;
+    this.lemmaTokensError = '';
+    this.lemmaTokensByAyah.clear();
+
+    let page = 1;
+    let hasMore = true;
+    try {
+      while (hasMore) {
+        const response = await this.dataService.listLemmaLocations({ surah, page, pageSize: 200 });
+        const rows = response.results ?? [];
+        for (const row of rows) {
+          const ayah = row.ayah;
+          if (!ayah) continue;
+          const word = row.word_diacritic || row.word_simple || row.lemma_text || '';
+          if (!word) continue;
+          if (!this.lemmaTokensByAyah.has(ayah)) {
+            this.lemmaTokensByAyah.set(ayah, []);
+          }
+          this.lemmaTokensByAyah.get(ayah)?.push(word);
+        }
+        hasMore = !!response.hasMore;
+        page += 1;
+      }
+      this.lemmaTokensLoaded = true;
+    } catch (err: any) {
+      console.error('lemma token load error', err);
+      this.lemmaTokensError = err?.message ?? 'Unable to load lemma tokens.';
+    } finally {
+      this.loadingLemmaTokens = false;
+    }
+  }
+
+  getReadingTokens(ayah: QuranAyahWithPage): string[] {
+    return this.lemmaTokensByAyah.get(ayah.ayah) ?? [];
   }
 }
