@@ -75,13 +75,53 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
 
     const { results = [] } = await dataStmt.bind(surah, limit, offset).all();
 
+    const ayahList = (results as any[]).map((row) => row.ayah).filter((value) => Number.isFinite(value));
+    let lemmaMap = new Map<number, any[]>();
+    if (ayahList.length) {
+      const placeholders = ayahList.map(() => '?').join(', ');
+      const lemmaStmt = ctx.env.DB.prepare(
+        `
+        SELECT
+          loc.id,
+          loc.surah,
+          loc.ayah,
+          loc.word_location,
+          loc.token_index,
+          loc.ar_token_occ_id,
+          loc.ar_u_token,
+          loc.word_simple,
+          loc.word_diacritic,
+          l.lemma_id,
+          l.lemma_text,
+          l.lemma_text_clean,
+          l.words_count,
+          l.uniq_words_count
+        FROM quran_ayah_lemma_location loc
+        JOIN quran_ayah_lemmas l ON l.lemma_id = loc.lemma_id
+        WHERE loc.surah = ?1 AND loc.ayah IN (${placeholders})
+        ORDER BY loc.ayah ASC, loc.token_index ASC, l.lemma_text ASC
+      `
+      );
+      const lemmaRows = (await lemmaStmt.bind(surah, ...ayahList).all()) as { results?: any[] };
+      for (const row of lemmaRows?.results ?? []) {
+        const bucket = lemmaMap.get(row.ayah) ?? [];
+        bucket.push(row);
+        lemmaMap.set(row.ayah, bucket);
+      }
+    }
+
+    const enriched = (results as any[]).map((row) => ({
+      ...row,
+      lemmas: lemmaMap.get(row.ayah) ?? [],
+    }));
+
     return new Response(
       JSON.stringify({
         ok: true,
         total,
         page,
         pageSize: limit,
-        results,
+        results: enriched,
       }),
       { headers: jsonHeaders }
     );

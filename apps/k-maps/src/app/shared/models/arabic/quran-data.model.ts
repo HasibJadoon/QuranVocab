@@ -28,6 +28,7 @@ export interface QuranAyah {
   char_count?: number | null;
   surah_name_ar?: string | null;
   surah_name_en?: string | null;
+  lemmas?: QuranLemmaLocation[];
 }
 
 export interface QuranAyahListResponse {

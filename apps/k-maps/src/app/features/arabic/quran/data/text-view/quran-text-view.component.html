@@ -75,22 +75,17 @@
     <div class="reading-block arabic-text" *ngIf="!loadingAyahs && viewMode === 'reading'">
       <div *ngIf="loadingLemmaTokens" class="text-body-secondary">Loading lemma tokens…</div>
       <div *ngIf="lemmaTokensError" class="alert alert-danger py-2">{{ lemmaTokensError }}</div>
-      <ng-container *ngFor="let ayah of ayahs; let i = index; trackBy: trackByAyah">
-        <div *ngIf="showPageDivider(i)" class="page-divider">
-          <span class="page-divider-number">{{ ayah.page || '—' }}</span>
+      <ng-container *ngFor="let page of readingPages; let pageIndex = index">
+        <div *ngIf="pageIndex > 0" class="page-divider">
+          <span class="page-divider-number">{{ page.page || '—' }}</span>
         </div>
-        <span class="reading-ayah arabic-verse">
-          <span class="verse-text">
-            <ng-container *ngIf="getReadingTokens(ayah).length; else readingFallback">
-              <ng-container *ngFor="let word of getReadingTokens(ayah); let isLast = last">
-                <span class="quran-word quran-word--interactive">{{ word }}</span>
-                <span *ngIf="!isLast"> </span>
-              </ng-container>
-            </ng-container>
-            <ng-template #readingFallback>{{ ayah.text }}</ng-template>
-          </span>
-          <span class="reading-ayah-mark">{{ getAyahMark(ayah) }}</span>
-        </span>
+        <div class="reading-text">
+          <ng-container *ngFor="let token of page.tokens; let isLast = last">
+            <span *ngIf="token.type === 'word'" class="quran-word quran-word--interactive">{{ token.text }}</span>
+            <span *ngIf="token.type === 'mark'" class="reading-ayah-mark">{{ token.text }}</span>
+            <span *ngIf="!isLast"> </span>
+          </ng-container>
+        </div>
       </ng-container>
     </div>
   </div>

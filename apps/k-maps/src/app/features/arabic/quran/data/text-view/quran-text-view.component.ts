@@ -8,6 +8,8 @@ import { QuranDataService } from '../../../../../shared/services/quran-data.serv
 import { QuranAyah, QuranSurah } from '../../../../../shared/models/arabic/quran-data.model';
 
 type QuranAyahWithPage = QuranAyah & { page?: number | null };
+type ReadingToken = { text: string; type: 'word' | 'mark' };
+type ReadingPage = { page: number | null; tokens: ReadingToken[] };
 
 @Component({
   selector: 'app-quran-text-view',
@@ -33,6 +35,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   lemmaTokensLoaded = false;
   loadingLemmaTokens = false;
   lemmaTokensError = '';
+  readingPages: ReadingPage[] = [];
 
   loadingSurah = false;
   loadingAyahs = false;
@@ -90,12 +93,33 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     try {
       const response = await this.dataService.listAyahs({ surah, pageSize: 400 });
       this.ayahs = response.results ?? [];
+      this.hydrateLemmaTokensFromAyahs();
+      if (this.viewMode === 'reading' && this.lemmaTokensLoaded) {
+        this.buildReadingPages();
+      }
     } catch (err: any) {
       console.error('ayah load error', err);
       this.error = err?.message ?? 'Unable to load ayahs.';
     } finally {
       this.loadingAyahs = false;
     }
+  }
+
+  hydrateLemmaTokensFromAyahs() {
+    this.lemmaTokensByAyah.clear();
+    let hasLemmaData = false;
+    for (const ayah of this.ayahs) {
+      const lemmas = Array.isArray(ayah.lemmas) ? ayah.lemmas : [];
+      if (!lemmas.length) continue;
+      hasLemmaData = true;
+      const tokens = lemmas
+        .map((lemma) => lemma.word_diacritic || lemma.word_simple || '')
+        .filter(Boolean);
+      if (tokens.length) {
+        this.lemmaTokensByAyah.set(ayah.ayah, tokens);
+      }
+    }
+    this.lemmaTokensLoaded = hasLemmaData;
   }
 
   get shouldShowBismillah() {
@@ -112,6 +136,8 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     this.viewMode = mode;
     if (mode === 'reading' && this.surahId && !this.lemmaTokensLoaded && !this.loadingLemmaTokens) {
       void this.loadLemmaTokens(this.surahId);
+    } else if (mode === 'reading') {
+      this.buildReadingPages();
     }
   }
 
@@ -144,6 +170,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     this.loadingLemmaTokens = true;
     this.lemmaTokensError = '';
     this.lemmaTokensByAyah.clear();
+    this.readingPages = [];
 
     let page = 1;
     let hasMore = true;
@@ -154,7 +181,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
         for (const row of rows) {
           const ayah = row.ayah;
           if (!ayah) continue;
-          const word = row.word_diacritic || row.word_simple || row.lemma_text || '';
+          const word = row.word_diacritic || row.word_simple || '';
           if (!word) continue;
           if (!this.lemmaTokensByAyah.has(ayah)) {
             this.lemmaTokensByAyah.set(ayah, []);
@@ -165,6 +192,7 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
         page += 1;
       }
       this.lemmaTokensLoaded = true;
+      this.buildReadingPages();
     } catch (err: any) {
       console.error('lemma token load error', err);
       this.lemmaTokensError = err?.message ?? 'Unable to load lemma tokens.';
@@ -175,5 +203,31 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
 
   getReadingTokens(ayah: QuranAyahWithPage): string[] {
     return this.lemmaTokensByAyah.get(ayah.ayah) ?? [];
+  }
+
+  buildReadingPages() {
+    const pages: ReadingPage[] = [];
+    const pageMap = new Map<number, ReadingPage>();
+
+    for (const ayah of this.ayahs) {
+      const pageKey = ayah.page ?? 0;
+      let page = pageMap.get(pageKey);
+      if (!page) {
+        page = { page: ayah.page ?? null, tokens: [] };
+        pageMap.set(pageKey, page);
+        pages.push(page);
+      }
+
+      const words = this.getReadingTokens(ayah);
+      for (const word of words) {
+        page.tokens.push({ text: word, type: 'word' });
+      }
+      const marker = this.getAyahMark(ayah);
+      if (marker) {
+        page.tokens.push({ text: marker, type: 'mark' });
+      }
+    }
+
+    this.readingPages = pages;
   }
 }
