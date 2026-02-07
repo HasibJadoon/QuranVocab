@@ -163,6 +163,7 @@ CREATE TABLE ar_quran_translations (
   surah              INTEGER NOT NULL,
   ayah               INTEGER NOT NULL,
   translation_haleem TEXT,
+  footnotes_haleem   TEXT,
   translation_asad   TEXT,
   translation_sahih  TEXT,
   translation_usmani TEXT,

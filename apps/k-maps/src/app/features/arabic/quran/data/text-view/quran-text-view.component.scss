@@ -126,49 +126,6 @@
   gap: 0.65rem;
 }
 
-.translation-intro {
-  padding: 0.75rem 0.85rem;
-  border: 1px dashed rgba(148, 163, 184, 0.25);
-  border-radius: 0.85rem;
-  background: rgba(15, 23, 42, 0.4);
-}
-
-.translation-intro-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(148, 163, 184, 0.9);
-  margin-bottom: 0.45rem;
-}
-
-.translation-intro-text {
-  font-size: 0.98rem;
-  line-height: 1.7;
-  text-align: justify;
-  text-align-last: left;
-  color: rgba(226, 232, 240, 0.88);
-}
-
-.translation-intro-divider {
-  margin-top: 0.65rem;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: #facc15;
-  font-weight: 600;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.translation-intro-divider::before,
-.translation-intro-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(250, 204, 21, 0.3);
-}
-
 .translation-passage-header {
   display: flex;
   align-items: baseline;
@@ -272,19 +229,6 @@
   text-transform: lowercase;
 }
 
-.footnote-inline {
-  font-size: 0.7rem;
-  font-weight: 600;
-  vertical-align: super;
-  color: #7dd3fc;
-  cursor: help;
-  transition: color 0.2s ease;
-  margin-left: 0.1rem;
-}
-
-.footnote-inline:hover {
-  color: #f9a8d4;
-}
 
 
 .passage-section {

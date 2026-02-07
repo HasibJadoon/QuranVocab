@@ -5,6 +5,13 @@ const { execSync } = require('child_process');
 const pdfPath = path.join(__dirname, '..', 'notes', 'resources', 'TheQuran-ANewTranslation.pdf');
 const outSourcesSql = path.join(__dirname, '..', 'database', 'migrations', 'seed-ar_quran_translation_sources.sql');
 const outPassagesSql = path.join(__dirname, '..', 'database', 'migrations', 'seed-ar_quran_translation_passages.sql');
+const outFootnotesSql = path.join(
+  __dirname,
+  '..',
+  'database',
+  'migrations',
+  'seed-ar_quran_translation_footnotes_haleem.sql'
+);
 const dbPath = path.join(__dirname, '..', 'database', 'd1.db');
 
 const sourceKey = 'haleem-2004';
@@ -116,11 +123,32 @@ function isFootnoteLine(line) {
   return false;
 }
 
-function extractFootnotes(lines, viewportHeight) {
+function getFootnoteStartY(lines, viewportHeight) {
+  const textLines = lines.filter((line) => {
+    const trimmed = line.text.trim();
+    if (!/^[a-z]\s+/i.test(trimmed)) return false;
+    if (/^[a-z](\s+[a-z])+$/.test(trimmed)) return false;
+    return trimmed.split(/\s+/).length >= 3;
+  });
+  if (textLines.length) {
+    return Math.max(...textLines.map((line) => line.y));
+  }
+
+  const threshold = viewportHeight * footnoteRegionRatio;
+  const markerLines = lines.filter((line) => line.y <= threshold && isFootnoteLine(line.text));
+  if (markerLines.length) {
+    return Math.max(...markerLines.map((line) => line.y));
+  }
+
+  return null;
+}
+
+function extractFootnotes(lines, viewportHeight, footnoteStartY) {
   const footnotes = [];
   let current = null;
   const threshold = viewportHeight * footnoteRegionRatio;
-  const footnoteLines = lines.filter((line) => line.y <= threshold);
+  const limitY = footnoteStartY != null ? footnoteStartY : threshold;
+  const footnoteLines = lines.filter((line) => line.y <= limitY);
 
   for (const line of footnoteLines) {
     const text = line.text.trim();
@@ -203,6 +231,81 @@ function chooseRange(numbers, headerAyah) {
   return sequences[0];
 }
 
+function addFootnoteToVerse(map, ayah, marker, text) {
+  if (!ayah || !marker || !text) return;
+  const key = `${ayah}`;
+  if (!map.has(key)) map.set(key, []);
+  const list = map.get(key);
+  if (list.some((entry) => entry.marker === marker)) return;
+  list.push({ marker, text });
+}
+
+function assignFootnotesToVerses(lines, footnotes, range) {
+  const result = new Map();
+  if (!lines.length || !footnotes.length || !range) return result;
+
+  const markerText = new Map(
+    footnotes.map((note) => [String(note.marker).toLowerCase(), String(note.text).trim()])
+  );
+  const markerSet = new Set(markerText.keys());
+  const pending = [];
+  let currentAyah = null;
+
+  for (const line of lines) {
+    const raw = String(line || '');
+    const text = raw.replace(/\s+/g, ' ').trim();
+    if (!text) continue;
+
+    const markerOnly = /^[a-z](\s+[a-z])*$/i.test(text);
+    if (markerOnly) {
+      text
+        .split(/\s+/)
+        .map((token) => token.toLowerCase())
+        .filter((token) => markerSet.has(token))
+        .forEach((token) => pending.push(token));
+      continue;
+    }
+
+    const numbers = [...text.matchAll(/\b\d{1,3}\b/g)].map((match) => Number(match[0]));
+    for (const num of numbers) {
+      if (!Number.isFinite(num)) continue;
+      if (num < range.from || num > range.to) continue;
+      currentAyah = num;
+      if (pending.length) {
+        for (const marker of pending.splice(0)) {
+          addFootnoteToVerse(result, currentAyah, marker, markerText.get(marker));
+        }
+      }
+    }
+
+    const markers = [...text.matchAll(/\b[a-z]\b/gi)].map((match) => ({
+      marker: match[0].toLowerCase(),
+      index: match.index ?? 0,
+    }));
+    for (const { marker, index } of markers) {
+      if (!markerSet.has(marker)) continue;
+      if (marker === 'a') {
+        const before = text.slice(Math.max(0, index - 6), index);
+        const after = text.slice(index + 1, index + 6);
+        if (!/\d/.test(before) && !/\d/.test(after)) continue;
+      }
+      if (currentAyah != null) {
+        addFootnoteToVerse(result, currentAyah, marker, markerText.get(marker));
+      } else {
+        pending.push(marker);
+      }
+    }
+  }
+
+  if (pending.length && currentAyah != null) {
+    for (const marker of pending) {
+      addFootnoteToVerse(result, currentAyah, marker, markerText.get(marker));
+    }
+  }
+
+  return result;
+}
+
 (async () => {
   const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const data = new Uint8Array(fs.readFileSync(pdfPath));
@@ -226,6 +329,7 @@ function chooseRange(numbers, headerAyah) {
   }
 
   const passages = [];
+  const footnotesByVerse = new Map();
   const passageIndexBySurah = new Map();
   let currentSurah = null;
 
@@ -234,7 +338,8 @@ function chooseRange(numbers, headerAyah) {
     const content = await page.getTextContent();
     const viewport = page.getViewport({ scale: 1.0 });
     const lines = groupLines(content.items);
-    const footnotes = extractFootnotes(lines, viewport.height);
+    const footnoteStartY = getFootnoteStartY(lines, viewport.height);
+    const footnotes = extractFootnotes(lines, viewport.height, footnoteStartY);
 
     let headerLine = null;
     let headerAyah = null;
@@ -251,21 +356,19 @@ function chooseRange(numbers, headerAyah) {
     }
 
     const bodyLines = [];
-    const threshold = viewport.height * footnoteRegionRatio;
-    const footnoteCandidates = lines.filter((line) => line.y <= threshold && isFootnoteLine(line.text));
-    const footnoteStartY = footnoteCandidates
-      .map((line) => line.y)
-      .reduce((acc, value) => (acc == null || value > acc ? value : acc), null);
 
     for (const line of lines) {
       if (footnoteStartY != null && line.y <= footnoteStartY) continue;
-      if (footnoteStartY == null && line.y <= threshold && isFootnoteLine(line.text)) continue;
+      if (footnoteStartY == null && line.y <= viewport.height * footnoteRegionRatio && isFootnoteLine(line.text)) {
+        continue;
+      }
 
       if (line.text === headerLine) continue;
       if (/^\d+\.\s+/.test(line.text)) continue;
       if (parseHeader(line.text)) continue;
-      if (/^[a-z](\s+[a-z])+$/.test(line.text)) continue;
-      if (isFootnoteLine(line.text)) continue;
+      const markerOnly = /^[a-z](\s+[a-z])+$/.test(line.text);
+      const footnoteTextLine = /^[a-z]\s+/.test(line.text) && !markerOnly;
+      if (footnoteTextLine) continue;
 
       bodyLines.push(line.text);
     }
@@ -331,6 +434,18 @@ function chooseRange(numbers, headerAyah) {
 
       const text = buildPassageText(surah, range.from, range.to);
 
+      const verseFootnotes = assignFootnotesToVerses(bodyLines, footnotes, range);
+      for (const [ayahKey, notes] of verseFootnotes.entries()) {
+        const mapKey = `${surah}:${ayahKey}`;
+        if (!footnotesByVerse.has(mapKey)) footnotesByVerse.set(mapKey, []);
+        const bucket = footnotesByVerse.get(mapKey);
+        for (const note of notes) {
+          if (!bucket.some((entry) => entry.marker === note.marker)) {
+            bucket.push(note);
+          }
+        }
+      }
+
       passages.push({
         source_key: sourceKey,
         surah,
@@ -391,11 +506,28 @@ function chooseRange(numbers, headerAyah) {
     ),
   ].join('\n');
 
+  const footnoteSql = [
+    `UPDATE ar_quran_translations SET footnotes_haleem = NULL WHERE translation_haleem IS NOT NULL;`,
+    ...[...footnotesByVerse.entries()]
+      .map(([key, notes]) => {
+        const [surah, ayah] = key.split(':').map(Number);
+        if (!notes || !notes.length) return null;
+        const json = JSON.stringify(notes);
+        return (
+          `UPDATE ar_quran_translations SET footnotes_haleem = '` +
+          `${String(json).replace(/'/g, "''")}' WHERE surah = ${surah} AND ayah = ${ayah};`
+        );
+      })
+      .filter(Boolean),
+  ].join('\n');
+
   fs.writeFileSync(outSourcesSql, sourceSql + '\n');
   fs.writeFileSync(outPassagesSql, passageSql + '\n');
+  fs.writeFileSync(outFootnotesSql, footnoteSql + '\n');
 
   console.log(`Translation start page: ${translationStart}`);
   console.log(`Passages: ${passages.length}`);
   console.log(`Wrote ${outSourcesSql}`);
   console.log(`Wrote ${outPassagesSql}`);
+  console.log(`Wrote ${outFootnotesSql}`);
 })();

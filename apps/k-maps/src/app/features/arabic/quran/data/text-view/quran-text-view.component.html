@@ -93,30 +93,16 @@
                     <span class="translation-page" *ngIf="passage.page_book">p. {{ passage.page_book }}</span>
                   </div>
                   <div class="translation-body">
-                    <ng-container *ngIf="getPassageHtmlParts(passage) as passageParts; else translationSegmentsTpl">
-                      <div class="translation-intro" *ngIf="passageParts.intro">
-                        <div class="translation-intro-label">Surah Introduction</div>
-                        <div class="translation-intro-text" [innerHTML]="passageParts.intro"></div>
-                        <div class="translation-intro-divider">
-                          <span>Surah Begins</span>
-                        </div>
-                      </div>
-                      <p class="translation-text translation-text--justified">
-                        <span [innerHTML]="passageParts.body"></span>
-                      </p>
-                    </ng-container>
-                    <ng-template #translationSegmentsTpl>
-                      <p class="translation-text translation-text--justified">
-                        <ng-container *ngIf="getPassageSegments(passage).length; else translationTextFallback">
-                          <ng-container *ngFor="let seg of getPassageSegments(passage); let isLast = last">
-                            <span class="translation-number">{{ seg.number }}</span>
-                            <span class="translation-segment-text">{{ seg.text }}</span>
-                            <span *ngIf="!isLast"> </span>
-                          </ng-container>
+                    <p class="translation-text translation-text--justified">
+                      <ng-container *ngIf="getPassageSegments(passage).length; else translationTextFallback">
+                        <ng-container *ngFor="let seg of getPassageSegments(passage); let isLast = last">
+                          <span class="translation-number">{{ seg.number }}</span>
+                          <span class="translation-segment-text">{{ seg.text }}</span>
+                          <span *ngIf="!isLast"> </span>
                         </ng-container>
-                        <ng-template #translationTextFallback>{{ formatPassageText(passage.text) }}</ng-template>
-                      </p>
-                    </ng-template>
+                      </ng-container>
+                      <ng-template #translationTextFallback>{{ formatPassageText(passage.text) }}</ng-template>
+                    </p>
                   </div>
                   <div class="translation-footnotes" *ngIf="getFootnotes(passage).length">
                     <button

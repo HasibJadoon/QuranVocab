@@ -84,6 +84,7 @@ type TranslationRow = {
   surah: number;
   ayah: number;
   translation_haleem: string | null;
+  footnotes_haleem: string | null;
   translation_asad: string | null;
   translation_sahih: string | null;
   translation_usmani: string | null;
@@ -281,6 +282,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         surah,
         ayah,
         translation_haleem,
+        footnotes_haleem,
         translation_asad,
         translation_sahih,
         translation_usmani,
@@ -381,6 +383,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       const translations = t
         ? {
             haleem: t.translation_haleem ?? null,
+            footnotes_haleem: t.footnotes_haleem ? safeJson(t.footnotes_haleem) ?? t.footnotes_haleem : null,
             asad: t.translation_asad ?? null,
             sahih: t.translation_sahih ?? null,
             usmani: t.translation_usmani ?? null,

@@ -96,6 +96,7 @@ export interface QuranLemmaLocation {
 
 export interface QuranAyahTranslations {
   haleem?: string | null;
+  footnotes_haleem?: unknown;
   asad?: string | null;
   sahih?: string | null;
   usmani?: string | null;

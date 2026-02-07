@@ -42,7 +42,6 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   translationSource: QuranTranslationSource | null = null;
   translationPassages: QuranTranslationPassage[] = [];
   translationSegmentsByPassage = new Map<string, { number: number; text: string }[]>();
-  passageHtmlPartsByKey = new Map<string, { intro: SafeHtml | null; body: SafeHtml | null }>();
   expandedFootnotes = new Set<string>();
   viewMode: 'verse' | 'reading' | 'translation' = 'verse';
   lemmaTokensByAyah = new Map<number, string[]>();
@@ -164,7 +163,11 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
   }
 
   get translationPassageList() {
-    return (this.translationPassages ?? []).filter((passage) => (passage.text ?? '').trim().length > 0);
+    return (this.translationPassages ?? []).filter((passage) => {
+      const hasSegments = this.getPassageSegments(passage).length > 0;
+      const hasText = (passage.text ?? '').trim().length > 0;
+      return hasSegments || hasText;
+    });
   }
 
   formatTranslationRange(passage: QuranTranslationPassage) {
@@ -183,7 +186,6 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
 
   buildTranslationSegments() {
     this.translationSegmentsByPassage.clear();
-    this.passageHtmlPartsByKey.clear();
     if (!this.translationPassages.length || !this.ayahs.length) return;
 
     const textByAyah = new Map<number, string>();
@@ -208,45 +210,6 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
 
   getPassageSegments(passage: QuranTranslationPassage) {
     return this.translationSegmentsByPassage.get(this.getPassageKey(passage)) ?? [];
-  }
-
-  getPassagePdfText(passage: QuranTranslationPassage) {
-    const meta = passage.meta as Record<string, unknown> | null | undefined;
-    const text = typeof meta?.['text_pdf'] === 'string' ? meta?.['text_pdf'] : '';
-    return text.trim();
-  }
-
-  hasPassagePdfText(passage: QuranTranslationPassage) {
-    return this.getPassagePdfText(passage).length > 0;
-  }
-
-  getPassageHtmlParts(passage: QuranTranslationPassage) {
-    const key = this.getPassageKey(passage);
-    const cached = this.passageHtmlPartsByKey.get(key);
-    if (cached) return cached;
-
-    const text = this.getPassagePdfText(passage);
-    if (!text) return null;
-
-    const footnoteMap = new Map(
-      this.getFootnotes(passage).map((note) => [note.marker.toLowerCase(), note.text])
-    );
-
-    const splitIndex = this.findIntroSplitIndex(text, passage.ayah_from);
-    const introText = splitIndex > 0 ? text.slice(0, splitIndex).trim() : '';
-    const bodyText = splitIndex > 0 ? text.slice(splitIndex).trim() : text.trim();
-
-    const usedFootnotes = new Set<string>();
-    const introHtml = introText
-      ? this.buildPassageHtml(introText, footnoteMap, usedFootnotes, false)
-      : null;
-    const bodyHtml = bodyText
-      ? this.buildPassageHtml(bodyText, footnoteMap, usedFootnotes, true)
-      : null;
-
-    const result = { intro: introHtml, body: bodyHtml };
-    this.passageHtmlPartsByKey.set(key, result);
-    return result;
   }
 
   getFootnotes(passage: QuranTranslationPassage) {
@@ -290,59 +253,6 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
       .replace(/>/g, '&gt;')
       .replace(/\"/g, '&quot;')
       .replace(/'/g, '&#39;');
-  }
-
-  buildPassageHtml(
-    text: string,
-    footnoteMap: Map<string, string>,
-    usedFootnotes: Set<string>,
-    markVerseNumbers: boolean
-  ) {
-    let html = this.escapeHtml(text);
-    html = html.replace(/\s+/g, ' ').trim();
-
-    if (markVerseNumbers) {
-      html = html.replace(/(^|\s)(\d{1,3})(?=\s)/g, (_m, prefix, number) => {
-        return `${prefix}<sup class=\"translation-number\">${number}</sup>`;
-      });
-    }
-
-    html = html.replace(/(\S)\s([a-z])(?=[\s,;:!?.])/g, (_m, prev, marker) => {
-      const key = marker.toLowerCase();
-      const note = footnoteMap.get(key);
-      if (!note) return `${prev} ${marker}`;
-      if (usedFootnotes.has(key)) return `${prev} ${marker}`;
-      usedFootnotes.add(key);
-      const title = this.escapeHtml(note);
-      return `${prev}<sup class=\"footnote-inline\" title=\"${title}\" aria-label=\"${title}\">${marker}</sup>`;
-    });
-
-    html = html.replace(/(^|\s)([a-z])(?=[\s,;:!?.])/g, (_m, prefix, marker) => {
-      const key = marker.toLowerCase();
-      const note = footnoteMap.get(key);
-      if (!note) return `${prefix}${marker}`;
-      if (usedFootnotes.has(key)) return `${prefix}${marker}`;
-      usedFootnotes.add(key);
-      const title = this.escapeHtml(note);
-      return `${prefix}<sup class=\"footnote-inline\" title=\"${title}\" aria-label=\"${title}\">${marker}</sup>`;
-    });
-
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-
-  findIntroSplitIndex(text: string, startAyah: number) {
-    if (!text) return 0;
-    const ayahRegex = new RegExp(`\\\\b${startAyah}\\\\b\\\\s+[A-Za-z\\[]`, 'm');
-    const match = ayahRegex.exec(text);
-    if (!match) return 0;
-    let splitIndex = match.index;
-
-    const basmalaIndex = text.lastIndexOf('In the name of God', splitIndex);
-    if (basmalaIndex !== -1) {
-      splitIndex = basmalaIndex;
-    }
-
-    return splitIndex;
   }
 
   get showVerse() {
@@ -502,11 +412,6 @@ export class QuranTextViewComponent implements OnInit, OnDestroy {
     this.readingText = tokens.join(' ').replace(/\s+/g, ' ').trim();
     const html = htmlParts.join(' ').replace(/\s+/g, ' ').trim();
     this.readingHtml = html ? this.sanitizer.bypassSecurityTrustHtml(html) : null;
-    const passageText = this.translationPassages
-      .map((passage) => passage.text ?? '')
-      .map((text) => text.trim())
-      .filter(Boolean)
-      .join('\n\n');
-    this.readingTranslation = passageText || translationParts.join(' ').replace(/\s+/g, ' ').trim();
+    this.readingTranslation = translationParts.join(' ').replace(/\s+/g, ' ').trim();
   }
 }
