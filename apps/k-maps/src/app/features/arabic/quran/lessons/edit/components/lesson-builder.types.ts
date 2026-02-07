@@ -4,6 +4,7 @@ export type BuilderTabId =
   | 'container'
   | 'units'
   | 'tokens'
+  | 'morphology'
   | 'spans'
   | 'sentences'
   | 'grammar'

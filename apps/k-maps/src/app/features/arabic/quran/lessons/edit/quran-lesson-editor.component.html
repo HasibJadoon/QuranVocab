@@ -181,6 +181,23 @@
         </div>
       </ng-container>
 
+      <ng-container *ngSwitchCase="'morphology'">
+        <div class="split-layout split-layout--two">
+          <app-unit-navigator
+            [verses]="selectedVerseNavItems"
+            [selectedUnitId]="selectedVerse?.unit_id || ''"
+            (select)="selectVerse($event)"
+          />
+
+          <app-center-workspace-outlet>
+            <app-occ-morphology-grid
+              [tokens]="selectedMorphTokens"
+              (changed)="onLessonEdited()"
+            />
+          </app-center-workspace-outlet>
+        </div>
+      </ng-container>
+
       <ng-container *ngSwitchCase="'spans'">
         <div class="split-layout">
           <app-unit-navigator

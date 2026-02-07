@@ -47,6 +47,7 @@ import { UnitNavigatorComponent } from './components/unit-navigator.component';
 import { CenterWorkspaceOutletComponent } from './components/center-workspace-outlet.component';
 import { ContextRightPaneComponent } from './components/context-right-pane.component';
 import { OccTokenGridComponent } from './components/occ-token-grid.component';
+import { OccMorphologyGridComponent } from './components/occ-morphology-grid.component';
 import { LemmaLocationPanelComponent } from './components/lemma-location-panel.component';
 import { GrammarLinkPanelComponent } from './components/grammar-link-panel.component';
 import { SentenceSegmentationCanvasComponent } from './components/sentence-segmentation-canvas.component';
@@ -96,6 +97,7 @@ const BUILDER_TABS: BuilderTab[] = [
   { id: 'container', label: 'Create Container + Passage Unit', intent: 'Build lesson container foundation' },
   { id: 'units', label: 'Attach Verse Units', intent: 'Ensure every verse unit is linked' },
   { id: 'tokens', label: 'Tokens + Lemmas', intent: 'Fix token alignment and lemma locations' },
+  { id: 'morphology', label: 'Morphology', intent: 'Capture noun/verb morphology per verse' },
   { id: 'spans', label: 'Spans / Expressions', intent: 'Build span layer from tokens' },
   { id: 'sentences', label: 'Sentences Builder', intent: 'Create occurrence sentences from token ranges' },
   { id: 'grammar', label: 'Grammar Concepts', intent: 'Link grammar to token/span/sentence targets' },
@@ -119,6 +121,7 @@ const DRAFT_COMMIT_STEP_BY_TAB: Partial<Record<BuilderTabId, DraftCommitStep>> =
 const LEGACY_COMMIT_STEP_BY_TAB: Partial<Record<BuilderTabId, QuranLessonCommitStep>> = {
   container: 'container',
   tokens: 'tokens',
+  morphology: 'tokens',
   spans: 'spans',
   grammar: 'grammar',
 };
@@ -171,6 +174,7 @@ type LocalDraftSnapshot = {
     CenterWorkspaceOutletComponent,
     ContextRightPaneComponent,
     OccTokenGridComponent,
+    OccMorphologyGridComponent,
     LemmaLocationPanelComponent,
     GrammarLinkPanelComponent,
     SentenceSegmentationCanvasComponent,
@@ -313,6 +317,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       locks.container = 'Select verses first in the Select Verses tab.';
       locks.units = 'Select verses first in the Select Verses tab.';
       locks.tokens = 'Select verses and attach units first.';
+      locks.morphology = 'Select verses and attach units first.';
       locks.spans = 'Select verses and attach units first.';
       locks.sentences = 'Select verses and attach units first.';
       locks.grammar = 'Build token/span/sentence layers first.';
@@ -325,6 +330,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
 
     if (hasVerses && !hasAyahUnits) {
       locks.tokens = 'Attach verse units first in the Units tab.';
+      locks.morphology = 'Attach verse units first in the Units tab.';
       locks.spans = 'Attach verse units first in the Units tab.';
       locks.sentences = 'Attach verse units first in the Units tab.';
       locks.grammar = 'Attach verse units first, then create data layers.';
@@ -332,6 +338,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     }
 
     if (!hasTokens) {
+      locks.morphology = locks.morphology ?? 'Create tokens first.';
       locks.spans = locks.spans ?? 'Create tokens first.';
       locks.sentences = locks.sentences ?? 'Create tokens first.';
     }
@@ -610,6 +617,10 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     return this.safeTokens.filter((token) => token.unit_id === unitId);
   }
 
+  get selectedMorphTokens() {
+    return this.selectedVerseTokens.filter((token) => token.pos === 'noun' || token.pos === 'verb');
+  }
+
   get canLookupTokens() {
     return !!this.selectedVerse && !this.lookupTokensLoading;
   }
@@ -724,6 +735,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       container: health.passageOk,
       units: health.unitsOk,
       tokens: health.tokensOk,
+      morphology: health.morphologyOk,
       spans: health.spansOk,
       sentences: health.sentencesOk,
       grammar: health.grammarOk,
@@ -796,6 +808,12 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
         detail: health.tokensOk ? `${this.safeTokens.length} tokens present.` : 'No tokens yet.',
       },
       {
+        key: 'morphology',
+        label: 'Morphology layer',
+        ok: health.morphologyOk,
+        detail: health.morphologyOk ? 'Morphology captured.' : 'Add noun/verb morphology.',
+      },
+      {
         key: 'spans',
         label: 'Span layer',
         ok: health.spansOk,
@@ -842,6 +860,15 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     );
   }
 
+  private hasMorphFeatures(features: Record<string, unknown> | null | undefined) {
+    if (!features) return false;
+    const keys = ['status', 'number', 'gender', 'type', 'tense', 'mood', 'voice', 'person'];
+    return keys.some((key) => {
+      const value = (features as Record<string, unknown>)[key];
+      return typeof value === 'string' && value.trim().length > 0;
+    });
+  }
+
   private scrollEditorIntoView() {
     const doc = (globalThis as any)?.document as Document | undefined;
     const panel = doc?.querySelector('.builder-panel');
@@ -853,6 +880,9 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     const unitCount = this.verseUnitRows.filter((row) => row.exists).length;
     const contentOk =
       this.safeMcqQuestions.length > 0 || this.reflectiveQuestions.length > 0 || this.analyticalQuestions.length > 0;
+    const morphTargets = this.safeTokens.filter((token) => token.pos === 'noun' || token.pos === 'verb');
+    const morphologyOk =
+      morphTargets.length === 0 ? true : morphTargets.some((token) => this.hasMorphFeatures(token.features));
 
     return {
       titleOk: !!this.lesson?.title?.trim(),
@@ -861,6 +891,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       unitsOk: this.verseUnitRows.length > 0 && unitCount === this.verseUnitRows.length,
       unitCount,
       tokensOk: this.safeTokens.length > 0,
+      morphologyOk,
       spansOk: this.safeSpans.length > 0,
       sentencesOk: this.safeSentences.length > 0,
       grammarOk:
