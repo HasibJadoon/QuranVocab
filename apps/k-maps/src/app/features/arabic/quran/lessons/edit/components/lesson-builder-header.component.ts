@@ -21,6 +21,17 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         <button type="button" class="btn btn-ghost" [disabled]="isNew" (click)="view.emit()">
           View
         </button>
+        <button
+          *ngIf="showNormalize"
+          type="button"
+          class="btn btn-ghost btn-icon"
+          [disabled]="isSaving || isNormalizing"
+          (click)="normalize.emit()"
+          title="Normalize IDs and sync"
+        >
+          <span class="btn-icon__glyph">↻</span>
+          Normalize
+        </button>
         <button type="button" class="btn btn-primary" [disabled]="isSaving" (click)="save.emit()">
           {{ isSaving ? 'Saving...' : 'Save' }}
         </button>
@@ -98,6 +109,17 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         font-size: 0.79rem;
       }
 
+      .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .btn-icon__glyph {
+        font-size: 0.9rem;
+        line-height: 1;
+      }
+
       .btn.btn-primary {
         background: linear-gradient(150deg, #5c71f8, #4a5dea);
         border-color: transparent;
@@ -124,11 +146,14 @@ export class LessonBuilderHeaderComponent {
   @Input() fallbackTitle = 'Untitled lesson';
   @Input() intent = '';
   @Input() isSaving = false;
+  @Input() isNormalizing = false;
   @Input() isNew = false;
   @Input() currentStep = 1;
   @Input() totalSteps = 1;
+  @Input() showNormalize = false;
 
   @Output() back = new EventEmitter<void>();
   @Output() view = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
+  @Output() normalize = new EventEmitter<void>();
 }

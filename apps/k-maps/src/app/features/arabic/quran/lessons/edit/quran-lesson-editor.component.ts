@@ -10,6 +10,7 @@ import {
   QuranLessonService,
 } from '../../../../../shared/services/quran-lesson.service';
 import { PageHeaderService } from '../../../../../shared/services/page-header.service';
+import { QuranDataService } from '../../../../../shared/services/quran-data.service';
 import {
   QuranLesson,
   QuranLessonAyahUnit,
@@ -193,18 +194,15 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly service = inject(QuranLessonService);
   private readonly pageHeaderService = inject(PageHeaderService);
+  private readonly quranData = inject(QuranDataService);
+  private readonly arabicDiacriticsRe = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 
   readonly tabs: BuilderTab[] = BUILDER_TABS;
   readonly surahOptions = Array.from({ length: 114 }, (_, index) => index + 1);
   readonly grammarConcepts = [
-    'mubtada',
-    'khabar',
+    'ism',
     'fi_l',
-    'fa_il',
-    'maf_ul',
-    'hal',
-    'mudaf',
-    'mudaf_ilayh',
+    'harf',
   ];
 
   lesson: QuranLesson | null = null;
@@ -262,6 +260,9 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
   metaNotesJson = '[]';
   metaJsonError: string | null = null;
   jsonError = '';
+  lookupTokensLoading = false;
+  lookupSplitAffixes = true;
+  isNormalizing = false;
 
   async ngOnInit() {
     this.pageHeaderService.clearTabs();
@@ -397,6 +398,28 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       this.setSaveStatus(`Save failed: ${message}`, 'error');
     } finally {
       this.isSaving = false;
+    }
+  }
+
+  async normalizeLessonIds() {
+    if (!this.lesson || this.isNormalizing) return;
+    this.isNormalizing = true;
+    this.setSaveStatus('Normalizing lesson IDs...', 'info');
+    try {
+      this.applyIdNormalization();
+      this.normalizeBeforeSave();
+      await this.ensureDraftInitialized();
+      await this.persistDraftToServer();
+      const lessonId = this.getLessonId();
+      if (lessonId) {
+        await firstValueFrom(this.service.updateLesson(lessonId, this.lesson));
+      }
+      this.setSaveStatus('Normalized and synced to server.', 'success');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Normalization failed';
+      this.setSaveStatus(`Normalization failed: ${message}`, 'error');
+    } finally {
+      this.isNormalizing = false;
     }
   }
 
@@ -584,6 +607,10 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     const unitId = this.selectedVerse?.unit_id;
     if (!unitId) return [];
     return this.safeTokens.filter((token) => token.unit_id === unitId);
+  }
+
+  get canLookupTokens() {
+    return !!this.selectedVerse && !this.lookupTokensLoading;
   }
 
   get selectedVerseSentences() {
@@ -1090,6 +1117,403 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     this.onLessonEdited();
   }
 
+  async lookupTokensAndLemmas() {
+    const verse = this.selectedVerse;
+    if (!verse) {
+      this.setSaveStatus('Select a verse first.', 'error');
+      return;
+    }
+
+    const unitId = verse.unit_id || this.composeAyahUnitId(verse.surah, verse.ayah);
+    const existingTokens = this.safeTokens.filter((token) => token.unit_id === unitId);
+    if (existingTokens.length) {
+      this.setSaveStatus('Replacing existing tokens for this verse…', 'info');
+      const tokensToRemove = new Set(existingTokens.map((token) => token.token_occ_id));
+      for (let index = this.safeTokens.length - 1; index >= 0; index -= 1) {
+        if (tokensToRemove.has(this.safeTokens[index]?.token_occ_id)) {
+          this.safeTokens.splice(index, 1);
+        }
+      }
+      for (const tokenId of tokensToRemove) {
+        this.removeGrammarTarget('token', tokenId);
+      }
+    }
+
+    this.lookupTokensLoading = true;
+    this.setSaveStatus('Looking up tokens + lemmas…', 'info');
+
+    try {
+      if (!this.containerForm.containerId) {
+        this.containerForm.containerId = this.composeContainerId(verse.surah);
+      }
+      if (!verse.unit_id) {
+        verse.unit_id = unitId;
+      }
+      if (!this.containerForm.unitId) {
+        this.containerForm.unitId = unitId;
+      }
+
+      const response = await this.quranData.listLemmaLocations({
+        surah: verse.surah,
+        ayah: verse.ayah,
+        pageSize: 500,
+      });
+
+      const rows = (response.results ?? []).filter((row) => Number.isFinite(row.token_index));
+      if (!rows.length) {
+        this.setSaveStatus('No lemma locations found for this verse.', 'error');
+        return;
+      }
+
+      const sorted = [...rows].sort((a, b) => (a.token_index ?? 0) - (b.token_index ?? 0));
+      const containerId = this.containerForm.containerId || this.composeContainerId(verse.surah);
+
+      const { lemmas, tokens } = this.buildLookupTokensAndLemmas(sorted, verse, unitId, containerId);
+      verse.lemmas = lemmas;
+
+      this.safeTokens.push(...tokens);
+      this.syncContextSelections();
+      this.onLessonEdited();
+      this.setSaveStatus(`Loaded ${tokens.length} tokens for ${verse.surah}:${verse.ayah}.`, 'success');
+    } catch (error: any) {
+      console.error('token lookup error', error);
+      this.setSaveStatus(error?.message ?? 'Failed to lookup tokens.', 'error');
+    } finally {
+      this.lookupTokensLoading = false;
+    }
+  }
+
+  private buildLookupTokensAndLemmas(
+    rows: Array<{
+      lemma_id?: number | null;
+      lemma_text?: string | null;
+      lemma_text_clean?: string | null;
+      words_count?: number | null;
+      uniq_words_count?: number | null;
+      word_location?: string | null;
+      token_index?: number | null;
+      ar_token_occ_id?: string | null;
+      ar_u_token?: string | null;
+      word_simple?: string | null;
+      word_diacritic?: string | null;
+    }>,
+    verse: QuranLessonAyahUnit,
+    unitId: string,
+    containerId: string
+  ) {
+    const lemmas: QuranLessonLemmaLocation[] = [];
+    const tokens: QuranLessonTokenV2[] = [];
+    let tokenIndex = 1;
+
+    for (const row of rows) {
+      const segments = this.lookupSplitAffixes
+        ? this.splitWordSegments(row.word_simple ?? '', row.word_diacritic ?? row.word_simple ?? '')
+        : [
+            {
+              kind: 'stem' as const,
+              simple: row.word_simple ?? this.stripArabicDiacritics(row.word_diacritic ?? ''),
+              surface: row.word_diacritic ?? row.word_simple ?? '',
+            },
+          ];
+
+      for (const segment of segments) {
+        const isStem = segment.kind === 'stem';
+        const { pos, features } = this.getSegmentPosAndFeatures(segment);
+        const lemmaId = isStem && Number.isFinite(row.lemma_id) && (row.lemma_id ?? 0) > 0 ? row.lemma_id : 0;
+        const lemmaText = isStem
+          ? row.lemma_text ?? segment.simple
+          : segment.simple;
+        const lemmaClean = isStem
+          ? row.lemma_text_clean ?? segment.simple
+          : segment.simple;
+
+        lemmas.push({
+          lemma_id: lemmaId ?? 0,
+          lemma_text: lemmaText ?? '',
+          lemma_text_clean: lemmaClean ?? '',
+          words_count: isStem ? row.words_count ?? null : null,
+          uniq_words_count: isStem ? row.uniq_words_count ?? null : null,
+          word_location: `${verse.surah}:${verse.ayah}:${tokenIndex}`,
+          token_index: tokenIndex,
+          ar_token_occ_id: isStem ? row.ar_token_occ_id ?? null : null,
+          ar_u_token: isStem ? row.ar_u_token ?? null : null,
+          word_simple: segment.simple || null,
+          word_diacritic: segment.surface || null,
+        });
+
+        const token: QuranLessonTokenV2 = {
+          token_occ_id: isStem && row.ar_token_occ_id ? row.ar_token_occ_id : crypto.randomUUID(),
+          u_token_id: isStem ? row.ar_u_token ?? '' : '',
+          u_root_id: null,
+          container_id: containerId,
+          unit_id: unitId,
+          pos_index: tokenIndex,
+          surface_ar: segment.surface ?? '',
+          norm_ar: segment.simple ?? null,
+          lemma_ar: lemmaText ?? segment.simple ?? null,
+          pos,
+          features,
+        };
+
+        const defaults = this.deriveTokenDefaults(token);
+        if (!token.pos && defaults.pos) {
+          token.pos = defaults.pos;
+        }
+        if (!token.features && defaults.features) {
+          token.features = defaults.features;
+        }
+
+        tokens.push(token);
+
+        tokenIndex += 1;
+      }
+    }
+
+    return { lemmas, tokens };
+  }
+
+  private stripArabicDiacritics(text: string) {
+    return String(text ?? '').normalize('NFKC').replace(this.arabicDiacriticsRe, '').trim();
+  }
+
+  private isArabicDiacritic(char: string) {
+    return /[\u064B-\u065F\u0670\u06D6-\u06ED]/.test(char);
+  }
+
+  private deriveTokenDefaults(token: QuranLessonTokenV2) {
+    const surface = token.surface_ar ?? '';
+    const lemma = token.lemma_ar ?? '';
+    const norm = token.norm_ar ?? this.stripArabicDiacritics(surface);
+    const normalized = norm || this.stripArabicDiacritics(surface);
+
+    const tanweenMap: Record<string, string> = {
+      '\u064B': 'fathatan',
+      '\u064C': 'dammatan',
+      '\u064D': 'kasratan',
+    };
+    let tanween: string | null = null;
+    for (const [mark, label] of Object.entries(tanweenMap)) {
+      if (surface.includes(mark)) {
+        tanween = label;
+        break;
+      }
+    }
+
+    const particleMap: Record<string, string> = {
+      و: 'conjunction',
+      ف: 'result',
+      س: 'future',
+      ب: 'preposition',
+      ك: 'preposition',
+      ل: 'preposition',
+      إلى: 'preposition',
+      على: 'preposition',
+      من: 'preposition',
+      في: 'preposition',
+      عن: 'preposition',
+      حتى: 'preposition',
+      إن: 'inna',
+      إِن: 'inna',
+      أن: 'an',
+      لن: 'negation',
+      لم: 'negation',
+      لا: 'negation',
+      ما: 'negation',
+      يا: 'vocative',
+      قد: 'particle',
+    };
+
+    const pronouns = new Set(['ي', 'ك', 'ه', 'ها', 'هم', 'هن', 'نا', 'كما', 'كم', 'كن', 'هما']);
+    const features: Record<string, unknown> = {};
+    let pos: string | null = token.pos ?? null;
+
+    const particleType = particleMap[normalized] ?? particleMap[surface];
+    if (particleType || pronouns.has(normalized)) {
+      pos = pos ?? 'particle';
+      if (particleType) {
+        features['particle_type'] = particleType;
+      }
+      if (pronouns.has(normalized)) {
+        features['particle_type'] = 'pronoun';
+        features['pronoun'] = normalized;
+      }
+    }
+
+    if (!pos) {
+      if (normalized.startsWith('ال') || lemma.startsWith('ال')) {
+        pos = 'noun';
+        features['definite'] = true;
+      }
+      if (tanween) {
+        pos = 'noun';
+        features['tanween'] = tanween;
+      }
+    }
+
+    return { pos, features: Object.keys(features).length ? features : null };
+  }
+
+  private getPosFeatureTemplate(pos: string) {
+    switch (pos) {
+      case 'verb':
+        return { tense: null, mood: null, person: null, number: null, gender: null };
+      case 'noun':
+        return { case: null, number: null, gender: null, state: null };
+      case 'adj':
+        return { case: null, number: null, gender: null, degree: null };
+      case 'particle':
+        return { particle_type: null };
+      case 'phrase':
+        return { role: null };
+      default:
+        return {};
+    }
+  }
+
+  private splitArabicSegments(text: string) {
+    const raw = String(text ?? '');
+    if (!raw) return [];
+    const segments: string[] = [];
+    let current = '';
+    for (const char of raw) {
+      if (this.isArabicDiacritic(char)) {
+        current += char;
+        continue;
+      }
+      if (current) segments.push(current);
+      current = char;
+    }
+    if (current) segments.push(current);
+    return segments;
+  }
+
+  private splitWordSegments(wordSimple: string, wordDiacritic: string) {
+    const simple = wordSimple || this.stripArabicDiacritics(wordDiacritic);
+    const surface = wordDiacritic || wordSimple || '';
+    if (!simple || simple.length <= 1) {
+      return [{ kind: 'stem' as const, simple, surface }];
+    }
+
+    const prefixLetters = new Set(['و', 'ف', 'ب', 'ك', 'ل', 'س']);
+    const suffixes = ['كما', 'هما', 'كم', 'كن', 'هم', 'هن', 'ها', 'ه', 'ك', 'ي', 'نا'];
+
+    const letters = Array.from(simple);
+    let prefixCount = 0;
+    while (letters.length - prefixCount > 1 && prefixLetters.has(letters[prefixCount])) {
+      prefixCount += 1;
+    }
+
+    let suffixMatch = '';
+    for (const suffix of suffixes) {
+      if (simple.endsWith(suffix) && simple.length > suffix.length) {
+        suffixMatch = suffix;
+        break;
+      }
+    }
+    const tanweenAtEnd = /[ًٌٍ][اى]?$/u.test(surface);
+    if (suffixMatch === 'نا' && tanweenAtEnd) {
+      suffixMatch = '';
+    }
+    let suffixCount = suffixMatch ? Array.from(suffixMatch).length : 0;
+    const minStemLength = letters.length > 2 ? 2 : 1;
+    if (suffixCount && letters.length - prefixCount - suffixCount < minStemLength) {
+      suffixCount = Math.max(1, letters.length - prefixCount - minStemLength);
+    }
+
+    if (!prefixCount && !suffixCount) {
+      return [{ kind: 'stem' as const, simple, surface }];
+    }
+
+    const baseSegments = this.splitArabicSegments(surface);
+    const segments = baseSegments.length === letters.length ? baseSegments : letters;
+    if (prefixCount + suffixCount >= segments.length) {
+      if (prefixCount && suffixCount && prefixCount + suffixCount === segments.length) {
+        const results: Array<{ kind: 'prefix' | 'stem' | 'suffix'; simple: string; surface: string }> = [];
+        for (let i = 0; i < prefixCount; i += 1) {
+          results.push({
+            kind: 'prefix',
+            simple: letters[i],
+            surface: segments[i] ?? letters[i],
+          });
+        }
+        const suffixSurface = segments.slice(segments.length - suffixCount).join('') || suffixMatch;
+        results.push({
+          kind: 'suffix',
+          simple: suffixMatch || letters.slice(segments.length - suffixCount).join(''),
+          surface: suffixMatch && suffixCount < Array.from(suffixMatch).length ? suffixMatch : suffixSurface,
+        });
+        return results;
+      }
+      return [{ kind: 'stem' as const, simple, surface }];
+    }
+
+    const results: Array<{ kind: 'prefix' | 'stem' | 'suffix'; simple: string; surface: string }> = [];
+
+    for (let i = 0; i < prefixCount; i += 1) {
+      results.push({
+        kind: 'prefix',
+        simple: letters[i],
+        surface: segments[i] ?? letters[i],
+      });
+    }
+
+    const stemStart = prefixCount;
+    const stemEnd = segments.length - suffixCount;
+    const stemSimple = letters.slice(stemStart, stemEnd).join('');
+    const stemSurface = segments.slice(stemStart, stemEnd).join('');
+    if (stemSimple) {
+      results.push({
+        kind: 'stem',
+        simple: stemSimple,
+        surface: stemSurface || stemSimple,
+      });
+    }
+
+    if (suffixCount) {
+      const suffixSurface = segments.slice(segments.length - suffixCount).join('') || suffixMatch;
+      results.push({
+        kind: 'suffix',
+        simple: suffixMatch,
+        surface: suffixMatch && suffixCount < Array.from(suffixMatch).length ? suffixMatch : suffixSurface,
+      });
+    }
+
+    return results.length ? results : [{ kind: 'stem' as const, simple, surface }];
+  }
+
+  private getSegmentPosAndFeatures(segment: { kind: 'prefix' | 'stem' | 'suffix'; simple: string }) {
+    if (segment.kind === 'stem') {
+      return { pos: null, features: null };
+    }
+
+    const simple = segment.simple;
+    const features: Record<string, unknown> = {};
+
+    if (segment.kind === 'prefix') {
+      const particleType =
+        simple === 'و'
+          ? 'conjunction'
+          : simple === 'ف'
+            ? 'result'
+            : simple === 'س'
+              ? 'future'
+              : simple === 'ب' || simple === 'ك' || simple === 'ل'
+                ? 'preposition'
+                : null;
+      if (particleType) {
+        features['particle_type'] = particleType;
+      }
+      return { pos: 'particle', features: Object.keys(features).length ? features : null };
+    }
+
+    if (segment.kind === 'suffix') {
+      features['particle_type'] = 'pronoun';
+      return { pos: 'particle', features };
+    }
+
+    return { pos: null, features: null };
+  }
+
   addSentenceForSelectedVerse() {
     const unitId = this.selectedVerse?.unit_id ?? '';
     const order = this.selectedVerseSentences.length + 1;
@@ -1175,6 +1599,26 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     } catch {
       // Keep previous valid value.
     }
+  }
+
+  autoBuildTokenFeatures(token: QuranLessonTokenV2) {
+    if (!token) return;
+    const defaults = this.deriveTokenDefaults(token);
+    if (!token.pos && defaults.pos) {
+      token.pos = defaults.pos;
+    }
+    const existing = this.asRecord(token.features ?? null);
+    const existingKeys = existing ? Object.keys(existing) : [];
+    if (!existingKeys.length) {
+      if (defaults.features) {
+        token.features = defaults.features;
+      } else if (token.pos) {
+        token.features = this.getPosFeatureTemplate(token.pos);
+      }
+    } else if (defaults.features && existing) {
+      token.features = { ...defaults.features, ...existing };
+    }
+    this.onLessonEdited();
   }
 
   onGrammarTargetChange(targetType: GrammarTargetType, targetId: string) {
@@ -2256,6 +2700,116 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     return verse.lemmas;
   }
 
+  private applyIdNormalization() {
+    if (!this.lesson) return;
+
+    const { surah, ayahFrom, ayahTo } = this.resolveNormalizationBounds();
+    const containerId = this.composeContainerId(surah);
+    const passageUnitId = this.composePassageUnitId(surah, ayahFrom, ayahTo);
+
+    this.verseSelection = { surah, ayahFrom, ayahTo };
+    this.containerForm = {
+      ...this.containerForm,
+      surah,
+      ayahFrom,
+      ayahTo,
+      containerId,
+      unitId: passageUnitId,
+    };
+
+    const reference = this.safeReference;
+    reference.container_id = containerId;
+    reference.unit_id = passageUnitId;
+    reference.surah = surah;
+    reference.ayah_from = ayahFrom;
+    reference.ayah_to = ayahTo;
+    reference.ref_label = reference.ref_label || `Surah ${surah}:${ayahFrom}-${ayahTo}`;
+
+    const verseAyahs: number[] = [];
+    for (const [index, verse] of this.safeArabicVerses.entries()) {
+      const parsed = this.parseAyahRange(verse.unit_id);
+      const ayahCandidate =
+        Number.isFinite(verse.ayah) && verse.ayah > 0
+          ? verse.ayah
+          : parsed?.ayahFrom ?? ayahFrom + index;
+      const ayah = this.clampNumber(ayahCandidate, 1, 286, ayahFrom);
+      verse.surah = surah;
+      verse.ayah = ayah;
+      verse.unit_type = 'ayah';
+      verse.unit_id = this.composeAyahUnitId(surah, ayah);
+      verseAyahs.push(ayah);
+
+      const lemmas = this.getVerseLemmas(verse).map((lemma, lemmaIndex) => {
+        const parsedIndex = this.parseWordLocationIndex(lemma.word_location);
+        const tokenIndexRaw = lemma.token_index;
+        const tokenIndex =
+          Number.isFinite(tokenIndexRaw) && tokenIndexRaw > 0
+            ? tokenIndexRaw
+            : parsedIndex ?? lemmaIndex + 1;
+        const wordLocation =
+          lemma.word_location || (tokenIndex ? `${surah}:${ayah}:${tokenIndex}` : lemma.word_location);
+        return {
+          ...lemma,
+          token_index: tokenIndex,
+          word_location: wordLocation ?? lemma.word_location,
+        };
+      });
+      verse.lemmas = lemmas;
+    }
+
+    const ayahNumbers = verseAyahs.length
+      ? Array.from(new Set(verseAyahs)).sort((a, b) => a - b)
+      : this.buildAyahRange(ayahFrom, ayahTo);
+
+    this.normalizeUnitsForRange(surah, ayahFrom, ayahTo, ayahNumbers);
+
+    for (const sentence of this.safeSentences) {
+      const rawUnitId = sentence.unit_id || sentence.ref?.unit_id || '';
+      const parsed = this.parseAyahRange(rawUnitId);
+      if (!parsed) continue;
+      const normalizedSurah = this.clampNumber(parsed.surah, 1, 114, surah);
+      const from = this.clampNumber(parsed.ayahFrom, 1, 286, ayahFrom);
+      const to = this.clampNumber(parsed.ayahTo, from, 286, from);
+      const normalizedUnitId =
+        from === to
+          ? this.composeAyahUnitId(normalizedSurah, from)
+          : this.composePassageUnitId(normalizedSurah, from, to);
+      sentence.unit_id = normalizedUnitId;
+      sentence.ref = sentence.ref ?? {};
+      sentence.ref.unit_id = normalizedUnitId;
+      sentence.ref.surah = normalizedSurah;
+      sentence.ref.ayah_from = from;
+      sentence.ref.ayah_to = to;
+    }
+
+    for (const token of this.safeTokens) {
+      token.container_id = containerId;
+      const parsed = this.parseAyahRange(token.unit_id);
+      if (parsed) {
+        const normalizedSurah = this.clampNumber(parsed.surah, 1, 114, surah);
+        const from = this.clampNumber(parsed.ayahFrom, 1, 286, ayahFrom);
+        token.unit_id = this.composeAyahUnitId(normalizedSurah, from);
+      }
+    }
+
+    for (const span of this.safeSpans) {
+      span.container_id = containerId;
+      const parsed = this.parseAyahRange(span.unit_id);
+      if (parsed) {
+        const normalizedSurah = this.clampNumber(parsed.surah, 1, 114, surah);
+        const from = this.clampNumber(parsed.ayahFrom, 1, 286, ayahFrom);
+        span.unit_id = this.composeAyahUnitId(normalizedSurah, from);
+      }
+    }
+
+    this.normalizeLinkedUnitsInComprehension(surah);
+
+    if (!this.safeArabicVerses.some((verse) => verse.unit_id === this.selectedVerseUnitId)) {
+      this.selectedVerseUnitId = this.safeArabicVerses[0]?.unit_id ?? '';
+    }
+    this.syncContextSelections();
+  }
+
   private normalizeBeforeSave() {
     if (!this.lesson) return;
 
@@ -2314,6 +2868,154 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
 
     this.fixVerseUnitOrder();
     this.onLessonEdited();
+  }
+
+  private resolveNormalizationBounds() {
+    const reference = this.safeReference;
+    const fallbackSurah = this.clampNumber(
+      reference.surah ?? this.verseSelection.surah ?? this.safeArabicVerses[0]?.surah ?? 1,
+      1,
+      114,
+      1
+    );
+
+    const verseAyahs = this.safeArabicVerses
+      .filter((verse) => verse.surah === fallbackSurah && Number.isFinite(verse.ayah))
+      .map((verse) => verse.ayah);
+
+    const minAyah = verseAyahs.length
+      ? Math.min(...verseAyahs)
+      : this.clampNumber(reference.ayah_from ?? this.verseSelection.ayahFrom, 1, 286, this.verseSelection.ayahFrom);
+    const maxAyah = verseAyahs.length
+      ? Math.max(...verseAyahs)
+      : this.clampNumber(reference.ayah_to ?? this.verseSelection.ayahTo, minAyah, 286, this.verseSelection.ayahTo);
+
+    const ayahFrom = this.clampNumber(reference.ayah_from ?? minAyah, 1, 286, minAyah);
+    const ayahTo = this.clampNumber(reference.ayah_to ?? maxAyah, ayahFrom, 286, maxAyah);
+
+    return { surah: fallbackSurah, ayahFrom, ayahTo };
+  }
+
+  private normalizeUnitsForRange(surah: number, ayahFrom: number, ayahTo: number, ayahNumbers: number[]) {
+    const passageUnitId = this.composePassageUnitId(surah, ayahFrom, ayahTo);
+    const passageStartRef = `Q:${surah}:${ayahFrom}`;
+    const passageEndRef = `Q:${surah}:${ayahTo}`;
+    const passageText = this.safeArabicVerses.map((verse) => verse.arabic).filter(Boolean).join(' ').trim();
+
+    let passageUnit = this.safeUnits.find((unit) => unit.unit_type === 'passage');
+    if (!passageUnit) {
+      passageUnit = {
+        id: passageUnitId,
+        unit_type: 'passage',
+        order_index: 0,
+        ayah_from: ayahFrom,
+        ayah_to: ayahTo,
+        start_ref: passageStartRef,
+        end_ref: passageEndRef,
+        text_cache: passageText || null,
+        meta_json: null,
+      };
+      this.safeUnits.unshift(passageUnit);
+    } else {
+      passageUnit.id = passageUnitId;
+      passageUnit.unit_type = 'passage';
+      passageUnit.ayah_from = ayahFrom;
+      passageUnit.ayah_to = ayahTo;
+      passageUnit.start_ref = passageStartRef;
+      passageUnit.end_ref = passageEndRef;
+      passageUnit.text_cache = passageText || passageUnit.text_cache || null;
+    }
+
+    const ayahUnitsByAyah = new Map<number, QuranLessonUnit>();
+    for (const unit of this.safeUnits) {
+      if (unit.unit_type !== 'ayah') continue;
+      const ayah = this.resolveAyahFromUnit(unit, surah);
+      if (!ayah) continue;
+      unit.ayah_from = ayah;
+      unit.ayah_to = ayah;
+      unit.id = this.composeAyahUnitId(surah, ayah);
+      unit.start_ref = `Q:${surah}:${ayah}`;
+      unit.end_ref = `Q:${surah}:${ayah}`;
+      ayahUnitsByAyah.set(ayah, unit);
+    }
+
+    for (const ayah of ayahNumbers) {
+      if (ayahUnitsByAyah.has(ayah)) continue;
+      this.safeUnits.push({
+        id: this.composeAyahUnitId(surah, ayah),
+        unit_type: 'ayah',
+        order_index: ayah - ayahFrom + 1,
+        ayah_from: ayah,
+        ayah_to: ayah,
+        start_ref: `Q:${surah}:${ayah}`,
+        end_ref: `Q:${surah}:${ayah}`,
+        text_cache: this.safeArabicVerses.find((verse) => verse.ayah === ayah)?.arabic ?? null,
+        meta_json: null,
+      });
+    }
+  }
+
+  private resolveAyahFromUnit(unit: QuranLessonUnit, fallbackSurah: number) {
+    if (Number.isFinite(unit.ayah_from)) {
+      return this.clampNumber(unit.ayah_from, 1, 286, 1);
+    }
+    if (Number.isFinite(unit.ayah_to)) {
+      return this.clampNumber(unit.ayah_to, 1, 286, 1);
+    }
+    const parsed = this.parseAyahRange(unit.id || unit.start_ref || unit.end_ref || '');
+    if (!parsed) return null;
+    const ayah = this.clampNumber(parsed.ayahFrom, 1, 286, 1);
+    return ayah;
+  }
+
+  private normalizeLinkedUnitsInComprehension(surah: number) {
+    const comprehension = this.ensureComprehension();
+    const normalizeList = (input?: string[]) => {
+      if (!Array.isArray(input)) return input;
+      const normalized = input
+        .map((value) => this.normalizeUnitIdValue(value, surah))
+        .filter((value): value is string => !!value);
+      return Array.from(new Set(normalized));
+    };
+
+    for (const question of comprehension.reflective ?? []) {
+      question.linked_unit_ids = normalizeList(question.linked_unit_ids) ?? question.linked_unit_ids;
+    }
+    for (const question of comprehension.analytical ?? []) {
+      question.linked_unit_ids = normalizeList(question.linked_unit_ids) ?? question.linked_unit_ids;
+    }
+    for (const mcq of this.safeMcqQuestions) {
+      mcq.linked_unit_ids = normalizeList(mcq.linked_unit_ids) ?? mcq.linked_unit_ids;
+    }
+  }
+
+  private normalizeUnitIdValue(value: string | null | undefined, fallbackSurah: number) {
+    if (!value) return null;
+    const parsed = this.parseAyahRange(value);
+    if (!parsed) return String(value);
+    const surah = this.clampNumber(parsed.surah, 1, 114, fallbackSurah);
+    const from = this.clampNumber(parsed.ayahFrom, 1, 286, 1);
+    const to = this.clampNumber(parsed.ayahTo, from, 286, from);
+    return from === to ? this.composeAyahUnitId(surah, from) : this.composePassageUnitId(surah, from, to);
+  }
+
+  private parseAyahRange(value: string | null | undefined) {
+    if (!value) return null;
+    const match = String(value).match(/(\d{1,3})\s*[:._-]\s*(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?/);
+    if (!match) return null;
+    const surah = Number(match[1]);
+    const ayahFrom = Number(match[2]);
+    const ayahTo = match[3] ? Number(match[3]) : ayahFrom;
+    if (!Number.isFinite(surah) || !Number.isFinite(ayahFrom)) return null;
+    return { surah, ayahFrom, ayahTo };
+  }
+
+  private parseWordLocationIndex(value: string | null | undefined) {
+    if (!value) return null;
+    const match = String(value).match(/(\d{1,3})\s*[:._-]\s*(\d{1,3})\s*[:._-]\s*(\d{1,3})/);
+    if (!match) return null;
+    const tokenIndex = Number(match[3]);
+    return Number.isFinite(tokenIndex) ? tokenIndex : null;
   }
 
   private syncSelectionFromLesson() {

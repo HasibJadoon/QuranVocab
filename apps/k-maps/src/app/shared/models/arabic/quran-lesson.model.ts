@@ -129,6 +129,8 @@ export interface QuranLessonVocabLayer {
 export interface QuranLessonReference {
   source_type?: string;
   source_ref_id?: string | null;
+  container_id?: string | null;
+  unit_id?: string | null;
   surah?: number;
   ayah_from?: number;
   ayah_to?: number;
@@ -260,6 +262,7 @@ export interface QuranLessonMcq {
   question: string;
   question_ar?: string;
   options: QuranLessonMcqOption[];
+  linked_unit_ids?: string[];
 }
 
 export interface QuranLessonComprehension {

@@ -6,10 +6,13 @@
     [currentStep]="activeTabIndex + 1"
     [totalSteps]="tabs.length"
     [isSaving]="isSaving"
+    [isNormalizing]="isNormalizing"
     [isNew]="isNewLesson"
+    [showNormalize]="true"
     (back)="back()"
     (view)="openView()"
     (save)="save()"
+    (normalize)="normalizeLessonIds()"
   />
 
   <div class="builder-workspace">
@@ -143,14 +146,20 @@
           <app-center-workspace-outlet>
             <app-occ-token-grid
               [tokens]="selectedVerseTokens"
+              [canLookup]="canLookupTokens"
+              [lookupLoading]="lookupTokensLoading"
+              [splitAffixes]="lookupSplitAffixes"
+              (splitAffixesChange)="lookupSplitAffixes = $event"
               (add)="addTokenForSelectedVerse()"
               (remove)="removeTokenById($event)"
               (changed)="onLessonEdited()"
+              (autoFeatures)="autoBuildTokenFeatures($event)"
+              (lookup)="lookupTokensAndLemmas()"
               (tokenFeaturesInput)="onTokenFeaturesInput($event)"
             />
           </app-center-workspace-outlet>
 
-          <app-context-right-pane>
+          <app-context-right-pane class="context-pane--split">
             <app-lemma-location-panel
               [lemmas]="selectedVerseLemmas"
               (add)="addLemmaToSelectedVerse()"
