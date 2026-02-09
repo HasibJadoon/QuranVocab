@@ -61,6 +61,8 @@ import { ReflectiveQuestionsComponent } from './components/reflective-questions.
 import { AnalyticalQuestionsComponent } from './components/analytical-questions.component';
 import { LessonValidationChecklistComponent } from './components/lesson-validation-checklist.component';
 import { RawJsonEditorComponent } from './components/raw-json-editor.component';
+import { BUILDER_TABS, DRAFT_COMMIT_STEP_BY_TAB, DRAFT_ID_KEY_PREFIX, DRAFT_KEY_PREFIX, LEGACY_COMMIT_STEP_BY_TAB } from './state/builder-tabs.const';
+import { composeAyahUnitId, composeContainerId, composePassageUnitId } from './domain/utils';
 
 type GrammarTargetType = 'token' | 'span' | 'sentence';
 
@@ -91,40 +93,12 @@ type SentenceTreeState = {
 type SaveStatusTone = 'info' | 'success' | 'error';
 type DraftCommitStep = 'meta' | 'units' | 'sentences' | 'comprehension' | 'notes';
 
-const BUILDER_TABS: BuilderTab[] = [
-  { id: 'meta', label: 'Lesson Info', intent: 'Create lesson envelope first' },
-  { id: 'verses', label: 'Select Verses', intent: 'Pick surah + ayah range and preview' },
-  { id: 'container', label: 'Create Container + Passage Unit', intent: 'Build lesson container foundation' },
-  { id: 'units', label: 'Attach Verse Units', intent: 'Ensure every verse unit is linked' },
-  { id: 'tokens', label: 'Tokens + Lemmas', intent: 'Fix token alignment and lemma locations' },
-  { id: 'morphology', label: 'Morphology', intent: 'Capture noun/verb morphology per verse' },
-  { id: 'spans', label: 'Spans / Expressions', intent: 'Build span layer from tokens' },
-  { id: 'sentences', label: 'Sentences Builder', intent: 'Create occurrence sentences from token ranges' },
-  { id: 'grammar', label: 'Grammar Concepts', intent: 'Link grammar to token/span/sentence targets' },
-  { id: 'tree', label: 'Sentence Tree', intent: 'Build clause graph per sentence occurrence' },
-  { id: 'content', label: 'MCQs + Questions', intent: 'Author lesson overlays' },
-  { id: 'review', label: 'Validate + Publish', intent: 'Run checks before publish' },
-  { id: 'dev', label: 'Raw JSON / Tools', intent: 'Use low-level JSON and debug helpers' },
-];
 
-const DRAFT_KEY_PREFIX = 'km:quran-lesson-builder:draft';
-const DRAFT_ID_KEY_PREFIX = 'km:quran-lesson-builder:draft-id';
 
-const DRAFT_COMMIT_STEP_BY_TAB: Partial<Record<BuilderTabId, DraftCommitStep>> = {
-  meta: 'meta',
-  units: 'units',
-  sentences: 'sentences',
-  content: 'comprehension',
-  review: 'notes',
-};
 
-const LEGACY_COMMIT_STEP_BY_TAB: Partial<Record<BuilderTabId, QuranLessonCommitStep>> = {
-  container: 'container',
-  tokens: 'tokens',
-  morphology: 'tokens',
-  spans: 'spans',
-  grammar: 'grammar',
-};
+
+
+
 
 type LocalDraftSnapshot = {
   savedAt: string;
@@ -638,7 +612,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
   }
 
   get proposedContainerId() {
-    return this.composeContainerId(this.verseSelection.surah);
+    return composeContainerId(this.verseSelection.surah);
   }
 
   get proposedPassageUnitId() {
@@ -665,7 +639,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       return {
         surah: this.verseSelection.surah,
         ayah,
-        unitId: linkedUnit?.id ?? this.composeAyahUnitId(this.verseSelection.surah, ayah),
+        unitId: linkedUnit?.id ?? composeAyahUnitId(this.verseSelection.surah, ayah),
         exists: !!linkedUnit,
         orderIndex: linkedUnit?.order_index ?? null,
       };
@@ -952,13 +926,13 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     const nextVerses = this.buildAyahRange(ayahFrom, ayahTo).map((ayah) => {
       const existing = existingByAyah.get(ayah);
       if (existing) {
-        existing.unit_id = existing.unit_id || this.composeAyahUnitId(surah, ayah);
+        existing.unit_id = existing.unit_id || composeAyahUnitId(surah, ayah);
         existing.surah = surah;
         existing.ayah = ayah;
         return existing;
       }
       return {
-        unit_id: this.composeAyahUnitId(surah, ayah),
+        unit_id: composeAyahUnitId(surah, ayah),
         unit_type: 'ayah',
         arabic: '',
         translation: null,
@@ -1026,7 +1000,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
   attachVerseUnit(ayah: number) {
     if (!this.lesson) return;
 
-    const unitId = this.composeAyahUnitId(this.verseSelection.surah, ayah);
+    const unitId = composeAyahUnitId(this.verseSelection.surah, ayah);
     const startRef = `Q:${this.verseSelection.surah}:${ayah}`;
 
     const existing = this.safeUnits.find(
@@ -1156,7 +1130,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const unitId = verse.unit_id || this.composeAyahUnitId(verse.surah, verse.ayah);
+    const unitId = verse.unit_id || composeAyahUnitId(verse.surah, verse.ayah);
     const existingTokens = this.safeTokens.filter((token) => token.unit_id === unitId);
     if (existingTokens.length) {
       this.setSaveStatus('Replacing existing tokens for this verse…', 'info');
@@ -1176,7 +1150,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
 
     try {
       if (!this.containerForm.containerId) {
-        this.containerForm.containerId = this.composeContainerId(verse.surah);
+        this.containerForm.containerId = composeContainerId(verse.surah);
       }
       if (!verse.unit_id) {
         verse.unit_id = unitId;
@@ -1198,7 +1172,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       }
 
       const sorted = [...rows].sort((a, b) => (a.token_index ?? 0) - (b.token_index ?? 0));
-      const containerId = this.containerForm.containerId || this.composeContainerId(verse.surah);
+      const containerId = this.containerForm.containerId || composeContainerId(verse.surah);
 
       const { lemmas, tokens } = this.buildLookupTokensAndLemmas(sorted, verse, unitId, containerId);
       verse.lemmas = lemmas;
@@ -2571,7 +2545,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     this.lesson.units = Array.isArray(this.lesson.units) ? this.lesson.units : [];
 
     for (const verse of this.lesson.text.arabic_full) {
-      verse.unit_id = verse.unit_id || this.composeAyahUnitId(verse.surah, verse.ayah);
+      verse.unit_id = verse.unit_id || composeAyahUnitId(verse.surah, verse.ayah);
       verse.lemmas = Array.isArray(verse.lemmas) ? verse.lemmas : [];
     }
 
@@ -2790,8 +2764,8 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     if (!this.lesson) return;
 
     const { surah, ayahFrom, ayahTo } = this.resolveNormalizationBounds();
-    const containerId = this.composeContainerId(surah);
-    const passageUnitId = this.composePassageUnitId(surah, ayahFrom, ayahTo);
+    const containerId = composeContainerId(surah);
+    const passageUnitId = composePassageUnitId(surah, ayahFrom, ayahTo);
 
     this.verseSelection = { surah, ayahFrom, ayahTo };
     this.containerForm = {
@@ -2822,7 +2796,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       verse.surah = surah;
       verse.ayah = ayah;
       verse.unit_type = 'ayah';
-      verse.unit_id = this.composeAyahUnitId(surah, ayah);
+      verse.unit_id = composeAyahUnitId(surah, ayah);
       verseAyahs.push(ayah);
 
       const lemmas = this.getVerseLemmas(verse).map((lemma, lemmaIndex) => {
@@ -2858,7 +2832,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       const to = this.clampNumber(parsed.ayahTo, from, 286, from);
       const normalizedUnitId =
         from === to
-          ? this.composeAyahUnitId(normalizedSurah, from)
+          ? composeAyahUnitId(normalizedSurah, from)
           : this.composePassageUnitId(normalizedSurah, from, to);
       sentence.unit_id = normalizedUnitId;
       sentence.ref = sentence.ref ?? {};
@@ -2874,7 +2848,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       if (parsed) {
         const normalizedSurah = this.clampNumber(parsed.surah, 1, 114, surah);
         const from = this.clampNumber(parsed.ayahFrom, 1, 286, ayahFrom);
-        token.unit_id = this.composeAyahUnitId(normalizedSurah, from);
+        token.unit_id = composeAyahUnitId(normalizedSurah, from);
       }
     }
 
@@ -2884,7 +2858,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       if (parsed) {
         const normalizedSurah = this.clampNumber(parsed.surah, 1, 114, surah);
         const from = this.clampNumber(parsed.ayahFrom, 1, 286, ayahFrom);
-        span.unit_id = this.composeAyahUnitId(normalizedSurah, from);
+        span.unit_id = composeAyahUnitId(normalizedSurah, from);
       }
     }
 
@@ -2924,7 +2898,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     for (const verse of this.safeArabicVerses) {
       verse.surah = this.clampNumber(verse.surah, 1, 114, this.verseSelection.surah);
       verse.ayah = this.clampNumber(verse.ayah, 1, 286, 1);
-      verse.unit_id = verse.unit_id || this.composeAyahUnitId(verse.surah, verse.ayah);
+      verse.unit_id = verse.unit_id || composeAyahUnitId(verse.surah, verse.ayah);
       verse.lemmas = this.getVerseLemmas(verse).map((lemma) => ({
         ...lemma,
         token_index: this.clampNumber(lemma.token_index, 0, 999, 0),
@@ -3019,7 +2993,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       if (!ayah) continue;
       unit.ayah_from = ayah;
       unit.ayah_to = ayah;
-      unit.id = this.composeAyahUnitId(surah, ayah);
+      unit.id = composeAyahUnitId(surah, ayah);
       unit.start_ref = `Q:${surah}:${ayah}`;
       unit.end_ref = `Q:${surah}:${ayah}`;
       ayahUnitsByAyah.set(ayah, unit);
@@ -3028,7 +3002,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     for (const ayah of ayahNumbers) {
       if (ayahUnitsByAyah.has(ayah)) continue;
       this.safeUnits.push({
-        id: this.composeAyahUnitId(surah, ayah),
+        id: composeAyahUnitId(surah, ayah),
         unit_type: 'ayah',
         order_index: ayah - ayahFrom + 1,
         ayah_from: ayah,
@@ -3082,7 +3056,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     const surah = this.clampNumber(parsed.surah, 1, 114, fallbackSurah);
     const from = this.clampNumber(parsed.ayahFrom, 1, 286, 1);
     const to = this.clampNumber(parsed.ayahTo, from, 286, from);
-    return from === to ? this.composeAyahUnitId(surah, from) : this.composePassageUnitId(surah, from, to);
+    return from === to ? composeAyahUnitId(surah, from) : this.composePassageUnitId(surah, from, to);
   }
 
   private parseAyahRange(value: string | null | undefined) {
@@ -3130,7 +3104,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     this.selectedVerseUnitId = sorted[0]?.unit_id ?? '';
 
     if (!this.containerForm.containerId) {
-      this.containerForm.containerId = this.composeContainerId(surah);
+      this.containerForm.containerId = composeContainerId(surah);
     }
     if (!this.containerForm.unitId) {
       this.containerForm.unitId = this.composePassageUnitId(surah, ayahFrom, ayahTo);
@@ -3260,17 +3234,12 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     return Array.from({ length: end - start + 1 }, (_, offset) => start + offset);
   }
 
-  private composeContainerId(surah: number) {
-    return `C:QURAN:${surah}`;
-  }
-
+ 
   private composePassageUnitId(surah: number, ayahFrom: number, ayahTo: number) {
     return `U:C:QURAN:${surah}:${ayahFrom}-${ayahTo}`;
   }
 
-  private composeAyahUnitId(surah: number, ayah: number) {
-    return `U:C:QURAN:${surah}:${ayah}`;
-  }
+
 
   private clampNumber(
     value: string | number | null | undefined,
