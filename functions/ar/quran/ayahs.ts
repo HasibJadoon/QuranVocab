@@ -65,19 +65,7 @@ type AyahRow = {
 
   word_count: number | null;
   char_count: number | null;
-};
-
-type WordRow = {
-  id: number;
-  surah: number;
-  ayah: number;
-  token_index: number;
-  word_location: string;
-  word_simple: string | null;
-  word_diacritic: string | null;
-  lemma_id: number | null;
-  ar_u_token: string | null;
-  ar_token_occ_id: string | null;
+  words: string | null;
 };
 
 type TranslationRow = {
@@ -198,7 +186,8 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         verse_mark,
         verse_full,
         word_count,
-        char_count
+        char_count,
+        words
       FROM ar_quran_ayah
       WHERE surah = ?1
       ORDER BY ayah ASC
@@ -235,47 +224,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     let minAyah = ayahRows[0]!.ayah;
     let maxAyah = ayahRows[ayahRows.length - 1]!.ayah;
 
-    // 4) Fetch words for all ayahs in the window (diacritic + non-diacritic)
-    const wordsStmt = ctx.env.DB.prepare(
-      `
-      SELECT
-        id,
-        surah,
-        ayah,
-        token_index,
-        word_location,
-        word_simple,
-        word_diacritic,
-        lemma_id,
-        ar_u_token,
-        ar_token_occ_id
-      FROM quran_ayah_lemma_location
-      WHERE surah = ?1
-        AND ayah BETWEEN ?2 AND ?3
-      ORDER BY ayah ASC, token_index ASC
-    `
-    );
-
-    const { results: wordRowsRaw = [] } = await wordsStmt.bind(surah, minAyah, maxAyah).all<WordRow>();
-    const wordRows = (wordRowsRaw ?? []) as WordRow[];
-
-    // Group words by ayah
-    const wordsByAyah = new Map<number, any[]>();
-    for (const w of wordRows) {
-      const bucket = wordsByAyah.get(w.ayah) ?? [];
-      bucket.push({
-        token_index: w.token_index,
-        word_location: w.word_location,
-        word_simple: w.word_simple ?? null,
-        word_diacritic: w.word_diacritic ?? null,
-        lemma_id: w.lemma_id ?? null,
-        ar_u_token: w.ar_u_token ?? null,
-        ar_token_occ_id: w.ar_token_occ_id ?? null,
-      });
-      wordsByAyah.set(w.ayah, bucket);
-    }
-
-    // 5) Fetch translations for the window
+    // 4) Fetch translations for the window
     const trStmt = ctx.env.DB.prepare(
       `
       SELECT
@@ -376,7 +325,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       meta: safeJson(row.meta_json),
     }));
 
-    // 6) Build final envelope
+    // 5) Build final envelope
     const verses = ayahRows.map((v) => {
       const t = trByAyah.get(v.ayah) ?? null;
 
@@ -400,7 +349,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         t?.translation_usmani ??
         null;
 
-      const words = wordsByAyah.get(v.ayah) ?? [];
+      const words = (safeJson(v.words) as any[]) ?? [];
 
       return {
         id: v.id,

@@ -6,6 +6,8 @@ interface Env {
 type Body = { roots: string[] };
 
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
+  return Response.json({ ok: false, error: 'Root layer removed.' }, { status: 410 });
+
   const body = (await ctx.request.json()) as Partial<Body>;
 
   // Validate

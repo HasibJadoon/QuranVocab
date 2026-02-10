@@ -108,6 +108,16 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       );
     }
 
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        total: 0,
+        hasMore: false,
+        results: [],
+      }),
+      { headers: jsonHeaders }
+    );
+
     const url = new URL(ctx.request.url);
     const rootParam = (url.searchParams.get('root') ?? '').trim();
     const q = (url.searchParams.get('q') ?? '').trim();
@@ -273,6 +283,11 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         { status: 401, headers: jsonHeaders }
       );
     }
+
+    return new Response(JSON.stringify({ ok: false, error: 'Root layer removed.' }), {
+      status: 410,
+      headers: jsonHeaders,
+    });
 
     let body: any;
     try {

@@ -249,6 +249,11 @@ async function insertGrammarLink(
 }
 
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
+  return new Response(JSON.stringify({ ok: false, error: 'Occurrence layer removed.' }), {
+    status: 410,
+    headers: jsonHeaders,
+  });
+
   try {
     const user = await requireAuth(ctx);
     if (!user) {

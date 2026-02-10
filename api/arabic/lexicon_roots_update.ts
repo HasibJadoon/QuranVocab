@@ -22,6 +22,8 @@ function safeJsonParse<T>(value: string | null | undefined): T | null {
 }
 
 export const onRequestPut: PagesFunction<Env> = async (ctx) => {
+  return Response.json({ ok: false, error: 'Root layer removed.' }, { status: 410 });
+
   try {
     // ---------------- AUTH ----------------
     const user = await requireAuth(ctx as any);

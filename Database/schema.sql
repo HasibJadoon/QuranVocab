@@ -254,20 +254,6 @@ CREATE INDEX IF NOT EXISTS idx_ar_lesson_unit_link_lesson_order
 CREATE INDEX IF NOT EXISTS idx_ar_lesson_unit_link_container
   ON ar_lesson_unit_link(container_id);
 
-CREATE TABLE ar_lesson_sentence_link (
-  lesson_id          INTEGER NOT NULL,
-  ar_sentence_occ_id TEXT NOT NULL,
-  unit_id            TEXT NOT NULL,
-  sentence_order     INTEGER NOT NULL DEFAULT 0,
-  created_at         TEXT NOT NULL DEFAULT (datetime('now')),
-  PRIMARY KEY (lesson_id, ar_sentence_occ_id),
-  FOREIGN KEY (lesson_id) REFERENCES ar_lessons(id) ON DELETE CASCADE,
-  FOREIGN KEY (ar_sentence_occ_id) REFERENCES ar_occ_sentence(ar_sentence_occ_id) ON DELETE CASCADE
-);
-
-CREATE INDEX idx_ar_lesson_sentence_link_unit
-  ON ar_lesson_sentence_link(lesson_id, unit_id, sentence_order);
-
 -- =====================================================================================
 -- 1b) USER LESSON LAYER (empty placeholders removed earlier; add minimal tables here)
 -- =====================================================================================
@@ -437,64 +423,74 @@ CREATE INDEX idx_ar_note_targets_container ON ar_note_targets(container_id, unit
 -- =====================================================================================
 -- 2) SRS LAYER (per-user spaced repetition)
 -- =====================================================================================
+DROP TABLE IF EXISTS ar_srs;
 DROP TABLE IF EXISTS ar_srs_reviews;
 DROP TABLE IF EXISTS ar_srs_state;
 DROP TABLE IF EXISTS ar_srs_items;
 
-CREATE TABLE IF NOT EXISTS ar_srs_items (
+CREATE TABLE IF NOT EXISTS ar_srs (
   id              TEXT PRIMARY KEY,
   canonical_input TEXT NOT NULL UNIQUE,
+
   user_id         INTEGER NOT NULL,
   lesson_id       INTEGER,
-  item_type       TEXT NOT NULL,
-  item_key        TEXT NOT NULL,
-  front_json      JSON NOT NULL CHECK (json_valid(front_json)),
-  back_json       JSON NOT NULL CHECK (json_valid(back_json)),
-  tags_json       JSON CHECK (tags_json IS NULL OR json_valid(tags_json)),
-  source_json     JSON CHECK (source_json IS NULL OR json_valid(source_json)),
-  status          TEXT NOT NULL DEFAULT 'active',
-  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at      TEXT,
-  FOREIGN KEY (user_id)  REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (lesson_id) REFERENCES ar_lessons(id) ON DELETE SET NULL
-);
-CREATE INDEX IF NOT EXISTS idx_ar_srs_items_user_status ON ar_srs_items(user_id, status);
-CREATE INDEX IF NOT EXISTS idx_ar_srs_items_user_lesson ON ar_srs_items(user_id, lesson_id);
-CREATE INDEX IF NOT EXISTS idx_ar_srs_items_type_key ON ar_srs_items(item_type, item_key);
 
-CREATE TABLE IF NOT EXISTS ar_srs_state (
-  srs_item_id     TEXT PRIMARY KEY,
+  item_type       TEXT NOT NULL,   -- verb | noun | idiom | verb_prep | stanza | etc
+  item_key        TEXT NOT NULL,   -- your stable key (e.g. "Q:12:1:root:متع" etc)
+
+  -- SINGLE CARD JSON (front+example+morph+back+tags)
+  card_json       JSON NOT NULL CHECK (json_valid(card_json)),
+
+  -- scheduler
+  status          TEXT NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active','suspended','archived')),
+
   due_at          TEXT NOT NULL,
   last_review_at  TEXT,
+
   interval_days   REAL NOT NULL DEFAULT 0,
   ease            REAL NOT NULL DEFAULT 2.5,
   reps            INTEGER NOT NULL DEFAULT 0,
   lapses          INTEGER NOT NULL DEFAULT 0,
+
   again_count     INTEGER NOT NULL DEFAULT 0,
   hard_count      INTEGER NOT NULL DEFAULT 0,
   good_count      INTEGER NOT NULL DEFAULT 0,
   easy_count      INTEGER NOT NULL DEFAULT 0,
-  state_json      JSON CHECK (state_json IS NULL OR json_valid(state_json)),
-  updated_at      TEXT,
-  FOREIGN KEY (srs_item_id) REFERENCES ar_srs_items(id) ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS idx_ar_srs_state_due ON ar_srs_state(due_at);
 
-CREATE TABLE IF NOT EXISTS ar_srs_reviews (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  srs_item_id   TEXT NOT NULL,
-  user_id       INTEGER NOT NULL,
-  lesson_id     INTEGER,
-  rating        TEXT NOT NULL,
-  response_ms   INTEGER,
-  result_json   JSON CHECK (result_json IS NULL OR json_valid(result_json)),
-  reviewed_at   TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (srs_item_id) REFERENCES ar_srs_items(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id)     REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (lesson_id)   REFERENCES ar_lessons(id) ON DELETE SET NULL
+  last_rating     TEXT CHECK (last_rating IS NULL OR last_rating IN ('again','hard','good','easy')),
+  last_response_ms INTEGER,
+
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT,
+
+  FOREIGN KEY (user_id)  REFERENCES users(id)      ON DELETE CASCADE,
+  FOREIGN KEY (lesson_id) REFERENCES ar_lessons(id) ON DELETE SET NULL,
+
+  -- prevent duplicates within a user’s collection
+  UNIQUE (user_id, item_type, item_key)
 );
-CREATE INDEX IF NOT EXISTS idx_ar_srs_reviews_user_time ON ar_srs_reviews(user_id, reviewed_at);
-CREATE INDEX IF NOT EXISTS idx_ar_srs_reviews_item_time ON ar_srs_reviews(srs_item_id, reviewed_at);
+
+-- fast queues (review screen)
+CREATE INDEX IF NOT EXISTS idx_ar_srs_user_due
+  ON ar_srs(user_id, status, due_at);
+
+-- quick filtering
+CREATE INDEX IF NOT EXISTS idx_ar_srs_user_lesson
+  ON ar_srs(user_id, lesson_id);
+
+CREATE INDEX IF NOT EXISTS idx_ar_srs_type_key
+  ON ar_srs(item_type, item_key);
+
+CREATE TRIGGER IF NOT EXISTS trg_ar_srs_updated_at
+AFTER UPDATE ON ar_srs
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+  UPDATE ar_srs
+  SET updated_at = datetime('now')
+  WHERE id = OLD.id;
+END;
 
 --------------------------------------------------------------------------------
 -- 1d) DOCUMENTATION TABLES (Markdown knowledge)
@@ -515,168 +511,88 @@ CREATE TABLE IF NOT EXISTS wiki_docs (
 );
 CREATE INDEX IF NOT EXISTS idx_wiki_docs_status ON wiki_docs(status);
 
--- 2) UNIVERSAL LAYER (ar_u_*)
+--------------------------------------------------------------------------------
+-- ar_u_lexicon (UPDATED) — captures LexicalUnit (Word | KeyTerm | VerbalIdiom | Expression)
+-- Keeps your canonical_input + root FK + sense_key, but expands to:
+--   UnitType, Surface/Normalized, Meanings/Synonyms/Antonyms,
+--   Morphology (Pattern/Features/Derivations),
+--   Expression (ExpressionType/Text/TokenRange/Meaning),
+--   References, Flags
 --------------------------------------------------------------------------------
 
-CREATE TABLE ar_u_roots (
-  ar_u_root        TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  root             TEXT NOT NULL,
-  root_norm        TEXT NOT NULL UNIQUE,
-
-  family            TEXT,
-  arabic_trilateral TEXT,
-  english_trilateral TEXT,
-  root_latn         TEXT,
-
-  alt_latn_json     JSON CHECK (alt_latn_json IS NULL OR json_valid(alt_latn_json)),
-  search_keys_norm  TEXT,
-
-  cards_json        JSON CHECK (cards_json IS NULL OR json_valid(cards_json)),
-  status            TEXT NOT NULL DEFAULT 'active',
-  difficulty        INTEGER,
-  frequency         TEXT,
-
-  created_at        TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at        TEXT,
-  extracted_at      TEXT,
-  meta_json         JSON CHECK (meta_json IS NULL OR json_valid(meta_json))
-);
-
-CREATE TABLE ar_u_tokens (
-  ar_u_token       TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  lemma_ar         TEXT NOT NULL,
-  lemma_norm       TEXT NOT NULL,
-  pos              TEXT NOT NULL,
-
-  root_norm        TEXT,
-  ar_u_root        TEXT,
-
-  features_json    JSON CHECK (features_json IS NULL OR json_valid(features_json)),
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT,
-
-  FOREIGN KEY (ar_u_root) REFERENCES ar_u_roots(ar_u_root) ON DELETE SET NULL
-);
-
-CREATE TABLE ar_u_spans (
-  ar_u_span        TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  span_type        TEXT NOT NULL,
-  span_kind        TEXT,
-  token_ids_csv    TEXT NOT NULL,
-
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT
-);
-
-CREATE TABLE ar_u_sentences (
-  ar_u_sentence    TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  sentence_kind    TEXT NOT NULL,
-  sequence_json    JSON NOT NULL CHECK (json_valid(sequence_json)),
-
-  text_ar          TEXT,
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT
-);
-
-CREATE TABLE ar_u_expressions (
-  ar_u_expression  TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  label            TEXT,
-  text_ar          TEXT,
-  sequence_json    JSON NOT NULL CHECK (json_valid(sequence_json)),
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT
-);
+DROP TABLE IF EXISTS ar_u_lexicon;
 
 CREATE TABLE ar_u_lexicon (
-  ar_u_lexicon     TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
+  ar_u_lexicon        TEXT PRIMARY KEY,
+  canonical_input     TEXT NOT NULL UNIQUE,
 
-  lemma_ar         TEXT NOT NULL,
-  lemma_norm       TEXT NOT NULL,
-  pos              TEXT NOT NULL,
-  root_norm        TEXT,
-  ar_u_root        TEXT,
+  -- Type
+  unit_type           TEXT NOT NULL CHECK (unit_type IN ('word','key_term','verbal_idiom','expression')),
 
-  valency_id       TEXT,
-  sense_key        TEXT NOT NULL,
+  -- Token surface + normalization (for single words AND also expression head/representative form)
+  surface_ar          TEXT NOT NULL,
+  surface_norm        TEXT NOT NULL,
 
-  gloss_primary    TEXT,
+  -- Core lexeme identity
+  lemma_ar            TEXT,
+  lemma_norm          TEXT,
+  pos                 TEXT,
+
+  -- Root linkage
+  root_norm           TEXT,
+  ar_u_root           TEXT,
+
+  -- Valency / sense partitioning (kept)
+  valency_id          TEXT,
+  sense_key           TEXT NOT NULL,
+
+  -- Meanings / synonyms / antonyms
+  meanings_json       JSON CHECK (meanings_json IS NULL OR json_valid(meanings_json)),
+  synonyms_json       JSON CHECK (synonyms_json IS NULL OR json_valid(synonyms_json)),
+  antonyms_json       JSON CHECK (antonyms_json IS NULL OR json_valid(antonyms_json)),
+
+  -- Keep your “gloss” fields as optional convenience
+  gloss_primary       TEXT,
   gloss_secondary_json JSON CHECK (gloss_secondary_json IS NULL OR json_valid(gloss_secondary_json)),
-  usage_notes      TEXT,
+  usage_notes         TEXT,
 
-  cards_json       JSON CHECK (cards_json IS NULL OR json_valid(cards_json)),
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  -- Morphology
+  morph_pattern       TEXT,
+  morph_features_json JSON CHECK (morph_features_json IS NULL OR json_valid(morph_features_json)),
+  morph_derivations_json JSON CHECK (morph_derivations_json IS NULL OR json_valid(morph_derivations_json)),
 
-  status           TEXT NOT NULL DEFAULT 'active',
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT,
+  -- Expression block (only meaningful when unit_type='expression' or 'verbal_idiom')
+  expression_type     TEXT,
+  expression_text     TEXT,
+  expression_token_range_json JSON CHECK (expression_token_range_json IS NULL OR json_valid(expression_token_range_json)),
+  expression_meaning  TEXT,
+
+  -- References + flags
+  references_json     JSON CHECK (references_json IS NULL OR json_valid(references_json)),
+  flags_json          JSON CHECK (flags_json IS NULL OR json_valid(flags_json)),
+
+  -- Existing payload buckets (kept)
+  cards_json          JSON CHECK (cards_json IS NULL OR json_valid(cards_json)),
+  meta_json           JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  status              TEXT NOT NULL DEFAULT 'active',
+  created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at          TEXT,
 
   FOREIGN KEY (ar_u_root) REFERENCES ar_u_roots(ar_u_root) ON DELETE SET NULL
 );
 
-CREATE TABLE ar_u_valency (
-  ar_u_valency     TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  verb_lemma_ar    TEXT NOT NULL,
-  verb_lemma_norm  TEXT NOT NULL,
-
-  prep_ar_u_token  TEXT NOT NULL,
-  frame_type       TEXT NOT NULL,
-
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT,
-
-  FOREIGN KEY (prep_ar_u_token) REFERENCES ar_u_tokens(ar_u_token) ON DELETE RESTRICT
-);
-
-CREATE TABLE ar_u_grammar (
-  ar_u_grammar     TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  grammar_id       TEXT NOT NULL UNIQUE,
-  category         TEXT,
-  title            TEXT,
-  title_ar         TEXT,
-  definition       TEXT,
-  definition_ar    TEXT,
-
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT
-);
-
-CREATE TABLE ar_u_grammar_relations (
-  id                  TEXT PRIMARY KEY,
-  parent_ar_u_grammar TEXT NOT NULL,
-  child_ar_u_grammar  TEXT NOT NULL,
-  relation_type       TEXT NOT NULL DEFAULT 'is_a',
-  order_index         INTEGER,
-  meta_json           JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-  created_at          TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at          TEXT,
-  FOREIGN KEY (parent_ar_u_grammar) REFERENCES ar_u_grammar(ar_u_grammar) ON DELETE CASCADE,
-  FOREIGN KEY (child_ar_u_grammar)  REFERENCES ar_u_grammar(ar_u_grammar) ON DELETE CASCADE,
-  UNIQUE (parent_ar_u_grammar, child_ar_u_grammar, relation_type)
-);
+--------------------------------------------------------------------------------
+-- Suggested indexes (optional, but very helpful)
+--------------------------------------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_lex_unit_type        ON ar_u_lexicon(unit_type);
+CREATE INDEX IF NOT EXISTS idx_lex_lemma_norm       ON ar_u_lexicon(lemma_norm);
+CREATE INDEX IF NOT EXISTS idx_lex_surface_norm     ON ar_u_lexicon(surface_norm);
+CREATE INDEX IF NOT EXISTS idx_lex_root_norm        ON ar_u_lexicon(root_norm);
+CREATE INDEX IF NOT EXISTS idx_lex_ar_u_root        ON ar_u_lexicon(ar_u_root);
+CREATE INDEX IF NOT EXISTS idx_lex_pos              ON ar_u_lexicon(pos);
+CREATE INDEX IF NOT EXISTS idx_lex_sense_key        ON ar_u_lexicon(sense_key);
+CREATE INDEX IF NOT EXISTS idx_lex_valency_id       ON ar_u_lexicon(valency_id);
 
 CREATE TABLE ar_grammar_units (
   id          TEXT PRIMARY KEY,
@@ -708,262 +624,6 @@ CREATE TABLE ar_grammar_unit_items (
   updated_at  TEXT,
   FOREIGN KEY (unit_id) REFERENCES ar_grammar_units(id) ON DELETE CASCADE
 );
-
---------------------------------------------------------------------------------
--- 3) OCCURRENCE LAYER (Arabic transactional)
---------------------------------------------------------------------------------
-DROP TABLE IF EXISTS ar_token_pair_links;
-DROP TABLE IF EXISTS ar_token_valency_link;
-DROP TABLE IF EXISTS ar_token_lexicon_link;
-DROP TABLE IF EXISTS ar_occ_grammar;
-DROP TABLE IF EXISTS ar_occ_expression;
-DROP TABLE IF EXISTS ar_occ_sentence;
-DROP TABLE IF EXISTS ar_occ_span;
-DROP TABLE IF EXISTS ar_occ_token_morph;
-DROP TABLE IF EXISTS ar_occ_token;
-DROP TABLE IF EXISTS quran_ayah_lemma_location;
-DROP TABLE IF EXISTS quran_ayah_lemmas;
-
-CREATE TABLE ar_occ_token (
-  ar_token_occ_id  TEXT PRIMARY KEY,
-  user_id          INTEGER,
-
-  container_id     TEXT NOT NULL,
-  unit_id          TEXT,
-
-  pos_index        INTEGER NOT NULL,
-  surface_ar       TEXT NOT NULL,
-  norm_ar          TEXT,
-  lemma_ar         TEXT,
-  pos              TEXT,
-
-  ar_u_token       TEXT NOT NULL,
-  ar_u_root        TEXT,
-
-  features_json    JSON CHECK (features_json IS NULL OR json_valid(features_json)),
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT,
-
-  FOREIGN KEY (user_id)      REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE CASCADE,
-  FOREIGN KEY (unit_id)      REFERENCES ar_container_units(id) ON DELETE SET NULL,
-  FOREIGN KEY (ar_u_token)   REFERENCES ar_u_tokens(ar_u_token) ON DELETE RESTRICT,
-  FOREIGN KEY (ar_u_root)    REFERENCES ar_u_roots(ar_u_root) ON DELETE SET NULL,
-
-  UNIQUE(container_id, unit_id, pos_index)
-);
-
-CREATE TABLE ar_occ_token_morph (
-  ar_token_occ_id    TEXT PRIMARY KEY,
-
-  pos                TEXT,
-
-  noun_case          TEXT,
-  noun_number        TEXT,
-  noun_gender        TEXT,
-  noun_definiteness  TEXT,
-
-  verb_tense         TEXT,
-  verb_mood          TEXT,
-  verb_voice         TEXT,
-  verb_person        TEXT,
-  verb_number        TEXT,
-  verb_gender        TEXT,
-
-  particle_type      TEXT,
-
-  extra_json         JSON CHECK (extra_json IS NULL OR json_valid(extra_json)),
-
-  created_at         TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at         TEXT,
-
-  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE
-);
-
-CREATE TABLE ar_occ_span (
-  ar_span_occ_id   TEXT PRIMARY KEY,
-  user_id          INTEGER,
-
-  container_id     TEXT NOT NULL,
-  unit_id          TEXT,
-
-  start_index      INTEGER NOT NULL,
-  end_index        INTEGER NOT NULL,
-  text_cache       TEXT,
-
-  ar_u_span        TEXT NOT NULL,
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT,
-
-  FOREIGN KEY (user_id)      REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE CASCADE,
-  FOREIGN KEY (unit_id)      REFERENCES ar_container_units(id) ON DELETE SET NULL,
-  FOREIGN KEY (ar_u_span)    REFERENCES ar_u_spans(ar_u_span) ON DELETE RESTRICT
-);
-
-CREATE TABLE ar_occ_sentence (
-  ar_sentence_occ_id TEXT PRIMARY KEY,
-  user_id            INTEGER,
-
-  container_id       TEXT NOT NULL,
-  unit_id            TEXT,
-
-  sentence_order     INTEGER,
-  text_ar            TEXT,
-  translation        TEXT,
-  notes              TEXT,
-
-  ar_u_sentence      TEXT NOT NULL,
-
-  created_at         TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at         TEXT,
-
-  FOREIGN KEY (user_id)      REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE CASCADE,
-  FOREIGN KEY (unit_id)      REFERENCES ar_container_units(id) ON DELETE SET NULL,
-  FOREIGN KEY (ar_u_sentence) REFERENCES ar_u_sentences(ar_u_sentence) ON DELETE RESTRICT,
-
-  UNIQUE(container_id, unit_id, sentence_order)
-);
-
-CREATE TABLE ar_occ_expression (
-  ar_expression_occ_id TEXT PRIMARY KEY,
-  user_id              INTEGER,
-
-  container_id         TEXT NOT NULL,
-  unit_id              TEXT,
-
-  start_index          INTEGER,
-  end_index            INTEGER,
-  text_cache           TEXT,
-
-  ar_u_expression      TEXT NOT NULL,
-
-  note                 TEXT,
-  meta_json            JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at           TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at           TEXT,
-
-  FOREIGN KEY (user_id)       REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (container_id)  REFERENCES ar_containers(id) ON DELETE CASCADE,
-  FOREIGN KEY (unit_id)       REFERENCES ar_container_units(id) ON DELETE SET NULL,
-  FOREIGN KEY (ar_u_expression) REFERENCES ar_u_expressions(ar_u_expression) ON DELETE RESTRICT
-);
-
-CREATE TABLE ar_occ_grammar (
-  id               TEXT PRIMARY KEY,
-  user_id          INTEGER,
-
-  container_id     TEXT NOT NULL,
-  unit_id          TEXT,
-
-  ar_u_grammar     TEXT NOT NULL,
-
-  target_type      TEXT NOT NULL,
-  target_id        TEXT NOT NULL,
-
-  note             TEXT,
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-
-  FOREIGN KEY (user_id)      REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE CASCADE,
-  FOREIGN KEY (unit_id)      REFERENCES ar_container_units(id) ON DELETE SET NULL,
-  FOREIGN KEY (ar_u_grammar) REFERENCES ar_u_grammar(ar_u_grammar) ON DELETE RESTRICT
-);
-
-CREATE TABLE ar_token_lexicon_link (
-  ar_token_occ_id  TEXT NOT NULL,
-  ar_u_lexicon     TEXT NOT NULL,
-
-  confidence       REAL,
-  is_primary       INTEGER NOT NULL DEFAULT 1,
-  source           TEXT,
-  note             TEXT,
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-
-  PRIMARY KEY (ar_token_occ_id, ar_u_lexicon),
-  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
-  FOREIGN KEY (ar_u_lexicon)    REFERENCES ar_u_lexicon(ar_u_lexicon) ON DELETE RESTRICT
-);
-
-CREATE TABLE ar_token_valency_link (
-  ar_token_occ_id  TEXT NOT NULL,
-  ar_u_valency     TEXT NOT NULL,
-
-  role             TEXT,
-  note             TEXT,
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-
-  PRIMARY KEY (ar_token_occ_id, ar_u_valency),
-  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
-  FOREIGN KEY (ar_u_valency)    REFERENCES ar_u_valency(ar_u_valency) ON DELETE RESTRICT
-);
-
-CREATE TABLE ar_token_pair_links (
-  id              TEXT PRIMARY KEY,
-  user_id         INTEGER,
-
-  container_id    TEXT NOT NULL,
-  unit_id         TEXT,
-
-  link_type       TEXT NOT NULL,
-  from_token_occ  TEXT NOT NULL,
-  to_token_occ    TEXT NOT NULL,
-
-  ar_u_valency    TEXT,
-  note            TEXT,
-  meta_json       JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-
-  FOREIGN KEY (user_id)         REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (container_id)    REFERENCES ar_containers(id) ON DELETE CASCADE,
-  FOREIGN KEY (unit_id)         REFERENCES ar_container_units(id) ON DELETE SET NULL,
-  FOREIGN KEY (from_token_occ)  REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
-  FOREIGN KEY (to_token_occ)    REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
-  FOREIGN KEY (ar_u_valency)    REFERENCES ar_u_valency(ar_u_valency) ON DELETE SET NULL
-);
-
-CREATE TABLE quran_ayah_lemmas (
-  lemma_id                 INTEGER PRIMARY KEY,
-  lemma_text               TEXT NOT NULL,
-  lemma_text_clean         TEXT NOT NULL,
-  words_count              INTEGER,
-  uniq_words_count         INTEGER,
-  primary_ar_token_occ_id  TEXT,
-  primary_ar_u_token       TEXT,
-  created_at               TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (primary_ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id),
-  FOREIGN KEY (primary_ar_u_token) REFERENCES ar_u_tokens(ar_u_token)
-);
-
-CREATE TABLE quran_ayah_lemma_location (
-  id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  lemma_id       INTEGER NOT NULL REFERENCES quran_ayah_lemmas(lemma_id) ON DELETE CASCADE,
-  word_location  TEXT NOT NULL,
-  surah          INTEGER NOT NULL,
-  ayah           INTEGER NOT NULL,
-  token_index    INTEGER NOT NULL,
-  ar_token_occ_id TEXT,
-  ar_u_token     TEXT,
-  word_simple    TEXT,
-  word_diacritic TEXT,
-  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id),
-  FOREIGN KEY (ar_u_token) REFERENCES ar_u_tokens(ar_u_token)
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_quran_ayah_lemma_location_unique
-  ON quran_ayah_lemma_location (lemma_id, word_location);
-CREATE INDEX IF NOT EXISTS idx_quran_ayah_lemma_location_ref
-  ON quran_ayah_lemma_location (surah, ayah);
 
 --------------------------------------------------------------------------------
 -- 4) WORLDVIEW (wv_) + PLANNER (sp_)
@@ -1263,62 +923,11 @@ CREATE INDEX idx_ar_lessons_type     ON ar_lessons(lesson_type);
 CREATE INDEX idx_ar_containers_type_key ON ar_containers(container_type, container_key);
 CREATE INDEX idx_ar_units_container_order ON ar_container_units(container_id, order_index);
 
-CREATE INDEX idx_ar_u_roots_root_norm  ON ar_u_roots(root_norm);
-CREATE INDEX idx_ar_u_roots_root       ON ar_u_roots(root);
-CREATE INDEX idx_ar_u_roots_root_latn  ON ar_u_roots(root_latn);
-CREATE INDEX idx_ar_u_roots_status     ON ar_u_roots(status);
-CREATE INDEX idx_ar_u_roots_freq       ON ar_u_roots(frequency);
-
-CREATE INDEX idx_ar_u_tokens_lemma_norm ON ar_u_tokens(lemma_norm);
-CREATE INDEX idx_ar_u_tokens_pos        ON ar_u_tokens(pos);
-CREATE INDEX idx_ar_u_tokens_root_norm  ON ar_u_tokens(root_norm);
-CREATE INDEX idx_ar_u_tokens_root_fk    ON ar_u_tokens(ar_u_root);
-
-CREATE INDEX idx_ar_u_spans_type        ON ar_u_spans(span_type);
-CREATE INDEX idx_ar_u_sent_kind         ON ar_u_sentences(sentence_kind);
-
-CREATE INDEX idx_ar_u_lex_lemma_norm    ON ar_u_lexicon(lemma_norm);
-CREATE INDEX idx_ar_u_lex_pos           ON ar_u_lexicon(pos);
-CREATE INDEX idx_ar_u_lex_root_norm     ON ar_u_lexicon(root_norm);
-CREATE INDEX idx_ar_u_lex_root_fk       ON ar_u_lexicon(ar_u_root);
-
-CREATE INDEX idx_ar_u_valency_verb_norm ON ar_u_valency(verb_lemma_norm);
-CREATE INDEX idx_ar_u_valency_prep      ON ar_u_valency(prep_ar_u_token);
-CREATE INDEX idx_ar_u_valency_frame     ON ar_u_valency(frame_type);
-
-CREATE INDEX idx_ar_u_grammar_grammar_id ON ar_u_grammar(grammar_id);
-CREATE INDEX idx_ar_u_grammar_rel_parent ON ar_u_grammar_relations(parent_ar_u_grammar);
-CREATE INDEX idx_ar_u_grammar_rel_child ON ar_u_grammar_relations(child_ar_u_grammar);
 CREATE INDEX idx_ar_grammar_units_parent ON ar_grammar_units(parent_id);
 CREATE INDEX idx_ar_grammar_units_type ON ar_grammar_units(unit_type);
 CREATE INDEX idx_ar_grammar_units_source ON ar_grammar_units(source_id);
 CREATE INDEX idx_ar_grammar_unit_items_unit ON ar_grammar_unit_items(unit_id);
 CREATE INDEX idx_ar_grammar_unit_items_type ON ar_grammar_unit_items(item_type);
-
-CREATE INDEX idx_ar_occ_token_container_unit ON ar_occ_token(container_id, unit_id);
-CREATE INDEX idx_ar_occ_token_order          ON ar_occ_token(container_id, unit_id, pos_index);
-CREATE INDEX idx_ar_occ_token_u_token        ON ar_occ_token(ar_u_token);
-CREATE INDEX idx_ar_occ_token_morph_pos      ON ar_occ_token_morph(pos);
-
-CREATE INDEX idx_ar_occ_span_container_unit  ON ar_occ_span(container_id, unit_id);
-CREATE INDEX idx_ar_occ_span_range           ON ar_occ_span(container_id, unit_id, start_index, end_index);
-CREATE INDEX idx_ar_occ_span_u_span          ON ar_occ_span(ar_u_span);
-
-CREATE INDEX idx_ar_occ_sentence_container_unit ON ar_occ_sentence(container_id, unit_id);
-CREATE INDEX idx_ar_occ_sentence_u_sent        ON ar_occ_sentence(ar_u_sentence);
-
-CREATE INDEX idx_ar_occ_expression_container_unit ON ar_occ_expression(container_id, unit_id);
-CREATE INDEX idx_ar_occ_expression_expression    ON ar_occ_expression(ar_u_expression);
-
-CREATE INDEX idx_ar_occ_grammar_container_unit ON ar_occ_grammar(container_id, unit_id);
-CREATE INDEX idx_ar_occ_grammar_u_grammar      ON ar_occ_grammar(ar_u_grammar);
-CREATE INDEX idx_ar_occ_grammar_target         ON ar_occ_grammar(target_type, target_id);
-
-CREATE INDEX idx_ar_token_lexicon_link_lex     ON ar_token_lexicon_link(ar_u_lexicon);
-CREATE INDEX idx_ar_token_valency_link_val     ON ar_token_valency_link(ar_u_valency);
-
-CREATE INDEX idx_ar_pair_links_container_unit  ON ar_token_pair_links(container_id, unit_id);
-CREATE INDEX idx_ar_pair_links_type            ON ar_token_pair_links(link_type);
 
 CREATE INDEX idx_wv_brainstorm_user_id ON wv_brainstorm_sessions(user_id);
 CREATE INDEX idx_wv_brainstorm_topic   ON wv_brainstorm_sessions(topic);

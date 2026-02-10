@@ -80,6 +80,10 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     });
   }
 
+  return new Response(JSON.stringify({ ok: true, concepts: [], relations: [] }), {
+    headers: jsonHeaders,
+  });
+
   try {
     const { results: conceptRows = [] } = await ctx.env.DB.prepare(
       `SELECT
@@ -149,6 +153,11 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       headers: jsonHeaders,
     });
   }
+
+  return new Response(JSON.stringify({ ok: false, error: 'Grammar concepts removed.' }), {
+    status: 410,
+    headers: jsonHeaders,
+  });
 
   let body: Record<string, unknown> | null = null;
   try {
@@ -296,6 +305,11 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       headers: jsonHeaders,
     });
   }
+
+  return new Response(JSON.stringify({ ok: false, error: 'Grammar concepts removed.' }), {
+    status: 410,
+    headers: jsonHeaders,
+  });
 
   let body: Record<string, unknown> | null = null;
   try {

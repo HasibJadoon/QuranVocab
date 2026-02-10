@@ -360,127 +360,15 @@ async function fetchTranslations(
 }
 
 async function fetchTokens(db: D1Database, containerId: string, ids: string[]) {
-  if (!ids.length) return [];
-  const placeholders = ids.map(() => '?').join(', ');
-  const stmt = db
-    .prepare(
-      `
-      SELECT
-        t.ar_token_occ_id,
-        t.user_id,
-        t.container_id,
-        t.unit_id,
-        t.pos_index,
-        t.surface_ar,
-        t.norm_ar,
-        t.lemma_ar,
-        t.pos,
-        t.ar_u_token,
-        t.ar_u_root,
-        t.features_json,
-        m.noun_case,
-        m.noun_number,
-        m.noun_gender,
-        m.noun_definiteness,
-        m.verb_tense,
-        m.verb_mood,
-        m.verb_voice,
-        m.verb_person,
-        m.verb_number,
-        m.verb_gender,
-        m.particle_type,
-        t.created_at,
-        t.updated_at
-      FROM ar_occ_token t
-      LEFT JOIN ar_occ_token_morph m ON m.ar_token_occ_id = t.ar_token_occ_id
-      WHERE t.container_id = ?1
-        AND t.unit_id IN (${placeholders})
-      ORDER BY t.unit_id, t.pos_index
-    `
-    )
-    .bind(containerId, ...ids);
-  const result = (await stmt.all()) as { results?: QuranTokenRow[] };
-  return result?.results ?? [];
+  return [];
 }
 
 async function fetchSpans(db: D1Database, containerId: string, ids: string[]) {
-  if (!ids.length) return [];
-  const placeholders = ids.map(() => '?').join(', ');
-  const stmt = db
-    .prepare(
-      `
-      SELECT
-        os.ar_span_occ_id,
-        os.user_id,
-        os.container_id,
-        os.unit_id,
-        os.start_index,
-        os.end_index,
-        os.text_cache,
-        os.ar_u_span,
-        os.created_at,
-        os.updated_at,
-        us.span_type,
-        us.span_kind,
-        us.token_ids_csv,
-        us.meta_json AS u_meta_json
-      FROM ar_occ_span os
-      JOIN ar_u_spans us ON us.ar_u_span = os.ar_u_span
-      WHERE os.container_id = ?1
-        AND os.unit_id IN (${placeholders})
-      ORDER BY os.unit_id, os.start_index, os.end_index
-    `
-    )
-    .bind(containerId, ...ids);
-  const result = (await stmt.all()) as { results?: any[] };
-  return result?.results ?? [];
+  return [];
 }
 
 async function fetchSentences(db: D1Database, containerId: string, unitIds: string[], passageUnitId: string | null) {
-  const hasUnits = unitIds.length > 0;
-  const hasPassage = Boolean(passageUnitId);
-  if (!hasPassage && !hasUnits) return [];
-  const clauseParts: string[] = [];
-  const bindings: (string | null)[] = [containerId];
-  if (hasPassage) {
-    clauseParts.push(`s.unit_id = ?${bindings.length + 1}`);
-    bindings.push(passageUnitId);
-  }
-  if (hasUnits) {
-    const placeholders = unitIds.map(() => '?').join(', ');
-    clauseParts.push(`s.unit_id IN (${placeholders})`);
-    bindings.push(...unitIds);
-  }
-  const clauseSql = clauseParts.length > 1 ? `(${clauseParts.join(' OR ')})` : clauseParts[0];
-  const orderClause = hasPassage
-    ? 'ORDER BY CASE WHEN s.unit_id = ?2 THEN -1 ELSE 0 END, s.unit_id, s.sentence_order'
-    : 'ORDER BY s.unit_id, s.sentence_order';
-  const sql = `
-      SELECT
-        s.ar_sentence_occ_id,
-        s.user_id,
-        s.container_id,
-        s.unit_id,
-        s.sentence_order,
-        s.text_ar,
-        s.translation,
-        s.notes,
-        s.ar_u_sentence,
-        us.sentence_kind,
-        us.sequence_json,
-        us.text_ar AS u_text_ar,
-        us.meta_json AS u_meta_json,
-        s.created_at,
-        s.updated_at
-      FROM ar_occ_sentence s
-      JOIN ar_u_sentences us ON us.ar_u_sentence = s.ar_u_sentence
-      WHERE s.container_id = ?1
-        AND ${clauseSql}
-      ${orderClause}
-    `;
-  const stmt = db.prepare(sql);
-  const result = (await stmt.bind(...bindings).all()) as { results?: QuranSentenceRow[] };
-  return result?.results ?? [];
+  return [];
 }
 
 function buildVocabBuckets(tokens: QuranTokenRow[]) {
@@ -510,70 +398,7 @@ async function fetchAyahLemmaLocations(
   db: D1Database,
   combos: Array<{ surah: number; ayah: number }>
 ): Promise<Map<string, QuranLessonLemmaLocation[]>> {
-  const map = new Map<string, QuranLessonLemmaLocation[]>();
-  if (!combos.length) return map;
-
-  const unique = Array.from(
-    new Map(
-      combos
-        .map((combo) => [`${combo.surah}:${combo.ayah}`, combo] as const)
-        .filter(([, combo]) => Number.isFinite(combo.surah) && Number.isFinite(combo.ayah))
-    ).values()
-  );
-
-  if (!unique.length) return map;
-
-  const clause = unique.map(() => "(?, ?)").join(", ");
-    const sql = `
-      SELECT
-        loc.surah,
-        loc.ayah,
-        loc.word_location,
-        loc.token_index,
-        loc.ar_token_occ_id,
-        loc.ar_u_token,
-        loc.word_simple,
-        loc.word_diacritic,
-        l.lemma_id,
-        l.lemma_text,
-        l.lemma_text_clean,
-      l.words_count,
-      l.uniq_words_count
-    FROM quran_ayah_lemma_location loc
-    JOIN quran_ayah_lemmas l ON l.lemma_id = loc.lemma_id
-    WHERE (loc.surah, loc.ayah) IN (${clause})
-    ORDER BY loc.surah, loc.ayah, loc.token_index, l.lemma_text
-  `;
-
-  const bindings = unique.flatMap((combo) => [combo.surah, combo.ayah]);
-  const result = (await db.prepare(sql).bind(...bindings).all()) as {
-    results?: QuranLessonLemmaLocationRow[];
-  };
-
-    for (const row of result?.results ?? []) {
-      const key = `${row.surah}:${row.ayah}`;
-      const entry: QuranLessonLemmaLocation = {
-        lemma_id: row.lemma_id,
-        lemma_text: row.lemma_text,
-        lemma_text_clean: row.lemma_text_clean,
-        words_count: row.words_count,
-        uniq_words_count: row.uniq_words_count,
-        word_location: row.word_location,
-        token_index: row.token_index,
-        ar_token_occ_id: row.ar_token_occ_id,
-        ar_u_token: row.ar_u_token,
-        word_simple: row.word_simple,
-        word_diacritic: row.word_diacritic,
-      };
-    const existing = map.get(key);
-    if (existing) {
-      existing.push(entry);
-    } else {
-      map.set(key, [entry]);
-    }
-  }
-
-  return map;
+  return new Map();
 }
 
 

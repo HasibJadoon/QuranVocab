@@ -81,6 +81,18 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     offset = Math.max(0, toInt(offsetParam, 0));
   }
 
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      total: 0,
+      page,
+      pageSize: limit,
+      hasMore: false,
+      results: [],
+    }),
+    { headers: jsonHeaders }
+  );
+
   const whereParts: string[] = [];
   const bindValues: (string | number)[] = [];
 
@@ -157,6 +169,11 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       headers: jsonHeaders,
     });
   }
+
+  return new Response(JSON.stringify({ ok: false, error: 'Token layer removed.' }), {
+    status: 410,
+    headers: jsonHeaders,
+  });
 
   let body: Record<string, unknown> | null = null;
   try {

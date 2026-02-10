@@ -1455,6 +1455,11 @@ async function touchLesson(
 }
 
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
+  return new Response(JSON.stringify({ ok: false, error: 'Commit endpoint disabled.' }), {
+    status: 410,
+    headers: jsonHeaders,
+  });
+
   try {
     const user = await requireAuth(ctx);
     if (!user) {
