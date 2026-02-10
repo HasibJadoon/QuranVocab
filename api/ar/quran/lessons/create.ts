@@ -85,33 +85,6 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       )
       .run();
 
-    const ayahUnits = [];
-    for (let ayah = ayahFrom; ayah <= ayahTo; ayah += 1) {
-      const unitId = `U:${containerId}:${surah}:${ayah}`;
-      await ctx.env.DB
-        .prepare(
-          `
-          INSERT OR IGNORE INTO ar_container_units (
-            id, container_id, unit_type, order_index, ayah_from, ayah_to,
-            start_ref, end_ref, text_cache, meta_json, created_at
-          ) VALUES (?1, ?2, 'ayah', ?3, ?4, ?5, ?6, ?7, ?8, json(?9), datetime('now'))
-        `
-        )
-        .bind(
-          unitId,
-          containerId,
-          ayah - ayahFrom + 2,
-          ayah,
-          ayah,
-          `${surah}:${ayah}`,
-          `${surah}:${ayah}`,
-          null,
-          JSON.stringify({ source: 'lesson-authoring' })
-        )
-        .run();
-      ayahUnits.push({ unit_id: unitId, ayah, surah });
-    }
-
     const response = {
       ok: true,
       result: {
@@ -131,7 +104,6 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             start_ref: `${surah}:${ayahFrom}`,
             end_ref: `${surah}:${ayahTo}`,
           },
-          ...ayahUnits,
         ],
       },
     };

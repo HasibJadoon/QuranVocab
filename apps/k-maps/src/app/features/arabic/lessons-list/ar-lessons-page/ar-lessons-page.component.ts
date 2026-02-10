@@ -185,6 +185,12 @@ export class ArLessonsPageComponent implements OnInit {
     });
   }
 
+  get primaryLabel() {
+    if (this.lockedLessonType === 'quran' || this.lessonTypeFilter === 'quran') return 'New Quran Lesson';
+    if (this.lockedLessonType === 'literature' || this.lessonTypeFilter === 'literature') return 'New Literature Lesson';
+    return 'Add';
+  }
+
   onHeaderAddClick() {
     const target = this.lessonTypeFilter === 'literature' ? 'literature' : 'quran';
     this.router.navigate(['/arabic', target, 'lessons', 'new']);

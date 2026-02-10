@@ -13,7 +13,7 @@
 -- Universal PK columns are TEXT(64 hex). canonical_input is UNIQUE.
 --------------------------------------------------------------------------------
 
-PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys = OFF;
 
 
 --------------------------------------------------------------------------------
@@ -22,6 +22,20 @@ PRAGMA foreign_keys = ON;
 DROP TABLE IF EXISTS user_activity_logs;
 DROP TABLE IF EXISTS user_state;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS ar_lesson_unit_link;
+DROP TABLE IF EXISTS ar_lessons;
+DROP TABLE IF EXISTS ar_quran_translation_passages;
+DROP TABLE IF EXISTS ar_quran_translation_sources;
+DROP TABLE IF EXISTS ar_quran_translations;
+DROP TABLE IF EXISTS ar_quran_surah_ayah_meta;
+DROP TABLE IF EXISTS ar_quran_ayah;
+DROP TABLE IF EXISTS ar_container_units;
+DROP TABLE IF EXISTS ar_containers;
+DROP TABLE IF EXISTS ar_quran_surahs;
+DROP TABLE IF EXISTS ar_grammar_unit_items;
+DROP TABLE IF EXISTS ar_grammar_units;
+
+PRAGMA foreign_keys = ON;
 
 CREATE TABLE users (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -644,6 +658,7 @@ DROP TABLE IF EXISTS wv_brainstorm_sessions;
 DROP TABLE IF EXISTS sp_sprint_reviews;
 DROP TABLE IF EXISTS sp_weekly_tasks;
 DROP TABLE IF EXISTS sp_weekly_plans;
+DROP TABLE IF EXISTS sp_planner;
 
 DROP TABLE IF EXISTS ar_reviews;
 
@@ -827,64 +842,35 @@ CREATE TABLE wv_quran_relations (
   FOREIGN KEY (concept_id) REFERENCES wv_concepts(id) ON DELETE CASCADE
 );
 
-CREATE TABLE sp_weekly_plans (
-  week_start    TEXT PRIMARY KEY,
-  user_id       INTEGER,
+CREATE TABLE IF NOT EXISTS sp_planner (
+  id              TEXT PRIMARY KEY,        -- sha / uuid
+  canonical_input TEXT NOT NULL UNIQUE,    -- stable hash
 
-  notes         TEXT,
-  planned_count INTEGER NOT NULL DEFAULT 0,
-  done_count    INTEGER NOT NULL DEFAULT 0,
+  user_id         INTEGER NOT NULL,
 
-  week_json     JSON NOT NULL CHECK (json_valid(week_json)),
-  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at    TEXT,
+  -- planner identity
+  item_type       TEXT NOT NULL
+    CHECK (item_type IN ('week_plan','task','sprint_review')),
 
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
+  -- temporal anchors
+  week_start      TEXT,    -- for week_plan + task
+  period_start    TEXT,    -- for sprint_review
+  period_end      TEXT,    -- for sprint_review
 
-CREATE TABLE sp_weekly_tasks (
-  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id            INTEGER,
+  -- linking / references
+  related_type    TEXT,    -- ar_lesson | wv_claim | wv_content_item
+  related_id      TEXT,
 
-  week_start         TEXT NOT NULL,
-  title              TEXT NOT NULL,
+  -- unified payload
+  item_json       JSON NOT NULL CHECK (json_valid(item_json)),
 
-  task_type          TEXT NOT NULL,
-  kanban_state       TEXT NOT NULL DEFAULT 'backlog',
-  status             TEXT NOT NULL DEFAULT 'planned',
-  priority           INTEGER DEFAULT 3,
-  points             REAL,
-  due_date           TEXT,
-  order_index        INTEGER NOT NULL DEFAULT 0,
+  -- lifecycle
+  status          TEXT NOT NULL DEFAULT 'active',
 
-  task_json          JSON NOT NULL CHECK (json_valid(task_json)),
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT,
 
-  ar_lesson_id       INTEGER,
-  wv_claim_id        TEXT,
-  wv_content_item_id TEXT,
-
-  created_at         TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at         TEXT,
-
-  FOREIGN KEY (user_id)            REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (week_start)         REFERENCES sp_weekly_plans(week_start) ON DELETE CASCADE,
-  FOREIGN KEY (ar_lesson_id)       REFERENCES ar_lessons(id) ON DELETE SET NULL
-);
-
-CREATE TABLE sp_sprint_reviews (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id      INTEGER,
-
-  period_start TEXT NOT NULL,
-  period_end   TEXT NOT NULL,
-  status       TEXT NOT NULL DEFAULT 'draft',
-
-  review_json  JSON NOT NULL CHECK (json_valid(review_json)),
-
-  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at   TEXT,
-
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE ar_reviews (
@@ -963,15 +949,11 @@ CREATE INDEX idx_wv_quran_relations_concept  ON wv_quran_relations(concept_id);
 CREATE INDEX idx_wv_quran_relations_target   ON wv_quran_relations(target_type, target_id);
 CREATE INDEX idx_wv_quran_relations_relation ON wv_quran_relations(relation);
 
-CREATE INDEX idx_sp_weekly_plans_user_id        ON sp_weekly_plans(user_id);
-
-CREATE INDEX idx_sp_weekly_tasks_user_id        ON sp_weekly_tasks(user_id);
-CREATE INDEX idx_sp_weekly_tasks_week           ON sp_weekly_tasks(week_start);
-CREATE INDEX idx_sp_weekly_tasks_type           ON sp_weekly_tasks(task_type);
-CREATE INDEX idx_sp_weekly_tasks_kanban_state   ON sp_weekly_tasks(kanban_state);
-CREATE INDEX idx_sp_weekly_tasks_status         ON sp_weekly_tasks(status);
-CREATE INDEX idx_sp_weekly_tasks_order          ON sp_weekly_tasks(week_start, kanban_state, order_index);
-
-CREATE INDEX idx_sp_sprint_reviews_user_id      ON sp_sprint_reviews(user_id);
-CREATE INDEX idx_sp_sprint_reviews_period       ON sp_sprint_reviews(period_start, period_end);
-CREATE INDEX idx_sp_sprint_reviews_status       ON sp_sprint_reviews(status);
+CREATE INDEX idx_sp_planner_user_type
+  ON sp_planner(user_id, item_type);
+CREATE INDEX idx_sp_planner_week
+  ON sp_planner(user_id, week_start);
+CREATE INDEX idx_sp_planner_period
+  ON sp_planner(user_id, period_start, period_end);
+CREATE INDEX idx_sp_planner_related
+  ON sp_planner(related_type, related_id);

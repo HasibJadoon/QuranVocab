@@ -25,12 +25,50 @@ function safeParseJsonRecord(text: string | null) {
   return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
 }
 
+function normalizeLessonJson(input: unknown): Record<string, unknown> {
+  if (!input || typeof input !== 'object') return {};
+  if (Array.isArray(input)) return {};
+  return input as Record<string, unknown>;
+}
+
+function toInt(value: unknown, fallback: number | null = null) {
+  if (typeof value !== 'number') return fallback;
+  if (!Number.isFinite(value)) return fallback;
+  return Math.trunc(value);
+}
+
+function normLower(value: unknown, fallback: string) {
+  const s = typeof value === 'string' ? value.trim() : '';
+  return (s || fallback).toLowerCase();
+}
+
+function normStr(value: unknown) {
+  const s = typeof value === 'string' ? value.trim() : '';
+  return s || null;
+}
+
 function parseSurahFromUnitId(unitId: string | null): number | null {
   if (!unitId) return null;
   const parts = unitId.split(':');
   if (parts.length < 3) return null;
   const surah = Number.parseInt(parts[2], 10);
   return Number.isFinite(surah) ? surah : null;
+}
+
+function parseSurahFromRef(ref: string | null): number | null {
+  if (!ref) return null;
+  const parts = ref.split(':');
+  if (parts.length < 2) return null;
+  const surah = Number.parseInt(parts[0], 10);
+  return Number.isFinite(surah) ? surah : null;
+}
+
+function parseAyahFromRef(ref: string | null): number | null {
+  if (!ref) return null;
+  const parts = ref.split(':');
+  if (parts.length < 2) return null;
+  const ayah = Number.parseInt(parts[1], 10);
+  return Number.isFinite(ayah) ? ayah : null;
 }
 
 function parseAyahRange(unit: LessonUnitRow) {
@@ -261,8 +299,9 @@ async function loadLessonUnits(db: D1Database, containerId: string, lessonUnitId
 function collectAyahRequests(units: LessonUnitRow[]) {
   const map = new Map<number, Set<number>>();
   for (const unit of units) {
-    if (!unit.unit_id || unit.unit_type !== 'ayah') continue;
-    const surah = parseSurahFromUnitId(unit.unit_id);
+    if (!unit.unit_id) continue;
+    if (unit.unit_type !== 'ayah' && unit.unit_type !== 'passage') continue;
+    const surah = parseSurahFromUnitId(unit.unit_id) ?? parseSurahFromRef(unit.start_ref);
     if (!surah) continue;
     const ayahFromRaw = unit.ayah_from ?? null;
     const ayahToRaw = unit.ayah_to ?? ayahFromRaw;
@@ -464,8 +503,9 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     const ayat: QuranLessonAyahUnit[] = [];
     const seenVerseKeys = new Set<string>();
     for (const unit of unitRows) {
-      if (!unit.unit_id || unit.unit_type !== 'ayah') continue;
-      const surah = parseSurahFromUnitId(unit.unit_id);
+      if (!unit.unit_id) continue;
+      if (unit.unit_type !== 'ayah' && unit.unit_type !== 'passage') continue;
+      const surah = parseSurahFromUnitId(unit.unit_id) ?? parseSurahFromRef(unit.start_ref);
       if (!surah) continue;
       const { ayah_from: rawFrom, ayah_to: rawTo } = parseAyahRange(unit);
       const start = rawFrom ?? parseAyahFromRef(unit.start_ref) ?? 0;
@@ -693,6 +733,15 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       });
     }
 
+    const hasContainerId =
+      Object.prototype.hasOwnProperty.call(body, 'container_id') ||
+      Object.prototype.hasOwnProperty.call(body, 'containerId');
+    const hasUnitId =
+      Object.prototype.hasOwnProperty.call(body, 'unit_id') ||
+      Object.prototype.hasOwnProperty.call(body, 'unitId');
+    const containerIdInput = normStr(body?.container_id ?? body?.containerId);
+    const unitIdInput = normStr(body?.unit_id ?? body?.unitId);
+
     const title_ar = normStr(body?.title_ar);
     const lesson_type = 'quran';
     const subtype = normStr(body?.subtype);
@@ -702,6 +751,28 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
 
     const lessonJsonObj = normalizeLessonJson(body?.lesson_json ?? body?.lessonJson);
     const lesson_json = JSON.stringify(lessonJsonObj ?? {});
+
+    const existing = await ctx.env.DB
+      .prepare(
+        `
+        SELECT container_id, unit_id
+        FROM ar_lessons
+        WHERE id = ?1 AND user_id = ?2 AND lesson_type = 'quran'
+        LIMIT 1
+        `
+      )
+      .bind(id, user.id)
+      .first<any>();
+
+    if (!existing) {
+      return new Response(JSON.stringify({ ok: false, error: 'Not found' }), {
+        status: 404,
+        headers: jsonHeaders,
+      });
+    }
+
+    const nextContainerId = hasContainerId ? containerIdInput : (existing?.container_id ?? null);
+    const nextUnitId = hasUnitId ? unitIdInput : (existing?.unit_id ?? null);
 
     const res = await ctx.env.DB
       .prepare(
@@ -716,14 +787,29 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
           status = ?6,
           difficulty = ?7,
           lesson_json = ?8,
+          container_id = ?9,
+          unit_id = ?10,
           updated_at = datetime('now')
-        WHERE id = ?9 AND user_id = ?10 AND lesson_type = 'quran'
+        WHERE id = ?11 AND user_id = ?12 AND lesson_type = 'quran'
         RETURNING
           id, user_id, title, title_ar, lesson_type, subtype, source, status, difficulty,
-          created_at, updated_at, lesson_json
+          container_id, unit_id, created_at, updated_at, lesson_json
         `
       )
-      .bind(title, title_ar, lesson_type, subtype, source, status, difficulty, lesson_json, id, user.id)
+      .bind(
+        title,
+        title_ar,
+        lesson_type,
+        subtype,
+        source,
+        status,
+        difficulty,
+        lesson_json,
+        nextContainerId,
+        nextUnitId,
+        id,
+        user.id
+      )
       .first<any>();
 
     if (!res) {
@@ -731,6 +817,21 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
         status: 404,
         headers: jsonHeaders,
       });
+    }
+
+    if (nextContainerId) {
+      const linkScope = nextUnitId ? 'unit' : 'container';
+      const linkUnitId = nextUnitId ?? '';
+      await ctx.env.DB
+        .prepare(
+          `
+          INSERT OR REPLACE INTO ar_lesson_unit_link (
+            lesson_id, container_id, unit_id, order_index, link_scope, created_at
+          ) VALUES (?1, ?2, ?3, 1, ?4, datetime('now'))
+        `
+        )
+        .bind(id, nextContainerId, linkUnitId, linkScope)
+        .run();
     }
 
     const parsed = safeJsonParse((res.lesson_json as string | null) ?? null);

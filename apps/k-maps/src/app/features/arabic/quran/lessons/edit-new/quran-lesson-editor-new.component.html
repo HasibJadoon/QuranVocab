@@ -2,12 +2,12 @@
   <header class="edit-hero">
     <div>
       <p class="hero-kicker">K-Maps · Quran Editor (Fresh)</p>
-      <h1>{{ lessonTitle || (isNew ? 'New Lesson' : 'Lesson #' + lessonId) }}</h1>
+      <h1>{{ lessonTitle || (isNew ? 'New Quran Lesson' : 'Lesson #' + lessonId) }}</h1>
       <p class="hero-intent">{{ activeStep?.intent }}</p>
     </div>
     <div class="hero-actions">
+      <button type="button" class="btn btn-ghost" (click)="clearDraft()">New Quran Lesson</button>
       <button type="button" class="btn btn-ghost" (click)="back()">Back</button>
-      <button type="button" class="btn btn-ghost" (click)="clearDraft()">Clear</button>
     </div>
   </header>
 
@@ -59,6 +59,129 @@
               <span>Meta JSON</span>
               <textarea rows="6" [(ngModel)]="metaJson"></textarea>
             </label>
+            <div class="meta-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="savingLesson"
+                (click)="isNew ? createLesson() : saveLesson()"
+              >
+                {{ isNew ? 'Create Lesson' : 'Save Lesson' }}
+              </button>
+              <button type="button" class="btn btn-ghost" (click)="selectStep(1)">
+                Select Verses
+              </button>
+            </div>
+            <p *ngIf="statusMessage" class="status-banner" [ngClass]="statusTone">
+              {{ statusMessage }}
+            </p>
+          </div>
+
+          <div *ngSwitchCase="'verses'" class="verse-panel">
+            <div class="verse-controls">
+              <label>
+                <span>Surah</span>
+                <select [(ngModel)]="selectedSurah" (change)="onSurahChange()">
+                  <option *ngFor="let s of surahs" [value]="s.surah">
+                    {{ s.surah }} · {{ s.name_en || 'Surah' }} ({{ s.name_ar }})
+                  </option>
+                </select>
+              </label>
+
+              <div class="range-summary">
+                <div>
+                  <span class="label">Selected range</span>
+                  <strong>{{ selectedRangeLabel }}</strong>
+                </div>
+                <div class="range-actions">
+                  <button type="button" class="btn btn-ghost" (click)="clearRange()">Clear Range</button>
+                </div>
+              </div>
+
+              <label>
+                <span>Container title</span>
+                <input type="text" [(ngModel)]="containerTitle" placeholder="Surah 1 1-7" />
+              </label>
+
+              <div class="verse-actions">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="savingContainer || !lessonId || rangeStart === null"
+                  (click)="createContainer()"
+                >
+                  Create Container + Passage Unit
+                </button>
+                <button type="button" class="btn btn-ghost" (click)="saveLesson()" [disabled]="savingLesson || !lessonId">
+                  Save Lesson
+                </button>
+              </div>
+              <p *ngIf="statusMessage" class="status-banner" [ngClass]="statusTone">
+                {{ statusMessage }}
+              </p>
+            </div>
+
+            <div class="ayah-list" *ngIf="!loadingAyahs && ayahs.length">
+              <article
+                class="ayah-card"
+                *ngFor="let ayah of ayahs"
+                [class.ayah-card--selected]="isAyahSelected(ayah)"
+              >
+                <div class="ayah-header">
+                  <div>
+                    <span class="ayah-index">Ayah {{ ayah.ayah }}</span>
+                    <span class="ayah-key">Surah {{ ayah.surah }}</span>
+                  </div>
+                  <div class="ayah-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="setStart(ayah)">
+                      Start
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="setEnd(ayah)">
+                      End
+                    </button>
+                  </div>
+                </div>
+                <p class="ayah-text">{{ ayah.text }}</p>
+                <div class="ayah-words" *ngIf="ayah.words?.length">
+                  <ng-container *ngFor="let word of ayah.words">
+                    <span *ngIf="wordLabel(word) as label" class="ayah-word" [title]="wordTitle(word)">
+                      {{ label }}
+                    </span>
+                  </ng-container>
+                </div>
+                <p *ngIf="!ayah.words?.length" class="ayah-words-empty">No word tokens available.</p>
+              </article>
+            </div>
+
+            <div *ngIf="loadingAyahs" class="text-muted">Loading ayahs…</div>
+            <div *ngIf="!loadingAyahs && !ayahs.length" class="text-muted">No ayahs loaded.</div>
+            <div *ngIf="ayahError" class="error-banner">{{ ayahError }}</div>
+          </div>
+
+          <div *ngSwitchCase="'container'" class="card-stack">
+            <div class="info-row">
+              <span>Container</span>
+              <strong>{{ containerId || 'Not created yet' }}</strong>
+            </div>
+            <div class="info-row">
+              <span>Passage Unit</span>
+              <strong>{{ passageUnitId || 'Not created yet' }}</strong>
+            </div>
+            <div class="info-row">
+              <span>Title</span>
+              <strong>{{ containerTitle || '—' }}</strong>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="savingLesson || !lessonId"
+              (click)="saveLesson()"
+            >
+              Save Lesson
+            </button>
+            <p *ngIf="statusMessage" class="status-banner" [ngClass]="statusTone">
+              {{ statusMessage }}
+            </p>
           </div>
 
           <div *ngSwitchDefault class="placeholder">

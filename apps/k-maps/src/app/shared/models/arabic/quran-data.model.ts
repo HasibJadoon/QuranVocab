@@ -162,6 +162,8 @@ export interface QuranAyahWord {
   location?: string | null;
   word_location?: string | null;
   token_index?: number;
+  text?: string | null;
+  simple?: string | null;
   text_uthmani?: string | null;
   text_imlaei_simple?: string | null;
   lemma_id?: number;
@@ -171,6 +173,9 @@ export interface QuranAyahWord {
   uniq_words_count?: number | null;
   word_simple?: string | null;
   word_diacritic?: string | null;
+  lemma?: string | null;
+  root?: string | null;
+  char_type?: string | null;
   ar_u_token?: string | null;
   ar_token_occ_id?: string | null;
 }
