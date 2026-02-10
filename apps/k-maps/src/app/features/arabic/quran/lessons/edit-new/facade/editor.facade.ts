@@ -407,16 +407,18 @@ export class QuranLessonEditorFacade {
     this.state.lessonDifficulty = level;
   }
 
-  selectTaskTab(type: TaskType) {
+  selectTaskTab(type: TaskType, syncUrl = true) {
     this.state.activeTaskType = type;
     if (type === 'sentence_structure') {
       this.state.sentenceSubTab = 'verses';
+      this.state.sentenceAyahSelections = selectSelectedAyahs(this.state).map((ayah) => ayah.ayah);
       if (!this.state.sentenceLoadedAyahs.length) {
-        this.state.sentenceAyahSelections = selectSelectedAyahs(this.state).map((ayah) => ayah.ayah);
         this.loadSentenceVerses();
       }
     }
-    this.syncQueryParams({ task: type });
+    if (syncUrl) {
+      this.syncQueryParams({ task: type });
+    }
   }
 
   getActiveTaskTab(): TaskTab | null {
@@ -497,6 +499,31 @@ export class QuranLessonEditorFacade {
     this.state.sentenceCandidates = [candidate, ...this.state.sentenceCandidates];
   }
 
+  async addSentenceTextToTask(text: string, ayah: number | null = null, source: SentenceCandidate['source'] = 'selection') {
+    const cleaned = this.stripArabicDiacritics(text.replace(/\s+/g, ' ').trim());
+    if (!cleaned) {
+      setStatus(this.state, 'error', 'Select Arabic text to add as a sentence.');
+      return;
+    }
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
+    if (!tab) return;
+    const parsed = this.parseTaskJsonObject(tab.json);
+    const items = Array.isArray(parsed['items']) ? parsed['items'] : [];
+    const nextOrder = this.nextSentenceOrder(items);
+    items.push({
+      sentence_order: nextOrder,
+      canonical_sentence: cleaned,
+      steps: [],
+      source,
+      ayah,
+    });
+    parsed['schema_version'] = parsed['schema_version'] ?? 1;
+    parsed['task_type'] = 'sentence_structure';
+    parsed['items'] = items;
+    tab.json = JSON.stringify(parsed, null, 2);
+    setStatus(this.state, 'success', 'Sentence added to task (local).');
+  }
+
   async addSentenceCandidateToTask(candidate: SentenceCandidate) {
     if (!this.state.lessonId || !this.state.containerId || !this.state.passageUnitId) {
       setStatus(this.state, 'error', 'Save lesson metadata before adding sentences.');
@@ -549,6 +576,29 @@ export class QuranLessonEditorFacade {
     items.splice(index, 1);
     parsed['items'] = items;
     tab.json = JSON.stringify(parsed, null, 2);
+  }
+
+  updateSentenceItem(index: number, text: string) {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
+    if (!tab) return;
+    const cleaned = this.stripArabicDiacritics(text.replace(/\s+/g, ' ').trim());
+    if (!cleaned) {
+      setStatus(this.state, 'error', 'Sentence text cannot be empty.');
+      return;
+    }
+    const parsed = this.parseTaskJsonObject(tab.json);
+    const items = Array.isArray(parsed['items']) ? parsed['items'] : [];
+    if (index < 0 || index >= items.length) return;
+    const item = items[index];
+    if (item && typeof item === 'object') {
+      (item as Record<string, unknown>)['canonical_sentence'] = cleaned;
+      if ('ar_u_sentence' in (item as Record<string, unknown>)) {
+        delete (item as Record<string, unknown>)['ar_u_sentence'];
+      }
+    }
+    parsed['items'] = items;
+    tab.json = JSON.stringify(parsed, null, 2);
+    setStatus(this.state, 'success', 'Sentence updated.');
   }
 
   validateTaskJson(type: TaskType) {
@@ -686,6 +736,7 @@ export class QuranLessonEditorFacade {
       if (!tasks.length) {
         this.state.taskTabs = buildTaskTabs();
         this.state.activeTaskType = this.state.taskTabs[0]?.type ?? 'reading';
+        this.ensureSentenceVersesLoaded();
         return;
       }
       const tabs = buildTaskTabs();
@@ -697,7 +748,9 @@ export class QuranLessonEditorFacade {
         }
       }
       this.state.taskTabs = tabs;
-      this.state.activeTaskType = tabs[0]?.type ?? 'reading';
+      const preferredType = this.state.activeTaskType;
+      this.state.activeTaskType = tabs.some((tab) => tab.type === preferredType) ? preferredType : (tabs[0]?.type ?? 'reading');
+      this.ensureSentenceVersesLoaded();
     } catch (err: any) {
       setStatus(this.state, 'error', err?.message ?? 'Failed to load tasks.');
     }
@@ -711,7 +764,7 @@ export class QuranLessonEditorFacade {
 
     const task = params.get('task') as TaskType | null;
     if (task && this.isTaskType(task)) {
-      this.state.activeTaskType = task;
+      this.selectTaskTab(task, false);
     }
 
     const sub = params.get('sub') as SentenceSubTab | null;
@@ -803,6 +856,14 @@ export class QuranLessonEditorFacade {
     this.state.sentenceAyahSelections = selectSelectedAyahs(this.state).map((ayah) => ayah.ayah);
     this.state.sentenceLoadedAyahs = [];
     this.state.sentenceCandidates = [];
+  }
+
+  private ensureSentenceVersesLoaded() {
+    if (this.state.activeTaskType !== 'sentence_structure') return;
+    this.state.sentenceAyahSelections = selectSelectedAyahs(this.state).map((ayah) => ayah.ayah);
+    if (!this.state.sentenceLoadedAyahs.length) {
+      this.loadSentenceVerses();
+    }
   }
 
   destroy() {

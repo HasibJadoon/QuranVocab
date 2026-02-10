@@ -11,45 +11,29 @@
   <div class="sentence-pane">
     <ng-container *ngIf="state.sentenceSubTab === 'verses'">
       <div class="sentence-card">
-        <h4>Verse Selector</h4>
-        <div class="sentence-row">
-          <span>Surah</span>
-          <strong>{{ state.selectedSurah || '--' }}</strong>
-        </div>
-        <div class="sentence-row">
-          <span>Unit Range</span>
-          <strong>{{ rangeLabelShort }}</strong>
-        </div>
-        <div class="verse-list">
-          <label *ngFor="let ayah of selectedAyahs" class="verse-item">
-            <input
-              type="checkbox"
-              [checked]="state.sentenceAyahSelections.includes(ayah.ayah)"
-              (change)="toggleSentenceAyah(ayah.ayah)"
-            />
-            <span>Ayah {{ ayah.ayah }}</span>
-          </label>
-        </div>
-        <div class="action-row">
-          <button type="button" class="btn btn-ghost btn-sm" (click)="selectAllSentenceAyahs()">Select all</button>
-          <button type="button" class="btn btn-ghost btn-sm" (click)="clearSentenceAyahs()">Clear</button>
-          <button type="button" class="btn btn-primary btn-sm" (click)="loadSentenceVerses()">Load verses</button>
-        </div>
-      </div>
-
-      <div class="sentence-card">
         <div class="sentence-card-head">
           <h4>Verse Preview</h4>
           <div class="action-row">
             <button type="button" class="btn btn-ghost btn-sm" (click)="extractSentenceCandidates()">Extract sentences</button>
-            <button type="button" class="btn btn-ghost btn-sm" (click)="addSelectionFromPreview()">Add selection as sentence</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="addSelectionFromPreview()">Add selection</button>
           </div>
         </div>
+        <p class="note-muted">Double-click highlighted text to add it as a sentence. Right-click to open the menu.</p>
         <div class="unit-preview" *ngIf="state.sentenceLoadedAyahs.length; else noVersePreview">
-          <article class="unit-ayah" *ngFor="let ayah of selectedAyahs" [hidden]="!state.sentenceLoadedAyahs.includes(ayah.ayah)">
-            <span class="unit-ayah-index">Ayah {{ ayah.ayah }}</span>
-            <p class="unit-ayah-text">{{ sentenceAyahText(ayah) }}</p>
-          </article>
+          <div
+            class="passage-preview"
+            (contextmenu)="openContextMenu($event)"
+            (dblclick)="addSelectionFromPreview()"
+          >
+            <p class="passage-text">
+              <ng-container *ngFor="let ayah of selectedAyahs">
+                <span class="passage-ayah" *ngIf="state.sentenceLoadedAyahs.includes(ayah.ayah)">
+                  <span class="passage-ayah-text" (contextmenu)="openContextMenu($event, ayah)">{{ sentenceAyahText(ayah) }}</span>
+                  <span class="passage-ayah-marker" (contextmenu)="openContextMenu($event, ayah)">﴿{{ ayah.ayah }}﴾</span>
+                </span>
+              </ng-container>
+            </p>
+          </div>
         </div>
         <ng-template #noVersePreview>
           <p class="text-muted">Load verses to preview.</p>
@@ -86,11 +70,43 @@
         <h4>Task Sentences</h4>
         <div class="sentence-list" *ngIf="sentenceItems.length; else noItems">
           <div class="sentence-item" *ngFor="let item of sentenceItems; let i = index">
-            <div>
+            <div *ngIf="editingIndex !== i; else editSentence">
               <span class="sentence-tag">#{{ i + 1 }}</span>
               <p class="sentence-text">{{ item['canonical_sentence'] }}</p>
             </div>
-            <button type="button" class="btn btn-ghost btn-sm" (click)="removeSentenceItem(i)">Remove</button>
+            <ng-template #editSentence>
+              <label>
+                <span>Edit sentence</span>
+                <textarea rows="2" [(ngModel)]="editingValue"></textarea>
+              </label>
+            </ng-template>
+            <div class="action-row">
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                *ngIf="editingIndex !== i"
+                (click)="startEditSentence(item, i)"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                *ngIf="editingIndex === i"
+                (click)="saveEditSentence(i)"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                *ngIf="editingIndex === i"
+                (click)="cancelEditSentence()"
+              >
+                Cancel
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="removeSentenceItem(i)">Remove</button>
+            </div>
           </div>
         </div>
         <ng-template #noItems>
@@ -122,4 +138,30 @@
       </div>
     </ng-container>
   </div>
+</div>
+
+<div
+  class="sentence-context-menu"
+  *ngIf="contextMenuOpen"
+  [style.left.px]="contextMenuX"
+  [style.top.px]="contextMenuY"
+  (click)="$event.stopPropagation()"
+>
+  <button
+    type="button"
+    class="sentence-context-action"
+    [disabled]="!contextMenuSelection"
+    (click)="addContextSelection()"
+  >
+    Add selected text as sentence
+  </button>
+  <button
+    type="button"
+    class="sentence-context-action"
+    [disabled]="!contextMenuAyahText"
+    (click)="addContextAyah()"
+  >
+    Add entire ayah as sentence
+  </button>
+  <button type="button" class="sentence-context-action is-muted" (click)="closeContextMenu()">Close</button>
 </div>
