@@ -50,4 +50,13 @@ function isOverflown(element: HTMLElement) {
 })
 export class DefaultLayoutComponent {
   public navItems = [...navItems];
+  public sidebarCollapsed = false;
+
+  onSidebarEnter() {
+    this.sidebarCollapsed = false;
+  }
+
+  onSidebarLeave() {
+    this.sidebarCollapsed = true;
+  }
 }

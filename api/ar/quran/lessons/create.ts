@@ -15,6 +15,7 @@ type ContainerRequestBody = {
   container_id?: string;
   container_key?: string;
   title?: string;
+  unit_label?: string;
   surah: number;
   ayah_from: number;
   ayah_to: number;
@@ -64,6 +65,11 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       .run();
 
     const passageId = buildPassageUnitId(containerId, surah, ayahFrom, ayahTo);
+    const unitLabel = body.unit_label?.toString().trim();
+    const unitMeta = {
+      source: 'lesson-authoring',
+      ...(unitLabel ? { label: unitLabel } : {}),
+    };
     await ctx.env.DB
       .prepare(
         `
@@ -81,7 +87,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         `${surah}:${ayahFrom}`,
         `${surah}:${ayahTo}`,
         body.text_cache ?? null,
-        JSON.stringify({ source: 'lesson-authoring' })
+        JSON.stringify(unitMeta)
       )
       .run();
 

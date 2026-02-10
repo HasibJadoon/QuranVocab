@@ -13,27 +13,11 @@
 -- Universal PK columns are TEXT(64 hex). canonical_input is UNIQUE.
 --------------------------------------------------------------------------------
 
-PRAGMA foreign_keys = OFF;
 
 
 --------------------------------------------------------------------------------
 -- 0) USERS / CORE
 --------------------------------------------------------------------------------
-DROP TABLE IF EXISTS user_activity_logs;
-DROP TABLE IF EXISTS user_state;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS ar_lesson_unit_link;
-DROP TABLE IF EXISTS ar_lessons;
-DROP TABLE IF EXISTS ar_quran_translation_passages;
-DROP TABLE IF EXISTS ar_quran_translation_sources;
-DROP TABLE IF EXISTS ar_quran_translations;
-DROP TABLE IF EXISTS ar_quran_surah_ayah_meta;
-DROP TABLE IF EXISTS ar_quran_ayah;
-DROP TABLE IF EXISTS ar_container_units;
-DROP TABLE IF EXISTS ar_containers;
-DROP TABLE IF EXISTS ar_quran_surahs;
-DROP TABLE IF EXISTS ar_grammar_unit_items;
-DROP TABLE IF EXISTS ar_grammar_units;
 
 PRAGMA foreign_keys = ON;
 
@@ -271,10 +255,6 @@ CREATE INDEX IF NOT EXISTS idx_ar_lesson_unit_link_container
 -- =====================================================================================
 -- 1b) USER LESSON LAYER (empty placeholders removed earlier; add minimal tables here)
 -- =====================================================================================
-DROP TABLE IF EXISTS ar_lesson_enrollments;
-DROP TABLE IF EXISTS ar_lesson_user_state;
-DROP TABLE IF EXISTS ar_lesson_unit_progress;
-DROP TABLE IF EXISTS ar_lesson_unit_tasks;
 
 CREATE TABLE IF NOT EXISTS ar_lesson_enrollments (
   lesson_id     INTEGER NOT NULL,
@@ -329,19 +309,19 @@ CREATE TABLE IF NOT EXISTS ar_lesson_unit_progress (
 CREATE INDEX idx_ar_lesson_unit_progress_user
   ON ar_lesson_unit_progress(user_id, lesson_id, status);
 
-CREATE TABLE IF NOT EXISTS ar_lesson_unit_tasks (
+CREATE TABLE IF NOT EXISTS ar_container_unit_task (
   task_id    TEXT NOT NULL,
   unit_id    TEXT NOT NULL,
 
-  task_type  TEXT NOT NULL CHECK (task_type IN (
-    'reading',
-    'sentence_structure',
-    'morphology',
-    'grammar_concepts',
-    'expressions',
-    'comprehension',
-    'passage_structure'
-  )),
+  task_type TEXT NOT NULL CHECK (task_type IN (
+  'reading',
+  'structure',
+  'sentence',
+  'morphology',
+  'grammar',
+  'expressions',
+  'comprehension'
+)),
 
   task_name  TEXT NOT NULL,
   task_json  JSON NOT NULL CHECK (json_valid(task_json)),
@@ -355,15 +335,15 @@ CREATE TABLE IF NOT EXISTS ar_lesson_unit_tasks (
   UNIQUE (unit_id, task_type)
 );
 
-CREATE INDEX idx_ar_lesson_unit_tasks_unit ON ar_lesson_unit_tasks(unit_id);
-CREATE INDEX idx_ar_lesson_unit_tasks_type ON ar_lesson_unit_tasks(task_type);
+CREATE INDEX idx_ar_container_unit_task_unit ON ar_container_unit_task(unit_id);
+CREATE INDEX idx_ar_container_unit_task_type ON ar_container_unit_task(task_type);
 
-CREATE TRIGGER IF NOT EXISTS trg_ar_lesson_unit_tasks_updated_at
-AFTER UPDATE ON ar_lesson_unit_tasks
+CREATE TRIGGER IF NOT EXISTS trg_ar_container_unit_task_updated_at
+AFTER UPDATE ON ar_container_unit_task
 FOR EACH ROW
 WHEN NEW.updated_at = OLD.updated_at
 BEGIN
-  UPDATE ar_lesson_unit_tasks
+  UPDATE ar_container_unit_task
   SET updated_at = datetime('now')
   WHERE task_id = OLD.task_id;
 END;
@@ -371,9 +351,6 @@ END;
 --------------------------------------------------------------------------------
 -- 1c) NOTES & CITATIONS (scholarly annotations)
 --------------------------------------------------------------------------------
-DROP TABLE IF EXISTS ar_note_targets;
-DROP TABLE IF EXISTS ar_notes;
-DROP TABLE IF EXISTS ar_sources;
 
 CREATE TABLE ar_sources (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -437,10 +414,6 @@ CREATE INDEX idx_ar_note_targets_container ON ar_note_targets(container_id, unit
 -- =====================================================================================
 -- 2) SRS LAYER (per-user spaced repetition)
 -- =====================================================================================
-DROP TABLE IF EXISTS ar_srs;
-DROP TABLE IF EXISTS ar_srs_reviews;
-DROP TABLE IF EXISTS ar_srs_state;
-DROP TABLE IF EXISTS ar_srs_items;
 
 CREATE TABLE IF NOT EXISTS ar_srs (
   id              TEXT PRIMARY KEY,
@@ -534,7 +507,6 @@ CREATE INDEX IF NOT EXISTS idx_wiki_docs_status ON wiki_docs(status);
 --   References, Flags
 --------------------------------------------------------------------------------
 
-DROP TABLE IF EXISTS ar_u_lexicon;
 
 CREATE TABLE ar_u_lexicon (
   ar_u_lexicon        TEXT PRIMARY KEY,
@@ -643,24 +615,8 @@ CREATE TABLE ar_grammar_unit_items (
 -- 4) WORLDVIEW (wv_) + PLANNER (sp_)
 -- WV knowledge tables use SHA IDs + canonical_input
 --------------------------------------------------------------------------------
-DROP TABLE IF EXISTS wv_quran_relations;
-DROP TABLE IF EXISTS wv_discourse_edges;
-DROP TABLE IF EXISTS wv_concept_sources;
-DROP TABLE IF EXISTS wv_concept_anchors;
-DROP TABLE IF EXISTS wv_concepts;
-DROP TABLE IF EXISTS wv_cross_references;
-DROP TABLE IF EXISTS wv_content_items;
-DROP TABLE IF EXISTS wv_claims;
-DROP TABLE IF EXISTS wv_library_entries;
-DROP TABLE IF EXISTS wv_content_library_links;
-DROP TABLE IF EXISTS wv_brainstorm_sessions;
 
-DROP TABLE IF EXISTS sp_sprint_reviews;
-DROP TABLE IF EXISTS sp_weekly_tasks;
-DROP TABLE IF EXISTS sp_weekly_plans;
-DROP TABLE IF EXISTS sp_planner;
 
-DROP TABLE IF EXISTS ar_reviews;
 
 CREATE TABLE wv_brainstorm_sessions (
   id             TEXT PRIMARY KEY,

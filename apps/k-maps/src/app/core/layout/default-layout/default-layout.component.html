@@ -5,6 +5,9 @@
   colorScheme="dark"
   id="sidebar1"
   visible
+  [narrow]="sidebarCollapsed"
+  (mouseenter)="onSidebarEnter()"
+  (mouseleave)="onSidebarLeave()"
 >
   <c-sidebar-header class="border-bottom">
     <c-sidebar-brand [routerLink]="[]">
