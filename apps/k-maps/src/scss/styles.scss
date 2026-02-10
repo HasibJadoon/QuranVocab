@@ -26,6 +26,9 @@
 // Global styles for the Quran study view.
 @use "quran-lesson-study";
 
+// Global styles for the Quran lesson editor (authoring).
+@use "quran-lesson-editor-new";
+
 // Examples
 // We use those styles to show code examples, you should remove them in your application.
 @use "examples";
