@@ -134,6 +134,7 @@ CREATE TABLE ar_quran_ayah (
   char_count        INTEGER,
   verse_mark        TEXT,
   verse_full        TEXT,
+  words             JSON CHECK (words IS NULL OR json_valid(words)),
   created_at        TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at        TEXT,
   FOREIGN KEY (surah) REFERENCES ar_quran_surahs(surah) ON DELETE RESTRICT,
@@ -253,49 +254,6 @@ CREATE INDEX IF NOT EXISTS idx_ar_lesson_unit_link_lesson_order
 CREATE INDEX IF NOT EXISTS idx_ar_lesson_unit_link_container
   ON ar_lesson_unit_link(container_id);
 
-CREATE TABLE ar_lesson_drafts (
-  draft_id      TEXT PRIMARY KEY,
-  lesson_id     INTEGER,
-  user_id       INTEGER NOT NULL,
-  lesson_type   TEXT NOT NULL,
-  status        TEXT NOT NULL DEFAULT 'draft',
-  active_step   TEXT,
-  draft_version INTEGER NOT NULL DEFAULT 1,
-  draft_json    JSON NOT NULL CHECK (json_valid(draft_json)),
-  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at    TEXT,
-  FOREIGN KEY (lesson_id) REFERENCES ar_lessons(id) ON DELETE SET NULL,
-  FOREIGN KEY (user_id)   REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE INDEX idx_ar_lesson_drafts_user_updated
-  ON ar_lesson_drafts(user_id, updated_at);
-CREATE INDEX idx_ar_lesson_drafts_lesson
-  ON ar_lesson_drafts(lesson_id);
-CREATE INDEX idx_ar_lesson_drafts_status
-  ON ar_lesson_drafts(status);
-
-CREATE TABLE ar_lesson_commits (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  draft_id      TEXT NOT NULL,
-  lesson_id     INTEGER,
-  user_id       INTEGER NOT NULL,
-  step          TEXT NOT NULL,
-  draft_version INTEGER NOT NULL,
-  result_json   JSON CHECK (result_json IS NULL OR json_valid(result_json)),
-  error         TEXT,
-  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
-  UNIQUE (draft_id, step, draft_version),
-  FOREIGN KEY (draft_id) REFERENCES ar_lesson_drafts(draft_id) ON DELETE CASCADE,
-  FOREIGN KEY (lesson_id) REFERENCES ar_lessons(id) ON DELETE SET NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE INDEX idx_ar_lesson_commits_draft
-  ON ar_lesson_commits(draft_id, step);
-CREATE INDEX idx_ar_lesson_commits_user
-  ON ar_lesson_commits(user_id, created_at);
-
 CREATE TABLE ar_lesson_sentence_link (
   lesson_id          INTEGER NOT NULL,
   ar_sentence_occ_id TEXT NOT NULL,
@@ -316,6 +274,7 @@ CREATE INDEX idx_ar_lesson_sentence_link_unit
 DROP TABLE IF EXISTS ar_lesson_enrollments;
 DROP TABLE IF EXISTS ar_lesson_user_state;
 DROP TABLE IF EXISTS ar_lesson_unit_progress;
+DROP TABLE IF EXISTS ar_lesson_unit_tasks;
 
 CREATE TABLE IF NOT EXISTS ar_lesson_enrollments (
   lesson_id     INTEGER NOT NULL,
@@ -369,6 +328,45 @@ CREATE TABLE IF NOT EXISTS ar_lesson_unit_progress (
 );
 CREATE INDEX idx_ar_lesson_unit_progress_user
   ON ar_lesson_unit_progress(user_id, lesson_id, status);
+
+CREATE TABLE IF NOT EXISTS ar_lesson_unit_tasks (
+  task_id    TEXT NOT NULL,
+  unit_id    TEXT NOT NULL,
+
+  task_type  TEXT NOT NULL CHECK (task_type IN (
+    'reading',
+    'sentence_structure',
+    'morphology',
+    'grammar_concepts',
+    'expressions',
+    'comprehension',
+    'passage_structure'
+  )),
+
+  task_name  TEXT NOT NULL,
+  task_json  JSON NOT NULL CHECK (json_valid(task_json)),
+
+  status     TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','review','approved','published')),
+
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+
+  PRIMARY KEY (task_id),
+  UNIQUE (unit_id, task_type)
+);
+
+CREATE INDEX idx_ar_lesson_unit_tasks_unit ON ar_lesson_unit_tasks(unit_id);
+CREATE INDEX idx_ar_lesson_unit_tasks_type ON ar_lesson_unit_tasks(task_type);
+
+CREATE TRIGGER IF NOT EXISTS trg_ar_lesson_unit_tasks_updated_at
+AFTER UPDATE ON ar_lesson_unit_tasks
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+  UPDATE ar_lesson_unit_tasks
+  SET updated_at = datetime('now')
+  WHERE task_id = OLD.task_id;
+END;
 
 --------------------------------------------------------------------------------
 -- 1c) NOTES & CITATIONS (scholarly annotations)

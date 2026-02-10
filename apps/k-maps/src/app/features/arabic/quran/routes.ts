@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { ArLessonsPageComponent } from '../lessons-list/ar-lessons-page/ar-lessons-page.component';
-import { QuranLessonEditorComponent } from './lessons/edit/quran-lesson-editor.component';
+import { QuranLessonEditorNewComponent } from './lessons/edit-new/quran-lesson-editor-new.component';
 import { QuranLessonStudyComponent } from './lessons/study/quran-lesson-study.component';
 import { QuranLessonViewComponent } from './lessons/view/quran-lesson-view.component';
 import { QuranSectionListComponent } from './lessons/sections/list/quran-section-list.component';
@@ -58,11 +58,11 @@ export const routes: Routes = [
       },
       {
         path: 'new',
-        component: QuranLessonEditorComponent,
+        component: QuranLessonEditorNewComponent,
         data: { title: 'New Quran Lesson', lessonType: 'quran' },
       },
       { path: ':id/view', component: QuranLessonViewComponent, data: { title: 'Quran Lesson' } },
-      { path: ':id/edit', component: QuranLessonEditorComponent, data: { title: 'Edit Quran Lesson' } },
+      { path: ':id/edit', component: QuranLessonEditorNewComponent, data: { title: 'Edit Quran Lesson' } },
       { path: ':id/study', component: QuranLessonStudyComponent, data: { title: 'Study Quran Lesson' } },
       {
         path: 'sections',

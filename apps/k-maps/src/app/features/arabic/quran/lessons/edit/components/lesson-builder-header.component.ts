@@ -22,6 +22,16 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
           View
         </button>
         <button
+          *ngIf="showFreshStart"
+          type="button"
+          class="btn btn-ghost"
+          [disabled]="isSaving"
+          (click)="freshStart.emit()"
+          title="Start a fresh blank lesson"
+        >
+          Fresh Start
+        </button>
+        <button
           *ngIf="showNormalize"
           type="button"
           class="btn btn-ghost btn-icon"
@@ -151,9 +161,11 @@ export class LessonBuilderHeaderComponent {
   @Input() currentStep = 1;
   @Input() totalSteps = 1;
   @Input() showNormalize = false;
+  @Input() showFreshStart = false;
 
   @Output() back = new EventEmitter<void>();
   @Output() view = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
   @Output() normalize = new EventEmitter<void>();
+  @Output() freshStart = new EventEmitter<void>();
 }

@@ -1,3 +1,4 @@
+<!-- LEGACY (OLD): Replaced by lessons/edit-new. -->
 <section *ngIf="lesson as lessonData; else loadingTpl" class="lesson-builder lesson-builder--workflow">
   <app-lesson-builder-header
     [kicker]="'K-Maps · Quran Lesson Builder'"
@@ -9,10 +10,12 @@
     [isNormalizing]="isNormalizing"
     [isNew]="isNewLesson"
     [showNormalize]="true"
+    [showFreshStart]="true"
     (back)="back()"
     (view)="openView()"
     (save)="save()"
     (normalize)="normalizeLessonIds()"
+    (freshStart)="freshStart()"
   />
 
   <div class="builder-workspace">

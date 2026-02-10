@@ -262,6 +262,7 @@ export class ArLessonsPageComponent implements OnInit {
       case 'draft':
         return 'bg-secondary';
       case 'archived':
+      case 'old':
         return 'bg-dark';
       default:
         return 'bg-info text-dark';

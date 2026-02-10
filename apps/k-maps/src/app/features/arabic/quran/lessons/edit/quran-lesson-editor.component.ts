@@ -1,3 +1,4 @@
+// LEGACY (OLD): Replaced by lessons/edit-new. Kept for reference.
 import { Component, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -402,6 +403,47 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       this.setSaveStatus(`Normalization failed: ${message}`, 'error');
     } finally {
       this.isNormalizing = false;
+    }
+  }
+
+  async freshStart() {
+    if (this.isSaving) return;
+    const confirmMessage = this.isNewLesson
+      ? 'Start a fresh blank lesson? This clears the current draft.'
+      : 'Mark this lesson as old and start a fresh blank lesson? This clears the current draft.';
+    if (!confirm(confirmMessage)) return;
+
+    this.isSaving = true;
+    this.setSaveStatus('Preparing fresh lesson...', 'info');
+
+    try {
+      const wasNewLesson = this.isNewLesson;
+      if (!wasNewLesson) {
+        await this.markLessonAsOld();
+      }
+
+      const currentKey = wasNewLesson ? 'new' : String(this.lesson?.id ?? 'new');
+      this.clearDraftForLesson(currentKey);
+      this.clearDraftForLesson('new');
+      this.draftId = null;
+      this.draftVersion = null;
+      this.draftStatus = null;
+
+      this.setSaveStatus('Starting fresh lesson...', 'success');
+      if (wasNewLesson) {
+        await this.startBlankLesson();
+        return;
+      }
+
+      const navigated = await this.router.navigate(['/arabic/quran/lessons/new']);
+      if (!navigated) {
+        await this.startBlankLesson();
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unable to start fresh lesson.';
+      this.setSaveStatus(`Fresh start failed: ${message}`, 'error');
+    } finally {
+      this.isSaving = false;
     }
   }
 
@@ -2029,6 +2071,60 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
     return 'Server step commit failed.';
   }
 
+  private async markLessonAsOld() {
+    if (!this.lesson) return;
+    const lessonId = this.getLessonId();
+    if (!lessonId) {
+      throw new Error('Lesson id missing. Save the lesson first.');
+    }
+
+    const title = String(this.lesson.title ?? '').trim();
+    const normalizedTitle = title || `Untitled lesson ${lessonId}`;
+    this.lesson.title = normalizedTitle;
+    this.lesson.status = 'old';
+
+    await firstValueFrom(this.service.updateLesson(lessonId, this.lesson));
+  }
+
+  private async startBlankLesson() {
+    this.isNewLesson = true;
+    this.activeTabId = 'meta';
+
+    this.lesson = this.buildBlankLesson();
+    this.lessonJson = '';
+    this.jsonError = '';
+    this.metaJsonError = null;
+    this.metaComprehensionJson = '{}';
+    this.metaNotesJson = '[]';
+
+    this.verseSelection = { surah: 1, ayahFrom: 1, ayahTo: 7 };
+    this.containerForm = {
+      title: '',
+      surah: 1,
+      ayahFrom: 1,
+      ayahTo: 7,
+      containerId: '',
+      unitId: '',
+    };
+    this.sentenceForm = {
+      text: '',
+      translation: '',
+      tokens: '',
+      spans: '',
+      grammarIds: '',
+    };
+
+    this.grammarLinks = { token: {}, span: {}, sentence: {} };
+    this.sentenceTrees = {};
+    this.selectedSentenceIdForTree = '';
+    this.selectedVerseUnitId = '';
+    this.occurrenceFeedback = null;
+
+    this.ensureDefaults();
+    await this.initializeDraftForLesson();
+    this.onLessonEdited();
+  }
+
   private getDraftStepEligibility(step: DraftCommitStep) {
     if (!this.lesson) {
       return { ok: false, reason: 'Lesson is not initialized.' };
@@ -3156,6 +3252,7 @@ export class QuranLessonEditorComponent implements OnInit, OnDestroy {
       grammar_links: this.grammarLinks,
       sentence_trees: this.sentenceTrees,
     };
+    console.log('Synced builder extras to lesson:', lessonAny['builder_extras']);
   }
 
   private loadBuilderExtrasFromLesson() {

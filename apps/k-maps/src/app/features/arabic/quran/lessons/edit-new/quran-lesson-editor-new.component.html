@@ -1,0 +1,89 @@
+<section class="quran-edit-new">
+  <header class="edit-hero">
+    <div>
+      <p class="hero-kicker">K-Maps · Quran Editor (Fresh)</p>
+      <h1>{{ lessonTitle || (isNew ? 'New Lesson' : 'Lesson #' + lessonId) }}</h1>
+      <p class="hero-intent">{{ activeStep?.intent }}</p>
+    </div>
+    <div class="hero-actions">
+      <button type="button" class="btn btn-ghost" (click)="back()">Back</button>
+      <button type="button" class="btn btn-ghost" (click)="clearDraft()">Clear</button>
+    </div>
+  </header>
+
+  <div class="edit-grid">
+    <aside class="step-rail">
+      <div class="step-rail-header">
+        <span>Step {{ activeStepIndex + 1 }} / {{ steps.length }}</span>
+      </div>
+      <button
+        *ngFor="let step of steps; let i = index"
+        type="button"
+        class="step-item"
+        [class.step-item--active]="i === activeStepIndex"
+        (click)="selectStep(i)"
+      >
+        <span class="step-index">0{{ i + 1 }}</span>
+        <span class="step-label">{{ step.label }}</span>
+      </button>
+    </aside>
+
+    <main class="edit-panel">
+      <div class="panel-head">
+        <div>
+          <h2>{{ activeStep?.label }}</h2>
+          <p>{{ activeStep?.intent }}</p>
+        </div>
+        <div class="panel-actions">
+          <button type="button" class="btn btn-ghost" [disabled]="activeStepIndex === 0" (click)="prevStep()">
+            Previous
+          </button>
+          <button type="button" class="btn btn-primary" [disabled]="activeStepIndex === steps.length - 1" (click)="nextStep()">
+            Next
+          </button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <ng-container [ngSwitch]="activeStep?.id">
+          <div *ngSwitchCase="'meta'" class="card-stack">
+            <label>
+              <span>Lesson title</span>
+              <input type="text" [(ngModel)]="lessonTitle" placeholder="Untitled lesson" />
+            </label>
+            <label>
+              <span>Intent note</span>
+              <textarea rows="4" [(ngModel)]="lessonNote" placeholder="Why is this lesson important?"></textarea>
+            </label>
+            <label>
+              <span>Meta JSON</span>
+              <textarea rows="6" [(ngModel)]="metaJson"></textarea>
+            </label>
+          </div>
+
+          <div *ngSwitchDefault class="placeholder">
+            <h3>Fresh canvas</h3>
+            <p>This step is intentionally blank. Build the new flow here.</p>
+            <div class="placeholder-grid">
+              <div class="placeholder-tile">
+                <span>Target</span>
+                <strong>Define structure</strong>
+                <p>Capture exactly what this step should collect.</p>
+              </div>
+              <div class="placeholder-tile">
+                <span>Output</span>
+                <strong>Map the data</strong>
+                <p>Decide the JSON payload for this stage.</p>
+              </div>
+              <div class="placeholder-tile">
+                <span>Flow</span>
+                <strong>Keep it linear</strong>
+                <p>Only advance when the core fields are ready.</p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </main>
+  </div>
+</section>
