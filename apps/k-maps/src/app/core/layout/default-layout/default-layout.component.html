@@ -9,11 +9,6 @@
   (mouseenter)="onSidebarEnter()"
   (mouseleave)="onSidebarLeave()"
 >
-  <c-sidebar-header class="border-bottom">
-    <c-sidebar-brand [routerLink]="[]">
-      <span class="fw-semibold">k-maps</span>
-    </c-sidebar-brand>
-  </c-sidebar-header>
 
   <ng-scrollbar pointerEventsMethod="scrollbar" visibility="hover">
     <c-sidebar-nav [navItems]="navItems" dropdownMode="close" compact />

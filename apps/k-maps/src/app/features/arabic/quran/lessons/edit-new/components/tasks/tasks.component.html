@@ -1,0 +1,39 @@
+<div class="step-section">
+  <p class="status-banner info" *ngIf="!state.lessonId">
+    Save lesson metadata before adding tasks.
+  </p>
+
+  <div class="task-layout">
+    <app-tabs
+      class="task-tabs"
+      [tabs]="taskTabsForNav"
+      [activeId]="state.activeTaskType"
+      variant="pills"
+      orientation="vertical"
+      ariaLabel="Task types"
+      [primaryIds]="primaryTaskTypes"
+      overflowLabel="More Tasks"
+      (tabChange)="onTaskTabChange($event)"
+    ></app-tabs>
+
+    <div class="task-editor" *ngIf="activeTaskTab as tab">
+      <div class="task-meta">
+        <span>Linked unit: Surah {{ state.selectedSurah || '--' }} Ayah {{ rangeLabelShort }}</span>
+        <span>Task type: {{ tab.label }}</span>
+      </div>
+      <ng-container [ngSwitch]="tab.type">
+        <app-reader-task *ngSwitchCase="'reading'"></app-reader-task>
+        <app-sentence-structure-task *ngSwitchCase="'sentence_structure'"></app-sentence-structure-task>
+        <app-morphology-task *ngSwitchCase="'morphology'"></app-morphology-task>
+        <app-grammar-concepts-task *ngSwitchCase="'grammar_concepts'"></app-grammar-concepts-task>
+        <app-expressions-task *ngSwitchCase="'expressions'"></app-expressions-task>
+        <app-comprehension-task *ngSwitchCase="'comprehension'"></app-comprehension-task>
+        <app-passage-structure-task *ngSwitchCase="'passage_structure'"></app-passage-structure-task>
+      </ng-container>
+    </div>
+  </div>
+
+  <p *ngIf="state.statusMessage" class="status-banner" [ngClass]="state.statusTone">
+    {{ state.statusMessage }}
+  </p>
+</div>

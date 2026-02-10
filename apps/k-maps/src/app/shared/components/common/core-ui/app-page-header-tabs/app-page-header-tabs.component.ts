@@ -24,6 +24,18 @@ export class AppPageHeaderTabsComponent {
     return this.config.activeTabId === tabId;
   }
 
+  navigateTab(tab: PageHeaderTabItem) {
+    if (tab.disabled) return;
+    if (tab.queryParams) {
+      this.router.navigate(tab.commands, {
+        queryParams: tab.queryParams,
+        queryParamsHandling: 'merge',
+      });
+      return;
+    }
+    this.router.navigate(tab.commands);
+  }
+
   navigate(commands: any[], queryParams?: Record<string, unknown>) {
     if (queryParams) {
       this.router.navigate(commands, {

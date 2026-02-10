@@ -15,5 +15,6 @@ export {
   type AppHeaderbarPagination,
 } from './app-headerbar/app-headerbar.component';
 export { AppPageHeaderTabsComponent } from './app-page-header-tabs/app-page-header-tabs.component';
+export { AppTabsComponent, type AppTabItem } from './app-tabs/app-tabs.component';
 export { AppViewJsonModalComponent } from './app-view-json-modal/app-view-json-modal.component';
 export { HeaderSearchComponent } from './header-search/header-search.component';

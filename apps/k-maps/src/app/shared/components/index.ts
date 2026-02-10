@@ -10,6 +10,7 @@ export {
   type CrudTableColumn as EntityTableColumn
 } from './common/core-ui/app-crud-table/app-crud-table.component';
 export { AppPageHeaderTabsComponent } from './common/core-ui/app-page-header-tabs/app-page-header-tabs.component';
+export { AppTabsComponent, type AppTabItem } from './common/core-ui/app-tabs/app-tabs.component';
 export { AppHeaderSettingsDropdownComponent } from './common/core-ui/app-header-settings-dropdown/app-header-settings-dropdown.component';
 export {
   AppHeaderbarComponent,

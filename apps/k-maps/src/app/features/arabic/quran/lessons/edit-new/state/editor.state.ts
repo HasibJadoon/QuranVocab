@@ -54,6 +54,12 @@ export function createEditorState(): EditorState {
     activeTaskType: 'reading',
     taskSavingType: null,
 
+    sentenceSubTab: 'verses',
+    sentenceAyahSelections: [],
+    sentenceLoadedAyahs: [],
+    sentenceCandidates: [],
+    sentenceResolvingId: null,
+
     statusMessage: '',
     statusTone: 'idle',
     savingLesson: false,

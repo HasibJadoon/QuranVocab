@@ -6,6 +6,7 @@ export interface PageHeaderTabItem {
   iconUrl?: string;
   commands: any[];
   queryParams?: Params;
+  disabled?: boolean;
 }
 
 export interface PageHeaderActionItem {

@@ -1,0 +1,18 @@
+<p class="note-muted">Reading is locked to the Unit verse range. No edits are allowed.</p>
+<div class="unit-preview">
+  <article class="unit-ayah" *ngFor="let ayah of selectedAyahs">
+    <span class="unit-ayah-index">Ayah {{ ayah.ayah }}</span>
+    <p class="unit-ayah-text">{{ ayah.text }}</p>
+  </article>
+</div>
+<div class="text-muted" *ngIf="!selectedAyahs.length">No passage loaded.</div>
+<div class="action-row">
+  <button
+    type="button"
+    class="btn btn-primary"
+    [disabled]="state.taskSavingType === 'reading' || !state.lessonId || !state.passageUnitId"
+    (click)="save()"
+  >
+    {{ state.taskSavingType === 'reading' ? 'Saving...' : 'Save Reading Task' }}
+  </button>
+</div>

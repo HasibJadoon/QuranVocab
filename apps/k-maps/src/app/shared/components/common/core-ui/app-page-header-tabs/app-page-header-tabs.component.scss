@@ -52,6 +52,14 @@
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
+.page-header-tabs .nav-link:disabled,
+.page-header-tabs .nav-link.disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: var(--page-tab-shadow);
+}
+
 .page-header-tab-icon {
   width: 42px;
   height: 42px;

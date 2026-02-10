@@ -1,0 +1,125 @@
+<div class="sentence-layout">
+  <app-tabs
+    class="sentence-tabs"
+    [tabs]="sentenceTabs"
+    [activeId]="state.sentenceSubTab"
+    variant="tabs"
+    ariaLabel="Sentence structure tabs"
+    (tabChange)="onSentenceTabChange($event)"
+  ></app-tabs>
+
+  <div class="sentence-pane">
+    <ng-container *ngIf="state.sentenceSubTab === 'verses'">
+      <div class="sentence-card">
+        <h4>Verse Selector</h4>
+        <div class="sentence-row">
+          <span>Surah</span>
+          <strong>{{ state.selectedSurah || '--' }}</strong>
+        </div>
+        <div class="sentence-row">
+          <span>Unit Range</span>
+          <strong>{{ rangeLabelShort }}</strong>
+        </div>
+        <div class="verse-list">
+          <label *ngFor="let ayah of selectedAyahs" class="verse-item">
+            <input
+              type="checkbox"
+              [checked]="state.sentenceAyahSelections.includes(ayah.ayah)"
+              (change)="toggleSentenceAyah(ayah.ayah)"
+            />
+            <span>Ayah {{ ayah.ayah }}</span>
+          </label>
+        </div>
+        <div class="action-row">
+          <button type="button" class="btn btn-ghost btn-sm" (click)="selectAllSentenceAyahs()">Select all</button>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="clearSentenceAyahs()">Clear</button>
+          <button type="button" class="btn btn-primary btn-sm" (click)="loadSentenceVerses()">Load verses</button>
+        </div>
+      </div>
+
+      <div class="sentence-card">
+        <div class="sentence-card-head">
+          <h4>Verse Preview</h4>
+          <div class="action-row">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="extractSentenceCandidates()">Extract sentences</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="addSelectionFromPreview()">Add selection as sentence</button>
+          </div>
+        </div>
+        <div class="unit-preview" *ngIf="state.sentenceLoadedAyahs.length; else noVersePreview">
+          <article class="unit-ayah" *ngFor="let ayah of selectedAyahs" [hidden]="!state.sentenceLoadedAyahs.includes(ayah.ayah)">
+            <span class="unit-ayah-index">Ayah {{ ayah.ayah }}</span>
+            <p class="unit-ayah-text">{{ sentenceAyahText(ayah) }}</p>
+          </article>
+        </div>
+        <ng-template #noVersePreview>
+          <p class="text-muted">Load verses to preview.</p>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="state.sentenceSubTab === 'items'">
+      <div class="sentence-card">
+        <h4>Sentence Candidates</h4>
+        <p class="note-muted">Add candidates to the task to resolve universal sentence IDs.</p>
+        <div class="sentence-list" *ngIf="state.sentenceCandidates.length; else noCandidates">
+          <div class="sentence-item" *ngFor="let candidate of state.sentenceCandidates">
+            <div>
+              <span class="sentence-tag">{{ candidate.source }}</span>
+              <p class="sentence-text">{{ candidate.text }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              [disabled]="state.sentenceResolvingId === candidate.id"
+              (click)="addSentenceCandidateToTask(candidate)"
+            >
+              {{ state.sentenceResolvingId === candidate.id ? 'Resolving...' : 'Add to Task' }}
+            </button>
+          </div>
+        </div>
+        <ng-template #noCandidates>
+          <p class="text-muted">No sentence candidates yet.</p>
+        </ng-template>
+      </div>
+
+      <div class="sentence-card">
+        <h4>Task Sentences</h4>
+        <div class="sentence-list" *ngIf="sentenceItems.length; else noItems">
+          <div class="sentence-item" *ngFor="let item of sentenceItems; let i = index">
+            <div>
+              <span class="sentence-tag">#{{ i + 1 }}</span>
+              <p class="sentence-text">{{ item['canonical_sentence'] }}</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeSentenceItem(i)">Remove</button>
+          </div>
+        </div>
+        <ng-template #noItems>
+          <p class="text-muted">No sentences in task yet.</p>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="state.sentenceSubTab === 'json'">
+      <div class="sentence-json">
+        <div class="task-json-actions">
+          <button type="button" class="btn btn-ghost btn-sm" (click)="validateTaskJson()">Validate JSON</button>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="formatTaskJson()">Format JSON</button>
+        </div>
+        <label>
+          <span>Task JSON</span>
+          <textarea rows="14" [(ngModel)]="sentenceJson" placeholder='{\n  "schema_version": 1,\n  "task_type": "sentence_structure",\n  "items": []\n}'></textarea>
+        </label>
+        <div class="action-row">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="state.taskSavingType === 'sentence_structure' || !state.lessonId || !state.passageUnitId"
+            (click)="commitTask()"
+          >
+            {{ state.taskSavingType === 'sentence_structure' ? 'Saving...' : 'Commit Task' }}
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

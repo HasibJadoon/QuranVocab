@@ -5,8 +5,11 @@
         class="nav-link"
         type="button"
         [class.active]="isActive(tab.id)"
+        [class.disabled]="tab.disabled"
+        [disabled]="tab.disabled"
         [attr.aria-label]="tab.label || tab.id"
-        (click)="navigate(tab.commands, tab.queryParams)"
+        [attr.aria-disabled]="tab.disabled"
+        (click)="navigateTab(tab)"
       >
         <span
           *ngIf="tab.iconUrl"

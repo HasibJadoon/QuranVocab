@@ -1,0 +1,20 @@
+<div class="task-json">
+  <div class="task-json-actions">
+    <button type="button" class="btn btn-ghost btn-sm" (click)="validate()">Validate JSON</button>
+    <button type="button" class="btn btn-ghost btn-sm" (click)="format()">Format JSON</button>
+  </div>
+  <label>
+    <span>Task JSON</span>
+    <textarea rows="12" [(ngModel)]="jsonValue" placeholder='{\n  "items": []\n}'></textarea>
+  </label>
+  <div class="action-row">
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="state.taskSavingType === taskType || !state.lessonId || !state.passageUnitId"
+      (click)="save()"
+    >
+      {{ state.taskSavingType === taskType ? 'Saving...' : 'Save Task' }}
+    </button>
+  </div>
+</div>

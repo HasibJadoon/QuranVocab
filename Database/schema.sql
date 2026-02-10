@@ -315,12 +315,12 @@ CREATE TABLE IF NOT EXISTS ar_container_unit_task (
 
   task_type TEXT NOT NULL CHECK (task_type IN (
   'reading',
-  'structure',
-  'sentence',
+  'sentence_structure',
   'morphology',
-  'grammar',
+  'grammar_concepts',
   'expressions',
-  'comprehension'
+  'comprehension',
+  'passage_structure'
 )),
 
   task_name  TEXT NOT NULL,

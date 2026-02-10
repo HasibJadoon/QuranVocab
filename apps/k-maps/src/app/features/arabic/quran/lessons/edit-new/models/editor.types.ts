@@ -17,6 +17,15 @@ export type TaskType =
   | 'comprehension'
   | 'passage_structure';
 
+export type SentenceSubTab = 'verses' | 'items' | 'json';
+
+export type SentenceCandidate = {
+  id: string;
+  text: string;
+  ayah: number | null;
+  source: 'ayah' | 'selection' | 'ai';
+};
+
 export type TaskTab = {
   type: TaskType;
   label: string;
@@ -57,6 +66,12 @@ export type EditorState = {
   taskTabs: TaskTab[];
   activeTaskType: TaskType;
   taskSavingType: TaskType | null;
+
+  sentenceSubTab: SentenceSubTab;
+  sentenceAyahSelections: number[];
+  sentenceLoadedAyahs: number[];
+  sentenceCandidates: SentenceCandidate[];
+  sentenceResolvingId: string | null;
 
   statusMessage: string;
   statusTone: EditorStatusTone;
