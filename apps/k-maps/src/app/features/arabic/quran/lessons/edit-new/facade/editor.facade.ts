@@ -673,10 +673,9 @@ export class QuranLessonEditorFacade {
   validateTaskJson(type: TaskType) {
     const tab = this.state.taskTabs.find((entry) => entry.type === type);
     if (!tab) return;
-    const parsed = this.parseTaskJson(tab.json);
-    if (parsed === null) return;
     if (type === 'sentence_structure') {
-      const obj = this.parseTaskJsonObject(tab.json);
+      const obj = this.normalizeSentenceStructureTask(tab);
+      if (obj === null) return;
       const items = Array.isArray(obj['items']) ? obj['items'] : [];
       if (!items.length) {
         setStatus(this.state, 'error', 'Sentence Structure requires items[].');
@@ -684,19 +683,30 @@ export class QuranLessonEditorFacade {
       }
       for (let i = 0; i < items.length; i += 1) {
         const item = items[i] as Record<string, unknown>;
-        const sentence = typeof item['canonical_sentence'] === 'string' ? item['canonical_sentence'].trim() : '';
+        const sentence = this.resolveCanonicalSentence(item);
         if (!sentence) {
           setStatus(this.state, 'error', `items[${i}].canonical_sentence missing.`);
           return;
         }
       }
+      setStatus(this.state, 'success', 'Task JSON looks valid.');
+      return;
     }
+    const parsed = this.parseTaskJson(tab.json);
+    if (parsed === null) return;
     setStatus(this.state, 'success', 'Task JSON looks valid.');
   }
 
   formatTaskJson(type: TaskType) {
     const tab = this.state.taskTabs.find((entry) => entry.type === type);
     if (!tab) return;
+    if (type === 'sentence_structure') {
+      const obj = this.normalizeSentenceStructureTask(tab);
+      if (obj === null) return;
+      tab.json = JSON.stringify(obj, null, 2);
+      setStatus(this.state, 'success', 'Task JSON formatted.');
+      return;
+    }
     const parsed = this.parseTaskJson(tab.json);
     if (parsed === null) return;
     tab.json = JSON.stringify(parsed, null, 2);
@@ -745,7 +755,7 @@ export class QuranLessonEditorFacade {
       setStatus(this.state, 'error', 'Save lesson metadata before adding tasks.');
       return;
     }
-    const parsed = this.parseTaskJson(tab.json);
+    const parsed = this.normalizeSentenceStructureTask(tab);
     if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
       setStatus(this.state, 'error', 'Sentence Structure JSON must be an object.');
       return;
@@ -964,6 +974,41 @@ export class QuranLessonEditorFacade {
     if (!Array.isArray(summary['expansions'])) {
       summary['expansions'] = this.buildStructureSummary('').expansions;
     }
+  }
+
+  private resolveCanonicalSentence(item: Record<string, unknown>): string {
+    const direct = typeof item['canonical_sentence'] === 'string' ? item['canonical_sentence'].trim() : '';
+    if (direct) return direct;
+    const summary = item['structure_summary'];
+    if (!summary || typeof summary !== 'object' || Array.isArray(summary)) return '';
+    const fullText = (summary as Record<string, unknown>)['full_text'];
+    return typeof fullText === 'string' ? fullText.trim() : '';
+  }
+
+  private normalizeSentenceItem(item: Record<string, unknown>): Record<string, unknown> {
+    const canonical = this.resolveCanonicalSentence(item);
+    if (canonical) {
+      item['canonical_sentence'] = canonical;
+      this.ensureStructureSummary(item, canonical);
+    }
+    return item;
+  }
+
+  private normalizeSentenceStructureTask(tab: TaskTab): Record<string, unknown> | null {
+    const parsed = this.parseTaskJson(tab.json);
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      setStatus(this.state, 'error', 'Sentence Structure JSON must be an object.');
+      return null;
+    }
+    const obj = parsed as Record<string, unknown>;
+    const items = Array.isArray(obj['items']) ? obj['items'] : [];
+    const nextItems = items.map((item) => {
+      if (!item || typeof item !== 'object') return item;
+      return this.normalizeSentenceItem(item as Record<string, unknown>);
+    });
+    obj['items'] = nextItems;
+    tab.json = JSON.stringify(obj, null, 2);
+    return obj;
   }
 
   private getSentenceLoadedAyahs() {

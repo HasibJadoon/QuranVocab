@@ -186,12 +186,21 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
 
     for (const rawItem of rawItems) {
       const item = asRecord(rawItem) ?? {};
-      const canonicalSentence = asString(item.canonical_sentence) ?? '';
+      let canonicalSentence = asString(item.canonical_sentence) ?? '';
+      if (!canonicalSentence) {
+        const summary = asRecord(item.structure_summary) ?? {};
+        canonicalSentence = asString(summary.full_text) ?? '';
+      }
       if (!canonicalSentence) {
         return new Response(
           JSON.stringify({ ok: false, error: 'Each item requires canonical_sentence.' }),
           { status: 400, headers: jsonHeaders }
         );
+      }
+      item.canonical_sentence = canonicalSentence;
+      const summary = asRecord(item.structure_summary);
+      if (summary && !asString(summary.full_text)) {
+        summary.full_text = canonicalSentence;
       }
 
       const textNorm = canonicalize(canonicalSentence);
