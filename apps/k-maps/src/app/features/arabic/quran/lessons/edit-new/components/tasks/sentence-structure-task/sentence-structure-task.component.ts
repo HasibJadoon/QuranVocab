@@ -164,7 +164,8 @@ export class SentenceStructureTaskComponent {
 
   openEditModal(item: any, index: number) {
     this.editModalIndex = index;
-    this.editModalJson = JSON.stringify(item ?? {}, null, 2);
+    const base = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+    this.editModalJson = JSON.stringify(this.withStructureSummary({ ...base }), null, 2);
     this.editModalError = '';
     this.editModalTitle = 'Sentence JSON';
     this.editModalOpen = true;
@@ -172,22 +173,7 @@ export class SentenceStructureTaskComponent {
 
   openCreateModal() {
     this.editModalIndex = -1;
-    this.editModalJson = JSON.stringify(
-      {
-        sentence_order: null,
-        canonical_sentence: '',
-        source: 'manual',
-        ayah: null,
-        text_norm: '',
-        ar_u_sentence: null,
-        tokens: [],
-        spans: [],
-        steps: [],
-        structure_summary: this.buildStructureSummary(''),
-      },
-      null,
-      2
-    );
+    this.editModalJson = JSON.stringify(this.buildSentenceTemplate(), null, 2);
     this.editModalError = '';
     this.editModalTitle = 'Add Sentence JSON';
     this.editModalOpen = true;
@@ -229,18 +215,37 @@ export class SentenceStructureTaskComponent {
   submitEditModal() {
     if (this.editModalIndex == null) return;
     let parsed: unknown;
+    const trimmed = this.editModalJson.trim();
     try {
-      parsed = JSON.parse(this.editModalJson);
+      parsed = JSON.parse(trimmed);
     } catch (err: any) {
-      this.editModalError = err?.message ?? 'Invalid JSON.';
-      return;
+      const fallback = this.tryParseStructureSummarySnippet(trimmed);
+      if (!fallback) {
+        this.editModalError = err?.message ?? 'Invalid JSON.';
+        return;
+      }
+      parsed = fallback;
     }
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       this.editModalError = 'Sentence JSON must be an object.';
       return;
     }
-    const record = parsed as Record<string, unknown>;
-    const sentence = typeof record['canonical_sentence'] === 'string' ? record['canonical_sentence'].trim() : '';
+    let record = parsed as Record<string, unknown>;
+    if (this.isStructureSummaryOnly(record)) {
+      const base = this.getSentenceBase();
+      record = { ...base, ...record };
+    } else if (this.isLikelyStructureSummaryPayload(record) && !('structure_summary' in record)) {
+      const base = this.getSentenceBase();
+      record = { ...base, structure_summary: record };
+    }
+    const summaryFullText = this.extractSummaryFullText(record);
+    const canonical =
+      typeof record['canonical_sentence'] === 'string' ? record['canonical_sentence'].trim() : '';
+    if (!canonical && summaryFullText) {
+      record['canonical_sentence'] = summaryFullText;
+    }
+    const sentence =
+      typeof record['canonical_sentence'] === 'string' ? record['canonical_sentence'].trim() : '';
     if (!sentence) {
       this.editModalError = 'canonical_sentence is required.';
       return;
@@ -273,6 +278,21 @@ export class SentenceStructureTaskComponent {
     this.facade.saveTask('sentence_structure' as TaskType);
   }
 
+  private buildSentenceTemplate() {
+    return {
+      sentence_order: null,
+      canonical_sentence: '',
+      source: 'manual',
+      ayah: null,
+      text_norm: '',
+      ar_u_sentence: null,
+      tokens: [],
+      spans: [],
+      steps: [],
+      structure_summary: this.buildStructureSummary(''),
+    };
+  }
+
   private buildStructureSummary(fullText: string) {
     return {
       sentence_type: '',
@@ -296,5 +316,62 @@ export class SentenceStructureTaskComponent {
         },
       ],
     };
+  }
+
+  private withStructureSummary(record: Record<string, unknown>) {
+    const canonical = typeof record['canonical_sentence'] === 'string' ? record['canonical_sentence'] : '';
+    const current = record['structure_summary'];
+    if (!current || typeof current !== 'object' || Array.isArray(current)) {
+      return { ...record, structure_summary: this.buildStructureSummary(canonical) };
+    }
+    const summary = { ...(current as Record<string, unknown>) };
+    if (typeof summary['full_text'] !== 'string' || !summary['full_text'].trim()) {
+      summary['full_text'] = canonical;
+    }
+    return { ...record, structure_summary: summary };
+  }
+
+  private tryParseStructureSummarySnippet(raw: string): Record<string, unknown> | null {
+    if (!raw) return null;
+    if (/^"structure_summary"\s*:/.test(raw)) {
+      try {
+        return JSON.parse(`{${raw}}`) as Record<string, unknown>;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private isStructureSummaryOnly(record: Record<string, unknown>) {
+    const keys = Object.keys(record);
+    return keys.length === 1 && keys[0] === 'structure_summary';
+  }
+
+  private extractSummaryFullText(record: Record<string, unknown>) {
+    const summary = record['structure_summary'];
+    if (!summary || typeof summary !== 'object' || Array.isArray(summary)) return '';
+    const fullText = (summary as Record<string, unknown>)['full_text'];
+    return typeof fullText === 'string' ? fullText.trim() : '';
+  }
+
+  private isLikelyStructureSummaryPayload(record: Record<string, unknown>) {
+    return (
+      'sentence_type' in record ||
+      'full_text' in record ||
+      'core_pattern' in record ||
+      'main_components' in record ||
+      'expansions' in record
+    );
+  }
+
+  private getSentenceBase(): Record<string, unknown> {
+    if (this.editModalIndex != null && this.editModalIndex >= 0) {
+      const existing = this.sentenceItems[this.editModalIndex];
+      if (existing && typeof existing === 'object') {
+        return this.withStructureSummary({ ...(existing as Record<string, unknown>) });
+      }
+    }
+    return this.buildSentenceTemplate();
   }
 }
