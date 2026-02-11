@@ -179,19 +179,16 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       }
 
       const textNorm = canonicalize(canonicalSentence);
-      let arUSentence = asString(item.ar_u_sentence);
-      if (!arUSentence) {
-        const resolved = await upsertArUSentence(
-          { DB: ctx.env.DB },
-          {
-            kind: 'surface',
-            sequence: [textNorm],
-            textAr: canonicalSentence,
-            meta: { source: 'lesson-authoring', container_id: containerId, unit_id: unitId },
-          }
-        );
-        arUSentence = resolved.ar_u_sentence;
-      }
+      const resolved = await upsertArUSentence(
+        { DB: ctx.env.DB },
+        {
+          kind: 'surface',
+          sequence: [textNorm],
+          textAr: canonicalSentence,
+          meta: { source: 'lesson-authoring', container_id: containerId, unit_id: unitId },
+        }
+      );
+      const arUSentence = resolved.ar_u_sentence;
 
       const stepsRaw = Array.isArray(item.steps) ? item.steps : [];
       const steps: Array<Record<string, unknown>> = [];
