@@ -1,0 +1,38 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.json-code-editor {
+  border: 1px solid var(--km-core-border, rgba(133, 160, 214, 0.2));
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: var(--km-core-surface-2, rgba(11, 18, 30, 0.96));
+  position: relative;
+}
+
+.json-code-editor__editor {
+  height: 100%;
+  display: block;
+}
+
+.json-code-editor__fallback {
+  position: absolute;
+  inset: 0;
+  padding: 0.75rem;
+  background: var(--km-core-surface-2, rgba(11, 18, 30, 0.96));
+}
+
+.json-code-editor__fallback-input {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  border: 1px solid var(--km-core-border, rgba(133, 160, 214, 0.2));
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  padding: 0.75rem;
+}

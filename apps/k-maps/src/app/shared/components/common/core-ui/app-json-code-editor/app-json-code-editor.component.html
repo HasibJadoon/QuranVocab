@@ -1,0 +1,17 @@
+<div class="json-code-editor" [style.height]="height">
+  <ngx-monaco-editor
+    class="json-code-editor__editor"
+    [options]="editorOptions"
+    [(ngModel)]="model"
+    (ngModelChange)="onModelChange($event)"
+    (onInit)="onEditorInit()"
+  ></ngx-monaco-editor>
+  <div class="json-code-editor__fallback" *ngIf="!editorReady">
+    <textarea
+      class="json-code-editor__fallback-input"
+      [readonly]="readonly"
+      [ngModel]="model"
+      (ngModelChange)="onModelChange($event)"
+    ></textarea>
+  </div>
+</div>

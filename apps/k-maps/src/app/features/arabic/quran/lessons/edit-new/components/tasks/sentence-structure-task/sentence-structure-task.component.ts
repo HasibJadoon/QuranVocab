@@ -1,7 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AppJsonEditorModalComponent, AppTabsComponent, type AppTabItem } from '../../../../../../../../shared/components';
+import {
+  AppJsonCodeEditorComponent,
+  AppJsonEditorModalComponent,
+  AppTabsComponent,
+  type AppTabItem,
+} from '../../../../../../../../shared/components';
 import { QuranLessonEditorFacade } from '../../../facade/editor.facade';
 import { EditorState, SentenceCandidate, SentenceSubTab, TaskType } from '../../../models/editor.types';
 import { selectSelectedAyahs } from '../../../state/editor.selectors';
@@ -9,7 +14,7 @@ import { selectSelectedAyahs } from '../../../state/editor.selectors';
 @Component({
   selector: 'app-sentence-structure-task',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppTabsComponent, AppJsonEditorModalComponent],
+  imports: [CommonModule, FormsModule, AppTabsComponent, AppJsonEditorModalComponent, AppJsonCodeEditorComponent],
   templateUrl: './sentence-structure-task.component.html',
 })
 export class SentenceStructureTaskComponent {

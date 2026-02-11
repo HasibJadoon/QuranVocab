@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@angular/router": "^20.0.0",
+    "monaco-editor": "^0.52.2",
+    "ngx-monaco-editor-v2": "^20.3.0",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.7"

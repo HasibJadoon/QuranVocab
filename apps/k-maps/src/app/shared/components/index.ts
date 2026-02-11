@@ -21,6 +21,7 @@ export {
   type AppMenuCardItem,
   type AppMenuCardSection
 } from './common/core-ui/app-menu-cards/app-menu-cards.component';
+export { AppJsonCodeEditorComponent } from './common/core-ui/app-json-code-editor/app-json-code-editor.component';
 export { AppJsonEditorModalComponent } from './common/core-ui/app-json-editor-modal/app-json-editor-modal.component';
 export { AppViewJsonModalComponent } from './common/core-ui/app-view-json-modal/app-view-json-modal.component';
 export { ChecklistComponent, type ChecklistItem } from './checklist/checklist.component';

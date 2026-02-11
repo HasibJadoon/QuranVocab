@@ -134,7 +134,11 @@
         </div>
         <label>
           <span>Task JSON</span>
-          <textarea rows="14" [(ngModel)]="sentenceJson" placeholder='{\n  "schema_version": 1,\n  "task_type": "sentence_structure",\n  "items": []\n}'></textarea>
+          <app-json-code-editor
+            [value]="sentenceJson"
+            (valueChange)="sentenceJson = $event"
+            height="420px"
+          ></app-json-code-editor>
         </label>
         <div class="action-row">
           <button

@@ -801,8 +801,19 @@ export class QuranLessonEditorFacade {
       for (const task of tasks) {
         const tab = tabs.find((entry) => entry.type === task.task_type);
         if (!tab) continue;
-        if (task.task_json && typeof task.task_json === 'object') {
-          tab.json = JSON.stringify(task.task_json, null, 2);
+        const raw = task?.task_json;
+        if (typeof raw === 'string') {
+          const trimmed = raw.trim();
+          if (!trimmed) continue;
+          try {
+            tab.json = JSON.stringify(JSON.parse(trimmed), null, 2);
+          } catch {
+            tab.json = trimmed;
+          }
+          continue;
+        }
+        if (raw && typeof raw === 'object') {
+          tab.json = JSON.stringify(raw, null, 2);
         }
       }
       this.state.taskTabs = tabs;
