@@ -143,6 +143,42 @@ CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_surah_ayah ON ar_quran_ayah(surah, 
 CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_page ON ar_quran_ayah(page);
 CREATE INDEX IF NOT EXISTS idx_ar_quran_ayah_juz ON ar_quran_ayah(juz);
 
+CREATE TABLE IF NOT EXISTS ar_u_quran_ayah_words (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  word_id      INTEGER,
+  surah        INTEGER NOT NULL,
+  ayah         INTEGER NOT NULL,
+  position     INTEGER NOT NULL,
+  verse_key    TEXT,
+  text         TEXT,
+  simple       TEXT,
+  juz          INTEGER,
+  hezb         INTEGER,
+  rub          INTEGER,
+  page         INTEGER,
+  class_name   TEXT,
+  line         INTEGER,
+  code         TEXT,
+  code_v3      TEXT,
+  char_type    TEXT,
+  audio        TEXT,
+  translation  TEXT,
+  lemma        TEXT,
+  root         TEXT,
+  ar_u_root    TEXT,
+  meta_json    JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at   TEXT,
+  UNIQUE (surah, ayah, position, word_id),
+  FOREIGN KEY (surah, ayah) REFERENCES ar_quran_ayah(surah, ayah) ON DELETE CASCADE,
+  FOREIGN KEY (ar_u_root) REFERENCES ar_u_roots(ar_u_root) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_quran_ayah_words_ref
+  ON ar_u_quran_ayah_words(surah, ayah, position);
+CREATE INDEX IF NOT EXISTS idx_ar_u_quran_ayah_words_root
+  ON ar_u_quran_ayah_words(ar_u_root);
+
 CREATE TABLE ar_quran_surah_ayah_meta (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   surah_ayah      INTEGER NOT NULL UNIQUE,
@@ -497,6 +533,421 @@ CREATE TABLE IF NOT EXISTS wiki_docs (
   CHECK (status IN ('draft', 'published'))
 );
 CREATE INDEX IF NOT EXISTS idx_wiki_docs_status ON wiki_docs(status);
+
+--------------------------------------------------------------------------------
+-- 1e) UNIVERSAL + OCCURRENCE (ar_u_* / ar_occ_*)
+--------------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS ar_u_roots (
+  ar_u_root        TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
+
+  root             TEXT NOT NULL,
+  root_norm        TEXT NOT NULL UNIQUE,
+
+  arabic_trilateral TEXT,
+  english_trilateral TEXT,
+  root_latn         TEXT,
+
+  alt_latn_json     JSON CHECK (alt_latn_json IS NULL OR json_valid(alt_latn_json)),
+  search_keys_norm  TEXT,
+
+  status            TEXT NOT NULL DEFAULT 'active',
+  difficulty        INTEGER,
+  frequency         TEXT,
+
+  created_at        TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at        TEXT,
+  extracted_at      TEXT,
+  meta_json         JSON CHECK (meta_json IS NULL OR json_valid(meta_json))
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_roots_root_norm ON ar_u_roots(root_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_u_roots_root ON ar_u_roots(root);
+
+CREATE TABLE IF NOT EXISTS ar_u_tokens (
+  ar_u_token       TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
+
+  lemma_ar         TEXT NOT NULL,
+  lemma_norm       TEXT NOT NULL,
+  pos              TEXT NOT NULL,
+
+  root_norm        TEXT,
+  ar_u_root        TEXT,
+
+  features_json    JSON CHECK (features_json IS NULL OR json_valid(features_json)),
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT,
+
+  FOREIGN KEY (ar_u_root) REFERENCES ar_u_roots(ar_u_root) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_tokens_lemma_norm ON ar_u_tokens(lemma_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_u_tokens_pos ON ar_u_tokens(pos);
+CREATE INDEX IF NOT EXISTS idx_ar_u_tokens_root_norm ON ar_u_tokens(root_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_u_tokens_ar_u_root ON ar_u_tokens(ar_u_root);
+
+CREATE TABLE IF NOT EXISTS ar_u_spans (
+  ar_u_span        TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
+
+  span_type        TEXT NOT NULL,
+  token_ids_csv    TEXT NOT NULL,
+
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_spans_type ON ar_u_spans(span_type);
+
+CREATE TABLE IF NOT EXISTS ar_u_sentences (
+  ar_u_sentence    TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
+
+  sentence_kind    TEXT NOT NULL,
+  sequence_json    JSON CHECK (sequence_json IS NULL OR json_valid(sequence_json)),
+  text_ar          TEXT,
+
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_sentences_kind ON ar_u_sentences(sentence_kind);
+
+CREATE TABLE IF NOT EXISTS ar_u_expressions (
+  ar_u_expression  TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
+
+  label            TEXT,
+  text_ar          TEXT,
+  sequence_json    JSON CHECK (sequence_json IS NULL OR json_valid(sequence_json)),
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_expressions_label ON ar_u_expressions(label);
+
+CREATE TABLE IF NOT EXISTS ar_u_grammar (
+  ar_u_grammar     TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
+
+  grammar_id       TEXT NOT NULL UNIQUE,
+  category         TEXT,
+  title            TEXT,
+  title_ar         TEXT,
+  definition       TEXT,
+  definition_ar    TEXT,
+
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_category ON ar_u_grammar(category);
+CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_grammar_id ON ar_u_grammar(grammar_id);
+
+CREATE TABLE IF NOT EXISTS ar_u_grammar_relations (
+  id                 TEXT PRIMARY KEY,
+  parent_ar_u_grammar TEXT NOT NULL,
+  child_ar_u_grammar  TEXT NOT NULL,
+  relation_type       TEXT NOT NULL,
+  order_index         INTEGER,
+  meta_json           JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at          TEXT,
+
+  FOREIGN KEY (parent_ar_u_grammar) REFERENCES ar_u_grammar(ar_u_grammar) ON DELETE CASCADE,
+  FOREIGN KEY (child_ar_u_grammar) REFERENCES ar_u_grammar(ar_u_grammar) ON DELETE CASCADE,
+  UNIQUE (parent_ar_u_grammar, child_ar_u_grammar, relation_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_rel_parent ON ar_u_grammar_relations(parent_ar_u_grammar);
+CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_rel_child ON ar_u_grammar_relations(child_ar_u_grammar);
+
+CREATE TABLE IF NOT EXISTS ar_u_valency (
+  ar_u_valency     TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
+
+  verb_lemma_ar    TEXT NOT NULL,
+  verb_lemma_norm  TEXT NOT NULL,
+  prep_ar_u_token  TEXT,
+  frame_type       TEXT NOT NULL,
+
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT,
+
+  FOREIGN KEY (prep_ar_u_token) REFERENCES ar_u_tokens(ar_u_token) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_valency_verb_norm ON ar_u_valency(verb_lemma_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_u_valency_prep ON ar_u_valency(prep_ar_u_token);
+
+CREATE TABLE IF NOT EXISTS ar_occ_token (
+  ar_token_occ_id  TEXT PRIMARY KEY,
+  user_id          INTEGER,
+  container_id     TEXT,
+  unit_id          TEXT,
+
+  pos_index        INTEGER NOT NULL,
+  surface_ar       TEXT NOT NULL,
+  norm_ar          TEXT NOT NULL,
+  lemma_ar         TEXT,
+  pos              TEXT,
+
+  ar_u_token       TEXT,
+  ar_u_root        TEXT,
+
+  features_json    JSON CHECK (features_json IS NULL OR json_valid(features_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
+  FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
+  FOREIGN KEY (ar_u_token) REFERENCES ar_u_tokens(ar_u_token) ON DELETE SET NULL,
+  FOREIGN KEY (ar_u_root) REFERENCES ar_u_roots(ar_u_root) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_occ_token_unit ON ar_occ_token(container_id, unit_id);
+CREATE INDEX IF NOT EXISTS idx_ar_occ_token_u_token ON ar_occ_token(ar_u_token);
+
+CREATE TABLE IF NOT EXISTS ar_occ_token_morph (
+  ar_token_occ_id    TEXT PRIMARY KEY,
+
+  pos                TEXT,
+
+  noun_case          TEXT,
+  noun_number        TEXT,
+  noun_gender        TEXT,
+  noun_definiteness  TEXT,
+
+  verb_tense         TEXT,
+  verb_mood          TEXT,
+  verb_voice         TEXT,
+  verb_person        TEXT,
+  verb_number        TEXT,
+  verb_gender        TEXT,
+
+  particle_type      TEXT,
+
+  extra_json         JSON CHECK (extra_json IS NULL OR json_valid(extra_json)),
+
+  created_at         TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at         TEXT,
+
+  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_occ_token_morph_pos ON ar_occ_token_morph(pos);
+
+CREATE TABLE IF NOT EXISTS ar_occ_span (
+  ar_span_occ_id  TEXT PRIMARY KEY,
+  user_id         INTEGER,
+  container_id    TEXT,
+  unit_id         TEXT,
+
+  start_index     INTEGER,
+  end_index       INTEGER,
+  text_cache      TEXT,
+
+  ar_u_span       TEXT,
+
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
+  FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
+  FOREIGN KEY (ar_u_span) REFERENCES ar_u_spans(ar_u_span) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_occ_span_unit ON ar_occ_span(container_id, unit_id);
+CREATE INDEX IF NOT EXISTS idx_ar_occ_span_u_span ON ar_occ_span(ar_u_span);
+
+CREATE TABLE IF NOT EXISTS ar_occ_sentence (
+  ar_sentence_occ_id  TEXT PRIMARY KEY,
+  user_id             INTEGER,
+  container_id        TEXT,
+  unit_id             TEXT,
+
+  sentence_order      INTEGER,
+  text_ar             TEXT NOT NULL,
+  translation         TEXT,
+  notes               TEXT,
+
+  ar_u_sentence       TEXT,
+
+  created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at          TEXT,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
+  FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
+  FOREIGN KEY (ar_u_sentence) REFERENCES ar_u_sentences(ar_u_sentence) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_occ_sentence_unit ON ar_occ_sentence(container_id, unit_id);
+CREATE INDEX IF NOT EXISTS idx_ar_occ_sentence_u_sentence ON ar_occ_sentence(ar_u_sentence);
+
+CREATE TABLE IF NOT EXISTS ar_occ_expression (
+  ar_expression_occ_id  TEXT PRIMARY KEY,
+  user_id               INTEGER,
+  container_id          TEXT,
+  unit_id               TEXT,
+
+  start_index           INTEGER,
+  end_index             INTEGER,
+  text_cache            TEXT,
+  ar_u_expression       TEXT,
+
+  note                  TEXT,
+  meta_json             JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at            TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at            TEXT,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
+  FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
+  FOREIGN KEY (ar_u_expression) REFERENCES ar_u_expressions(ar_u_expression) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_occ_expression_unit ON ar_occ_expression(container_id, unit_id);
+CREATE INDEX IF NOT EXISTS idx_ar_occ_expression_u_expression ON ar_occ_expression(ar_u_expression);
+
+CREATE TABLE IF NOT EXISTS ar_occ_grammar (
+  id              TEXT PRIMARY KEY,
+  user_id         INTEGER,
+  container_id    TEXT,
+  unit_id         TEXT,
+
+  ar_u_grammar    TEXT NOT NULL,
+  target_type     TEXT NOT NULL,
+  target_id       TEXT NOT NULL,
+
+  note            TEXT,
+  meta_json       JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
+  FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
+  FOREIGN KEY (ar_u_grammar) REFERENCES ar_u_grammar(ar_u_grammar) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_occ_grammar_target ON ar_occ_grammar(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_ar_occ_grammar_unit ON ar_occ_grammar(container_id, unit_id);
+
+CREATE TABLE IF NOT EXISTS ar_token_lexicon_link (
+  ar_token_occ_id  TEXT NOT NULL,
+  ar_u_lexicon     TEXT NOT NULL,
+
+  confidence       REAL,
+  is_primary       INTEGER NOT NULL DEFAULT 1 CHECK (is_primary IN (0, 1)),
+  source           TEXT,
+  note             TEXT,
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+
+  PRIMARY KEY (ar_token_occ_id, ar_u_lexicon),
+  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
+  FOREIGN KEY (ar_u_lexicon) REFERENCES ar_u_lexicon(ar_u_lexicon) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_token_lexicon_link_lexicon ON ar_token_lexicon_link(ar_u_lexicon);
+
+CREATE TABLE IF NOT EXISTS ar_token_valency_link (
+  ar_token_occ_id  TEXT NOT NULL,
+  ar_u_valency     TEXT NOT NULL,
+
+  role             TEXT,
+  note             TEXT,
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+
+  PRIMARY KEY (ar_token_occ_id, ar_u_valency),
+  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
+  FOREIGN KEY (ar_u_valency) REFERENCES ar_u_valency(ar_u_valency) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_token_valency_link_valency ON ar_token_valency_link(ar_u_valency);
+
+CREATE TABLE IF NOT EXISTS ar_token_pair_links (
+  id              TEXT PRIMARY KEY,
+  user_id         INTEGER,
+  container_id    TEXT,
+  unit_id         TEXT,
+
+  link_type       TEXT NOT NULL,
+  from_token_occ  TEXT NOT NULL,
+  to_token_occ    TEXT NOT NULL,
+
+  ar_u_valency    TEXT,
+  note            TEXT,
+  meta_json       JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
+  FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
+  FOREIGN KEY (from_token_occ) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
+  FOREIGN KEY (to_token_occ) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
+  FOREIGN KEY (ar_u_valency) REFERENCES ar_u_valency(ar_u_valency) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_token_pair_links_unit ON ar_token_pair_links(container_id, unit_id);
+CREATE INDEX IF NOT EXISTS idx_ar_token_pair_links_type ON ar_token_pair_links(link_type);
+
+CREATE TABLE IF NOT EXISTS quran_ayah_lemmas (
+  lemma_id                 INTEGER PRIMARY KEY,
+  lemma_text               TEXT NOT NULL,
+  lemma_text_clean         TEXT NOT NULL,
+  words_count              INTEGER,
+  uniq_words_count         INTEGER,
+  primary_ar_u_token       TEXT,
+  created_at               TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (primary_ar_u_token) REFERENCES ar_u_tokens(ar_u_token)
+);
+
+CREATE TABLE IF NOT EXISTS quran_ayah_lemma_location (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  lemma_id       INTEGER NOT NULL REFERENCES quran_ayah_lemmas(lemma_id) ON DELETE CASCADE,
+  word_location  TEXT NOT NULL,
+  surah          INTEGER NOT NULL,
+  ayah           INTEGER NOT NULL,
+  token_index    INTEGER NOT NULL,
+  ar_token_occ_id TEXT,
+  ar_u_token     TEXT,
+  word_simple    TEXT,
+  word_diacritic TEXT,
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id),
+  FOREIGN KEY (ar_u_token) REFERENCES ar_u_tokens(ar_u_token)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_quran_ayah_lemma_location_unique
+  ON quran_ayah_lemma_location (lemma_id, word_location);
+
+CREATE INDEX IF NOT EXISTS idx_quran_ayah_lemma_location_ref
+  ON quran_ayah_lemma_location (surah, ayah);
 
 --------------------------------------------------------------------------------
 -- ar_u_lexicon (UPDATED) — captures LexicalUnit (Word | KeyTerm | VerbalIdiom | Expression)

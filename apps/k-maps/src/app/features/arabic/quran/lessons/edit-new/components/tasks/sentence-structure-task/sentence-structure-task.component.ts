@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AppTabsComponent, type AppTabItem } from '../../../../../../../../shared/components';
+import { AppJsonEditorModalComponent, AppTabsComponent, type AppTabItem } from '../../../../../../../../shared/components';
 import { QuranLessonEditorFacade } from '../../../facade/editor.facade';
 import { EditorState, SentenceCandidate, SentenceSubTab, TaskType } from '../../../models/editor.types';
 import { selectSelectedAyahs } from '../../../state/editor.selectors';
@@ -9,7 +9,7 @@ import { selectSelectedAyahs } from '../../../state/editor.selectors';
 @Component({
   selector: 'app-sentence-structure-task',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppTabsComponent],
+  imports: [CommonModule, FormsModule, AppTabsComponent, AppJsonEditorModalComponent],
   templateUrl: './sentence-structure-task.component.html',
 })
 export class SentenceStructureTaskComponent {
@@ -19,6 +19,13 @@ export class SentenceStructureTaskComponent {
     { id: 'items', label: 'Sentence Items' },
     { id: 'json', label: 'Task JSON' },
   ];
+  editModalOpen = false;
+  editModalIndex: number | null = null;
+  editModalJson = '';
+  editModalError = '';
+  editModalTitle = 'Sentence JSON';
+  editModalPlaceholder =
+    '{"sentence_order":1,"canonical_sentence":"...","source":"selection","ayah":1,"text_norm":"","ar_u_sentence":null,"tokens":[],"spans":[],"steps":[]}';
   editingIndex: number | null = null;
   editingValue = '';
   contextMenuOpen = false;
@@ -136,9 +143,55 @@ export class SentenceStructureTaskComponent {
     }
   }
 
+  openEditModal(item: any, index: number) {
+    this.editModalIndex = index;
+    this.editModalJson = JSON.stringify(item ?? {}, null, 2);
+    this.editModalError = '';
+    this.editModalTitle = 'Sentence JSON';
+    this.editModalOpen = true;
+  }
+
+  openCreateModal() {
+    this.editModalIndex = -1;
+    this.editModalJson = JSON.stringify(
+      {
+        sentence_order: null,
+        canonical_sentence: '',
+        source: 'manual',
+        ayah: null,
+        text_norm: '',
+        ar_u_sentence: null,
+        tokens: [],
+        spans: [],
+        steps: [],
+      },
+      null,
+      2
+    );
+    this.editModalError = '';
+    this.editModalTitle = 'Add Sentence JSON';
+    this.editModalOpen = true;
+  }
+
+  openPasteSentenceModal() {
+    this.editModalIndex = -1;
+    this.editModalJson = '';
+    this.editModalError = '';
+    this.editModalTitle = 'Paste Sentence JSON';
+    this.editModalOpen = true;
+  }
+
   startEditSentence(item: any, index: number) {
+    const record = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+    const current = typeof record['canonical_sentence'] === 'string' ? record['canonical_sentence'] : '';
     this.editingIndex = index;
-    this.editingValue = typeof item['canonical_sentence'] === 'string' ? String(item['canonical_sentence']) : '';
+    this.editingValue = current;
+  }
+
+  saveEditSentence(index: number) {
+    if (this.editingIndex !== index) return;
+    this.facade.updateSentenceItem(index, this.editingValue);
+    this.cancelEditSentence();
   }
 
   cancelEditSentence() {
@@ -146,9 +199,38 @@ export class SentenceStructureTaskComponent {
     this.editingValue = '';
   }
 
-  saveEditSentence(index: number) {
-    this.facade.updateSentenceItem(index, this.editingValue);
-    this.cancelEditSentence();
+  closeEditModal() {
+    this.editModalOpen = false;
+    this.editModalIndex = null;
+    this.editModalJson = '';
+    this.editModalError = '';
+  }
+
+  submitEditModal() {
+    if (this.editModalIndex == null) return;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(this.editModalJson);
+    } catch (err: any) {
+      this.editModalError = err?.message ?? 'Invalid JSON.';
+      return;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      this.editModalError = 'Sentence JSON must be an object.';
+      return;
+    }
+    const record = parsed as Record<string, unknown>;
+    const sentence = typeof record['canonical_sentence'] === 'string' ? record['canonical_sentence'].trim() : '';
+    if (!sentence) {
+      this.editModalError = 'canonical_sentence is required.';
+      return;
+    }
+    if (this.editModalIndex < 0) {
+      this.facade.addSentenceItemRecord(record);
+    } else {
+      this.facade.replaceSentenceItem(this.editModalIndex, record);
+    }
+    this.closeEditModal();
   }
 
   addSentenceCandidateToTask(candidate: SentenceCandidate) {

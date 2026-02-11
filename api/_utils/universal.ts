@@ -432,6 +432,38 @@ export async function upsertArUGrammar(env: EnvCommon, payload: ArUGrammarPayloa
   if (!payload.grammarId) {
     throw new Error('grammarId is required');
   }
+  const existing = await env.DB.prepare(
+    `SELECT ar_u_grammar, canonical_input FROM ar_u_grammar WHERE grammar_id = ?1`
+  )
+    .bind(payload.grammarId)
+    .first<{ ar_u_grammar: string; canonical_input: string }>();
+  if (existing?.ar_u_grammar) {
+    const metaJson = toJsonOrNull(payload.meta);
+    await env.DB.prepare(
+      `
+      UPDATE ar_u_grammar
+      SET category = ?2,
+          title = ?3,
+          title_ar = ?4,
+          definition = ?5,
+          definition_ar = ?6,
+          meta_json = ?7,
+          updated_at = datetime('now')
+      WHERE ar_u_grammar = ?1
+    `
+    )
+      .bind(
+        existing.ar_u_grammar,
+        payload.category ?? null,
+        payload.title ?? null,
+        payload.titleAr ?? null,
+        payload.definition ?? null,
+        payload.definitionAr ?? null,
+        metaJson
+      )
+      .run();
+    return { ar_u_grammar: existing.ar_u_grammar, canonical_input: existing.canonical_input };
+  }
   const canonical = Canon.grammar(payload.grammarId);
   const { id, canonical_input } = await universalId(canonical);
   const metaJson = toJsonOrNull(payload.meta);
@@ -443,8 +475,7 @@ export async function upsertArUGrammar(env: EnvCommon, payload: ArUGrammarPayloa
       definition, definition_ar,
       meta_json
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(ar_u_grammar) DO UPDATE SET
-      grammar_id = excluded.grammar_id,
+    ON CONFLICT(grammar_id) DO UPDATE SET
       category = excluded.category,
       title = excluded.title,
       title_ar = excluded.title_ar,

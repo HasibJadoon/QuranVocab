@@ -601,6 +601,64 @@ export class QuranLessonEditorFacade {
     setStatus(this.state, 'success', 'Sentence updated.');
   }
 
+  addSentenceItemRecord(record: Record<string, unknown>) {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
+    if (!tab) return;
+    const parsed = this.parseTaskJsonObject(tab.json);
+    const items = Array.isArray(parsed['items']) ? parsed['items'] : [];
+    const next: Record<string, unknown> = { ...record };
+    const orderValue = next['sentence_order'];
+    const orderNumber = Number(orderValue);
+    if (!Number.isFinite(orderNumber)) {
+      next['sentence_order'] = this.nextSentenceOrder(items);
+    }
+    if (typeof next['canonical_sentence'] === 'string') {
+      const cleaned = this.stripArabicDiacritics(next['canonical_sentence'].replace(/\s+/g, ' ').trim());
+      next['canonical_sentence'] = cleaned;
+      const textNorm = typeof next['text_norm'] === 'string' ? next['text_norm'].trim() : '';
+      if (!textNorm) {
+        next['text_norm'] = cleaned;
+      }
+    }
+    items.push(next);
+    parsed['items'] = items;
+    parsed['schema_version'] = parsed['schema_version'] ?? 1;
+    parsed['task_type'] = 'sentence_structure';
+    tab.json = JSON.stringify(parsed, null, 2);
+    setStatus(this.state, 'success', 'Sentence added.');
+  }
+
+  replaceSentenceItem(index: number, record: Record<string, unknown>) {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
+    if (!tab) return;
+    const parsed = this.parseTaskJsonObject(tab.json);
+    const items = Array.isArray(parsed['items']) ? parsed['items'] : [];
+    if (index < 0 || index >= items.length) return;
+    const existing = items[index];
+    const next: Record<string, unknown> = { ...record };
+    const orderValue = next['sentence_order'];
+    const orderNumber = Number(orderValue);
+    if (!Number.isFinite(orderNumber)) {
+      const existingOrder =
+        existing && typeof existing === 'object'
+          ? Number((existing as Record<string, unknown>)['sentence_order'])
+          : NaN;
+      next['sentence_order'] = Number.isFinite(existingOrder) ? existingOrder : index + 1;
+    }
+    if (typeof next['canonical_sentence'] === 'string') {
+      const cleaned = this.stripArabicDiacritics(next['canonical_sentence'].replace(/\s+/g, ' ').trim());
+      next['canonical_sentence'] = cleaned;
+      const textNorm = typeof next['text_norm'] === 'string' ? next['text_norm'].trim() : '';
+      if (!textNorm) {
+        next['text_norm'] = cleaned;
+      }
+    }
+    items[index] = next;
+    parsed['items'] = items;
+    tab.json = JSON.stringify(parsed, null, 2);
+    setStatus(this.state, 'success', 'Sentence updated.');
+  }
+
   validateTaskJson(type: TaskType) {
     const tab = this.state.taskTabs.find((entry) => entry.type === type);
     if (!tab) return;
