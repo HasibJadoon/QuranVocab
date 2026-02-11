@@ -514,7 +514,6 @@ export class QuranLessonEditorFacade {
       sentence_order: nextOrder,
       canonical_sentence: cleaned,
       structure_summary: this.buildStructureSummary(cleaned),
-      steps: [],
       source,
       ayah,
     });
@@ -554,7 +553,6 @@ export class QuranLessonEditorFacade {
         canonical_sentence: candidate.text,
         ar_u_sentence: arUSentence,
         structure_summary: this.buildStructureSummary(candidate.text),
-        steps: [],
       });
       parsed['schema_version'] = parsed['schema_version'] ?? 1;
       parsed['task_type'] = 'sentence_structure';

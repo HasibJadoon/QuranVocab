@@ -31,6 +31,12 @@ type SentenceItem = {
   [key: string]: unknown;
 };
 
+type GrammarRef = {
+  grammarId?: string;
+  arUGrammar?: string;
+  record?: Record<string, unknown> | null;
+};
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
@@ -52,6 +58,81 @@ function nextOrder(items: SentenceItem[]): number {
   const orders = items.map((item) => asNumber(item.sentence_order)).filter((n): n is number => n != null);
   if (!orders.length) return 1;
   return Math.max(...orders) + 1;
+}
+
+function isLikelyArUGrammar(value: string): boolean {
+  return /^[a-f0-9]{64}$/i.test(value);
+}
+
+function parseGrammarString(value: string): { grammarId?: string; arUGrammar?: string } {
+  const trimmed = value.trim();
+  if (!trimmed) return {};
+  if (isLikelyArUGrammar(trimmed)) return { arUGrammar: trimmed };
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith('gram|') || lower.startsWith('grammar|')) {
+    const parts = trimmed.split('|');
+    const last = parts[parts.length - 1];
+    if (last && last !== trimmed) return { grammarId: last };
+  }
+  return { grammarId: trimmed };
+}
+
+function extractGrammarRef(entry: unknown): GrammarRef | null {
+  if (typeof entry === 'string') {
+    const parsed = parseGrammarString(entry);
+    if (parsed.grammarId || parsed.arUGrammar) return { ...parsed };
+    return null;
+  }
+  const record = asRecord(entry);
+  if (!record) return null;
+  const arUGrammar = asString(record['ar_u_grammar']);
+  const grammarId =
+    asString(record['grammar_id']) ??
+    asString(record['id']) ??
+    asString(record['grammar']);
+  if (arUGrammar) {
+    return { arUGrammar, record };
+  }
+  if (grammarId) {
+    const parsed = parseGrammarString(grammarId);
+    if (parsed.grammarId || parsed.arUGrammar) return { ...parsed, record };
+  }
+  return null;
+}
+
+function collectGrammarRefs(list: unknown, out: GrammarRef[]) {
+  if (!Array.isArray(list)) return;
+  for (const entry of list) {
+    const ref = extractGrammarRef(entry);
+    if (ref) out.push(ref);
+  }
+}
+
+function looksLikeStructureSummary(record: Record<string, unknown>): boolean {
+  return (
+    'sentence_type' in record ||
+    'core_pattern' in record ||
+    'main_components' in record ||
+    'expansions' in record ||
+    'grammar_flow' in record
+  );
+}
+
+function collectGrammarFromSummary(summary: Record<string, unknown> | null, out: GrammarRef[]) {
+  if (!summary) return;
+  collectGrammarRefs(summary['grammar_flow'], out);
+  const main = Array.isArray(summary['main_components']) ? summary['main_components'] : [];
+  for (const component of main) {
+    const compRecord = asRecord(component);
+    if (!compRecord) continue;
+    collectGrammarRefs(compRecord['grammar'], out);
+  }
+  const expansions = Array.isArray(summary['expansions']) ? summary['expansions'] : [];
+  for (const expansion of expansions) {
+    const expRecord = asRecord(expansion);
+    if (!expRecord) continue;
+    collectGrammarRefs(expRecord['grammar'], out);
+  }
 }
 
 function taskJsonObject(taskJson: unknown): Record<string, unknown> | null {
@@ -177,6 +258,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       if (summary && !asString(summary.full_text)) {
         summary.full_text = canonicalSentence;
       }
+      const summaryForGrammar = summary ?? (looksLikeStructureSummary(item) ? item : null);
 
       const textNorm = canonicalize(canonicalSentence);
       const resolved = await upsertArUSentence(
@@ -242,10 +324,47 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         )
         .run();
 
-      for (const step of steps) {
-        const grammarId = asString(step.grammar_id);
-        const arUGrammar = asString(step.ar_u_grammar);
-        if (!grammarId || !arUGrammar) continue;
+      const grammarRefs: GrammarRef[] = [];
+      collectGrammarRefs(steps, grammarRefs);
+      collectGrammarRefs(item['grammar_flow'], grammarRefs);
+      collectGrammarFromSummary(summaryForGrammar, grammarRefs);
+      const resolvedGrammar = new Map<string, string>();
+      const insertedGrammar = new Set<string>();
+
+      for (const ref of grammarRefs) {
+        let arUGrammar = ref.arUGrammar;
+        if (arUGrammar && !isLikelyArUGrammar(arUGrammar)) {
+          if (!ref.grammarId) {
+            ref.grammarId = arUGrammar;
+          }
+          arUGrammar = undefined;
+        }
+        if (!arUGrammar && ref.grammarId) {
+          const cacheKey = `grammar:${ref.grammarId}`;
+          arUGrammar = resolvedGrammar.get(cacheKey);
+          if (!arUGrammar) {
+            const resolvedGrammarRow = await upsertArUGrammar(
+              { DB: ctx.env.DB },
+              {
+                grammarId: ref.grammarId,
+                category: null,
+                title: ref.grammarId,
+                titleAr: null,
+                definition: null,
+                definitionAr: null,
+                meta: { source: 'lesson-authoring' },
+              }
+            );
+            arUGrammar = resolvedGrammarRow.ar_u_grammar;
+            resolvedGrammar.set(cacheKey, arUGrammar);
+          }
+        }
+        if (!arUGrammar) continue;
+        if (ref.record && !asString(ref.record['ar_u_grammar'])) {
+          ref.record['ar_u_grammar'] = arUGrammar;
+        }
+        if (insertedGrammar.has(arUGrammar)) continue;
+        insertedGrammar.add(arUGrammar);
         const occGrammarId = await sha256Hex(`occ_grammar|${containerId}|${unitId}|occ_sentence|${occSentenceId}|${arUGrammar}`);
         await ctx.env.DB
           .prepare(

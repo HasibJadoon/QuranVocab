@@ -37,9 +37,6 @@ export class SentenceStructureTaskComponent {
       ayah: 1,
       text_norm: '',
       ar_u_sentence: null,
-      tokens: [],
-      spans: [],
-      steps: [],
       structure_summary: this.buildStructureSummary('...'),
     },
     null,
@@ -286,9 +283,6 @@ export class SentenceStructureTaskComponent {
       ayah: null,
       text_norm: '',
       ar_u_sentence: null,
-      tokens: [],
-      spans: [],
-      steps: [],
       structure_summary: this.buildStructureSummary(''),
     };
   }
