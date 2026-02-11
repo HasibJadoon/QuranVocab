@@ -1,5 +1,13 @@
 import { requireAuth } from '../../../../../_utils/auth';
-import { canonicalize, sha256Hex, upsertArUGrammar, upsertArUSentence } from '../../../../../_utils/universal';
+import {
+  canonicalize,
+  sha256Hex,
+  upsertArUGrammar,
+  upsertArURoot,
+  upsertArUSentence,
+  upsertArUSpan,
+  upsertArUToken,
+} from '../../../../../_utils/universal';
 
 interface Env {
   DB: D1Database;
@@ -52,6 +60,23 @@ function nextOrder(items: SentenceItem[]): number {
   const orders = items.map((item) => asNumber(item.sentence_order)).filter((n): n is number => n != null);
   if (!orders.length) return 1;
   return Math.max(...orders) + 1;
+}
+
+function normalizeRoot(raw: string): string {
+  return canonicalize(raw).replace(/\s+/g, '');
+}
+
+function normalizePos(raw?: string | null, detail?: string | null): 'noun' | 'verb' | 'adj' | 'particle' | 'phrase' {
+  const rawTrim = raw?.trim() ?? '';
+  const rawLower = rawTrim.toLowerCase();
+  if (['noun', 'verb', 'adj', 'particle', 'phrase'].includes(rawLower)) {
+    return rawLower as 'noun' | 'verb' | 'adj' | 'particle' | 'phrase';
+  }
+  const combined = `${rawTrim} ${detail ?? ''}`.toLowerCase();
+  if (combined.includes('فعل') || combined.includes('verb')) return 'verb';
+  if (combined.includes('صفة') || combined.includes('adj')) return 'adj';
+  if (combined.includes('حرف') || combined.includes('particle')) return 'particle';
+  return 'noun';
 }
 
 function taskJsonObject(taskJson: unknown): Record<string, unknown> | null {
@@ -211,6 +236,87 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         steps.push(step);
       }
 
+      const tokensRaw = Array.isArray(item.tokens) ? item.tokens : [];
+      const tokens: Array<Record<string, unknown>> = [];
+      const tokenIdMap = new Map<number, string>();
+      for (let i = 0; i < tokensRaw.length; i += 1) {
+        const token = asRecord(tokensRaw[i]) ?? {};
+        const tokenIndex = asNumber(token.token_index) ?? i;
+        const lemmaAr = asString(token.lemma) ?? asString(token.surface) ?? '';
+        const lemmaNorm = canonicalize(lemmaAr || '');
+        const pos = normalizePos(asString(token.pos), asString(token.pos_detail));
+        const rootRaw = asString(token.root);
+        let arURoot = asString(token.ar_u_root);
+        let rootNorm: string | null = asString(token.root_norm);
+        if (!rootNorm && rootRaw) {
+          rootNorm = normalizeRoot(rootRaw);
+          token.root_norm = rootNorm;
+        }
+        if (rootRaw && !arURoot) {
+          const resolvedRoot = await upsertArURoot(
+            { DB: ctx.env.DB },
+            {
+              root: rootRaw,
+              rootNorm: rootNorm ?? normalizeRoot(rootRaw),
+              meta: { source: 'lesson-authoring' },
+            }
+          );
+          arURoot = resolvedRoot.ar_u_root;
+          token.ar_u_root = arURoot;
+        }
+        let arUToken = asString(token.ar_u_token);
+        if (!arUToken && lemmaAr) {
+          const resolvedToken = await upsertArUToken(
+            { DB: ctx.env.DB },
+            {
+              lemmaAr,
+              lemmaNorm: lemmaNorm || lemmaAr,
+              pos,
+              rootNorm: rootNorm ?? null,
+              arURoot: arURoot ?? null,
+              features: token,
+              meta: { source: 'lesson-authoring' },
+            }
+          );
+          arUToken = resolvedToken.ar_u_token;
+          token.ar_u_token = arUToken;
+        }
+        if (typeof tokenIndex === 'number' && arUToken) {
+          tokenIdMap.set(tokenIndex, arUToken);
+        }
+        tokens.push(token);
+      }
+
+      const spansRaw = Array.isArray(item.spans) ? item.spans : [];
+      const spans: Array<Record<string, unknown>> = [];
+      for (let i = 0; i < spansRaw.length; i += 1) {
+        const span = asRecord(spansRaw[i]) ?? {};
+        const spanType = asString(span.span_type) ?? asString(span.type) ?? 'span';
+        const from = asNumber(span.token_from);
+        const to = asNumber(span.token_to);
+        let arUSpan = asString(span.ar_u_span);
+        if (!arUSpan && from != null && to != null) {
+          const tokenIds: string[] = [];
+          for (let idx = from; idx <= to; idx += 1) {
+            const tokenId = tokenIdMap.get(idx);
+            if (tokenId) tokenIds.push(tokenId);
+          }
+          if (tokenIds.length) {
+            const resolvedSpan = await upsertArUSpan(
+              { DB: ctx.env.DB },
+              {
+                spanType,
+                tokenIds,
+                meta: { source: 'lesson-authoring' },
+              }
+            );
+            arUSpan = resolvedSpan.ar_u_span;
+            span.ar_u_span = arUSpan;
+          }
+        }
+        spans.push(span);
+      }
+
       const order = Number.isFinite(Number(item.sentence_order)) ? Number(item.sentence_order) : nextOrder(items);
       const occSentenceId = await sha256Hex(`occ_sentence|${containerId}|${unitId}|${order}|${canonicalSentence}`);
 
@@ -273,6 +379,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         ar_u_sentence: arUSentence,
         steps,
         text_norm: textNorm,
+        tokens,
+        spans,
       });
     }
 
