@@ -513,6 +513,7 @@ export class QuranLessonEditorFacade {
     items.push({
       sentence_order: nextOrder,
       canonical_sentence: cleaned,
+      structure_summary: this.buildStructureSummary(cleaned),
       steps: [],
       source,
       ayah,
@@ -552,6 +553,7 @@ export class QuranLessonEditorFacade {
         sentence_order: nextOrder,
         canonical_sentence: candidate.text,
         ar_u_sentence: arUSentence,
+        structure_summary: this.buildStructureSummary(candidate.text),
         steps: [],
       });
       parsed['schema_version'] = parsed['schema_version'] ?? 1;
@@ -595,6 +597,7 @@ export class QuranLessonEditorFacade {
       if ('ar_u_sentence' in (item as Record<string, unknown>)) {
         delete (item as Record<string, unknown>)['ar_u_sentence'];
       }
+      this.ensureStructureSummary(item as Record<string, unknown>, cleaned);
     }
     parsed['items'] = items;
     tab.json = JSON.stringify(parsed, null, 2);
@@ -620,6 +623,10 @@ export class QuranLessonEditorFacade {
         next['text_norm'] = cleaned;
       }
     }
+    this.ensureStructureSummary(
+      next,
+      typeof next['canonical_sentence'] === 'string' ? (next['canonical_sentence'] as string) : ''
+    );
     items.push(next);
     parsed['items'] = items;
     parsed['schema_version'] = parsed['schema_version'] ?? 1;
@@ -653,6 +660,10 @@ export class QuranLessonEditorFacade {
         next['text_norm'] = cleaned;
       }
     }
+    this.ensureStructureSummary(
+      next,
+      typeof next['canonical_sentence'] === 'string' ? (next['canonical_sentence'] as string) : ''
+    );
     items[index] = next;
     parsed['items'] = items;
     tab.json = JSON.stringify(parsed, null, 2);
@@ -904,6 +915,55 @@ export class QuranLessonEditorFacade {
       .filter((value) => Number.isFinite(value)) as number[];
     if (!orders.length) return 1;
     return Math.max(...orders) + 1;
+  }
+
+  private buildStructureSummary(fullText: string): Record<string, unknown> {
+    return {
+      sentence_type: '',
+      full_text: fullText,
+      core_pattern: '',
+      main_components: [
+        {
+          component: '',
+          text: '',
+          pattern: '',
+          role: '',
+          grammar: [],
+        },
+      ],
+      expansions: [
+        {
+          type: '',
+          text: '',
+          function: '',
+          grammar: [],
+        },
+      ],
+    };
+  }
+
+  private ensureStructureSummary(record: Record<string, unknown>, fullText: string) {
+    const current = record['structure_summary'];
+    if (!current || typeof current !== 'object' || Array.isArray(current)) {
+      record['structure_summary'] = this.buildStructureSummary(fullText);
+      return;
+    }
+    const summary = current as Record<string, unknown>;
+    if (typeof summary['sentence_type'] !== 'string') {
+      summary['sentence_type'] = '';
+    }
+    if (typeof summary['full_text'] !== 'string' || !summary['full_text'].trim()) {
+      summary['full_text'] = fullText;
+    }
+    if (typeof summary['core_pattern'] !== 'string') {
+      summary['core_pattern'] = '';
+    }
+    if (!Array.isArray(summary['main_components'])) {
+      summary['main_components'] = this.buildStructureSummary('').main_components;
+    }
+    if (!Array.isArray(summary['expansions'])) {
+      summary['expansions'] = this.buildStructureSummary('').expansions;
+    }
   }
 
   private getSentenceLoadedAyahs() {

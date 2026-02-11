@@ -55,12 +55,33 @@
   line-height: 1.5;
 }
 
-.app-json-modal-body textarea {
+.app-json-modal-editor {
+  display: block;
+  border: 1px solid var(--km-core-border, rgba(133, 160, 214, 0.2));
+  border-radius: 0.6rem;
+  overflow: hidden;
+}
+
+:host ::ng-deep .app-json-modal-editor .CodeMirror {
   min-height: 12rem;
+  height: 100%;
+  background: transparent;
+}
+
+:host ::ng-deep .app-json-modal-editor .CodeMirror-scroll {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
   font-size: 0.85rem;
   line-height: 1.5;
+}
+
+:host ::ng-deep .app-json-modal-editor .CodeMirror-gutters {
+  background: transparent;
+  border-right: 1px solid var(--km-core-border, rgba(133, 160, 214, 0.2));
+}
+
+:host ::ng-deep .app-json-modal-editor .CodeMirror-linenumber {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .app-json-modal-footer {

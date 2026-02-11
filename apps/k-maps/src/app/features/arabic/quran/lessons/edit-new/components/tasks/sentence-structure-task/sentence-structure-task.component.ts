@@ -29,8 +29,22 @@ export class SentenceStructureTaskComponent {
   editModalJson = '';
   editModalError = '';
   editModalTitle = 'Sentence JSON';
-  editModalPlaceholder =
-    '{"sentence_order":1,"canonical_sentence":"...","source":"selection","ayah":1,"text_norm":"","ar_u_sentence":null,"tokens":[],"spans":[],"steps":[]}';
+  editModalPlaceholder = JSON.stringify(
+    {
+      sentence_order: 1,
+      canonical_sentence: '...',
+      source: 'selection',
+      ayah: 1,
+      text_norm: '',
+      ar_u_sentence: null,
+      tokens: [],
+      spans: [],
+      steps: [],
+      structure_summary: this.buildStructureSummary('...'),
+    },
+    null,
+    2
+  );
   editingIndex: number | null = null;
   editingValue = '';
   contextMenuOpen = false;
@@ -169,6 +183,7 @@ export class SentenceStructureTaskComponent {
         tokens: [],
         spans: [],
         steps: [],
+        structure_summary: this.buildStructureSummary(''),
       },
       null,
       2
@@ -256,5 +271,30 @@ export class SentenceStructureTaskComponent {
 
   commitTask() {
     this.facade.saveTask('sentence_structure' as TaskType);
+  }
+
+  private buildStructureSummary(fullText: string) {
+    return {
+      sentence_type: '',
+      full_text: fullText,
+      core_pattern: '',
+      main_components: [
+        {
+          component: '',
+          text: '',
+          pattern: '',
+          role: '',
+          grammar: [],
+        },
+      ],
+      expansions: [
+        {
+          type: '',
+          text: '',
+          function: '',
+          grammar: [],
+        },
+      ],
+    };
   }
 }

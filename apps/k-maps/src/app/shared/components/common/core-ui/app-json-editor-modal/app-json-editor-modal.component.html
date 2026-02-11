@@ -12,13 +12,12 @@
     <div class="app-json-modal-body">
       <label class="d-block w-100">
         <span>JSON</span>
-        <textarea
-          rows="14"
-          class="form-control"
+        <ngx-codemirror
+          class="app-json-modal-editor"
+          [options]="editorOptions"
           [(ngModel)]="draft"
-          [placeholder]="placeholder"
           (keydown)="onKeydown($event)"
-        ></textarea>
+        ></ngx-codemirror>
       </label>
       <p class="text-danger mt-2" *ngIf="displayError">{{ displayError }}</p>
     </div>

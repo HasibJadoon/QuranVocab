@@ -1,12 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
+import { CodemirrorModule } from '@ctrl/ngx-codemirror';
+
+import 'codemirror/mode/javascript/javascript';
+import 'codemirror/addon/fold/foldcode';
+import 'codemirror/addon/fold/foldgutter';
+import 'codemirror/addon/fold/brace-fold';
 
 @Component({
   selector: 'app-json-code-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, MonacoEditorModule],
+  imports: [CommonModule, FormsModule, CodemirrorModule],
   templateUrl: './app-json-code-editor.component.html',
   styleUrls: ['./app-json-code-editor.component.scss'],
 })
@@ -23,27 +28,22 @@ export class AppJsonCodeEditorComponent implements OnChanges {
   @Output() valueChange = new EventEmitter<string>();
 
   model = '';
-  editorReady = false;
 
   get editorOptions(): Record<string, unknown> {
+    const resolvedTheme = this.theme === 'vs' ? 'default' : 'material-darker';
+    const resolvedMode = this.language === 'json' ? { name: 'javascript', json: true } : this.language;
+    const gutters = this.enableFolding ? ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'] : ['CodeMirror-linenumbers'];
+
     return {
-      theme: this.theme,
-      language: this.language,
-      automaticLayout: true,
-      minimap: { enabled: false },
-      tabSize: 2,
-      wordWrap: 'on',
-      scrollBeyondLastLine: false,
-      formatOnPaste: true,
-      formatOnType: true,
-      folding: this.enableFolding,
-      showFoldingControls: this.showFoldingControls,
-      foldingStrategy: 'auto',
-      glyphMargin: true,
-      lineNumbers: 'on',
-      renderLineHighlight: 'all',
-      guides: { indentation: true },
+      lineNumbers: true,
+      mode: resolvedMode,
+      theme: resolvedTheme,
       readOnly: this.readonly,
+      lineWrapping: true,
+      foldGutter: this.enableFolding,
+      gutters,
+      tabSize: 2,
+      indentUnit: 2,
       ...this.options,
     };
   }
@@ -52,10 +52,6 @@ export class AppJsonCodeEditorComponent implements OnChanges {
     if (changes['value']) {
       this.model = this.value ?? '';
     }
-  }
-
-  onEditorInit() {
-    this.editorReady = true;
   }
 
   onModelChange(next: string) {
