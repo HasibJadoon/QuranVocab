@@ -969,10 +969,10 @@ export class QuranLessonEditorFacade {
       summary['core_pattern'] = '';
     }
     if (!Array.isArray(summary['main_components'])) {
-      summary['main_components'] = this.buildStructureSummary('').main_components;
+      summary['main_components'] = this.buildStructureSummary('')['main_components'];
     }
     if (!Array.isArray(summary['expansions'])) {
-      summary['expansions'] = this.buildStructureSummary('').expansions;
+      summary['expansions'] = this.buildStructureSummary('')['expansions'];
     }
   }
 
