@@ -40,6 +40,20 @@ export class SentenceStructureTaskComponent {
     return this.facade.getSentenceItems();
   }
 
+  trackBySentenceItem(index: number, item: any) {
+    if (item && typeof item === 'object') {
+      const order = (item as Record<string, unknown>)['sentence_order'];
+      if (typeof order === 'number' || typeof order === 'string') {
+        return order;
+      }
+      const key = (item as Record<string, unknown>)['ar_u_sentence'];
+      if (typeof key === 'string') return key;
+      const text = (item as Record<string, unknown>)['canonical_sentence'];
+      if (typeof text === 'string') return text;
+    }
+    return index;
+  }
+
   get sentenceJson(): string {
     const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
     return tab?.json ?? '';

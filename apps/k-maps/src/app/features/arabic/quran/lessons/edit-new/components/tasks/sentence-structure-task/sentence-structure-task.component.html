@@ -69,7 +69,7 @@
       <div class="sentence-card">
         <h4>Task Sentences</h4>
         <div class="sentence-list" *ngIf="sentenceItems.length; else noItems">
-          <div class="sentence-item" *ngFor="let item of sentenceItems; let i = index">
+          <div class="sentence-item" *ngFor="let item of sentenceItems; let i = index; trackBy: trackBySentenceItem">
             <div *ngIf="editingIndex !== i; else editSentence">
               <span class="sentence-tag">#{{ i + 1 }}</span>
               <p class="sentence-text">{{ item['canonical_sentence'] }}</p>
