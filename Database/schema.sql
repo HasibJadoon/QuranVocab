@@ -642,10 +642,14 @@ CREATE TABLE IF NOT EXISTS ar_u_grammar (
 
   grammar_id       TEXT NOT NULL UNIQUE,
   category         TEXT,
+  sub_category     TEXT,
   title            TEXT,
   title_ar         TEXT,
   definition       TEXT,
   definition_ar    TEXT,
+
+  lookup_keys_json JSON CHECK (lookup_keys_json IS NULL OR json_valid(lookup_keys_json)),
+  canonical_norm   TEXT,
 
   meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
 
@@ -655,6 +659,10 @@ CREATE TABLE IF NOT EXISTS ar_u_grammar (
 
 CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_category ON ar_u_grammar(category);
 CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_grammar_id ON ar_u_grammar(grammar_id);
+CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_canonical_norm ON ar_u_grammar(canonical_norm);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_ar_u_grammar_canonical_norm
+  ON ar_u_grammar(canonical_norm)
+  WHERE canonical_norm IS NOT NULL AND canonical_norm <> '';
 
 CREATE TABLE IF NOT EXISTS ar_u_grammar_relations (
   id                 TEXT PRIMARY KEY,

@@ -1,1 +1,109 @@
-<app-quran-lesson-task-json taskType="morphology"></app-quran-lesson-task-json>
+<div class="sentence-layout">
+  <app-tabs
+    class="sentence-tabs"
+    [tabs]="tabs"
+    [activeId]="activeTabId"
+    variant="tabs"
+    ariaLabel="Morphology task tabs"
+    (tabChange)="onTabChange($event)"
+  ></app-tabs>
+
+  <div class="sentence-pane">
+    <ng-container *ngIf="activeTabId === 'items'">
+      <div class="sentence-card">
+        <div class="sentence-card-head">
+          <h4>Morphology Items</h4>
+          <div class="action-row">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="loadFromVerses()">Load from verses</button>
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              [disabled]="state.taskSavingType === 'morphology'"
+              (click)="saveTask()"
+            >
+              {{ state.taskSavingType === 'morphology' ? 'Saving...' : 'Save Task' }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              [disabled]="state.taskSavingType === 'morphology' || !state.lessonId || !state.passageUnitId"
+              (click)="commitLexicon()"
+            >
+              {{ state.taskSavingType === 'morphology' ? 'Committing...' : 'Push to Lexicon' }}
+            </button>
+          </div>
+        </div>
+        <p class="note-muted">Loads every word from the selected verses. Remove items you do not want to keep.</p>
+
+        <div class="table-wrap" *ngIf="items.length; else noItems">
+          <table class="editor-table editor-table--morph">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ref</th>
+                <th>Word</th>
+                <th>Lemma</th>
+                <th>Root</th>
+                <th>POS</th>
+                <th>Pattern</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of items; let i = index; trackBy: trackByItem">
+                <td>{{ i + 1 }}</td>
+                <td>{{ item['word_location'] || (item['surah'] + ':' + item['ayah'] + ':' + item['token_index']) }}</td>
+                <td class="text-arabic" dir="rtl">{{ item['surface_ar'] || '—' }}</td>
+                <td>
+                  <input
+                    type="text"
+                    class="text-arabic"
+                    dir="rtl"
+                    [ngModel]="itemValue(item, 'lemma_ar')"
+                    (ngModelChange)="updateItem(i, 'lemma_ar', $event)"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    class="text-arabic"
+                    dir="rtl"
+                    [ngModel]="itemValue(item, 'root_norm')"
+                    (ngModelChange)="updateItem(i, 'root_norm', $event)"
+                  />
+                </td>
+                <td>
+                  <select [ngModel]="itemValue(item, 'pos')" (ngModelChange)="updatePos(i, $event)">
+                    <option [ngValue]="''">—</option>
+                    <option [ngValue]="'noun'">noun</option>
+                    <option [ngValue]="'verb'">verb</option>
+                    <option [ngValue]="'adj'">adj</option>
+                    <option [ngValue]="'particle'">particle</option>
+                    <option [ngValue]="'phrase'">phrase</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    [ngModel]="itemValue(item, 'morph_pattern')"
+                    (ngModelChange)="updateItem(i, 'morph_pattern', $event)"
+                  />
+                </td>
+                <td>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="removeItem(i)">Remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noItems>
+          <p class="text-muted">No morphology items yet. Click “Load from verses” to populate.</p>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="activeTabId === 'json'">
+      <app-quran-lesson-task-json taskType="morphology"></app-quran-lesson-task-json>
+    </ng-container>
+  </div>
+</div>

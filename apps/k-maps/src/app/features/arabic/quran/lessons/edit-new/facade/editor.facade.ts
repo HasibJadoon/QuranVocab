@@ -416,6 +416,16 @@ export class QuranLessonEditorFacade {
         this.loadSentenceVerses();
       }
     }
+    if (type === 'morphology') {
+      const tab = this.state.taskTabs.find((entry) => entry.type === 'morphology');
+      if (tab) {
+        const parsed = this.parseTaskJsonObject(tab.json);
+        const items = Array.isArray(parsed['items']) ? parsed['items'] : [];
+        if (!items.length) {
+          this.loadMorphologyFromSelectedAyahs({ silent: true, merge: true });
+        }
+      }
+    }
     if (syncUrl) {
       this.syncQueryParams({ task: type });
     }
@@ -1035,6 +1045,201 @@ export class QuranLessonEditorFacade {
     this.state.sentenceAyahSelections = selectSelectedAyahs(this.state).map((ayah) => ayah.ayah);
     if (!this.state.sentenceLoadedAyahs.length) {
       this.loadSentenceVerses();
+    }
+  }
+
+  loadMorphologyFromSelectedAyahs(options: { merge?: boolean; silent?: boolean } = {}) {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'morphology');
+    if (!tab) return;
+    const selected = selectSelectedAyahs(this.state);
+    if (!selected.length) {
+      if (!options.silent) {
+        setStatus(this.state, 'error', 'Select a surah and ayah range first.');
+      }
+      return;
+    }
+
+    const nextItems = this.buildMorphologyItems(selected);
+    if (!nextItems.length) {
+      if (!options.silent) {
+        setStatus(this.state, 'error', 'No words found for the selected verses.');
+      }
+      return;
+    }
+
+    let items = nextItems;
+    if (options.merge !== false) {
+      const existing = this.parseMorphologyItems(tab.json);
+      if (existing.length) {
+        items = this.mergeMorphologyItems(existing, nextItems);
+      }
+    }
+
+    const payload: Record<string, unknown> = {
+      schema_version: 1,
+      task_type: 'morphology',
+      surah: this.state.selectedSurah,
+      ayah_from: this.state.rangeStart,
+      ayah_to: this.state.rangeEnd ?? this.state.rangeStart,
+      source: 'quran-ayah-words',
+      items,
+    };
+
+    tab.json = JSON.stringify(payload, null, 2);
+    if (!options.silent) {
+      setStatus(this.state, 'success', `Loaded ${items.length} words from selected verses.`);
+    }
+  }
+
+  private buildMorphologyItems(ayahs: Array<any>): Array<Record<string, unknown>> {
+    const items: Array<Record<string, unknown>> = [];
+    for (const ayah of ayahs) {
+      const words = Array.isArray(ayah?.words) ? ayah.words : [];
+      let fallbackIndex = 1;
+      for (const raw of words) {
+        if (!raw || typeof raw !== 'object') continue;
+        const record = raw as Record<string, unknown>;
+        const charType = typeof record['char_type'] === 'string' ? record['char_type'] : null;
+        if (charType && charType !== 'word') continue;
+        const indexValue = Number(record['position'] ?? record['token_index'] ?? record['tokenIndex'] ?? fallbackIndex);
+        const tokenIndex = Number.isFinite(indexValue) ? indexValue : fallbackIndex;
+        fallbackIndex = tokenIndex + 1;
+
+        const surface =
+          (record['text_uthmani'] as string) ??
+          (record['text'] as string) ??
+          (record['word_diacritic'] as string) ??
+          (record['simple'] as string) ??
+          (record['word_simple'] as string) ??
+          '';
+        const simple =
+          (record['simple'] as string) ??
+          (record['word_simple'] as string) ??
+          this.stripArabicDiacritics(surface);
+        const lemma =
+          (record['lemma'] as string) ??
+          (record['lemma_text'] as string) ??
+          (record['lemma_text_clean'] as string) ??
+          simple;
+        const lemmaNorm =
+          (record['lemma_text_clean'] as string) ??
+          this.stripArabicDiacritics(lemma);
+        const root = (record['root'] as string) ?? (record['root_norm'] as string) ?? null;
+        const translation = (record['translation'] as string) ?? null;
+
+        if (!surface && !simple) continue;
+        const wordLocation =
+          typeof record['word_location'] === 'string'
+            ? record['word_location']
+            : `${ayah.surah}:${ayah.ayah}:${tokenIndex}`;
+
+        items.push({
+          word_location: wordLocation,
+          surah: ayah.surah,
+          ayah: ayah.ayah,
+          token_index: tokenIndex,
+          surface_ar: surface,
+          surface_norm: simple,
+          lemma_ar: lemma,
+          lemma_norm: lemmaNorm,
+          root_norm: root,
+          translation,
+          pos: null,
+          morph_pattern: '',
+          morph_features: {},
+          lexicon_id: null,
+        });
+      }
+    }
+    return items;
+  }
+
+  private parseMorphologyItems(raw: string): Array<Record<string, unknown>> {
+    const parsed = this.parseTaskJsonObject(raw);
+    const items = Array.isArray(parsed['items']) ? parsed['items'] : [];
+    return items.filter((item) => item && typeof item === 'object') as Array<Record<string, unknown>>;
+  }
+
+  private mergeMorphologyItems(
+    existing: Array<Record<string, unknown>>,
+    incoming: Array<Record<string, unknown>>
+  ): Array<Record<string, unknown>> {
+    const lookup = new Map<string, Record<string, unknown>>();
+    for (const item of existing) {
+      const key = this.getMorphologyItemKey(item);
+      if (key) lookup.set(key, item);
+    }
+    return incoming.map((base) => {
+      const key = this.getMorphologyItemKey(base);
+      const prev = key ? lookup.get(key) : null;
+      if (!prev) return base;
+      const merged = { ...base, ...prev } as Record<string, unknown>;
+      merged['word_location'] = base['word_location'];
+      merged['surah'] = base['surah'];
+      merged['ayah'] = base['ayah'];
+      merged['token_index'] = base['token_index'];
+      merged['surface_ar'] = base['surface_ar'];
+      merged['surface_norm'] = base['surface_norm'];
+      if (!merged['lemma_ar']) merged['lemma_ar'] = base['lemma_ar'];
+      if (!merged['lemma_norm']) merged['lemma_norm'] = base['lemma_norm'];
+      if (!merged['root_norm']) merged['root_norm'] = base['root_norm'];
+      if (!merged['translation']) merged['translation'] = base['translation'];
+      return merged;
+    });
+  }
+
+  private getMorphologyItemKey(item: Record<string, unknown>): string | null {
+    const wordLocation = typeof item['word_location'] === 'string' ? item['word_location'].trim() : '';
+    if (wordLocation) return wordLocation;
+    const surah = Number(item['surah']);
+    const ayah = Number(item['ayah']);
+    const tokenIndex = Number(item['token_index']);
+    if (Number.isFinite(surah) && Number.isFinite(ayah) && Number.isFinite(tokenIndex)) {
+      return `${surah}:${ayah}:${tokenIndex}`;
+    }
+    return null;
+  }
+
+  async commitMorphologyTask(tab: TaskTab) {
+    if (!this.state.lessonId || !this.state.containerId || !this.state.passageUnitId) {
+      setStatus(this.state, 'error', 'Save lesson metadata before adding tasks.');
+      return;
+    }
+    const parsed = this.parseTaskJson(tab.json);
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      setStatus(this.state, 'error', 'Morphology task JSON must be an object.');
+      return;
+    }
+
+    this.state.taskSavingType = tab.type;
+    setStatus(this.state, 'info', 'Committing Morphology task...');
+    try {
+      const payload = {
+        container_id: this.state.containerId,
+        unit_id: this.state.passageUnitId,
+        task_type: tab.type,
+        task_json: parsed,
+      };
+      const data = await this.request(`${API_BASE}/ar/quran/lessons/${this.state.lessonId}/tasks/commit`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      const taskJson = data?.result?.task_json;
+      if (taskJson) {
+        tab.json = JSON.stringify(taskJson, null, 2);
+      }
+      const summary = data?.result?.lexicon_summary;
+      if (summary && typeof summary === 'object') {
+        const upserted = summary.upserted ?? 0;
+        const skipped = summary.skipped ?? 0;
+        setStatus(this.state, 'success', `Morphology committed. Lexicon upserted ${upserted}, skipped ${skipped}.`);
+      } else {
+        setStatus(this.state, 'success', 'Morphology committed.');
+      }
+    } catch (err: any) {
+      setStatus(this.state, 'error', err?.message ?? 'Failed to commit morphology task.');
+    } finally {
+      this.state.taskSavingType = null;
     }
   }
 

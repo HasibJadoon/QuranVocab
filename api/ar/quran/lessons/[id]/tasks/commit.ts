@@ -3,6 +3,7 @@ import {
   canonicalize,
   sha256Hex,
   upsertArUGrammar,
+  upsertArULexicon,
   upsertArURoot,
   upsertArUSentence,
   upsertArUSpan,
@@ -22,7 +23,17 @@ const jsonHeaders: Record<string, string> = {
 
 const TASK_LABELS: Record<string, string> = {
   sentence_structure: 'Sentence Structure',
+  morphology: 'Morphology',
 };
+
+const MORPH_POS_MAP: Record<string, string> = {
+  اسم: 'noun',
+  فعل: 'verb',
+  حرف: 'particle',
+  صفة: 'adj',
+};
+
+const ARABIC_DIACRITICS_RE = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 
 type CommitBody = {
   container_id?: string | null;
@@ -60,6 +71,19 @@ function asNumber(value: unknown): number | null {
   if (typeof value !== 'number') return null;
   if (!Number.isFinite(value)) return null;
   return value;
+}
+
+function normalizeArabic(input: string): string {
+  return input.normalize('NFKC').replace(ARABIC_DIACRITICS_RE, '').trim();
+}
+
+function normalizePos(value: string | null): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const lower = trimmed.toLowerCase();
+  if (['verb', 'noun', 'adj', 'particle', 'phrase'].includes(lower)) return lower;
+  return MORPH_POS_MAP[trimmed] ?? null;
 }
 
 function nextOrder(items: SentenceItem[]): number {
@@ -210,8 +234,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     }
 
     const taskType = asString(body.task_type);
-    if (taskType !== 'sentence_structure') {
-      return new Response(JSON.stringify({ ok: false, error: 'Only sentence_structure supported.' }), {
+    if (!taskType || (taskType !== 'sentence_structure' && taskType !== 'morphology')) {
+      return new Response(JSON.stringify({ ok: false, error: 'Unsupported task_type.' }), {
         status: 400,
         headers: jsonHeaders,
       });
@@ -251,6 +275,156 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         status: 400,
         headers: jsonHeaders,
       });
+    }
+
+    if (taskType === 'morphology') {
+      const rawItems = Array.isArray(taskJson.items) ? taskJson.items : [];
+      if (!rawItems.length) {
+        return new Response(JSON.stringify({ ok: false, error: 'task_json.items[] is required.' }), {
+          status: 400,
+          headers: jsonHeaders,
+        });
+      }
+
+      let lexiconUpserted = 0;
+      let lexiconSkipped = 0;
+      const items: Array<Record<string, unknown>> = [];
+
+      for (const rawItem of rawItems) {
+        const item = asRecord(rawItem) ?? {};
+        const surfaceAr =
+          asString(item['surface_ar']) ??
+          asString(item['surface']) ??
+          asString(item['text']) ??
+          '';
+        const surfaceNorm =
+          asString(item['surface_norm']) ??
+          asString(item['simple']) ??
+          normalizeArabic(surfaceAr);
+        const lemmaAr =
+          asString(item['lemma_ar']) ??
+          asString(item['lemma']) ??
+          asString(item['lemma_text']) ??
+          surfaceAr;
+        const lemmaNorm =
+          asString(item['lemma_norm']) ??
+          asString(item['lemma_text_clean']) ??
+          normalizeArabic(lemmaAr || surfaceAr);
+        const rootNorm = asString(item['root_norm']) ?? asString(item['root']);
+        const pos = normalizePos(asString(item['pos']));
+        const morphPattern = asString(item['morph_pattern']) ?? asString(item['pattern']);
+        const morphFeatures = asRecord(item['morph_features']) ?? asRecord(item['features']);
+        const morphDerivations = Array.isArray(item['morph_derivations'])
+          ? item['morph_derivations']
+          : Array.isArray(item['derivations'])
+            ? item['derivations']
+            : null;
+        const translation = asString(item['translation']) ?? asString(item['gloss']) ?? null;
+
+        let lexiconId =
+          asString(item['lexicon_id']) ??
+          asString(item['ar_u_lexicon']) ??
+          null;
+
+        if (!lexiconId && lemmaAr && pos) {
+          let arURoot: string | null = null;
+          if (rootNorm) {
+            const rootRow = await upsertArURoot(
+              { DB: ctx.env.DB },
+              {
+                root: rootNorm,
+                rootNorm,
+                meta: { source: 'morphology-task' },
+              }
+            );
+            arURoot = rootRow.ar_u_root;
+          }
+
+          const lexiconRow = await upsertArULexicon(
+            { DB: ctx.env.DB },
+            {
+              unitType: 'word',
+              surfaceAr: surfaceAr || lemmaAr,
+              surfaceNorm: surfaceNorm || lemmaNorm,
+              lemmaAr: lemmaAr,
+              lemmaNorm: lemmaNorm,
+              pos,
+              rootNorm: rootNorm ?? null,
+              arURoot,
+              senseKey: 'sense-1',
+              glossPrimary: translation,
+              morphPattern: morphPattern ?? null,
+              morphFeatures: morphFeatures,
+              morphDerivations: morphDerivations,
+              meta: {
+                source: 'morphology-task',
+                container_id: containerId,
+                unit_id: unitId,
+              },
+            }
+          );
+          lexiconId = lexiconRow.ar_u_lexicon;
+          lexiconUpserted += 1;
+        } else if (!lexiconId) {
+          lexiconSkipped += 1;
+        }
+
+        if (surfaceAr) item['surface_ar'] = surfaceAr;
+        if (surfaceNorm) item['surface_norm'] = surfaceNorm;
+        if (lemmaAr) item['lemma_ar'] = lemmaAr;
+        if (lemmaNorm) item['lemma_norm'] = lemmaNorm;
+        if (rootNorm) item['root_norm'] = rootNorm;
+        if (pos) item['pos'] = pos;
+        if (morphPattern) item['morph_pattern'] = morphPattern;
+        if (morphFeatures) item['morph_features'] = morphFeatures;
+        if (lexiconId) {
+          item['lexicon_id'] = lexiconId;
+          item['ar_u_lexicon'] = lexiconId;
+        }
+
+        items.push(item);
+      }
+
+      const enriched = {
+        ...taskJson,
+        schema_version: taskJson.schema_version ?? 1,
+        task_type: 'morphology',
+        items,
+      };
+
+      const taskId = `UT:${unitId}:${taskType}`;
+      const taskJsonText = JSON.stringify(enriched);
+      const taskName = TASK_LABELS[taskType] ?? taskType;
+
+      await ctx.env.DB
+        .prepare(
+          `
+          INSERT INTO ar_container_unit_task (
+            task_id, unit_id, task_type, task_name, task_json, status
+          ) VALUES (?1, ?2, ?3, ?4, json(?5), 'draft')
+          ON CONFLICT(unit_id, task_type)
+          DO UPDATE SET
+            task_name = excluded.task_name,
+            task_json = excluded.task_json,
+            status = excluded.status
+        `
+        )
+        .bind(taskId, unitId, taskType, taskName, taskJsonText)
+        .run();
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          result: {
+            task_json: enriched,
+            lexicon_summary: {
+              upserted: lexiconUpserted,
+              skipped: lexiconSkipped,
+            },
+          },
+        }),
+        { headers: jsonHeaders }
+      );
     }
 
     const rawItems = Array.isArray(taskJson.items) ? taskJson.items : [];
