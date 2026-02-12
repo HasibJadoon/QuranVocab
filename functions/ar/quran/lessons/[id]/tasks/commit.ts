@@ -252,6 +252,11 @@ function extractTokenMorph(pos: string, features: Record<string, unknown> | null
   };
 }
 
+function isLikelyHexId(value: string | null): boolean {
+  if (!value) return false;
+  return /^[a-f0-9]{64}$/i.test(value);
+}
+
 async function upsertTokenMorph(
   db: D1Database,
   tokenOccId: string,
@@ -613,10 +618,11 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
           parseWordLocationIndex(wordLocation) ??
           null;
 
-        let lexiconId =
+        const lexiconRaw =
           asString(item['lexicon_id']) ??
           asString(item['ar_u_lexicon']) ??
           null;
+        let lexiconId = isLikelyHexId(lexiconRaw) ? lexiconRaw : null;
 
         let arURoot: string | null =
           asString(item['ar_u_root']) ?? asString(item['u_root_id']) ?? null;

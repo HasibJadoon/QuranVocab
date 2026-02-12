@@ -1075,6 +1075,7 @@ export class QuranLessonEditorFacade {
         items = this.mergeMorphologyItems(existing, nextItems);
       }
     }
+    items = this.dedupeMorphologyItems(items);
 
     const payload: Record<string, unknown> = {
       schema_version: 1,
@@ -1094,6 +1095,7 @@ export class QuranLessonEditorFacade {
 
   private buildMorphologyItems(ayahs: Array<any>): Array<Record<string, unknown>> {
     const items: Array<Record<string, unknown>> = [];
+    const seen = new Set<string>();
     for (const ayah of ayahs) {
       const words = Array.isArray(ayah?.words) ? ayah.words : [];
       let fallbackIndex = 1;
@@ -1140,7 +1142,7 @@ export class QuranLessonEditorFacade {
             ? record['word_location']
             : `${ayah.surah}:${ayah.ayah}:${tokenIndex}`;
 
-        items.push({
+        const normalized = this.normalizeMorphologyItem({
           word_location: wordLocation,
           surah: ayah.surah,
           ayah: ayah.ayah,
@@ -1152,10 +1154,16 @@ export class QuranLessonEditorFacade {
           root_norm: root,
           translation,
           pos: null,
-          morph_pattern: '',
-          morph_features: {},
           lexicon_id: null,
         });
+        const key = this.getMorphologyUniqueKey(normalized);
+        if (key && seen.has(key)) {
+          continue;
+        }
+        if (key) {
+          seen.add(key);
+        }
+        items.push(normalized);
       }
     }
     return items;
@@ -1179,25 +1187,158 @@ export class QuranLessonEditorFacade {
     const lookup = new Map<string, Record<string, unknown>>();
     for (const item of existing) {
       const key = this.getMorphologyItemKey(item);
-      if (key) lookup.set(key, item);
+      if (key) lookup.set(key, this.normalizeMorphologyItem(item));
     }
     return incoming.map((base) => {
-      const key = this.getMorphologyItemKey(base);
+      const normalizedBase = this.normalizeMorphologyItem(base);
+      const key = this.getMorphologyItemKey(normalizedBase);
       const prev = key ? lookup.get(key) : null;
-      if (!prev) return base;
-      const merged = { ...base, ...prev } as Record<string, unknown>;
-      merged['word_location'] = base['word_location'];
-      merged['surah'] = base['surah'];
-      merged['ayah'] = base['ayah'];
-      merged['token_index'] = base['token_index'];
-      merged['surface_ar'] = base['surface_ar'];
-      merged['surface_norm'] = base['surface_norm'];
-      if (!merged['lemma_ar']) merged['lemma_ar'] = base['lemma_ar'];
-      if (!merged['lemma_norm']) merged['lemma_norm'] = base['lemma_norm'];
-      if (!merged['root_norm']) merged['root_norm'] = base['root_norm'];
-      if (!merged['translation']) merged['translation'] = base['translation'];
-      return merged;
+      if (!prev) return normalizedBase;
+      const merged = { ...normalizedBase, ...prev } as Record<string, unknown>;
+      merged['word_location'] = normalizedBase['word_location'];
+      merged['surah'] = normalizedBase['surah'];
+      merged['ayah'] = normalizedBase['ayah'];
+      merged['token_index'] = normalizedBase['token_index'];
+      merged['surface_ar'] = normalizedBase['surface_ar'];
+      merged['surface_norm'] = normalizedBase['surface_norm'];
+      if (!merged['lemma_ar']) merged['lemma_ar'] = normalizedBase['lemma_ar'];
+      if (!merged['lemma_norm']) merged['lemma_norm'] = normalizedBase['lemma_norm'];
+      if (!merged['root_norm']) merged['root_norm'] = normalizedBase['root_norm'];
+      if (!merged['translation']) merged['translation'] = normalizedBase['translation'];
+      return this.normalizeMorphologyItem(merged);
     });
+  }
+
+  private getMorphologyUniqueKey(item: Record<string, unknown>): string | null {
+    const lemmaNorm = typeof item['lemma_norm'] === 'string' ? item['lemma_norm'] : '';
+    const surfaceNorm = typeof item['surface_norm'] === 'string' ? item['surface_norm'] : '';
+    const surfaceAr = typeof item['surface_ar'] === 'string' ? item['surface_ar'] : '';
+    const pos = typeof item['pos'] === 'string' ? item['pos'].trim().toLowerCase() : '';
+    const base = lemmaNorm || surfaceNorm || surfaceAr;
+    const normalized = this.normalizeMorphologyKey(base);
+    if (normalized) {
+      return pos ? `${normalized}|${pos}` : normalized;
+    }
+    const wordLocation = typeof item['word_location'] === 'string' ? item['word_location'].trim() : '';
+    if (wordLocation) return wordLocation;
+    return null;
+  }
+
+  private dedupeMorphologyItems(items: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+    const seen = new Map<string, Record<string, unknown>>();
+    const orderedKeys: string[] = [];
+    for (const item of items) {
+      const key = this.getMorphologyUniqueKey(item);
+      if (!key) {
+        orderedKeys.push(`__${orderedKeys.length}`);
+        seen.set(`__${orderedKeys.length - 1}`, item);
+        continue;
+      }
+      if (!seen.has(key)) {
+        seen.set(key, item);
+        orderedKeys.push(key);
+        continue;
+      }
+      const existing = seen.get(key)!;
+      const nextScore = this.scoreMorphologyItem(item);
+      const prevScore = this.scoreMorphologyItem(existing);
+      if (nextScore > prevScore) {
+        seen.set(key, item);
+      }
+    }
+    return orderedKeys.map((key) => seen.get(key)!).filter(Boolean);
+  }
+
+  private scoreMorphologyItem(item: Record<string, unknown>): number {
+    let score = 0;
+    if (typeof item['lexicon_id'] === 'string' && item['lexicon_id']) score += 3;
+    if (typeof item['pos'] === 'string' && item['pos']) score += 2;
+    if (typeof item['root_norm'] === 'string' && item['root_norm']) score += 1;
+    if (typeof item['lemma_ar'] === 'string' && item['lemma_ar']) score += 1;
+    const translation = item['translation'];
+    if (typeof translation === 'string' && translation) score += 2;
+    if (translation && typeof translation === 'object' && !Array.isArray(translation)) {
+      const primary = (translation as Record<string, unknown>)['primary'];
+      if (typeof primary === 'string' && primary) score += 2;
+    }
+    const morphology = item['morphology'];
+    if (morphology && typeof morphology === 'object' && !Array.isArray(morphology)) {
+      const singular = (morphology as Record<string, unknown>)['singular'];
+      if (singular && typeof singular === 'object' && !Array.isArray(singular)) {
+        const pattern = (singular as Record<string, unknown>)['pattern'];
+        if (typeof pattern === 'string' && pattern) score += 1;
+      }
+      const features = (morphology as Record<string, unknown>)['morph_features'];
+      if (features && typeof features === 'object' && !Array.isArray(features)) {
+        if (Object.keys(features as Record<string, unknown>).length) score += 1;
+      }
+    }
+    return score;
+  }
+
+  private normalizeMorphologyItem(item: Record<string, unknown>): Record<string, unknown> {
+    const next = { ...item };
+    const morphology = next['morphology'];
+    const morphologyRecord =
+      morphology && typeof morphology === 'object' && !Array.isArray(morphology)
+        ? { ...(morphology as Record<string, unknown>) }
+        : ({} as Record<string, unknown>);
+    const singularRaw = morphologyRecord['singular'];
+    const singular =
+      singularRaw && typeof singularRaw === 'object' && !Array.isArray(singularRaw)
+        ? { ...(singularRaw as Record<string, unknown>) }
+        : ({} as Record<string, unknown>);
+    if (typeof singular['form_ar'] !== 'string') {
+      singular['form_ar'] = typeof next['lemma_ar'] === 'string' ? next['lemma_ar'] : '';
+    }
+    if (typeof singular['pattern'] !== 'string') {
+      singular['pattern'] = typeof next['morph_pattern'] === 'string' ? next['morph_pattern'] : '';
+    }
+
+    const pluralRaw = morphologyRecord['plural'];
+    const plural =
+      pluralRaw && typeof pluralRaw === 'object' && !Array.isArray(pluralRaw)
+        ? { ...(pluralRaw as Record<string, unknown>) }
+        : pluralRaw === null
+          ? null
+          : null;
+
+    const morphFeatures =
+      (morphologyRecord['morph_features'] &&
+      typeof morphologyRecord['morph_features'] === 'object' &&
+      !Array.isArray(morphologyRecord['morph_features'])
+        ? { ...(morphologyRecord['morph_features'] as Record<string, unknown>) }
+        : null) ??
+      (next['morph_features'] &&
+      typeof next['morph_features'] === 'object' &&
+      !Array.isArray(next['morph_features'])
+        ? { ...(next['morph_features'] as Record<string, unknown>) }
+        : {});
+
+    next['morphology'] = {
+      singular,
+      plural,
+      morph_features: morphFeatures,
+    };
+
+    const translation = next['translation'];
+    let translationRecord: Record<string, unknown>;
+    if (typeof translation === 'string') {
+      translationRecord = { primary: translation, alternatives: [], context: '' };
+    } else if (translation && typeof translation === 'object' && !Array.isArray(translation)) {
+      translationRecord = { ...(translation as Record<string, unknown>) };
+    } else {
+      translationRecord = { primary: '', alternatives: [], context: '' };
+    }
+    if (typeof translationRecord['primary'] !== 'string') translationRecord['primary'] = '';
+    if (!Array.isArray(translationRecord['alternatives'])) translationRecord['alternatives'] = [];
+    if (typeof translationRecord['context'] !== 'string') translationRecord['context'] = '';
+    next['translation'] = translationRecord;
+
+    delete next['morph_pattern'];
+    delete next['morph_features'];
+
+    return next;
   }
 
   private getMorphologyItemKey(item: Record<string, unknown>): string | null {
@@ -1249,7 +1390,12 @@ export class QuranLessonEditorFacade {
         setStatus(this.state, 'success', 'Morphology committed.');
       }
     } catch (err: any) {
-      setStatus(this.state, 'error', err?.message ?? 'Failed to commit morphology task.');
+      const message = err?.message ?? 'Failed to commit morphology task.';
+      if (typeof message === 'string' && message.toLowerCase().includes('sentence_structure')) {
+        setStatus(this.state, 'error', 'Morphology commit is supported here, but the API deployment is outdated.');
+      } else {
+        setStatus(this.state, 'error', message);
+      }
     } finally {
       this.state.taskSavingType = null;
     }

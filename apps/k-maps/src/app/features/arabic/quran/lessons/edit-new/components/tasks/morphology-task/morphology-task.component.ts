@@ -153,6 +153,7 @@ export class MorphologyTaskComponent {
         delete singular['pattern'];
       }
       item['morphology'] = morphology;
+      delete item['morph_pattern'];
     }
     this.writeItems(items);
   }
@@ -177,7 +178,8 @@ export class MorphologyTaskComponent {
     this.editModalError = '';
     this.editModalTitle = 'Edit Morphology JSON';
     try {
-      this.editModalJson = JSON.stringify({ ...item }, null, 2);
+      const normalized = this.ensureMorphologyDefaults({ ...item });
+      this.editModalJson = JSON.stringify(normalized, null, 2);
     } catch (err: any) {
       this.editModalError = err?.message ?? 'Failed to format JSON.';
       this.editModalJson = '';
@@ -278,37 +280,45 @@ export class MorphologyTaskComponent {
       }
     }
     const morphology = this.ensureMorphologyObject(next);
-    if (!('singular' in morphology)) {
-      morphology['singular'] = { form_ar: '', pattern: '' };
+    const singular =
+      morphology['singular'] && typeof morphology['singular'] === 'object' && !Array.isArray(morphology['singular'])
+        ? { ...(morphology['singular'] as Record<string, unknown>) }
+        : ({} as Record<string, unknown>);
+    if (typeof singular['form_ar'] !== 'string') {
+      singular['form_ar'] = typeof next['lemma_ar'] === 'string' ? next['lemma_ar'] : '';
     }
+    if (typeof singular['pattern'] !== 'string') {
+      singular['pattern'] = typeof next['morph_pattern'] === 'string' ? next['morph_pattern'] : '';
+    }
+    morphology['singular'] = singular;
     if (!('plural' in morphology)) {
       morphology['plural'] = null;
     }
     if (!('morph_features' in morphology)) {
-      morphology['morph_features'] = {};
+      const fallback =
+        next['morph_features'] && typeof next['morph_features'] === 'object' && !Array.isArray(next['morph_features'])
+          ? { ...(next['morph_features'] as Record<string, unknown>) }
+          : {};
+      morphology['morph_features'] = fallback;
     }
     next['morphology'] = morphology;
 
     const translation = next['translation'];
+    let translationRecord: Record<string, unknown>;
     if (typeof translation === 'string') {
-      next['translation'] = {
-        primary: translation,
-        alternatives: [],
-        context: '',
-      };
-    } else if (!translation || typeof translation !== 'object' || Array.isArray(translation)) {
-      next['translation'] = {
-        primary: '',
-        alternatives: [],
-        context: '',
-      };
+      translationRecord = { primary: translation, alternatives: [], context: '' };
+    } else if (translation && typeof translation === 'object' && !Array.isArray(translation)) {
+      translationRecord = { ...(translation as Record<string, unknown>) };
     } else {
-      const translationRecord = translation as Record<string, unknown>;
-      if (typeof translationRecord['primary'] !== 'string') translationRecord['primary'] = '';
-      if (!Array.isArray(translationRecord['alternatives'])) translationRecord['alternatives'] = [];
-      if (typeof translationRecord['context'] !== 'string') translationRecord['context'] = '';
-      next['translation'] = translationRecord;
+      translationRecord = { primary: '', alternatives: [], context: '' };
     }
+    if (typeof translationRecord['primary'] !== 'string') translationRecord['primary'] = '';
+    if (!Array.isArray(translationRecord['alternatives'])) translationRecord['alternatives'] = [];
+    if (typeof translationRecord['context'] !== 'string') translationRecord['context'] = '';
+    next['translation'] = translationRecord;
+
+    delete next['morph_pattern'];
+    delete next['morph_features'];
     return next;
   }
 
