@@ -84,6 +84,21 @@ function normalizePos(value: string | null): string | null {
   return MORPH_POS_MAP[trimmed] ?? null;
 }
 
+function asInteger(value: unknown): number | null {
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num)) return null;
+  return Math.trunc(num);
+}
+
+function parseWordLocation(raw: string | null): { surah: number; ayah: number; tokenIndex: number } | null {
+  if (!raw) return null;
+  const parts = raw.split(':').map((part) => Number(part.trim()));
+  if (parts.length < 3) return null;
+  const [surah, ayah, tokenIndex] = parts;
+  if (!Number.isFinite(surah) || !Number.isFinite(ayah) || !Number.isFinite(tokenIndex)) return null;
+  return { surah: Math.trunc(surah), ayah: Math.trunc(ayah), tokenIndex: Math.trunc(tokenIndex) };
+}
+
 function nextOrder(items: SentenceItem[]): number {
   const orders = items.map((item) => asNumber(item.sentence_order)).filter((n): n is number => n != null);
   if (!orders.length) return 1;
@@ -270,6 +285,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       let lexiconUpserted = 0;
       let lexiconSkipped = 0;
       const items: Array<Record<string, unknown>> = [];
+      const updatesByAyah = new Map<string, Array<Record<string, unknown>>>();
 
       for (const rawItem of rawItems) {
         const item = asRecord(rawItem) ?? {};
@@ -363,6 +379,38 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
           item['ar_u_lexicon'] = lexiconId;
         }
 
+        const location = parseWordLocation(asString(item['word_location']));
+        const surah = asInteger(item['surah']) ?? location?.surah ?? null;
+        const ayah = asInteger(item['ayah']) ?? location?.ayah ?? null;
+        const tokenIndex =
+          asInteger(item['token_index']) ??
+          asInteger(item['position']) ??
+          location?.tokenIndex ??
+          null;
+        if (surah != null) item['surah'] = surah;
+        if (ayah != null) item['ayah'] = ayah;
+        if (tokenIndex != null) item['token_index'] = tokenIndex;
+
+        if (
+          surah != null &&
+          ayah != null &&
+          tokenIndex != null &&
+          (surfaceNorm || surfaceAr || lemmaAr || rootNorm)
+        ) {
+          const key = `${surah}:${ayah}`;
+          const updates = updatesByAyah.get(key) ?? [];
+          updates.push({
+            surah,
+            ayah,
+            token_index: tokenIndex,
+            surface_norm: surfaceNorm || null,
+            surface_ar: surfaceAr || null,
+            lemma_ar: lemmaAr || null,
+            root_norm: rootNorm || null,
+          });
+          updatesByAyah.set(key, updates);
+        }
+
         items.push(item);
       }
 
@@ -392,6 +440,87 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         )
         .bind(taskId, unitId, taskType, taskName, taskJsonText)
         .run();
+
+      for (const [key, updates] of updatesByAyah.entries()) {
+        const [surahStr, ayahStr] = key.split(':');
+        const surah = Number(surahStr);
+        const ayah = Number(ayahStr);
+        if (!Number.isFinite(surah) || !Number.isFinite(ayah)) continue;
+
+        const row = await ctx.env.DB
+          .prepare(
+            `
+            SELECT words
+            FROM ar_quran_ayah
+            WHERE surah = ?1 AND ayah = ?2
+            LIMIT 1
+          `
+          )
+          .bind(surah, ayah)
+          .first<any>();
+
+        let words: Array<Record<string, unknown>> = [];
+        if (row?.words) {
+          try {
+            const parsed = JSON.parse(row.words);
+            if (Array.isArray(parsed)) {
+              words = parsed.filter((entry) => entry && typeof entry === 'object');
+            }
+          } catch {
+            words = [];
+          }
+        }
+
+        if (words.length) {
+          for (const update of updates) {
+            const tokenIndex = Number(update.token_index);
+            if (!Number.isFinite(tokenIndex)) continue;
+            const entry = words.find((word) => {
+              const record = word as Record<string, unknown>;
+              const charType = typeof record['char_type'] === 'string' ? record['char_type'] : null;
+              if (charType && charType !== 'word') return false;
+              const position = Number(record['position'] ?? record['token_index']);
+              return Number.isFinite(position) && position === tokenIndex;
+            });
+            if (!entry) continue;
+            const target = entry as Record<string, unknown>;
+            if (update.surface_norm) target['simple'] = update.surface_norm;
+            if (update.surface_ar) target['text'] = update.surface_ar;
+            if (update.lemma_ar) target['lemma'] = update.lemma_ar;
+            if (update.root_norm) target['root'] = update.root_norm;
+          }
+
+          await ctx.env.DB
+            .prepare(
+              `
+              UPDATE ar_quran_ayah
+              SET words = json(?3)
+              WHERE surah = ?1 AND ayah = ?2
+            `
+            )
+            .bind(surah, ayah, JSON.stringify(words))
+            .run();
+        }
+
+        for (const update of updates) {
+          const tokenIndex = Number(update.token_index);
+          if (!Number.isFinite(tokenIndex)) continue;
+          const wordSimple = update.surface_norm ?? null;
+          const wordDiacritic = update.surface_ar ?? null;
+          if (!wordSimple && !wordDiacritic) continue;
+          await ctx.env.DB
+            .prepare(
+              `
+              UPDATE quran_ayah_lemma_location
+              SET word_simple = COALESCE(?4, word_simple),
+                  word_diacritic = COALESCE(?5, word_diacritic)
+              WHERE surah = ?1 AND ayah = ?2 AND token_index = ?3
+            `
+            )
+            .bind(surah, ayah, tokenIndex, wordSimple, wordDiacritic)
+            .run();
+        }
+      }
 
       return new Response(
         JSON.stringify({

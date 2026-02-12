@@ -9,6 +9,7 @@ import { parseRefPart } from '../../lesson-utils';
 import { buildContainerPayload } from '../domain/container-payload.builder';
 import { buildLessonPayload } from '../domain/lesson-payload.builder';
 import { normalizeSurahQuery } from '../domain/normalize-surah-query';
+import { MORPHOLOGY_SKIP_WORDS } from '../domain/morphology-constants';
 import { EditorState, EditorStepId, SentenceCandidate, SentenceSubTab, TaskTab, TaskType } from '../models/editor.types';
 import { setLessonLocked, setRange, setReferenceLocked, setSaving, setStatus, setUnlockedStep } from '../state/editor.actions';
 import { buildTaskTabs, createEditorState, resetEditorState } from '../state/editor.state';
@@ -1127,6 +1128,12 @@ export class QuranLessonEditorFacade {
         const root = (record['root'] as string) ?? (record['root_norm'] as string) ?? null;
         const translation = (record['translation'] as string) ?? null;
 
+        const simpleKey = this.normalizeMorphologyKey(simple || surface);
+        const lemmaKey = this.normalizeMorphologyKey(lemma || simple || surface);
+        if ((simpleKey && MORPHOLOGY_SKIP_WORDS.has(simpleKey)) || (lemmaKey && MORPHOLOGY_SKIP_WORDS.has(lemmaKey))) {
+          continue;
+        }
+
         if (!surface && !simple) continue;
         const wordLocation =
           typeof record['word_location'] === 'string'
@@ -1152,6 +1159,16 @@ export class QuranLessonEditorFacade {
       }
     }
     return items;
+  }
+
+  private normalizeMorphologyKey(value: string): string {
+    if (!value) return '';
+    return this.stripArabicDiacritics(value)
+      .replace(/[إأآ]/g, 'ا')
+      .replace(/ؤ/g, 'و')
+      .replace(/ئ/g, 'ي')
+      .replace(/ى/g, 'ي')
+      .replace(/ة/g, 'ه');
   }
 
   private parseMorphologyItems(raw: string): Array<Record<string, unknown>> {
