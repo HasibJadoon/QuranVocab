@@ -1,0 +1,8875 @@
+{
+  "topics": [
+    {
+      "id": "A1",
+      "topic": "To settle",
+      "topic_ur": "آباد ہونا",
+      "words_ar": [
+        "سكن",
+        "تبوأ",
+        "ثوى",
+        "بدا",
+        "حضر",
+        "خلد",
+        "عاشر",
+        "غني"
+      ],
+      "search_keys_norm": "سكن تبوأ ثوى بدا حضر خلد عاشر غني"
+    },
+    {
+      "id": "A2",
+      "topic": "To cultivate, populate",
+      "topic_ur": "آباد کرنا",
+      "words_ar": [
+        "اسكن",
+        "بوأ",
+        "عمر",
+        "آوى"
+      ],
+      "search_keys_norm": "اسكن بوأ عمر آوى"
+    },
+    {
+      "id": "A3",
+      "topic": "The Hereafter",
+      "topic_ur": "آخرت  Also refer to the word قیامت",
+      "words_ar": [
+        "أخرت",
+        "دارالآخرة",
+        "اليومالآخر",
+        "دارالقرار",
+        "يومالبعث"
+      ],
+      "search_keys_norm": "أخرت دارالآخرة اليومالآخر دارالقرار يومالبعث"
+    },
+    {
+      "id": "A4",
+      "topic": "Man, human",
+      "topic_ur": "آدمی انسان",
+      "words_ar": [
+        "انس",
+        "إنسان",
+        "ناس",
+        "إنسيا",
+        "أناسي",
+        "آدم",
+        "بشر"
+      ],
+      "search_keys_norm": "انس إنسان ناس إنسيا أناسي آدم بشر"
+    },
+    {
+      "id": "A5",
+      "topic": "To rest",
+      "topic_ur": "آرام کرنا",
+      "words_ar": [
+        "سكن",
+        "سبت",
+        "ارتفق"
+      ],
+      "search_keys_norm": "سكن سبت ارتفق"
+    },
+    {
+      "id": "A6",
+      "topic": "To wish",
+      "topic_ur": "آرزو کرنا",
+      "words_ar": [
+        "أمل",
+        "أمنية",
+        "ود"
+      ],
+      "search_keys_norm": "أمل أمنية ود"
+    },
+    {
+      "id": "A7",
+      "topic": "Barrier",
+      "topic_ur": "آڑ   Also refer toپردہ     and دیوار",
+      "words_ar": [
+        "برزخ",
+        "حجر",
+        "حجز",
+        "حد"
+      ],
+      "search_keys_norm": "برزخ حجر حجز حد"
+    },
+    {
+      "id": "A8",
+      "topic": "Free",
+      "topic_ur": "آزاد",
+      "words_ar": [
+        "حر",
+        "محصن",
+        "سدى"
+      ],
+      "search_keys_norm": "حر محصن سدى"
+    },
+    {
+      "id": "A9",
+      "topic": "To free",
+      "topic_ur": "آزادکرنا Also refer to رخصت کرنا",
+      "words_ar": [
+        "حرر",
+        "طلق",
+        "سرح"
+      ],
+      "search_keys_norm": "حرر طلق سرح"
+    },
+    {
+      "id": "A10",
+      "topic": "To test, Exam",
+      "topic_ur": "آزمائش کرنا",
+      "words_ar": [
+        "امتحن",
+        "بلى",
+        "ابتلى",
+        "فتن"
+      ],
+      "search_keys_norm": "امتحن بلى ابتلى فتن"
+    },
+    {
+      "id": "A11",
+      "topic": "Easy",
+      "topic_ur": "آسان",
+      "words_ar": [
+        "يسير",
+        "هين"
+      ],
+      "search_keys_norm": "يسير هين"
+    },
+    {
+      "id": "A12",
+      "topic": "heaven",
+      "topic_ur": "آسمان",
+      "words_ar": [
+        "سماء",
+        "فلك"
+      ],
+      "search_keys_norm": "سماء فلك"
+    },
+    {
+      "id": "A13",
+      "topic": "To haunt",
+      "topic_ur": "آسیب زدہ کرنا",
+      "words_ar": [
+        "تخبط",
+        "اعترى"
+      ],
+      "search_keys_norm": "تخبط اعترى"
+    },
+    {
+      "id": "A14",
+      "topic": "Fire",
+      "topic_ur": "آگ",
+      "words_ar": [
+        "نار",
+        "لظى"
+      ],
+      "search_keys_norm": "نار لظى"
+    },
+    {
+      "id": "A15",
+      "topic": "Live coal, cinder",
+      "topic_ur": "آگ کا انگارہ",
+      "words_ar": [
+        "شهاب",
+        "جذوة",
+        "قبس"
+      ],
+      "search_keys_norm": "شهاب جذوة قبس"
+    },
+    {
+      "id": "A16",
+      "topic": "The burning of fire, to lit fire",
+      "topic_ur": "آگ جلنا جلانا",
+      "words_ar": [
+        "قدح",
+        "اورى",
+        "أوقد",
+        "استوقد",
+        "قبس",
+        "سعر",
+        "سجر",
+        "تلظى"
+      ],
+      "search_keys_norm": "قدح اورى أوقد استوقد قبس سعر سجر تلظى"
+    },
+    {
+      "id": "A17",
+      "topic": "The fire’s burning something",
+      "topic_ur": "آگ کا دوسری چیزوں  کو جلانا",
+      "words_ar": [
+        "لوح",
+        "لفح",
+        "شوى",
+        "صهر",
+        "نفح",
+        "حرق",
+        "احترق"
+      ],
+      "search_keys_norm": "لوح لفح شوى صهر نفح حرق احترق"
+    },
+    {
+      "id": "A18",
+      "topic": "To be extinguished, to extinguish",
+      "topic_ur": "بجھنا بجھانا",
+      "words_ar": [
+        "خمد",
+        "خبا",
+        "طفأ"
+      ],
+      "search_keys_norm": "خمد خبا طفأ"
+    },
+    {
+      "id": "A19",
+      "topic": "To be aware",
+      "topic_ur": "آگاہ ہونا",
+      "words_ar": [
+        "شعر",
+        "ظهر",
+        "عثر",
+        "علم",
+        "خبر"
+      ],
+      "search_keys_norm": "شعر ظهر عثر علم خبر"
+    },
+    {
+      "id": "A20",
+      "topic": "To inform, show",
+      "topic_ur": "آگاہ کرنا بتلانا",
+      "words_ar": [
+        "اشعر",
+        "اظهر",
+        "علم",
+        "ادرى",
+        "حدث",
+        "عرف",
+        "اطلع",
+        "نبأ",
+        "دل"
+      ],
+      "search_keys_norm": "اشعر اظهر علم ادرى حدث عرف اطلع نبأ دل"
+    },
+    {
+      "id": "A21",
+      "topic": "In front,",
+      "topic_ur": "آگے سامنے",
+      "words_ar": [
+        "قبل",
+        "بينيدي"
+      ],
+      "search_keys_norm": "قبل بينيدي"
+    },
+    {
+      "id": "A22",
+      "topic": "To come forward, to go forward",
+      "topic_ur": "آگے آنا بڑھنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "A23",
+      "topic": "To send forward",
+      "topic_ur": "آگے بیھجنا",
+      "words_ar": [
+        "قدم",
+        "اسلف"
+      ],
+      "search_keys_norm": "قدم اسلف"
+    },
+    {
+      "id": "A24",
+      "topic": "Arms, weapons, armour",
+      "topic_ur": "آلات جنگ",
+      "words_ar": [
+        "أسلحة",
+        "أوزار",
+        "حذر",
+        "شوكة"
+      ],
+      "search_keys_norm": "أسلحة أوزار حذر شوكة"
+    },
+    {
+      "id": "A25",
+      "topic": "To come",
+      "topic_ur": "آنا",
+      "words_ar": [
+        "جاء",
+        "أتى",
+        "هيت",
+        "هلم",
+        "تعال"
+      ],
+      "search_keys_norm": "جاء أتى هيت هلم تعال"
+    },
+    {
+      "id": "A26",
+      "topic": "Eyes",
+      "topic_ur": "آنکھ",
+      "words_ar": [
+        "عين",
+        "حور",
+        "بصر"
+      ],
+      "search_keys_norm": "عين حور بصر"
+    },
+    {
+      "id": "A27",
+      "topic": "To wander vagrancy",
+      "topic_ur": "آوارہ پھرنا",
+      "words_ar": [
+        "تاه",
+        "هام"
+      ],
+      "search_keys_norm": "تاه هام"
+    },
+    {
+      "id": "A28",
+      "topic": "Noise and its kind",
+      "topic_ur": "آواز اور اسکی اقسام",
+      "words_ar": [
+        "صوت",
+        "صد",
+        "صريخ",
+        "همس",
+        "حسيس",
+        "مكاء",
+        "تصدية",
+        "ضبح",
+        "خوار",
+        "شهيق",
+        "زفير",
+        "لهث",
+        "ركز",
+        "صيحة",
+        "صاخة",
+        "تغيظ",
+        "هد",
+        "غلى",
+        "صلصال",
+        "قارعة"
+      ],
+      "search_keys_norm": "صوت صد صريخ همس حسيس مكاء تصدية ضبح خوار شهيق زفير لهث ركز صيحة صاخة تغيظ هد غلى صلصال قارعة"
+    },
+    {
+      "id": "A29",
+      "topic": "To do something slowly",
+      "topic_ur": "آہستہ آہستہ [کرنا]",
+      "words_ar": [
+        "رويد",
+        "رخاء",
+        "عرف",
+        "يسر",
+        "استدراج",
+        "دلى"
+      ],
+      "search_keys_norm": "رويد رخاء عرف يسر استدراج دلى"
+    },
+    {
+      "id": "AA1",
+      "topic": "To boil, to rage",
+      "topic_ur": "ابلنا [جوش مارنا]",
+      "words_ar": [
+        "غلى",
+        "نضخ",
+        "فار"
+      ],
+      "search_keys_norm": "غلى نضخ فار"
+    },
+    {
+      "id": "AA2",
+      "topic": "Protrude",
+      "topic_ur": "ابھار",
+      "words_ar": [
+        "كعب",
+        "حدب",
+        "أمت",
+        "نجد",
+        "سمك"
+      ],
+      "search_keys_norm": "كعب حدب أمت نجد سمك"
+    },
+    {
+      "id": "AA3",
+      "topic": "To Encourage",
+      "topic_ur": "ابھارنا",
+      "words_ar": [
+        "حرض",
+        "حض",
+        "حث",
+        "أز",
+        "جرم"
+      ],
+      "search_keys_norm": "حرض حض حث أز جرم"
+    },
+    {
+      "id": "AA4",
+      "topic": "To descend, to reveal, come down",
+      "topic_ur": "اتارنا- اترنا",
+      "words_ar": [
+        "نزل",
+        "أنزل",
+        "تنزل",
+        "حل",
+        "هبط",
+        "وضع",
+        "خلع"
+      ],
+      "search_keys_norm": "نزل أنزل تنزل حل هبط وضع خلع"
+    },
+    {
+      "id": "AA5",
+      "topic": "To be boastful/arrogant",
+      "topic_ur": "اترانا – تکبر کرنا",
+      "words_ar": [
+        "فرح",
+        "بطر",
+        "مرحا",
+        "اختال",
+        "فخر",
+        "أشر",
+        "تمطى",
+        "تكبر",
+        "فره"
+      ],
+      "search_keys_norm": "فرح بطر مرحا اختال فخر أشر تمطى تكبر فره"
+    },
+    {
+      "id": "AA6",
+      "topic": "To invent stories/slander",
+      "topic_ur": "اٹکل پچو [من گھڑت]باتیں کرنا",
+      "words_ar": [
+        "خرص",
+        "اختلق",
+        "افترى",
+        "تقول"
+      ],
+      "search_keys_norm": "خرص اختلق افترى تقول"
+    },
+    {
+      "id": "AA7",
+      "topic": "To carry,",
+      "topic_ur": "اٹھانا",
+      "words_ar": [
+        "حمل",
+        "ناء",
+        "وزر",
+        "اثار",
+        "أقل",
+        "بعث",
+        "أنشر",
+        "أنشز",
+        "لقط",
+        "لقح"
+      ],
+      "search_keys_norm": "حمل ناء وزر اثار أقل بعث أنشر أنشز لقط لقح"
+    },
+    {
+      "id": "AA8",
+      "topic": "To get up",
+      "topic_ur": "اٹھنا",
+      "words_ar": [
+        "انبعث",
+        "نشر",
+        "نشز",
+        "قام"
+      ],
+      "search_keys_norm": "انبعث نشر نشز قام"
+    },
+    {
+      "id": "AA9",
+      "topic": "To get permission",
+      "topic_ur": "اجازت لینا",
+      "words_ar": [
+        "استأذن",
+        "أذن",
+        "استأنس"
+      ],
+      "search_keys_norm": "استأذن أذن استأنس"
+    },
+    {
+      "id": "AA10",
+      "topic": "Obstinate, stubborn",
+      "topic_ur": "اجڈ",
+      "words_ar": [
+        "عتل",
+        "فظ",
+        "أعراب"
+      ],
+      "search_keys_norm": "عتل فظ أعراب"
+    },
+    {
+      "id": "AA11",
+      "topic": "Suddenly",
+      "topic_ur": "اچانک",
+      "words_ar": [
+        "إذ",
+        "إذن",
+        "بغتة"
+      ],
+      "search_keys_norm": "إذ إذن بغتة"
+    },
+    {
+      "id": "AA12",
+      "topic": "Very good, better",
+      "topic_ur": "اچھا خوب بہتر",
+      "words_ar": [
+        "نعم",
+        "خير",
+        "حسن",
+        "امثل",
+        "مثلى",
+        "جميل"
+      ],
+      "search_keys_norm": "نعم خير حسن امثل مثلى جميل"
+    },
+    {
+      "id": "AA13",
+      "topic": "To be strange",
+      "topic_ur": "اچنبھا [اجنبی ہونا]",
+      "words_ar": [
+        "نكر",
+        "عجب",
+        "جنب"
+      ],
+      "search_keys_norm": "نكر عجب جنب"
+    },
+    {
+      "id": "AA14",
+      "topic": "To do a favour",
+      "topic_ur": "احسان کرنا",
+      "words_ar": [
+        "فضل",
+        "من",
+        "أنعم",
+        "أحسن"
+      ],
+      "search_keys_norm": "فضل من أنعم أحسن"
+    },
+    {
+      "id": "AA15",
+      "topic": "To have power",
+      "topic_ur": "اختیار [رکھنا]",
+      "words_ar": [
+        "خيرة",
+        "ملك",
+        "ولاية",
+        "أمكن"
+      ],
+      "search_keys_norm": "خيرة ملك ولاية أمكن"
+    },
+    {
+      "id": "AA16",
+      "topic": "To choose, select",
+      "topic_ur": "اختیار کرنا",
+      "words_ar": [
+        "استحب",
+        "تحرى"
+      ],
+      "search_keys_norm": "استحب تحرى"
+    },
+    {
+      "id": "AA17",
+      "topic": "Debt/credit",
+      "topic_ur": "ادھار",
+      "words_ar": [
+        "قرض",
+        "دين"
+      ],
+      "search_keys_norm": "قرض دين"
+    },
+    {
+      "id": "AA18",
+      "topic": "To intend",
+      "topic_ur": "ارادہ کرنا[قصد کرنا]",
+      "words_ar": [
+        "أراد",
+        "عزم",
+        "أبرم",
+        "هم",
+        "أم",
+        "تيمم",
+        "تحرى"
+      ],
+      "search_keys_norm": "أراد عزم أبرم هم أم تيمم تحرى"
+    },
+    {
+      "id": "AA19",
+      "topic": "To persist",
+      "topic_ur": "اڑنا",
+      "words_ar": [
+        "أصر",
+        "مرد",
+        "لج"
+      ],
+      "search_keys_norm": "أصر مرد لج"
+    },
+    {
+      "id": "AA20",
+      "topic": "To fly, to make fly",
+      "topic_ur": "اڑنا اڑانا",
+      "words_ar": [
+        "طار",
+        "استطار",
+        "أذرى",
+        "نسف"
+      ],
+      "search_keys_norm": "طار استطار أذرى نسف"
+    },
+    {
+      "id": "AA21",
+      "topic": "To indicate",
+      "topic_ur": "اشارہ کرنا",
+      "words_ar": [
+        "أشار",
+        "رمز",
+        "تغامز"
+      ],
+      "search_keys_norm": "أشار رمز تغامز"
+    },
+    {
+      "id": "AA22",
+      "topic": "Obedience",
+      "topic_ur": "اطاعت وتابعداری پیروی- فرمانبرداری",
+      "words_ar": [
+        "تبع",
+        "اقتداء",
+        "أسوة",
+        "أطاع",
+        "استجاب",
+        "أسلم",
+        "قنت",
+        "ذعن"
+      ],
+      "search_keys_norm": "تبع اقتداء أسوة أطاع استجاب أسلم قنت ذعن"
+    },
+    {
+      "id": "AA23",
+      "topic": "Middle Path/Balanced/Moderation",
+      "topic_ur": "اعتدال",
+      "words_ar": [
+        "عرض",
+        "قصد",
+        "وسط",
+        "تقويم"
+      ],
+      "search_keys_norm": "عرض قصد وسط تقويم"
+    },
+    {
+      "id": "AA24",
+      "topic": "The book of deeds",
+      "topic_ur": "اعمال نامہ",
+      "words_ar": [
+        "طائر",
+        "قط",
+        "كتاب",
+        "صحف"
+      ],
+      "search_keys_norm": "طائر قط كتاب صحف"
+    },
+    {
+      "id": "AA25",
+      "topic": "Remorse,  regret",
+      "topic_ur": "افسوس",
+      "words_ar": [
+        "ويل",
+        "ليت",
+        "أسفى",
+        "أسى"
+      ],
+      "search_keys_norm": "ويل ليت أسفى أسى"
+    },
+    {
+      "id": "AA26",
+      "topic": "To give authority",
+      "topic_ur": "اقتدار بخشنا",
+      "words_ar": [
+        "مكن",
+        "استخلف"
+      ],
+      "search_keys_norm": "مكن استخلف"
+    },
+    {
+      "id": "AA27",
+      "topic": "To acknowledge,  admit",
+      "topic_ur": "اقرار کرنا",
+      "words_ar": [
+        "أقر",
+        "اعترف",
+        "شهد"
+      ],
+      "search_keys_norm": "أقر اعترف شهد"
+    },
+    {
+      "id": "AA28",
+      "topic": "To gather,   assemble",
+      "topic_ur": "اکٹھا کرنا",
+      "words_ar": [
+        "جمع",
+        "اجتمع",
+        "حشر",
+        "ادخر",
+        "خزن",
+        "وسق",
+        "اتسق",
+        "كفت",
+        "لم",
+        "حصل",
+        "مثابة"
+      ],
+      "search_keys_norm": "جمع اجتمع حشر ادخر خزن وسق اتسق كفت لم حصل مثابة"
+    },
+    {
+      "id": "AA29",
+      "topic": "To uproot,    uproot",
+      "topic_ur": "اکھاڑنا-اکھڑنا",
+      "words_ar": [
+        "اجتث",
+        "انقعر"
+      ],
+      "search_keys_norm": "اجتث انقعر"
+    },
+    {
+      "id": "AA30",
+      "topic": "One",
+      "topic_ur": "اکیلا",
+      "words_ar": [
+        "أحد",
+        "وحيد",
+        "فرد",
+        "فرادى"
+      ],
+      "search_keys_norm": "أحد وحيد فرد فرادى"
+    },
+    {
+      "id": "AA31",
+      "topic": "If",
+      "topic_ur": "اگر",
+      "words_ar": [
+        "إن",
+        "إما",
+        "لو"
+      ],
+      "search_keys_norm": "إن إما لو"
+    },
+    {
+      "id": "AA32",
+      "topic": "To turn over",
+      "topic_ur": "الٹ دینا-اوندھا کرنا-ہونا",
+      "words_ar": [
+        "أركس",
+        "ائتفك",
+        "جثم",
+        "كب",
+        "كبكب",
+        "قلب",
+        "تقلب",
+        "نكس"
+      ],
+      "search_keys_norm": "أركس ائتفك جثم كب كبكب قلب تقلب نكس"
+    },
+    {
+      "id": "AA33",
+      "topic": "To separate, to detatch",
+      "topic_ur": "الگ[ جدا یا علحیدہ] کرنا",
+      "words_ar": [
+        "فرق",
+        "فتق",
+        "عزل",
+        "جنب",
+        "ماز",
+        "زيل"
+      ],
+      "search_keys_norm": "فرق فتق عزل جنب ماز زيل"
+    },
+    {
+      "id": "AA34",
+      "topic": "To separate",
+      "topic_ur": "الگ ہونا",
+      "words_ar": [
+        "تفرق",
+        "اعتزل",
+        "تجنب",
+        "امتاز",
+        "تزيل",
+        "خلا",
+        "خلص",
+        "فصل",
+        "انتبذ",
+        "تجافى"
+      ],
+      "search_keys_norm": "تفرق اعتزل تجنب امتاز تزيل خلا خلص فصل انتبذ تجافى"
+    },
+    {
+      "id": "AA35",
+      "topic": "To hope",
+      "topic_ur": "امید    لگانا     امید لگانا",
+      "words_ar": [
+        "أمل",
+        "متى",
+        "رجأ"
+      ],
+      "search_keys_norm": "أمل متى رجأ"
+    },
+    {
+      "id": "AA36",
+      "topic": "Intestines",
+      "topic_ur": "انٹریاں",
+      "words_ar": [
+        "حوايا",
+        "أمعاء"
+      ],
+      "search_keys_norm": "حوايا أمعاء"
+    },
+    {
+      "id": "AA37",
+      "topic": "To await",
+      "topic_ur": "انتظار کرنا",
+      "words_ar": [
+        "انتظر",
+        "ترقب",
+        "تربص"
+      ],
+      "search_keys_norm": "انتظر ترقب تربص"
+    },
+    {
+      "id": "AA38",
+      "topic": "End Result/Consequence",
+      "topic_ur": "انجام [کار]",
+      "words_ar": [
+        "منتهى",
+        "عاقبة",
+        "مصير"
+      ],
+      "search_keys_norm": "منتهى عاقبة مصير"
+    },
+    {
+      "id": "AA39",
+      "topic": "To estimate",
+      "topic_ur": "andaza lagana",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "AA40",
+      "topic": "Inside",
+      "topic_ur": "andar",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "AA41",
+      "topic": "Blind",
+      "topic_ur": "اندھا",
+      "words_ar": [
+        "أعمى",
+        "أكمه",
+        "كمه"
+      ],
+      "search_keys_norm": "أعمى أكمه كمه"
+    },
+    {
+      "id": "AA42",
+      "topic": "Justice(to do justice)",
+      "topic_ur": "انصاف[کرنا]",
+      "words_ar": [
+        "قسط",
+        "عدل"
+      ],
+      "search_keys_norm": "قسط عدل"
+    },
+    {
+      "id": "AA43",
+      "topic": "To refute, to refuse",
+      "topic_ur": "انکار کرنا",
+      "words_ar": [
+        "أبى",
+        "أنكر",
+        "جحد",
+        "كفر"
+      ],
+      "search_keys_norm": "أبى أنكر جحد كفر"
+    },
+    {
+      "id": "AA44",
+      "topic": "Fingers",
+      "topic_ur": "انگلیاں",
+      "words_ar": [
+        "أصابع",
+        "أنامل"
+      ],
+      "search_keys_norm": "أصابع أنامل"
+    },
+    {
+      "id": "AA45",
+      "topic": "To cover",
+      "topic_ur": "اوڑھنا",
+      "words_ar": [
+        "استغشى",
+        "ادثر",
+        "ازمل"
+      ],
+      "search_keys_norm": "استغشى ادثر ازمل"
+    },
+    {
+      "id": "AA46",
+      "topic": "Children/Offspring",
+      "topic_ur": "اولاد",
+      "words_ar": [
+        "أولاد",
+        "ذرية",
+        "أسباط",
+        "عقب",
+        "نسل",
+        "حفدة",
+        "آل",
+        "أهل"
+      ],
+      "search_keys_norm": "أولاد ذرية أسباط عقب نسل حفدة آل أهل"
+    },
+    {
+      "id": "AA47",
+      "topic": "Wool",
+      "topic_ur": "اون",
+      "words_ar": [
+        "صوف",
+        "عهن"
+      ],
+      "search_keys_norm": "صوف عهن"
+    },
+    {
+      "id": "AA48",
+      "topic": "Camel",
+      "topic_ur": "اونٹ",
+      "words_ar": [
+        "بعير",
+        "جمل",
+        "هيم",
+        "ركاب",
+        "ناقة",
+        "ضامر",
+        "عشار",
+        "بدن",
+        "بحيرة",
+        "وصيلة",
+        "سائبة",
+        "حام"
+      ],
+      "search_keys_norm": "بعير جمل هيم ركاب ناقة ضامر عشار بدن بحيرة وصيلة سائبة حام"
+    },
+    {
+      "id": "AA49",
+      "topic": "Doze",
+      "topic_ur": "اونگھ",
+      "words_ar": [
+        "نعاس",
+        "سنة"
+      ],
+      "search_keys_norm": "نعاس سنة"
+    },
+    {
+      "id": "AA50",
+      "topic": "Fuel",
+      "topic_ur": "ایندھن",
+      "words_ar": [
+        "حطب",
+        "حصب",
+        "وقود"
+      ],
+      "search_keys_norm": "حطب حصب وقود"
+    },
+    {
+      "id": "AA51",
+      "topic": "O,  (word of calling someone)",
+      "topic_ur": "اے[حرف ندا]",
+      "words_ar": [
+        "يا",
+        "أيه",
+        "ياأيها"
+      ],
+      "search_keys_norm": "يا أيه ياأيها"
+    },
+    {
+      "id": "b1",
+      "topic": "Father",
+      "topic_ur": "باپ",
+      "words_ar": [
+        "والد",
+        "أب"
+      ],
+      "search_keys_norm": "والد أب"
+    },
+    {
+      "id": "b2",
+      "topic": "To be blessed",
+      "topic_ur": "بابرکت ہونا",
+      "words_ar": [
+        "تبارك",
+        "مبارك",
+        "أيمن",
+        "طوبى"
+      ],
+      "search_keys_norm": "تبارك مبارك أيمن طوبى"
+    },
+    {
+      "id": "b3",
+      "topic": "speech",
+      "topic_ur": "بات",
+      "words_ar": [
+        "قول",
+        "حديث",
+        "كلمة"
+      ],
+      "search_keys_norm": "قول حديث كلمة"
+    },
+    {
+      "id": "b4",
+      "topic": "To talk",
+      "topic_ur": "بات کرنا",
+      "words_ar": [
+        "كلم",
+        "حاور",
+        "خاطب"
+      ],
+      "search_keys_norm": "كلم حاور خاطب"
+    },
+    {
+      "id": "b5",
+      "topic": "sovereignty",
+      "topic_ur": "بادشاہی",
+      "words_ar": [
+        "سلطان",
+        "ملك",
+        "ملكوت"
+      ],
+      "search_keys_norm": "سلطان ملك ملكوت"
+    },
+    {
+      "id": "b6",
+      "topic": "clouds",
+      "topic_ur": "بادل",
+      "words_ar": [
+        "سحاب",
+        "غمام",
+        "عارض",
+        "معصرات",
+        "مزن",
+        "صيب"
+      ],
+      "search_keys_norm": "سحاب غمام عارض معصرات مزن صيب"
+    },
+    {
+      "id": "b7",
+      "topic": "Time/s",
+      "topic_ur": "بار[دفعہ مرتبہ]",
+      "words_ar": [
+        "مرة",
+        "كرة",
+        "تارة"
+      ],
+      "search_keys_norm": "مرة كرة تارة"
+    },
+    {
+      "id": "b8",
+      "topic": "Rain",
+      "topic_ur": "بارش",
+      "words_ar": [
+        "مطر",
+        "ماء",
+        "طل",
+        "ودق",
+        "غيث",
+        "مدرار",
+        "غدق",
+        "صيب",
+        "وابل"
+      ],
+      "search_keys_norm": "مطر ماء طل ودق غيث مدرار غدق صيب وابل"
+    },
+    {
+      "id": "b9",
+      "topic": "To back off, abstain",
+      "topic_ur": "باز آنا",
+      "words_ar": [
+        "انتهى",
+        "انفك"
+      ],
+      "search_keys_norm": "انتهى انفك"
+    },
+    {
+      "id": "b10",
+      "topic": "Arm , wing of bird",
+      "topic_ur": "بازو",
+      "words_ar": [
+        "جناح",
+        "عضد",
+        "ذراع"
+      ],
+      "search_keys_norm": "جناح عضد ذراع"
+    },
+    {
+      "id": "b11",
+      "topic": "Garden",
+      "topic_ur": "باغ",
+      "words_ar": [
+        "جنة",
+        "حديقة",
+        "روضة"
+      ],
+      "search_keys_norm": "جنة حديقة روضة"
+    },
+    {
+      "id": "b12",
+      "topic": "To leave some remaining",
+      "topic_ur": "باقی چھوڑنا",
+      "words_ar": [
+        "أبقى",
+        "أثبت",
+        "غادر"
+      ],
+      "search_keys_norm": "أبقى أثبت غادر"
+    },
+    {
+      "id": "b13",
+      "topic": "Hair",
+      "topic_ur": "بال",
+      "words_ar": [
+        "شعر",
+        "وبر",
+        "صوف"
+      ],
+      "search_keys_norm": "شعر وبر صوف"
+    },
+    {
+      "id": "b14",
+      "topic": "Barren",
+      "topic_ur": "بانجھ",
+      "words_ar": [
+        "عاقر",
+        "عقيم"
+      ],
+      "search_keys_norm": "عاقر عقيم"
+    },
+    {
+      "id": "b15",
+      "topic": "To bind, fasten",
+      "topic_ur": "باندھنا",
+      "words_ar": [
+        "ربط",
+        "شد",
+        "غل"
+      ],
+      "search_keys_norm": "ربط شد غل"
+    },
+    {
+      "id": "b16",
+      "topic": "Statue",
+      "topic_ur": "بت",
+      "words_ar": [
+        "صنم",
+        "نصب",
+        "أوثان",
+        "جبت",
+        "طاغوت"
+      ],
+      "search_keys_norm": "صنم نصب أوثان جبت طاغوت"
+    },
+    {
+      "id": "b17",
+      "topic": "Lightning",
+      "topic_ur": "بجلی",
+      "words_ar": [
+        "برق",
+        "رعد",
+        "صاعقة"
+      ],
+      "search_keys_norm": "برق رعد صاعقة"
+    },
+    {
+      "id": "b18",
+      "topic": "To save",
+      "topic_ur": "بچانا",
+      "words_ar": [
+        "وقى",
+        "منع",
+        "حجز",
+        "أحصن",
+        "جنب",
+        "عصم"
+      ],
+      "search_keys_norm": "وقى منع حجز أحصن جنب عصم"
+    },
+    {
+      "id": "b19",
+      "topic": "To be saved",
+      "topic_ur": "بچنا",
+      "words_ar": [
+        "اتقى",
+        "تحصن",
+        "اجتنب",
+        "استعصم",
+        "حذر",
+        "تعفف"
+      ],
+      "search_keys_norm": "اتقى تحصن اجتنب استعصم حذر تعفف"
+    },
+    {
+      "id": "b20",
+      "topic": "Child",
+      "topic_ur": "بچہ [لڑکا]",
+      "words_ar": [
+        "أجنة",
+        "وليد",
+        "مولود",
+        "ولد",
+        "طفل",
+        "صبي",
+        "غلام"
+      ],
+      "search_keys_norm": "أجنة وليد مولود ولد طفل صبي غلام"
+    },
+    {
+      "id": "b21",
+      "topic": "To spread",
+      "topic_ur": "بچھانا",
+      "words_ar": [
+        "دحى",
+        "طحى",
+        "سطح",
+        "فرش",
+        "مهد"
+      ],
+      "search_keys_norm": "دحى طحى سطح فرش مهد"
+    },
+    {
+      "id": "b22",
+      "topic": "Spread/Bedding etc",
+      "topic_ur": "بچھونا",
+      "words_ar": [
+        "مهاد",
+        "فراش",
+        "مضاجع"
+      ],
+      "search_keys_norm": "مهاد فراش مضاجع"
+    },
+    {
+      "id": "b23",
+      "topic": "To be stingy, miser",
+      "topic_ur": "بخل کرنا",
+      "words_ar": [
+        "بخل",
+        "امسك",
+        "أدعى",
+        "أكدى",
+        "أقتر",
+        "ضن",
+        "شح",
+        "غل"
+      ],
+      "search_keys_norm": "بخل امسك أدعى أكدى أقتر ضن شح غل"
+    },
+    {
+      "id": "b24",
+      "topic": "Wretchedness",
+      "topic_ur": "بدبختی",
+      "words_ar": [
+        "شقوة",
+        "نحوسة",
+        "طائر",
+        "شؤم",
+        "حسوم"
+      ],
+      "search_keys_norm": "شقوة نحوسة طائر شؤم حسوم"
+    },
+    {
+      "id": "b25",
+      "topic": "To curse",
+      "topic_ur": "بد دعا دینا",
+      "words_ar": [
+        "لعن",
+        "سحق",
+        "بعد",
+        "ابتهل"
+      ],
+      "search_keys_norm": "لعن سحق بعد ابتهل"
+    },
+    {
+      "id": "b26",
+      "topic": "To become/ make disfigured",
+      "topic_ur": "بدصورت بنانا ہونا",
+      "words_ar": [
+        "مسخ",
+        "كلح",
+        "قبح"
+      ],
+      "search_keys_norm": "مسخ كلح قبح"
+    },
+    {
+      "id": "b27",
+      "topic": "Immoral, sinful, sinner",
+      "topic_ur": "بدکاری بدکار",
+      "words_ar": [
+        "زنا",
+        "بغاء",
+        "فاحشة",
+        "سفاح"
+      ],
+      "search_keys_norm": "زنا بغاء فاحشة سفاح"
+    },
+    {
+      "id": "b28",
+      "topic": "To substitute",
+      "topic_ur": "بدل دینا",
+      "words_ar": [
+        "بدل",
+        "حول",
+        "غير",
+        "حرف",
+        "تحرف",
+        "نكر",
+        "داول"
+      ],
+      "search_keys_norm": "بدل حول غير حرف تحرف نكر داول"
+    },
+    {
+      "id": "b29",
+      "topic": "Recompense",
+      "topic_ur": "بدلہ",
+      "words_ar": [
+        "بدل",
+        "ب",
+        "عدل",
+        "أجر",
+        "جزاء",
+        "ثواب",
+        "عقاب",
+        "وبال",
+        "كفارة",
+        "قصاص",
+        "دية",
+        "فدية"
+      ],
+      "search_keys_norm": "بدل ب عدل أجر جزاء ثواب عقاب وبال كفارة قصاص دية فدية"
+    },
+    {
+      "id": "b30",
+      "topic": "To reward/recompense",
+      "topic_ur": "بدلہ دینا",
+      "words_ar": [
+        "جزى",
+        "ثوب",
+        "أثاب",
+        "عذب",
+        "دان"
+      ],
+      "search_keys_norm": "جزى ثوب أثاب عذب دان"
+    },
+    {
+      "id": "b31",
+      "topic": "To take revenge",
+      "topic_ur": "بدلہ لینا",
+      "words_ar": [
+        "عاقب",
+        "انتصر",
+        "انتقم"
+      ],
+      "search_keys_norm": "عاقب انتصر انتقم"
+    },
+    {
+      "id": "b32",
+      "topic": "To be Drunk/inebriated",
+      "topic_ur": "بدمست ہونا",
+      "words_ar": [
+        "نزف",
+        "غال"
+      ],
+      "search_keys_norm": "نزف غال"
+    },
+    {
+      "id": "b33",
+      "topic": "Bad, evil",
+      "topic_ur": "برا- برائی",
+      "words_ar": [
+        "بئس",
+        "شر",
+        "شرير",
+        "ساء",
+        "سوء",
+        "سيئة",
+        "مسيء",
+        "قبح"
+      ],
+      "search_keys_norm": "بئس شر شرير ساء سوء سيئة مسيء قبح"
+    },
+    {
+      "id": "b34",
+      "topic": "To abuse, revile",
+      "topic_ur": "برابھلا کہنا",
+      "words_ar": [
+        "ذم",
+        "عتب",
+        "لام",
+        "ثرب"
+      ],
+      "search_keys_norm": "ذم عتب لام ثرب"
+    },
+    {
+      "id": "b35",
+      "topic": "To dislike/take offence",
+      "topic_ur": "برا لگنا",
+      "words_ar": [
+        "نقم",
+        "نكر"
+      ],
+      "search_keys_norm": "نقم نكر"
+    },
+    {
+      "id": "b36",
+      "topic": "To be equal, to make equal",
+      "topic_ur": "برابر ہونا- کرنا",
+      "words_ar": [
+        "عدل",
+        "سواء",
+        "سوى",
+        "استوى"
+      ],
+      "search_keys_norm": "عدل سواء سوى استوى"
+    },
+    {
+      "id": "b37",
+      "topic": "To be ruined, to destroy",
+      "topic_ur": "برباد ہونا- کرنا ضائع ہونا- کرنا",
+      "words_ar": [
+        "ضل",
+        "أضل",
+        "حبط",
+        "أحبط",
+        "بطل",
+        "أبطل",
+        "أضاع"
+      ],
+      "search_keys_norm": "ضل أضل حبط أحبط بطل أبطل أضاع"
+    },
+    {
+      "id": "b38",
+      "topic": "To tolerate",
+      "topic_ur": "برداشت کرنا",
+      "words_ar": [
+        "حلم",
+        "صبر",
+        "كظم"
+      ],
+      "search_keys_norm": "حلم صبر كظم"
+    },
+    {
+      "id": "b39",
+      "topic": "Great, noble, superior",
+      "topic_ur": "بڑا- [بزرگ]",
+      "words_ar": [
+        "كبير",
+        "أكبر",
+        "عظيم",
+        "أعظم",
+        "جليل",
+        "ذوالجلال",
+        "مجيد"
+      ],
+      "search_keys_norm": "كبير أكبر عظيم أعظم جليل ذوالجلال مجيد"
+    },
+    {
+      "id": "b40",
+      "topic": "Greatness",
+      "topic_ur": "برائی",
+      "words_ar": [
+        "كبر",
+        "جلال",
+        "جد"
+      ],
+      "search_keys_norm": "كبر جلال جد"
+    },
+    {
+      "id": "b41",
+      "topic": "Increase, to increase, expand",
+      "topic_ur": "بڑھنا بڑھانا",
+      "words_ar": [
+        "زاد",
+        "ازداد",
+        "كثر",
+        "عفا",
+        "ضاعف",
+        "تطوع",
+        "نفل",
+        "أربى"
+      ],
+      "search_keys_norm": "زاد ازداد كثر عفا ضاعف تطوع نفل أربى"
+    },
+    {
+      "id": "b42",
+      "topic": "Village, Villagers",
+      "topic_ur": "بستی-بستی والے",
+      "words_ar": [
+        "قرية",
+        "بدو",
+        "أعراب"
+      ],
+      "search_keys_norm": "قرية بدو أعراب"
+    },
+    {
+      "id": "b43",
+      "topic": "Goat",
+      "topic_ur": "بکری",
+      "words_ar": [
+        "غنم",
+        "معز"
+      ],
+      "search_keys_norm": "غنم معز"
+    },
+    {
+      "id": "b44",
+      "topic": "To be scattered, dishevelled",
+      "topic_ur": "بکھرنا [پراگندہ ہونا]",
+      "words_ar": [
+        "انبث",
+        "انتشر",
+        "انتثر",
+        "انفض",
+        "استطار"
+      ],
+      "search_keys_norm": "انبث انتشر انتثر انفض استطار"
+    },
+    {
+      "id": "b45",
+      "topic": "To elevate, raise",
+      "topic_ur": "بلند کرنا",
+      "words_ar": [
+        "رفع",
+        "أنشأ"
+      ],
+      "search_keys_norm": "رفع أنشأ"
+    },
+    {
+      "id": "b46",
+      "topic": "To be lofty, to be above",
+      "topic_ur": "بلند ہونا",
+      "words_ar": [
+        "علا",
+        "بسق",
+        "شمخ"
+      ],
+      "search_keys_norm": "علا بسق شمخ"
+    },
+    {
+      "id": "b47",
+      "topic": "To make",
+      "topic_ur": "بنانا",
+      "words_ar": [
+        "جعل",
+        "بنى",
+        "صنع",
+        "اتخذ"
+      ],
+      "search_keys_norm": "جعل بنى صنع اتخذ"
+    },
+    {
+      "id": "b48",
+      "topic": "To close, shut",
+      "topic_ur": "بند کرنا",
+      "words_ar": [
+        "غلق",
+        "وصد",
+        "قصر",
+        "قبض"
+      ],
+      "search_keys_norm": "غلق وصد قصر قبض"
+    },
+    {
+      "id": "b49",
+      "topic": "Weave , knit",
+      "topic_ur": "بننا",
+      "words_ar": [
+        "حبك",
+        "وضن"
+      ],
+      "search_keys_norm": "حبك وضن"
+    },
+    {
+      "id": "b50",
+      "topic": "Load, burden",
+      "topic_ur": "بوجھ",
+      "words_ar": [
+        "ثقل",
+        "حمل",
+        "وقر",
+        "وزر",
+        "اصر",
+        "كل",
+        "وزن",
+        "موازين"
+      ],
+      "search_keys_norm": "ثقل حمل وقر وزر اصر كل وزن موازين"
+    },
+    {
+      "id": "b51",
+      "topic": "To be burdened, loaded",
+      "topic_ur": "بوجھل ہونا [گراں ہونا]",
+      "words_ar": [
+        "ثقل",
+        "كسل",
+        "أد",
+        "كبر",
+        "كبيرة"
+      ],
+      "search_keys_norm": "ثقل كسل أد كبر كبيرة"
+    },
+    {
+      "id": "b52",
+      "topic": "Old",
+      "topic_ur": "بوڑھا",
+      "words_ar": [
+        "شيخ",
+        "شيب",
+        "كهل",
+        "عجوز",
+        "معمر",
+        "عوان",
+        "فارض"
+      ],
+      "search_keys_norm": "شيخ شيب كهل عجوز معمر عوان فارض"
+    },
+    {
+      "id": "b53",
+      "topic": "To decay, rot",
+      "topic_ur": "بوسیدہ ہونا",
+      "words_ar": [
+        "بلي",
+        "وهي",
+        "رم",
+        "رفت",
+        "نخر"
+      ],
+      "search_keys_norm": "بلي وهي رم رفت نخر"
+    },
+    {
+      "id": "b54",
+      "topic": "To speak",
+      "topic_ur": "بولنا",
+      "words_ar": [
+        "لفظ",
+        "نطق",
+        "فصح",
+        "أعرب",
+        "أعجم",
+        "تكلم",
+        "لحن"
+      ],
+      "search_keys_norm": "لفظ نطق فصح أعرب أعجم تكلم لحن"
+    },
+    {
+      "id": "b55",
+      "topic": "To Pour, to flow",
+      "topic_ur": "بہنا  بہانا",
+      "words_ar": [
+        "سال",
+        "أسال",
+        "أفاض",
+        "سكب",
+        "سفك",
+        "سفح",
+        "فجر",
+        "جرى"
+      ],
+      "search_keys_norm": "سال أسال أفاض سكب سفك سفح فجر جرى"
+    },
+    {
+      "id": "b56",
+      "topic": "Excuse, to make an excuse",
+      "topic_ur": "بہانہ – بہانہ بنانا",
+      "words_ar": [
+        "عذر",
+        "اعتذر",
+        "فتنة"
+      ],
+      "search_keys_norm": "عذر اعتذر فتنة"
+    },
+    {
+      "id": "b57",
+      "topic": "slander",
+      "topic_ur": "بہتان",
+      "words_ar": [
+        "بهتان",
+        "إفك",
+        "افتراء"
+      ],
+      "search_keys_norm": "بهتان إفك افتراء"
+    },
+    {
+      "id": "b58",
+      "topic": "Astray, to lead astray",
+      "topic_ur": "بہکنا بہکانا",
+      "words_ar": [
+        "ضل",
+        "أضل",
+        "غوى",
+        "أغوى",
+        "تاه"
+      ],
+      "search_keys_norm": "ضل أضل غوى أغوى تاه"
+    },
+    {
+      "id": "b59",
+      "topic": "Flee , cause to flee",
+      "topic_ur": "بھاگنا بھگانا",
+      "words_ar": [
+        "فر",
+        "أبق",
+        "زهق",
+        "هرب",
+        "استنفر",
+        "شرد"
+      ],
+      "search_keys_norm": "فر أبق زهق هرب استنفر شرد"
+    },
+    {
+      "id": "b60",
+      "topic": "brother",
+      "topic_ur": "بھائی",
+      "words_ar": [
+        "إخوة",
+        "إخوان"
+      ],
+      "search_keys_norm": "إخوة إخوان"
+    },
+    {
+      "id": "b61",
+      "topic": "To fill up",
+      "topic_ur": "بھر جانا",
+      "words_ar": [
+        "ملا",
+        "امتلاء",
+        "دهق",
+        "شحن"
+      ],
+      "search_keys_norm": "ملا امتلاء دهق شحن"
+    },
+    {
+      "id": "b62",
+      "topic": "hunger",
+      "topic_ur": "بھوک",
+      "words_ar": [
+        "جوع",
+        "مسغبة",
+        "مخمصة",
+        "خصاصة"
+      ],
+      "search_keys_norm": "جوع مسغبة مخمصة خصاصة"
+    },
+    {
+      "id": "b63",
+      "topic": "Forget, cause to forget",
+      "topic_ur": "بھولنا بھلانا",
+      "words_ar": [
+        "نسي",
+        "أنسى",
+        "سها",
+        "ضل",
+        "ذهل"
+      ],
+      "search_keys_norm": "نسي أنسى سها ضل ذهل"
+    },
+    {
+      "id": "b64",
+      "topic": "To roast like on a spit fire",
+      "topic_ur": "بھننا",
+      "words_ar": [
+        "شوى",
+        "حنذ"
+      ],
+      "search_keys_norm": "شوى حنذ"
+    },
+    {
+      "id": "b65",
+      "topic": "To send, dispatch",
+      "topic_ur": "بھیجنا",
+      "words_ar": [
+        "أرسل",
+        "بعث"
+      ],
+      "search_keys_norm": "أرسل بعث"
+    },
+    {
+      "id": "b66",
+      "topic": "To narrate or state",
+      "topic_ur": "بیان کرنا",
+      "words_ar": [
+        "وصف",
+        "قص",
+        "ضرب",
+        "حدث",
+        "أبان",
+        "بين",
+        "صرف",
+        "فصل",
+        "فسر"
+      ],
+      "search_keys_norm": "وصف قص ضرب حدث أبان بين صرف فصل فسر"
+    },
+    {
+      "id": "b67",
+      "topic": "Son , daughter",
+      "topic_ur": "بیٹا بیٹی",
+      "words_ar": [
+        "ولد",
+        "وليد",
+        "مولود",
+        "ابن",
+        "بنت"
+      ],
+      "search_keys_norm": "ولد وليد مولود ابن بنت"
+    },
+    {
+      "id": "b68",
+      "topic": "To sit",
+      "topic_ur": "بیٹھنا",
+      "words_ar": [
+        "قعد",
+        "جلس",
+        "جثا"
+      ],
+      "search_keys_norm": "قعد جلس جثا"
+    },
+    {
+      "id": "b69",
+      "topic": "Ill",
+      "topic_ur": "بیمار",
+      "words_ar": [
+        "مريض",
+        "سقيم",
+        "حرض"
+      ],
+      "search_keys_norm": "مريض سقيم حرض"
+    },
+    {
+      "id": "b70",
+      "topic": "Wife",
+      "topic_ur": "بیوی",
+      "words_ar": [
+        "زوج",
+        "حلائل",
+        "امرأة",
+        "صاحبة",
+        "نساء",
+        "أهل"
+      ],
+      "search_keys_norm": "زوج حلائل امرأة صاحبة نساء أهل"
+    },
+    {
+      "id": "b71",
+      "topic": "To be unfair, unjust",
+      "topic_ur": "بے انصافی کرنا",
+      "words_ar": [
+        "عدل",
+        "قسط",
+        "ظلم",
+        "حاف",
+        "عال",
+        "ضاز"
+      ],
+      "search_keys_norm": "عدل قسط ظلم حاف عال ضاز"
+    },
+    {
+      "id": "b72",
+      "topic": "Disinclination",
+      "topic_ur": "بے رغبتی کرنا",
+      "words_ar": [
+        "رغبعن",
+        "حصور",
+        "زاهد"
+      ],
+      "search_keys_norm": "رغبعن حصور زاهد"
+    },
+    {
+      "id": "b73",
+      "topic": "To be annoyed and dissatisfied",
+      "topic_ur": "بیزار ہونا",
+      "words_ar": [
+        "تبرأ",
+        "قلى",
+        "مقت"
+      ],
+      "search_keys_norm": "تبرأ قلى مقت"
+    },
+    {
+      "id": "b74",
+      "topic": "Indeed",
+      "topic_ur": "بیشک",
+      "words_ar": [
+        "إن",
+        "أن",
+        "لاجرم",
+        "قد"
+      ],
+      "search_keys_norm": "إن أن لاجرم قد"
+    },
+    {
+      "id": "b75",
+      "topic": "To be restless",
+      "topic_ur": "بے قرار ہونا [کرنا]",
+      "words_ar": [
+        "فرغ",
+        "جزع",
+        "فزع",
+        "كرب",
+        "هلع",
+        "اضطر",
+        "استفز"
+      ],
+      "search_keys_norm": "فرغ جزع فزع كرب هلع اضطر استفز"
+    },
+    {
+      "id": "b76",
+      "topic": "To be jobless, worthless",
+      "topic_ur": "بیکار ہونا",
+      "words_ar": [
+        "فرغ",
+        "عطل"
+      ],
+      "search_keys_norm": "فرغ عطل"
+    },
+    {
+      "id": "b77",
+      "topic": "Lacking good fortune",
+      "topic_ur": "بےنصیب",
+      "words_ar": [
+        "محروم",
+        "شقي"
+      ],
+      "search_keys_norm": "محروم شقي"
+    },
+    {
+      "id": "b78",
+      "topic": "Without want, Completely Independent",
+      "topic_ur": "بےنیاز",
+      "words_ar": [
+        "غني",
+        "صمد"
+      ],
+      "search_keys_norm": "غني صمد"
+    },
+    {
+      "id": "b79",
+      "topic": "Nonsense and frivolous talk",
+      "topic_ur": "بےہودہ کلام",
+      "words_ar": [
+        "لغو",
+        "لاغية",
+        "هزل",
+        "نزف"
+      ],
+      "search_keys_norm": "لغو لاغية هزل نزف"
+    },
+    {
+      "id": "b80",
+      "topic": "To be unconscious",
+      "topic_ur": "بےہوش ہونا",
+      "words_ar": [
+        "صعق",
+        "سكر",
+        "غمر",
+        "صرع",
+        "غشي"
+      ],
+      "search_keys_norm": "صعق سكر غمر صرع غشي"
+    },
+    {
+      "id": "p1",
+      "topic": "Near, close",
+      "topic_ur": "پاس",
+      "words_ar": [
+        "عند",
+        "لدى",
+        "لدن",
+        "حول",
+        "تلقاء"
+      ],
+      "search_keys_norm": "عند لدى لدن حول تلقاء"
+    },
+    {
+      "id": "p2",
+      "topic": "Pure",
+      "topic_ur": "پاک [ستھرا]",
+      "words_ar": [
+        "سبحان",
+        "قدوس",
+        "زكية",
+        "طهور",
+        "طيب"
+      ],
+      "search_keys_norm": "سبحان قدوس زكية طهور طيب"
+    },
+    {
+      "id": "p3",
+      "topic": "To purify, cleanse",
+      "topic_ur": "پاک کرنا",
+      "words_ar": [
+        "محص",
+        "زكى",
+        "طهر",
+        "صفا",
+        "برأ"
+      ],
+      "search_keys_norm": "محص زكى طهر صفا برأ"
+    },
+    {
+      "id": "p4",
+      "topic": "To obtain",
+      "topic_ur": "پانا",
+      "words_ar": [
+        "وجد",
+        "ثقف",
+        "ألفى",
+        "أدرك"
+      ],
+      "search_keys_norm": "وجد ثقف ألفى أدرك"
+    },
+    {
+      "id": "p5",
+      "topic": "Water and its different types",
+      "topic_ur": "پانی اور اسکی اقسام",
+      "words_ar": [
+        "ماء",
+        "حميم",
+        "غساق",
+        "آن",
+        "آنية",
+        "غور",
+        "معين",
+        "عذب",
+        "فرات",
+        "أجاج"
+      ],
+      "search_keys_norm": "ماء حميم غساق آن آنية غور معين عذب فرات أجاج"
+    },
+    {
+      "id": "p6",
+      "topic": "Different types of natural flowing water",
+      "topic_ur": "پانی کے رستے اور اسکے ذخیرے",
+      "words_ar": [
+        "أودية",
+        "عين",
+        "أنهار",
+        "سري",
+        "يم",
+        "بحر"
+      ],
+      "search_keys_norm": "أودية عين أنهار سري يم بحر"
+    },
+    {
+      "id": "p7",
+      "topic": "To ask for water",
+      "topic_ur": "پانی مانگنا",
+      "words_ar": [
+        "استسقى",
+        "استغاث"
+      ],
+      "search_keys_norm": "استسقى استغاث"
+    },
+    {
+      "id": "p8",
+      "topic": "Feet",
+      "topic_ur": "پاوّں",
+      "words_ar": [
+        "رجل",
+        "قدم"
+      ],
+      "search_keys_norm": "رجل قدم"
+    },
+    {
+      "id": "p9",
+      "topic": "Stone",
+      "topic_ur": "پتھر",
+      "words_ar": [
+        "حجر",
+        "حجارة",
+        "حصب",
+        "سجيل"
+      ],
+      "search_keys_norm": "حجر حجارة حصب سجيل"
+    },
+    {
+      "id": "p10",
+      "topic": "Behind, latter",
+      "topic_ur": "پچھلا",
+      "words_ar": [
+        "أخر",
+        "خلف"
+      ],
+      "search_keys_norm": "أخر خلف"
+    },
+    {
+      "id": "p11",
+      "topic": "To regret",
+      "topic_ur": "پچھتانا",
+      "words_ar": [
+        "ندم",
+        "حسر",
+        "سقطفييده"
+      ],
+      "search_keys_norm": "ندم حسر سقطفييده"
+    },
+    {
+      "id": "p12",
+      "topic": "To be old/ancient",
+      "topic_ur": "پرانا ہونا",
+      "words_ar": [
+        "بلي",
+        "قديم",
+        "عتيق"
+      ],
+      "search_keys_norm": "بلي قديم عتيق"
+    },
+    {
+      "id": "p13",
+      "topic": "Veil",
+      "topic_ur": "پردہ",
+      "words_ar": [
+        "غطاء",
+        "غشاوة",
+        "غلف",
+        "أكنان",
+        "أكنة",
+        "ستر",
+        "حجاب",
+        "عورة",
+        "سرادق"
+      ],
+      "search_keys_norm": "غطاء غشاوة غلف أكنان أكنة ستر حجاب عورة سرادق"
+    },
+    {
+      "id": "p14",
+      "topic": "To cover, veil",
+      "topic_ur": "پردہ کرنا",
+      "words_ar": [
+        "استتر",
+        "حجب"
+      ],
+      "search_keys_norm": "استتر حجب"
+    },
+    {
+      "id": "p15",
+      "topic": "To bring up/nurture",
+      "topic_ur": "پرورش کرنا",
+      "words_ar": [
+        "أنشأ",
+        "أنبت",
+        "ربا",
+        "ربى",
+        "كفل"
+      ],
+      "search_keys_norm": "أنشأ أنبت ربا ربى كفل"
+    },
+    {
+      "id": "p16",
+      "topic": "To teach, to read",
+      "topic_ur": "پڑھانا پڑھنا",
+      "words_ar": [
+        "قرأ",
+        "أقرأ",
+        "تلى",
+        "رتل",
+        "درس",
+        "دراسة",
+        "أملى"
+      ],
+      "search_keys_norm": "قرأ أقرأ تلى رتل درس دراسة أملى"
+    },
+    {
+      "id": "p17",
+      "topic": "To like,",
+      "topic_ur": "پسند کرنا",
+      "words_ar": [
+        "حب",
+        "ود",
+        "ارتضى",
+        "تخير"
+      ],
+      "search_keys_norm": "حب ود ارتضى تخير"
+    },
+    {
+      "id": "p18",
+      "topic": "To shout, call out",
+      "topic_ur": "پکارنا",
+      "words_ar": [
+        "دعا",
+        "نادى",
+        "أذن",
+        "ابتهل",
+        "جهر"
+      ],
+      "search_keys_norm": "دعا نادى أذن ابتهل جهر"
+    },
+    {
+      "id": "p19",
+      "topic": "To seize",
+      "topic_ur": "پکڑنا",
+      "words_ar": [
+        "أخذ",
+        "بطش",
+        "تناوش",
+        "قبض",
+        "خطف",
+        "سطا",
+        "اعتصم",
+        "استمسك",
+        "درك"
+      ],
+      "search_keys_norm": "أخذ بطش تناوش قبض خطف سطا اعتصم استمسك درك"
+    },
+    {
+      "id": "p20",
+      "topic": "Protection, shelter, refuge",
+      "topic_ur": "پناہ – پناہ گاہ",
+      "words_ar": [
+        "وزر",
+        "موئل",
+        "أكنان",
+        "ملجأ",
+        "مفازة",
+        "محيص",
+        "ملتحد"
+      ],
+      "search_keys_norm": "وزر موئل أكنان ملجأ مفازة محيص ملتحد"
+    },
+    {
+      "id": "p21",
+      "topic": "To ask for refuge, to give refuge",
+      "topic_ur": "پناہ مانگنا - دینا",
+      "words_ar": [
+        "أجار",
+        "استجار",
+        "أعاذ",
+        "استعاذ"
+      ],
+      "search_keys_norm": "أجار استجار أعاذ استعاذ"
+    },
+    {
+      "id": "p22",
+      "topic": "To ask",
+      "topic_ur": "پوچھنا",
+      "words_ar": [
+        "سأل",
+        "استفتى",
+        "استنبأ"
+      ],
+      "search_keys_norm": "سأل استفتى استنبأ"
+    },
+    {
+      "id": "p23",
+      "topic": "Whole entire, (all)",
+      "topic_ur": "پورا  [سارا سب]",
+      "words_ar": [
+        "كل",
+        "كامل",
+        "كافة",
+        "سلم"
+      ],
+      "search_keys_norm": "كل كامل كافة سلم"
+    },
+    {
+      "id": "p24",
+      "topic": "Accomplish , to complete",
+      "topic_ur": "پورا کرنا -ہونا",
+      "words_ar": [
+        "تم",
+        "أتم",
+        "أكمل",
+        "أوفى",
+        "قضى",
+        "أسبغ"
+      ],
+      "search_keys_norm": "تم أتم أكمل أوفى قضى أسبغ"
+    },
+    {
+      "id": "p25",
+      "topic": "Garments, clothes",
+      "topic_ur": "پوشاک",
+      "words_ar": [
+        "لباس",
+        "كسوة"
+      ],
+      "search_keys_norm": "لباس كسوة"
+    },
+    {
+      "id": "p26",
+      "topic": "Mountain",
+      "topic_ur": "پہار",
+      "words_ar": [
+        "جبل",
+        "رواسي",
+        "طود",
+        "صخرة",
+        "أعلام"
+      ],
+      "search_keys_norm": "جبل رواسي طود صخرة أعلام"
+    },
+    {
+      "id": "p27",
+      "topic": "To recognize",
+      "topic_ur": "پہچاننا",
+      "words_ar": [
+        "عرف",
+        "توسم"
+      ],
+      "search_keys_norm": "عرف توسم"
+    },
+    {
+      "id": "p28",
+      "topic": "First, at first",
+      "topic_ur": "پہلا پہلی پہلے",
+      "words_ar": [
+        "أول",
+        "أولى",
+        "سابق",
+        "قبل"
+      ],
+      "search_keys_norm": "أول أولى سابق قبل"
+    },
+    {
+      "id": "p29",
+      "topic": "Side, (in sleeping)",
+      "topic_ur": "پہلو [کروٹ]",
+      "words_ar": [
+        "جنب",
+        "جناح",
+        "عطف"
+      ],
+      "search_keys_norm": "جنب جناح عطف"
+    },
+    {
+      "id": "p30",
+      "topic": "To reach",
+      "topic_ur": "پہنچنا",
+      "words_ar": [
+        "بلغ",
+        "أصاب",
+        "أفضى",
+        "نال",
+        "تناوش",
+        "تعاطى",
+        "وصل",
+        "مس",
+        "ورد"
+      ],
+      "search_keys_norm": "بلغ أصاب أفضى نال تناوش تعاطى وصل مس ورد"
+    },
+    {
+      "id": "p31",
+      "topic": "To deliver",
+      "topic_ur": "پہنچانا",
+      "words_ar": [
+        "أبلغ",
+        "بلغ",
+        "أورد",
+        "جبا",
+        "أدلى"
+      ],
+      "search_keys_norm": "أبلغ بلغ أورد جبا أدلى"
+    },
+    {
+      "id": "p32",
+      "topic": "To tear, rip",
+      "topic_ur": "پھاڑنا",
+      "words_ar": [
+        "خرق",
+        "قد",
+        "فطر",
+        "فجر",
+        "مخر",
+        "شق",
+        "فلق",
+        "فرق",
+        "مزق"
+      ],
+      "search_keys_norm": "خرق قد فطر فجر مخر شق فلق فرق مزق"
+    },
+    {
+      "id": "p33",
+      "topic": "To Burst, explode",
+      "topic_ur": "پھٹنا",
+      "words_ar": [
+        "إنفطر",
+        "تفطر",
+        "شقق",
+        "إنشق",
+        "انفلق",
+        "تصدع",
+        "تميز"
+      ],
+      "search_keys_norm": "إنفطر تفطر شقق إنشق انفلق تصدع تميز"
+    },
+    {
+      "id": "p34",
+      "topic": "To stroll, to wander",
+      "topic_ur": "پھرنا",
+      "words_ar": [
+        "دار",
+        "طاف",
+        "حار",
+        "تقلب",
+        "إنقلب",
+        "نكص",
+        "إنصرف",
+        "ولى",
+        "تولى",
+        "ارتد",
+        "أدبر"
+      ],
+      "search_keys_norm": "دار طاف حار تقلب إنقلب نكص إنصرف ولى تولى ارتد أدبر"
+    },
+    {
+      "id": "p35",
+      "topic": "To turn over, to refute",
+      "topic_ur": "پھیرنا",
+      "words_ar": [
+        "أقلب",
+        "قلب",
+        "صرف",
+        "دلى",
+        "رد",
+        "لفت",
+        "أفك"
+      ],
+      "search_keys_norm": "أقلب قلب صرف دلى رد لفت أفك"
+    },
+    {
+      "id": "p36",
+      "topic": "To slip, cause to slip, to seduce",
+      "topic_ur": "پھسلنا  پھسلانا",
+      "words_ar": [
+        "زلق",
+        "أزلق",
+        "زل",
+        "أزل",
+        "دحض",
+        "أدحض",
+        "هال",
+        "راود"
+      ],
+      "search_keys_norm": "زلق أزلق زل أزل دحض أدحض هال راود"
+    },
+    {
+      "id": "p37",
+      "topic": "Fruit",
+      "topic_ur": "پھل",
+      "words_ar": [
+        "ثمر",
+        "فاكهة",
+        "جنى",
+        "أكل"
+      ],
+      "search_keys_norm": "ثمر فاكهة جنى أكل"
+    },
+    {
+      "id": "p38",
+      "topic": "Ripening of the fruit",
+      "topic_ur": "پھل پکنا",
+      "words_ar": [
+        "ينع",
+        "جنى"
+      ],
+      "search_keys_norm": "ينع جنى"
+    },
+    {
+      "id": "p39",
+      "topic": "To blow",
+      "topic_ur": "پھونک مارنا",
+      "words_ar": [
+        "نفخ",
+        "نقر",
+        "نفث",
+        "أطفأ"
+      ],
+      "search_keys_norm": "نفخ نقر نفث أطفأ"
+    },
+    {
+      "id": "p40",
+      "topic": "To spread",
+      "topic_ur": "پھیلانا",
+      "words_ar": [
+        "ذرأ",
+        "مد",
+        "دحى",
+        "طحى",
+        "نشر",
+        "بسط",
+        "بث"
+      ],
+      "search_keys_norm": "ذرأ مد دحى طحى نشر بسط بث"
+    },
+    {
+      "id": "p41",
+      "topic": "To discard",
+      "topic_ur": "پھینکنا",
+      "words_ar": [
+        "نبذ",
+        "طرح",
+        "رجم",
+        "رمى",
+        "قذف",
+        "جفا"
+      ],
+      "search_keys_norm": "نبذ طرح رجم رمى قذف جفا"
+    },
+    {
+      "id": "p42",
+      "topic": "Thirsty",
+      "topic_ur": "پیاسا",
+      "words_ar": [
+        "ظمآن",
+        "ورد",
+        "هيم",
+        "لهث"
+      ],
+      "search_keys_norm": "ظمآن ورد هيم لهث"
+    },
+    {
+      "id": "p43",
+      "topic": "Bowl",
+      "topic_ur": "پیالہ",
+      "words_ar": [
+        "أكواب",
+        "كأس",
+        "سقاية",
+        "صواع"
+      ],
+      "search_keys_norm": "أكواب كأس سقاية صواع"
+    },
+    {
+      "id": "p44",
+      "topic": "Puss",
+      "topic_ur": "پیپ",
+      "words_ar": [
+        "غسلين",
+        "غساق",
+        "صديد"
+      ],
+      "search_keys_norm": "غسلين غساق صديد"
+    },
+    {
+      "id": "p45",
+      "topic": "Backbone, loin",
+      "topic_ur": "پیٹھ پشت",
+      "words_ar": [
+        "ظهر",
+        "دبر",
+        "صلب"
+      ],
+      "search_keys_norm": "ظهر دبر صلب"
+    },
+    {
+      "id": "p46",
+      "topic": "To follow",
+      "topic_ur": "پیچھا کرنا",
+      "words_ar": [
+        "ابتغاء",
+        "قص",
+        "اتبع"
+      ],
+      "search_keys_norm": "ابتغاء قص اتبع"
+    },
+    {
+      "id": "p47",
+      "topic": "Back, behind",
+      "topic_ur": "پیچھے",
+      "words_ar": [
+        "بعد",
+        "ادبار",
+        "خلف",
+        "وراء"
+      ],
+      "search_keys_norm": "بعد ادبار خلف وراء"
+    },
+    {
+      "id": "p48",
+      "topic": "Ensue, to come after",
+      "topic_ur": "پیچھے آنا",
+      "words_ar": [
+        "خلف",
+        "خلفة",
+        "اردف",
+        "تلى"
+      ],
+      "search_keys_norm": "خلف خلفة اردف تلى"
+    },
+    {
+      "id": "p49",
+      "topic": "To leave behind",
+      "topic_ur": "چھوڑنا",
+      "words_ar": [
+        "أخر",
+        "خلف"
+      ],
+      "search_keys_norm": "أخر خلف"
+    },
+    {
+      "id": "p50",
+      "topic": "To stay behind",
+      "topic_ur": "پیچھے رہنا",
+      "words_ar": [
+        "تأخر",
+        "خالف",
+        "غبر"
+      ],
+      "search_keys_norm": "تأخر خالف غبر"
+    },
+    {
+      "id": "p51",
+      "topic": "To put behind, cause to delay",
+      "topic_ur": "پیچھے کرنا یا ڈالنا",
+      "words_ar": [
+        "أخر",
+        "أرجأ",
+        "أرجه",
+        "نسأ"
+      ],
+      "search_keys_norm": "أخر أرجأ أرجه نسأ"
+    },
+    {
+      "id": "p52",
+      "topic": "To pursue, follow, cause to",
+      "topic_ur": "پیچھے لگانا - لگنا",
+      "words_ar": [
+        "أتبع",
+        "قفى",
+        "أغرى"
+      ],
+      "search_keys_norm": "أتبع قفى أغرى"
+    },
+    {
+      "id": "p53",
+      "topic": "Other derivatives of behind",
+      "topic_ur": "پیچھے کے دوسرے مشتقات",
+      "words_ar": [
+        "اتبع",
+        "التفت",
+        "خنس"
+      ],
+      "search_keys_norm": "اتبع التفت خنس"
+    },
+    {
+      "id": "p54",
+      "topic": "To create",
+      "topic_ur": "پیدا کرنا",
+      "words_ar": [
+        "برأ",
+        "بدع",
+        "فطر",
+        "خلق",
+        "أنشأ",
+        "ذرأ"
+      ],
+      "search_keys_norm": "برأ بدع فطر خلق أنشأ ذرأ"
+    },
+    {
+      "id": "p55",
+      "topic": "To present",
+      "topic_ur": "پیش کرنا",
+      "words_ar": [
+        "عرض",
+        "احضر"
+      ],
+      "search_keys_norm": "عرض احضر"
+    },
+    {
+      "id": "p56",
+      "topic": "Forehead",
+      "topic_ur": "پیشانی",
+      "words_ar": [
+        "جبين",
+        "جبهة",
+        "ناصية"
+      ],
+      "search_keys_norm": "جبين جبهة ناصية"
+    },
+    {
+      "id": "p57",
+      "topic": "Prophet",
+      "topic_ur": "پیغمبر",
+      "words_ar": [
+        "نبي",
+        "رسول",
+        "ملائكة"
+      ],
+      "search_keys_norm": "نبي رسول ملائكة"
+    },
+    {
+      "id": "p58",
+      "topic": "The opponent, rival of prophets",
+      "topic_ur": "پیغمبروں کے حریف",
+      "words_ar": [
+        "ساحر",
+        "كاهن",
+        "شاعر",
+        "مجنون"
+      ],
+      "search_keys_norm": "ساحر كاهن شاعر مجنون"
+    },
+    {
+      "id": "p59",
+      "topic": "To drink",
+      "topic_ur": "پینا",
+      "words_ar": [
+        "شرب",
+        "جرع",
+        "ساغ"
+      ],
+      "search_keys_norm": "شرب جرع ساغ"
+    },
+    {
+      "id": "t1",
+      "topic": "Star (different types)",
+      "topic_ur": "تارا [اقسام]",
+      "words_ar": [
+        "نجم",
+        "كواكب",
+        "خنس",
+        "جوار",
+        "كنس"
+      ],
+      "search_keys_norm": "نجم كواكب خنس جوار كنس"
+    },
+    {
+      "id": "t2",
+      "topic": "Spread of darkness",
+      "topic_ur": "تاریکی چھانا",
+      "words_ar": [
+        "عسعس",
+        "غسق",
+        "غطش",
+        "وقب",
+        "سجى",
+        "أظلم"
+      ],
+      "search_keys_norm": "عسعس غسق غطش وقب سجى أظلم"
+    },
+    {
+      "id": "t3",
+      "topic": "fresh",
+      "topic_ur": "تازہ",
+      "words_ar": [
+        "طري",
+        "رطب",
+        "نضرة",
+        "ناعمة"
+      ],
+      "search_keys_norm": "طري رطب نضرة ناعمة"
+    },
+    {
+      "id": "t4",
+      "topic": "So that, so not",
+      "topic_ur": "تاکہ – تاکہ نہ",
+      "words_ar": [
+        "ل",
+        "كي",
+        "كيلا",
+        "لكيلا",
+        "لئلا"
+      ],
+      "search_keys_norm": "ل كي كيلا لكيلا لئلا"
+    },
+    {
+      "id": "t5",
+      "topic": "Copper",
+      "topic_ur": "تانبا",
+      "words_ar": [
+        "قطر",
+        "مهل"
+      ],
+      "search_keys_norm": "قطر مهل"
+    },
+    {
+      "id": "t6",
+      "topic": "Throne,  bed",
+      "topic_ur": "تخت",
+      "words_ar": [
+        "عرش",
+        "أرائك",
+        "سرير"
+      ],
+      "search_keys_norm": "عرش أرائك سرير"
+    },
+    {
+      "id": "t7",
+      "topic": "Plank of wood, a board",
+      "topic_ur": "تختہ",
+      "words_ar": [
+        "زبر",
+        "ألواح"
+      ],
+      "search_keys_norm": "زبر ألواح"
+    },
+    {
+      "id": "t8",
+      "topic": "Plot, to plot",
+      "topic_ur": "تدبیر –تدبیر کرنا",
+      "words_ar": [
+        "دبر",
+        "كاد",
+        "مكر",
+        "حيلة"
+      ],
+      "search_keys_norm": "دبر كاد مكر حيلة"
+    },
+    {
+      "id": "t9",
+      "topic": "scales",
+      "topic_ur": "ترازو",
+      "words_ar": [
+        "ميزان",
+        "قسطاس"
+      ],
+      "search_keys_norm": "ميزان قسطاس"
+    },
+    {
+      "id": "t10",
+      "topic": "To carve",
+      "topic_ur": "تراشنا",
+      "words_ar": [
+        "نحت",
+        "جاب"
+      ],
+      "search_keys_norm": "نحت جاب"
+    },
+    {
+      "id": "t11",
+      "topic": "vegetables",
+      "topic_ur": "ترکاری",
+      "words_ar": [
+        "قضب",
+        "بقل"
+      ],
+      "search_keys_norm": "قضب بقل"
+    },
+    {
+      "id": "t12",
+      "topic": "Glorification of Allah",
+      "topic_ur": "تسبیح و تقدیس",
+      "words_ar": [
+        "سبح",
+        "قدس",
+        "حاشا"
+      ],
+      "search_keys_norm": "سبح قدس حاشا"
+    },
+    {
+      "id": "t13",
+      "topic": "Peace and consolation",
+      "topic_ur": "تسکین تسلی",
+      "words_ar": [
+        "سكينة",
+        "اطمئنان"
+      ],
+      "search_keys_norm": "سكينة اطمئنان"
+    },
+    {
+      "id": "t14",
+      "topic": "To interpret,",
+      "topic_ur": "تعبیر بتلانا",
+      "words_ar": [
+        "عبر",
+        "أول",
+        "أفتى"
+      ],
+      "search_keys_norm": "عبر أول أفتى"
+    },
+    {
+      "id": "t15",
+      "topic": "To praise",
+      "topic_ur": "تعریف کرنا",
+      "words_ar": [
+        "حمد",
+        "شكر"
+      ],
+      "search_keys_norm": "حمد شكر"
+    },
+    {
+      "id": "t16",
+      "topic": "To honour, respect",
+      "topic_ur": "تعظیم کرنا",
+      "words_ar": [
+        "عظم",
+        "وقر"
+      ],
+      "search_keys_norm": "عظم وقر"
+    },
+    {
+      "id": "t17",
+      "topic": "To, until",
+      "topic_ur": "تک",
+      "words_ar": [
+        "إلى",
+        "حتى"
+      ],
+      "search_keys_norm": "إلى حتى"
+    },
+    {
+      "id": "t18",
+      "topic": "Trouble, difficulty, hardship",
+      "topic_ur": "تکلیف",
+      "words_ar": [
+        "ضر",
+        "ضراء",
+        "كرها",
+        "أذى",
+        "معرة"
+      ],
+      "search_keys_norm": "ضر ضراء كرها أذى معرة"
+    },
+    {
+      "id": "t19",
+      "topic": "To trouble, to endure hardship",
+      "topic_ur": "تکلیف دینا - اٹھانا",
+      "words_ar": [
+        "ضر",
+        "أذى",
+        "كلف",
+        "شق",
+        "أكره",
+        "عنت",
+        "أعنت",
+        "سام"
+      ],
+      "search_keys_norm": "ضر أذى كلف شق أكره عنت أعنت سام"
+    },
+    {
+      "id": "t20",
+      "topic": "To cure, to be healthy",
+      "topic_ur": "تندرست کرنا -ہونا",
+      "words_ar": [
+        "شفى",
+        "أبرأ",
+        "أفاق"
+      ],
+      "search_keys_norm": "شفى أبرأ أفاق"
+    },
+    {
+      "id": "t21",
+      "topic": "Poor, destitute",
+      "topic_ur": "تنگدستی",
+      "words_ar": [
+        "فقر",
+        "مسكنة",
+        "عيلة",
+        "إملاق",
+        "قتر",
+        "بأساء",
+        "متربة"
+      ],
+      "search_keys_norm": "فقر مسكنة عيلة إملاق قتر بأساء متربة"
+    },
+    {
+      "id": "t22",
+      "topic": "hardship",
+      "topic_ur": "تنگی",
+      "words_ar": [
+        "عسر",
+        "حرج",
+        "ضنك",
+        "ضيق",
+        "حاجة"
+      ],
+      "search_keys_norm": "عسر حرج ضنك ضيق حاجة"
+    },
+    {
+      "id": "t23",
+      "topic": "To narrow down,",
+      "topic_ur": "تنگ کرنا- ہونا",
+      "words_ar": [
+        "ضاق",
+        "قدر",
+        "قبض",
+        "حصر",
+        "حفا"
+      ],
+      "search_keys_norm": "ضاق قدر قبض حصر حفا"
+    },
+    {
+      "id": "t24",
+      "topic": "To break",
+      "topic_ur": "توڑنا-",
+      "words_ar": [
+        "نكث",
+        "نقض",
+        "أنقض",
+        "فقر",
+        "جذ"
+      ],
+      "search_keys_norm": "نكث نقض أنقض فقر جذ"
+    },
+    {
+      "id": "t25",
+      "topic": "To give Divine help",
+      "topic_ur": "توفیق دینا-",
+      "words_ar": [
+        "وفق",
+        "أوزع"
+      ],
+      "search_keys_norm": "وفق أوزع"
+    },
+    {
+      "id": "t26",
+      "topic": "Layered",
+      "topic_ur": "تہ بہ تہ",
+      "words_ar": [
+        "طباق",
+        "مركوم",
+        "ركام",
+        "متراكب",
+        "نضيد",
+        "منضود",
+        "كسف"
+      ],
+      "search_keys_norm": "طباق مركوم ركام متراكب نضيد منضود كسف"
+    },
+    {
+      "id": "t27",
+      "topic": "To get tired",
+      "topic_ur": "تھکنا ]",
+      "words_ar": [
+        "سئم",
+        "نصب",
+        "عي",
+        "لقب",
+        "حسر",
+        "أد"
+      ],
+      "search_keys_norm": "سئم نصب عي لقب حسر أد"
+    },
+    {
+      "id": "t28",
+      "topic": "Stop",
+      "topic_ur": "تھمنا [رکنا]",
+      "words_ar": [
+        "سكن",
+        "سكت",
+        "رهوا"
+      ],
+      "search_keys_norm": "سكن سكت رهوا"
+    },
+    {
+      "id": "t29",
+      "topic": "Less",
+      "topic_ur": "تھوڑا",
+      "words_ar": [
+        "قليل",
+        "فتيل",
+        "نقير",
+        "قطمير",
+        "فواق"
+      ],
+      "search_keys_norm": "قليل فتيل نقير قطمير فواق"
+    },
+    {
+      "id": "t30",
+      "topic": "To prepare",
+      "topic_ur": "تیار کرنا",
+      "words_ar": [
+        "هيأ",
+        "أعد",
+        "اعتد",
+        "جهز"
+      ],
+      "search_keys_norm": "هيأ أعد اعتد جهز"
+    },
+    {
+      "id": "t31",
+      "topic": "Arrow",
+      "topic_ur": "تیر",
+      "words_ar": [
+        "سهم",
+        "زلم"
+      ],
+      "search_keys_norm": "سهم زلم"
+    },
+    {
+      "id": "t32",
+      "topic": "Sharp",
+      "topic_ur": "تیز",
+      "words_ar": [
+        "حديد",
+        "حداد",
+        "سلق"
+      ],
+      "search_keys_norm": "حديد حداد سلق"
+    },
+    {
+      "id": "t33",
+      "topic": "Oil",
+      "topic_ur": "تیل",
+      "words_ar": [
+        "زيت",
+        "دهن",
+        "دهان"
+      ],
+      "search_keys_norm": "زيت دهن دهان"
+    },
+    {
+      "id": "t34",
+      "topic": "Scowl, frown",
+      "topic_ur": "تیوری چڑھانا",
+      "words_ar": [
+        "عبس",
+        "كلح",
+        "بسر"
+      ],
+      "search_keys_norm": "عبس كلح بسر"
+    },
+    {
+      "id": "tt1",
+      "topic": "Piece",
+      "topic_ur": "ٹکڑا",
+      "words_ar": [
+        "جزء",
+        "قطع",
+        "بقعة",
+        "كسف",
+        "زبر",
+        "أنكاث",
+        "عضين",
+        "جذاذ",
+        "فرق",
+        "بعض"
+      ],
+      "search_keys_norm": "جزء قطع بقعة كسف زبر أنكاث عضين جذاذ فرق بعض"
+    },
+    {
+      "id": "tt2",
+      "topic": "To break",
+      "topic_ur": "ٹوٹنا",
+      "words_ar": [
+        "تب",
+        "انفصم",
+        "تقطع",
+        "انقض"
+      ],
+      "search_keys_norm": "تب انفصم تقطع انقض"
+    },
+    {
+      "id": "tt3",
+      "topic": "To be cool , to cool",
+      "topic_ur": "ٹھندا ہونا - کرنا",
+      "words_ar": [
+        "برد",
+        "قر"
+      ],
+      "search_keys_norm": "برد قر"
+    },
+    {
+      "id": "tt4",
+      "topic": "To stay, to stop",
+      "topic_ur": "ٹھیرنا [رکنا]",
+      "words_ar": [
+        "سكن",
+        "ركد",
+        "جمد",
+        "رهوا",
+        "قر",
+        "وقف"
+      ],
+      "search_keys_norm": "سكن ركد جمد رهوا قر وقف"
+    },
+    {
+      "id": "tt5",
+      "topic": "To stay, to reside",
+      "topic_ur": "ٹھیرنا آباد ہونا",
+      "words_ar": [
+        "لبث",
+        "مكث",
+        "عكف"
+      ],
+      "search_keys_norm": "لبث مكث عكف"
+    },
+    {
+      "id": "tt6",
+      "topic": "Hill and types",
+      "topic_ur": "ٹیلہ اور اسکی اقسام",
+      "words_ar": [
+        "ربوة",
+        "أمت",
+        "حدب",
+        "ريع",
+        "أحقاف",
+        "نجد"
+      ],
+      "search_keys_norm": "ربوة أمت حدب ريع أحقاف نجد"
+    },
+    {
+      "id": "tt7",
+      "topic": "Crooked, to be bent",
+      "topic_ur": "ٹیڑھ  ٹیڑھا ہونا",
+      "words_ar": [
+        "عوج",
+        "زيغ",
+        "زاغ",
+        "أزاغ",
+        "ألحد",
+        "جار",
+        "نكب"
+      ],
+      "search_keys_norm": "عوج زيغ زاغ أزاغ ألحد جار نكب"
+    },
+    {
+      "id": "tt8",
+      "topic": "To lean against something",
+      "topic_ur": "ٹیک لگانا",
+      "words_ar": [
+        "إتكأ",
+        "ارتفق"
+      ],
+      "search_keys_norm": "إتكأ ارتفق"
+    },
+    {
+      "id": "th1",
+      "topic": "proven",
+      "topic_ur": "ثابت ہونا",
+      "words_ar": [
+        "ح"
+      ],
+      "search_keys_norm": "ح"
+    },
+    {
+      "id": "th2",
+      "topic": "To be steadfast",
+      "topic_ur": "ثابت قدم رہنا  رکھنا",
+      "words_ar": [
+        "ث",
+        "ا",
+        "ر"
+      ],
+      "search_keys_norm": "ث ا ر"
+    },
+    {
+      "id": "j1",
+      "topic": "To spy",
+      "topic_ur": "جاسوسی کرنا",
+      "words_ar": [
+        "ت",
+        "س"
+      ],
+      "search_keys_norm": "ت س"
+    },
+    {
+      "id": "j2",
+      "topic": "To know",
+      "topic_ur": "جاننا",
+      "words_ar": [
+        "ع",
+        "ا"
+      ],
+      "search_keys_norm": "ع ا"
+    },
+    {
+      "id": "j3",
+      "topic": "Side,  towards, over there",
+      "topic_ur": "جانب سمت",
+      "words_ar": [
+        "ج",
+        "ط",
+        "و"
+      ],
+      "search_keys_norm": "ج ط و"
+    },
+    {
+      "id": "j4",
+      "topic": "when",
+      "topic_ur": "جب",
+      "words_ar": [
+        "ا",
+        "لم",
+        "ك"
+      ],
+      "search_keys_norm": "ا لم ك"
+    },
+    {
+      "id": "j5",
+      "topic": "root",
+      "topic_ur": "جڑھ",
+      "words_ar": [
+        "ا",
+        "د"
+      ],
+      "search_keys_norm": "ا د"
+    },
+    {
+      "id": "j6",
+      "topic": "Body",
+      "topic_ur": "جسم",
+      "words_ar": [
+        "ج",
+        "ب"
+      ],
+      "search_keys_norm": "ج ب"
+    },
+    {
+      "id": "j7",
+      "topic": "To bind, fasten, shackle",
+      "topic_ur": "جکڑنا",
+      "words_ar": [
+        "و",
+        "ق"
+      ],
+      "search_keys_norm": "و ق"
+    },
+    {
+      "id": "j8",
+      "topic": "Place",
+      "topic_ur": "جگہ",
+      "words_ar": [
+        "مقام",
+        "مكان",
+        "مراغم"
+      ],
+      "search_keys_norm": "مقام مكان مراغم"
+    },
+    {
+      "id": "j9",
+      "topic": "Exile",
+      "topic_ur": "جلا وطنی",
+      "words_ar": [
+        "نفي",
+        "جلا",
+        "ج",
+        "الجالي",
+        "ث",
+        "ن",
+        "ا"
+      ],
+      "search_keys_norm": "نفي جلا ج الجالي ث ن ا"
+    },
+    {
+      "id": "j10",
+      "topic": "To hasten, to hurry",
+      "topic_ur": "جلدی کرنا",
+      "words_ar": [
+        "س",
+        "ع",
+        "ا",
+        "ب",
+        "ف",
+        "ل",
+        "ر",
+        "مضارع"
+      ],
+      "search_keys_norm": "س ع ا ب ف ل ر مضارع"
+    },
+    {
+      "id": "j11",
+      "topic": "Group",
+      "topic_ur": "جماعت",
+      "words_ar": [
+        "ج",
+        "ر",
+        "ش",
+        "ع",
+        "ط",
+        "ف",
+        "ز",
+        "ح",
+        "ث",
+        "م",
+        "ا",
+        "احزاب",
+        "عشر",
+        "عشيرة"
+      ],
+      "search_keys_norm": "ج ر ش ع ط ف ز ح ث م ا احزاب عشر عشيرة"
+    },
+    {
+      "id": "j12",
+      "topic": "Groups of animals",
+      "topic_ur": "جماعت جانوروں کی",
+      "words_ar": [
+        "ر",
+        "ال",
+        "غ",
+        "ا",
+        "فارس",
+        "ط"
+      ],
+      "search_keys_norm": "ر ال غ ا فارس ط"
+    },
+    {
+      "id": "j13",
+      "topic": "Jinn",
+      "topic_ur": "جن",
+      "words_ar": [
+        "ج",
+        "ش",
+        "م",
+        "خ",
+        "ع",
+        "ال",
+        "شياطين"
+      ],
+      "search_keys_norm": "ج ش م خ ع ال شياطين"
+    },
+    {
+      "id": "j14",
+      "topic": "Paradise and its different names",
+      "topic_ur": "جنت اور اسکے مختلف نام",
+      "words_ar": [
+        "ج"
+      ],
+      "search_keys_norm": "ج"
+    },
+    {
+      "id": "j15",
+      "topic": "War, battle",
+      "topic_ur": "جنگ",
+      "words_ar": [
+        "ح",
+        "ق",
+        "ز",
+        "ب",
+        "ج",
+        "غ",
+        "م",
+        "ا",
+        "الز",
+        "زحافات",
+        "باس",
+        "جهاد",
+        "كلمة"
+      ],
+      "search_keys_norm": "ح ق ز ب ج غ م ا الز زحافات باس جهاد كلمة"
+    },
+    {
+      "id": "j16",
+      "topic": "To give birth",
+      "topic_ur": "جننا",
+      "words_ar": [
+        "و",
+        "حمل",
+        "والده"
+      ],
+      "search_keys_norm": "و حمل والده"
+    },
+    {
+      "id": "j17",
+      "topic": "To answer, reply",
+      "topic_ur": "جواب دینا",
+      "words_ar": [
+        "ر",
+        "فتوي",
+        "استفتاء"
+      ],
+      "search_keys_norm": "ر فتوي استفتاء"
+    },
+    {
+      "id": "j18",
+      "topic": "Adolescence, youth",
+      "topic_ur": "جوانی",
+      "words_ar": [
+        "ح",
+        "ا"
+      ],
+      "search_keys_norm": "ح ا"
+    },
+    {
+      "id": "j19",
+      "topic": "Couple, pair",
+      "topic_ur": "جوڑا",
+      "words_ar": [
+        "ز"
+      ],
+      "search_keys_norm": "ز"
+    },
+    {
+      "id": "j20",
+      "topic": "To join",
+      "topic_ur": "جوڑنا",
+      "words_ar": [
+        "و",
+        "خ",
+        "ر",
+        "ف",
+        "ق",
+        "خصف",
+        "رصاص"
+      ],
+      "search_keys_norm": "و خ ر ف ق خصف رصاص"
+    },
+    {
+      "id": "j21",
+      "topic": "Where, wherever",
+      "topic_ur": "جہاں-  جہاں کہیں",
+      "words_ar": [
+        "ح",
+        "ا",
+        "م"
+      ],
+      "search_keys_norm": "ح ا م"
+    },
+    {
+      "id": "j22",
+      "topic": "To scold",
+      "topic_ur": "جھڑکنا",
+      "words_ar": [
+        "ز",
+        "ا",
+        "ن",
+        "الز"
+      ],
+      "search_keys_norm": "ز ا ن الز"
+    },
+    {
+      "id": "j23",
+      "topic": "To bend, bow, incline, stoop",
+      "topic_ur": "جھکنا مائل ہونا",
+      "words_ar": [
+        "ج",
+        "ر",
+        "خ",
+        "ذ",
+        "ع",
+        "د",
+        "ص"
+      ],
+      "search_keys_norm": "ج ر خ ذ ع د ص"
+    },
+    {
+      "id": "j24",
+      "topic": "Cause to bend, stoop",
+      "topic_ur": "جھکانا",
+      "words_ar": [
+        "خ",
+        "غ",
+        "ر",
+        "ن"
+      ],
+      "search_keys_norm": "خ غ ر ن"
+    },
+    {
+      "id": "j25",
+      "topic": "To quarrel",
+      "topic_ur": "جھگڑنا",
+      "words_ar": [
+        "ش",
+        "ت",
+        "ح",
+        "ج",
+        "م",
+        "خ",
+        "ل",
+        "ا",
+        "شد"
+      ],
+      "search_keys_norm": "ش ت ح ج م خ ل ا شد"
+    },
+    {
+      "id": "j26",
+      "topic": "lie",
+      "topic_ur": "جھوٹ",
+      "words_ar": [
+        "ك",
+        "باط",
+        "ز",
+        "ا",
+        "ص",
+        "ح",
+        "زور",
+        "قول",
+        "ق",
+        "فاحش"
+      ],
+      "search_keys_norm": "ك باط ز ا ص ح زور قول ق فاحش"
+    },
+    {
+      "id": "j27",
+      "topic": "To lie, fabricate",
+      "topic_ur": "جھوٹ بولنا یا بنانا",
+      "words_ar": [
+        "ك",
+        "اف",
+        "ت"
+      ],
+      "search_keys_norm": "ك اف ت"
+    },
+    {
+      "id": "j28",
+      "topic": "To falsify, belie, refute",
+      "topic_ur": "جھٹلانا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "ch1",
+      "topic": "Keys",
+      "topic_ur": "چابی کنجی",
+      "words_ar": [
+        "م",
+        "ق",
+        "ف"
+      ],
+      "search_keys_norm": "م ق ف"
+    },
+    {
+      "id": "ch2",
+      "topic": "Sheet",
+      "topic_ur": "چادر",
+      "words_ar": [
+        "خ",
+        "ج"
+      ],
+      "search_keys_norm": "خ ج"
+    },
+    {
+      "id": "ch3",
+      "topic": "Fodder,  grains – food for herbivores",
+      "topic_ur": "چارہ",
+      "words_ar": [
+        "م",
+        "ا",
+        "ع",
+        "ر",
+        "عصف"
+      ],
+      "search_keys_norm": "م ا ع ر عصف"
+    },
+    {
+      "id": "ch4",
+      "topic": "Moon",
+      "topic_ur": "چاند",
+      "words_ar": [
+        "ق",
+        "ا"
+      ],
+      "search_keys_norm": "ق ا"
+    },
+    {
+      "id": "ch5",
+      "topic": "To like, intend, desire",
+      "topic_ur": "چاہنا",
+      "words_ar": [
+        "ش",
+        "ا",
+        "ب",
+        "ر",
+        "مشيئت",
+        "م"
+      ],
+      "search_keys_norm": "ش ا ب ر مشيئت م"
+    },
+    {
+      "id": "ch6",
+      "topic": "To stay/be quiet",
+      "topic_ur": "چپ ہونا رہنا",
+      "words_ar": [
+        "س",
+        "ص",
+        "ا",
+        "م",
+        "ن"
+      ],
+      "search_keys_norm": "س ص ا م ن"
+    },
+    {
+      "id": "ch7",
+      "topic": "Lamp",
+      "topic_ur": "چراغ",
+      "words_ar": [
+        "م",
+        "س",
+        "ص"
+      ],
+      "search_keys_norm": "م س ص"
+    },
+    {
+      "id": "ch8",
+      "topic": "To graze",
+      "topic_ur": "چرانا",
+      "words_ar": [
+        "ر",
+        "ا"
+      ],
+      "search_keys_norm": "ر ا"
+    },
+    {
+      "id": "ch9",
+      "topic": "To climb, ascend, rise",
+      "topic_ur": "چڑھنا",
+      "words_ar": [
+        "گھاٹی",
+        "منجد",
+        "مصعدالکہر",
+        "سور",
+        "سار"
+      ],
+      "search_keys_norm": "گھاٹی منجد مصعدالکہر سور سار"
+    },
+    {
+      "id": "ch10",
+      "topic": "Fountain, spring",
+      "topic_ur": "چشمہ",
+      "words_ar": [
+        "چشمہ",
+        "اعین",
+        "عین",
+        "عیون",
+        "نبع",
+        "ینبوع",
+        "ینابیع",
+        "اسریہ",
+        "سریان",
+        "ہ",
+        "سرایا"
+      ],
+      "search_keys_norm": "چشمہ اعین عین عیون نبع ینبوع ینابیع اسریہ سریان ہ سرایا"
+    },
+    {
+      "id": "ch11",
+      "topic": "The bursting and flowing of a  stream",
+      "topic_ur": "اور بہنا چشمہ کا پھوٹنا",
+      "words_ar": [
+        "بہنا",
+        "فور",
+        "فارالقدر",
+        "فارالماء",
+        "فارالعرق",
+        "اللغتہ"
+      ],
+      "search_keys_norm": "بہنا فور فارالقدر فارالماء فارالعرق اللغتہ"
+    },
+    {
+      "id": "ch12",
+      "topic": "To walk and types of walking",
+      "topic_ur": "چلنا",
+      "words_ar": [
+        "مثی",
+        "دب",
+        "انطلق",
+        "سلک",
+        "سرب",
+        "سری",
+        "داب",
+        "مظی",
+        "نقب",
+        "سار",
+        "قص",
+        "رجل"
+      ],
+      "search_keys_norm": "مثی دب انطلق سلک سرب سری داب مظی نقب سار قص رجل"
+    },
+    {
+      "id": "ch13",
+      "topic": "Cause to walk or move",
+      "topic_ur": "چلانا",
+      "words_ar": [
+        "ساق",
+        "حرک",
+        "ازجی",
+        "سلک",
+        "سیر",
+        "اسری"
+      ],
+      "search_keys_norm": "ساق حرک ازجی سلک سیر اسری"
+    },
+    {
+      "id": "ch14",
+      "topic": "To scream",
+      "topic_ur": "چلانا چیخنا",
+      "words_ar": [
+        "نعق",
+        "صد",
+        "جر",
+        "صر",
+        "استصرخ"
+      ],
+      "search_keys_norm": "نعق صد جر صر استصرخ"
+    },
+    {
+      "id": "ch15",
+      "topic": "To stick , cling",
+      "topic_ur": "چمٹنا",
+      "words_ar": [
+        "الحف",
+        "لزب",
+        "لزم"
+      ],
+      "search_keys_norm": "الحف لزب لزم"
+    },
+    {
+      "id": "ch16",
+      "topic": "Shine/flash, to shine/flash",
+      "topic_ur": "چمک چمکنا",
+      "words_ar": [
+        "بزغ",
+        "اشرق",
+        "ثقب",
+        "سنا",
+        "دری"
+      ],
+      "search_keys_norm": "بزغ اشرق ثقب سنا دری"
+    },
+    {
+      "id": "ch17",
+      "topic": "Some, few",
+      "topic_ur": "چند",
+      "words_ar": [
+        "معدودہ",
+        "بضع",
+        "نفر",
+        "اختار",
+        "اصطفی",
+        "اجتبی",
+        "استخلص",
+        "اصطنع"
+      ],
+      "search_keys_norm": "معدودہ بضع نفر اختار اصطفی اجتبی استخلص اصطنع"
+    },
+    {
+      "id": "ch18",
+      "topic": "To choose",
+      "topic_ur": "چن لینا",
+      "words_ar": [
+        "نفس",
+        "جبو",
+        "ي",
+        "جمع",
+        "خ"
+      ],
+      "search_keys_norm": "نفس جبو ي جمع خ"
+    },
+    {
+      "id": "ch19",
+      "topic": "Creatures",
+      "topic_ur": "چوپائے",
+      "words_ar": [
+        "و",
+        "ب",
+        "ا",
+        "د",
+        "الدو"
+      ],
+      "search_keys_norm": "و ب ا د الدو"
+    },
+    {
+      "id": "ch20",
+      "topic": "Violently smashed  or broken into minute pieces",
+      "topic_ur": "ریزہ ریزہ کرنا چورہ چورہ",
+      "words_ar": [
+        "ه",
+        "ح",
+        "ر",
+        "ب",
+        "د"
+      ],
+      "search_keys_norm": "ه ح ر ب د"
+    },
+    {
+      "id": "ch21",
+      "topic": "To steal",
+      "topic_ur": "چوری کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "ch22",
+      "topic": "guard",
+      "topic_ur": "چوکیدار",
+      "words_ar": [
+        "ح",
+        "ر",
+        "م"
+      ],
+      "search_keys_norm": "ح ر م"
+    },
+    {
+      "id": "ch23",
+      "topic": "hide,  disappear",
+      "topic_ur": "چھپنا [غائب ہونا]",
+      "words_ar": [
+        "غ",
+        "ا",
+        "ع",
+        "و",
+        "ب",
+        "ت",
+        "خ",
+        "ك"
+      ],
+      "search_keys_norm": "غ ا ع و ب ت خ ك"
+    },
+    {
+      "id": "ch24",
+      "topic": "To conceal",
+      "topic_ur": "چھپانا",
+      "words_ar": [
+        "ك",
+        "و",
+        "ا"
+      ],
+      "search_keys_norm": "ك و ا"
+    },
+    {
+      "id": "ch25",
+      "topic": "roof",
+      "topic_ur": "چھت",
+      "words_ar": [
+        "عرش",
+        "س"
+      ],
+      "search_keys_norm": "عرش س"
+    },
+    {
+      "id": "ch26",
+      "topic": "To leave",
+      "topic_ur": "چھوڑنا",
+      "words_ar": [
+        "ت",
+        "ه",
+        "ع",
+        "خ",
+        "يذر",
+        "د",
+        "غ"
+      ],
+      "search_keys_norm": "ت ه ع خ يذر د غ"
+    },
+    {
+      "id": "ch27",
+      "topic": "Cause to liberate",
+      "topic_ur": "چھڑانا",
+      "words_ar": [
+        "ف",
+        "ا"
+      ],
+      "search_keys_norm": "ف ا"
+    },
+    {
+      "id": "ch28",
+      "topic": "Touch",
+      "topic_ur": "چھونا",
+      "words_ar": [
+        "م",
+        "ل",
+        "طمس"
+      ],
+      "search_keys_norm": "م ل طمس"
+    },
+    {
+      "id": "HA1",
+      "topic": "need",
+      "topic_ur": "حاجت",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA2",
+      "topic": "present",
+      "topic_ur": "حاضر",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA3",
+      "topic": "Condition, state",
+      "topic_ur": "حال - حالت",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA4",
+      "topic": "Ruler, authoritarian",
+      "topic_ur": "حاکم",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA5",
+      "topic": "To exceed bounds, transgress",
+      "topic_ur": "حد سے بڑھنا – زیادتی کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA6",
+      "topic": "To fall short",
+      "topic_ur": "حد سے کم کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA7",
+      "topic": "Forbidden",
+      "topic_ur": "حرام",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA8",
+      "topic": "Part, portion",
+      "topic_ur": "حصہ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA9",
+      "topic": "To protect",
+      "topic_ur": "حفاظت کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA10",
+      "topic": "Rightful",
+      "topic_ur": "حقدار",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA11",
+      "topic": "Right of dowry",
+      "topic_ur": "حق مہر",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA12",
+      "topic": "Order, to command",
+      "topic_ur": "حکم حکم دینا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA13",
+      "topic": "To attack",
+      "topic_ur": "حملہ کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA14",
+      "topic": "To be astonished",
+      "topic_ur": "حیران ہونا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "HA15",
+      "topic": "Menstruation",
+      "topic_ur": "حیض",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "kh1",
+      "topic": "husband",
+      "topic_ur": "خاوند",
+      "words_ar": [
+        "ب",
+        "زوج"
+      ],
+      "search_keys_norm": "ب زوج"
+    },
+    {
+      "id": "kh2",
+      "topic": "news",
+      "topic_ur": "خبر",
+      "words_ar": [
+        "خ",
+        "ن"
+      ],
+      "search_keys_norm": "خ ن"
+    },
+    {
+      "id": "kh3",
+      "topic": "finish",
+      "topic_ur": "ختم ہونا",
+      "words_ar": [
+        "نفد",
+        "ختم"
+      ],
+      "search_keys_norm": "نفد ختم"
+    },
+    {
+      "id": "kh4",
+      "topic": "servant",
+      "topic_ur": "خدمت گار",
+      "words_ar": [
+        "غ",
+        "ف",
+        "س"
+      ],
+      "search_keys_norm": "غ ف س"
+    },
+    {
+      "id": "kh5",
+      "topic": "Spoiled, ruined",
+      "topic_ur": "خرابی",
+      "words_ar": [
+        "ف"
+      ],
+      "search_keys_norm": "ف"
+    },
+    {
+      "id": "kh6",
+      "topic": "To ruin, corrupt",
+      "topic_ur": "خراب کرنا- ہونا",
+      "words_ar": [
+        "خ",
+        "ا",
+        "ف",
+        "ع"
+      ],
+      "search_keys_norm": "خ ا ف ع"
+    },
+    {
+      "id": "kh7",
+      "topic": "To spend",
+      "topic_ur": "خرچ کرنا",
+      "words_ar": [
+        "ا",
+        "ب"
+      ],
+      "search_keys_norm": "ا ب"
+    },
+    {
+      "id": "kh8",
+      "topic": "To undertake transactions",
+      "topic_ur": "خرید وفروخت کرنا",
+      "words_ar": [
+        "ب",
+        "ت",
+        "ش",
+        "ا"
+      ],
+      "search_keys_norm": "ب ت ش ا"
+    },
+    {
+      "id": "kh9",
+      "topic": "treasure",
+      "topic_ur": "خزانہ",
+      "words_ar": [
+        "ق",
+        "ك",
+        "خ"
+      ],
+      "search_keys_norm": "ق ك خ"
+    },
+    {
+      "id": "kh10",
+      "topic": "dry/dehydrated",
+      "topic_ur": "خشک ہونا",
+      "words_ar": [
+        "ي",
+        "ه"
+      ],
+      "search_keys_norm": "ي ه"
+    },
+    {
+      "id": "kh11",
+      "topic": "To liberate, to free",
+      "topic_ur": "خلاصی چھٹکارا پانا",
+      "words_ar": [
+        "ا"
+      ],
+      "search_keys_norm": "ا"
+    },
+    {
+      "id": "kh12",
+      "topic": "creation",
+      "topic_ur": "خلقت مخلوق",
+      "words_ar": [
+        "ا"
+      ],
+      "search_keys_norm": "ا"
+    },
+    {
+      "id": "kh13",
+      "topic": "dream",
+      "topic_ur": "خواب",
+      "words_ar": [
+        "ا"
+      ],
+      "search_keys_norm": "ا"
+    },
+    {
+      "id": "kh14",
+      "topic": "Wish/desire/hope",
+      "topic_ur": "خواہش",
+      "words_ar": [
+        "ام",
+        "ا",
+        "ه",
+        "ش",
+        "و"
+      ],
+      "search_keys_norm": "ام ا ه ش و"
+    },
+    {
+      "id": "kh15",
+      "topic": "Beautiful",
+      "topic_ur": "خوبصورت",
+      "words_ar": [
+        "ب",
+        "ن",
+        "ح"
+      ],
+      "search_keys_norm": "ب ن ح"
+    },
+    {
+      "id": "kh16",
+      "topic": "To bring food/nourishment",
+      "topic_ur": "خوراک لانا",
+      "words_ar": [
+        "ق",
+        "ر"
+      ],
+      "search_keys_norm": "ق ر"
+    },
+    {
+      "id": "kh17",
+      "topic": "To be happy, to make happy, to look happy",
+      "topic_ur": "خوش ہونا – کرنا -لگنا",
+      "words_ar": [
+        "ر",
+        "ب",
+        "ح",
+        "ا",
+        "ف"
+      ],
+      "search_keys_norm": "ر ب ح ا ف"
+    },
+    {
+      "id": "kh18",
+      "topic": "Happiness and Prosperity",
+      "topic_ur": "خوشحالی",
+      "words_ar": [
+        "سراء",
+        "نعماء",
+        "طوبي"
+      ],
+      "search_keys_norm": "سراء نعماء طوبي"
+    },
+    {
+      "id": "kh19",
+      "topic": "Bunch(of grapes etc), ear (of corn)",
+      "topic_ur": "خوشے",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "kh20",
+      "topic": "Breach of trust",
+      "topic_ur": "خیانت کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "kh21",
+      "topic": "Tent, pavilion",
+      "topic_ur": "خیمہ - سائبان",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "d1",
+      "topic": "To enter, to be entered",
+      "topic_ur": "داخل ہونا - کرنا",
+      "words_ar": [
+        "دخل",
+        "أدخل",
+        "ولج",
+        "أولج",
+        "صلى",
+        "سلك"
+      ],
+      "search_keys_norm": "دخل أدخل ولج أولج صلى سلك"
+    },
+    {
+      "id": "d2",
+      "topic": "Superintendent",
+      "topic_ur": "داروغہ",
+      "words_ar": [
+        "خزنة",
+        "مسيطر"
+      ],
+      "search_keys_norm": "خزنة مسيطر"
+    },
+    {
+      "id": "d3",
+      "topic": "To mark/scar",
+      "topic_ur": "داغ دینا",
+      "words_ar": [
+        "وسم",
+        "كوى",
+        "شيه"
+      ],
+      "search_keys_norm": "وسم كوى شيه"
+    },
+    {
+      "id": "d4",
+      "topic": "slim, lean",
+      "topic_ur": "دبلا",
+      "words_ar": [
+        "عجاف",
+        "ضامر"
+      ],
+      "search_keys_norm": "عجاف ضامر"
+    },
+    {
+      "id": "d5",
+      "topic": "Prolong, lengthen",
+      "topic_ur": "دراز ہونا - کرنا",
+      "words_ar": [
+        "طال",
+        "تطاول",
+        "مد",
+        "مدد",
+        "باعد"
+      ],
+      "search_keys_norm": "طال تطاول مد مدد باعد"
+    },
+    {
+      "id": "d6",
+      "topic": "Very persistent",
+      "topic_ur": "در پے ہونا",
+      "words_ar": [
+        "تصدى",
+        "حفا"
+      ],
+      "search_keys_norm": "تصدى حفا"
+    },
+    {
+      "id": "d7",
+      "topic": "Trees and shrubs",
+      "topic_ur": "درخت اور پودے",
+      "words_ar": [
+        "شجرة",
+        "شجر",
+        "نجم",
+        "أثل",
+        "يقطين",
+        "ضريع",
+        "زقوم"
+      ],
+      "search_keys_norm": "شجرة شجر نجم أثل يقطين ضريع زقوم"
+    },
+    {
+      "id": "d8",
+      "topic": "Correct, sound",
+      "topic_ur": "درست ٹھیک",
+      "words_ar": [
+        "صواب",
+        "حق"
+      ],
+      "search_keys_norm": "صواب حق"
+    },
+    {
+      "id": "d9",
+      "topic": "To correct, rectify",
+      "topic_ur": "درست کرنا",
+      "words_ar": [
+        "أصلح",
+        "سوى"
+      ],
+      "search_keys_norm": "أصلح سوى"
+    },
+    {
+      "id": "d10",
+      "topic": "In between",
+      "topic_ur": "درمیان",
+      "words_ar": [
+        "بين",
+        "سواء",
+        "وسط",
+        "خلال",
+        "قصد"
+      ],
+      "search_keys_norm": "بين سواء وسط خلال قصد"
+    },
+    {
+      "id": "d11",
+      "topic": "Enemy, animosity",
+      "topic_ur": "دشمن دشمنی",
+      "words_ar": [
+        "عدو",
+        "بغضاء",
+        "شانئ"
+      ],
+      "search_keys_norm": "عدو بغضاء شانئ"
+    },
+    {
+      "id": "d12",
+      "topic": "To pray for/to",
+      "topic_ur": "دعا دینا - کرنا",
+      "words_ar": [
+        "دعا",
+        "سلم",
+        "حي",
+        "صلى"
+      ],
+      "search_keys_norm": "دعا سلم حي صلى"
+    },
+    {
+      "id": "d13",
+      "topic": "Heart",
+      "topic_ur": "دل",
+      "words_ar": [
+        "قلب",
+        "فؤاد",
+        "صدر",
+        "نفس"
+      ],
+      "search_keys_norm": "قلب فؤاد صدر نفس"
+    },
+    {
+      "id": "d14",
+      "topic": "Inspiration in the heart",
+      "topic_ur": "دل میں بات ڈالنا",
+      "words_ar": [
+        "وحي",
+        "إلهام",
+        "إلقاء",
+        "وسواس",
+        "همزات"
+      ],
+      "search_keys_norm": "وحي إلهام إلقاء وسواس همزات"
+    },
+    {
+      "id": "d15",
+      "topic": "Proof",
+      "topic_ur": "دلیل",
+      "words_ar": [
+        "دليل",
+        "حجة",
+        "بينة",
+        "برهان",
+        "سلطان"
+      ],
+      "search_keys_norm": "دليل حجة بينة برهان سلطان"
+    },
+    {
+      "id": "d16",
+      "topic": "Day and its times",
+      "topic_ur": "دن اور اسکے اوقات",
+      "words_ar": [
+        "نهار",
+        "يوم",
+        "اليوم",
+        "يومئذ"
+      ],
+      "search_keys_norm": "نهار يوم اليوم يومئذ"
+    },
+    {
+      "id": "d17",
+      "topic": "Different names for the world",
+      "topic_ur": "دنیا کے مختلف نام",
+      "words_ar": [
+        "دنيا",
+        "أدنى",
+        "عاجلة",
+        "أولى"
+      ],
+      "search_keys_norm": "دنيا أدنى عاجلة أولى"
+    },
+    {
+      "id": "d18",
+      "topic": "Far away",
+      "topic_ur": "دور",
+      "words_ar": [
+        "بعيد",
+        "سحيق",
+        "عميق",
+        "قصيا"
+      ],
+      "search_keys_norm": "بعيد سحيق عميق قصيا"
+    },
+    {
+      "id": "d19",
+      "topic": "To distance, to be distanced",
+      "topic_ur": "دور کرنا - ہونا",
+      "words_ar": [
+        "بعد",
+        "باعد",
+        "قصا",
+        "ناء",
+        "كفر",
+        "قضى"
+      ],
+      "search_keys_norm": "بعد باعد قصا ناء كفر قضى"
+    },
+    {
+      "id": "d20",
+      "topic": "To run",
+      "topic_ur": "ڈورنا",
+      "words_ar": [
+        "سرع",
+        "سعى",
+        "زف",
+        "ركض",
+        "جمح",
+        "هرع",
+        "نسل",
+        "وفض",
+        "هطع",
+        "ضبح",
+        "سبق",
+        "استبق"
+      ],
+      "search_keys_norm": "سرع سعى زف ركض جمح هرع نسل وفض هطع ضبح سبق استبق"
+    },
+    {
+      "id": "d21",
+      "topic": "Cause to run",
+      "topic_ur": "ڈورانا",
+      "words_ar": [
+        "أوضع",
+        "أوجف"
+      ],
+      "search_keys_norm": "أوضع أوجف"
+    },
+    {
+      "id": "d22",
+      "topic": "Hell and its various names",
+      "topic_ur": "دوزخ اور اسکے مختلف نام",
+      "words_ar": [
+        "النار",
+        "جهنم",
+        "جحيم",
+        "سقر",
+        "سعير",
+        "هاوية",
+        "غي",
+        "حطمة"
+      ],
+      "search_keys_norm": "النار جهنم جحيم سقر سعير هاوية غي حطمة"
+    },
+    {
+      "id": "d23",
+      "topic": "Angels of hell fire",
+      "topic_ur": "دوزخ کے فرشتے",
+      "words_ar": [
+        "خزنة",
+        "زبانية",
+        "مالك"
+      ],
+      "search_keys_norm": "خزنة زبانية مالك"
+    },
+    {
+      "id": "d24",
+      "topic": "friend",
+      "topic_ur": "دوست",
+      "words_ar": [
+        "قرين",
+        "رفيق",
+        "صديق",
+        "ولي",
+        "موالي",
+        "خليل",
+        "حميم",
+        "وليجة",
+        "بطانة",
+        "خذول",
+        "أخدان"
+      ],
+      "search_keys_norm": "قرين رفيق صديق ولي موالي خليل حميم وليجة بطانة خذول أخدان"
+    },
+    {
+      "id": "d25",
+      "topic": "Drive (dogs out), revile, reprove",
+      "topic_ur": "دھتکارنا",
+      "words_ar": [
+        "رجم",
+        "خسأ",
+        "دحر"
+      ],
+      "search_keys_norm": "رجم خسأ دحر"
+    },
+    {
+      "id": "d26",
+      "topic": "Concealed",
+      "topic_ur": "دھندلانا",
+      "words_ar": [
+        "ابيض",
+        "انكدر",
+        "عمى",
+        "غمة"
+      ],
+      "search_keys_norm": "ابيض انكدر عمى غمة"
+    },
+    {
+      "id": "d27",
+      "topic": "Smoke",
+      "topic_ur": "دھواں",
+      "words_ar": [
+        "دخان",
+        "نحاس",
+        "يحموم"
+      ],
+      "search_keys_norm": "دخان نحاس يحموم"
+    },
+    {
+      "id": "d28",
+      "topic": "Sunshine",
+      "topic_ur": "دھوپ",
+      "words_ar": [
+        "شمس",
+        "ضحى",
+        "حر",
+        "حرور"
+      ],
+      "search_keys_norm": "شمس ضحى حر حرور"
+    },
+    {
+      "id": "d29",
+      "topic": "To deceive",
+      "topic_ur": "دھوکہ دینا",
+      "words_ar": [
+        "غر",
+        "خدع",
+        "خان",
+        "خذل",
+        "راغ",
+        "ختر"
+      ],
+      "search_keys_norm": "غر خدع خان خذل راغ ختر"
+    },
+    {
+      "id": "d30",
+      "topic": "To see, look",
+      "topic_ur": "دیکھنا",
+      "words_ar": [
+        "رأى",
+        "نظر",
+        "بصر",
+        "آنس",
+        "زار"
+      ],
+      "search_keys_norm": "رأى نظر بصر آنس زار"
+    },
+    {
+      "id": "d31",
+      "topic": "Various ways of looking",
+      "topic_ur": "دیکھنا [کیفیت نظر]",
+      "words_ar": [
+        "شخص",
+        "لمح",
+        "هطع",
+        "عشا",
+        "أغمض",
+        "زاغ",
+        "برق"
+      ],
+      "search_keys_norm": "شخص لمح هطع عشا أغمض زاغ برق"
+    },
+    {
+      "id": "d32",
+      "topic": "To show/reveal",
+      "topic_ur": "دکھلانا",
+      "words_ar": [
+        "أراى",
+        "ارى",
+        "بصر",
+        "تبرج"
+      ],
+      "search_keys_norm": "أراى ارى بصر تبرج"
+    },
+    {
+      "id": "d33",
+      "topic": "Religion",
+      "topic_ur": "دین",
+      "words_ar": [
+        "دين",
+        "شريعة",
+        "ملة"
+      ],
+      "search_keys_norm": "دين شريعة ملة"
+    },
+    {
+      "id": "d34",
+      "topic": "To give",
+      "topic_ur": "دینا",
+      "words_ar": [
+        "أتى",
+        "أعطى",
+        "أداء",
+        "دية",
+        "أثاب",
+        "وهب",
+        "رفد",
+        "دفعإلى",
+        "هدية",
+        "نحلة"
+      ],
+      "search_keys_norm": "أتى أعطى أداء دية أثاب وهب رفد دفعإلى هدية نحلة"
+    },
+    {
+      "id": "d35",
+      "topic": "Wall",
+      "topic_ur": "دیوار",
+      "words_ar": [
+        "جدار",
+        "سد",
+        "ردم",
+        "سور",
+        "بنيان"
+      ],
+      "search_keys_norm": "جدار سد ردم سور بنيان"
+    },
+    {
+      "id": "d36",
+      "topic": "Lunatic , insanity",
+      "topic_ur": "دیوانہ- دیوانگی",
+      "words_ar": [
+        "مجنون",
+        "خبط",
+        "مفتون",
+        "سعر"
+      ],
+      "search_keys_norm": "مجنون خبط مفتون سعر"
+    },
+    {
+      "id": "dd1",
+      "topic": "To throw, pour, cast away",
+      "topic_ur": "ڈالنا",
+      "words_ar": [
+        "ألقى",
+        "سلك",
+        "نبذ",
+        "قذف",
+        "افرغ",
+        "أوقع"
+      ],
+      "search_keys_norm": "ألقى سلك نبذ قذف افرغ أوقع"
+    },
+    {
+      "id": "dd2",
+      "topic": "To drown, dip",
+      "topic_ur": "ڈبونا",
+      "words_ar": [
+        "أغرق",
+        "صبغ"
+      ],
+      "search_keys_norm": "أغرق صبغ"
+    },
+    {
+      "id": "dd3",
+      "topic": "To fear",
+      "topic_ur": "ڈرنا",
+      "words_ar": [
+        "خاف",
+        "خشي",
+        "خشع",
+        "اتقى",
+        "راع",
+        "حذر",
+        "أوجس",
+        "وجف",
+        "وجل",
+        "رهب",
+        "رعب",
+        "أشفق"
+      ],
+      "search_keys_norm": "خاف خشي خشع اتقى راع حذر أوجس وجف وجل رهب رعب أشفق"
+    },
+    {
+      "id": "dd4",
+      "topic": "To frighten",
+      "topic_ur": "ڈرانا",
+      "words_ar": [
+        "خوف",
+        "حذر",
+        "أرهب",
+        "أنذر",
+        "أوعد"
+      ],
+      "search_keys_norm": "خوف حذر أرهب أنذر أوعد"
+    },
+    {
+      "id": "dd5",
+      "topic": "Bucket",
+      "topic_ur": "ڈول",
+      "words_ar": [
+        "دلو",
+        "ذنوب"
+      ],
+      "search_keys_norm": "دلو ذنوب"
+    },
+    {
+      "id": "dd6",
+      "topic": "Shield",
+      "topic_ur": "ڈھال",
+      "words_ar": [
+        "جنة",
+        "عرضة"
+      ],
+      "search_keys_norm": "جنة عرضة"
+    },
+    {
+      "id": "dd7",
+      "topic": "To cover",
+      "topic_ur": "ڈھانکنا",
+      "words_ar": [
+        "جن",
+        "غشى",
+        "أغشىوغيره",
+        "أرهق"
+      ],
+      "search_keys_norm": "جن غشى أغشىوغيره أرهق"
+    },
+    {
+      "id": "dd8",
+      "topic": "Setting (ie sun)",
+      "topic_ur": "ڈھلنا",
+      "words_ar": [
+        "زال",
+        "دلك"
+      ],
+      "search_keys_norm": "زال دلك"
+    },
+    {
+      "id": "dd9",
+      "topic": "To search",
+      "topic_ur": "ڈھونڈنا",
+      "words_ar": [
+        "طلب",
+        "إبتغاء",
+        "تجسس",
+        "إلتمس",
+        "جاس",
+        "بعثر",
+        "تحرى"
+      ],
+      "search_keys_norm": "طلب إبتغاء تجسس إلتمس جاس بعثر تحرى"
+    },
+    {
+      "id": "dh1",
+      "topic": "To slaughter",
+      "topic_ur": "ذبح کرنا",
+      "words_ar": [
+        "ذبح",
+        "زكى",
+        "نحر"
+      ],
+      "search_keys_norm": "ذبح زكى نحر"
+    },
+    {
+      "id": "dh2",
+      "topic": "Means, medium",
+      "topic_ur": "ذریعہ",
+      "words_ar": [
+        "سبب",
+        "وسيلة"
+      ],
+      "search_keys_norm": "سبب وسيلة"
+    },
+    {
+      "id": "dh3",
+      "topic": "disgrace",
+      "topic_ur": "ذلت",
+      "words_ar": [
+        "زلة",
+        "صغار",
+        "خزی",
+        "ھون"
+      ],
+      "search_keys_norm": "زلة صغار خزی ھون"
+    },
+    {
+      "id": "dh4",
+      "topic": "disgraced",
+      "topic_ur": "ذلیل",
+      "words_ar": [
+        "ازلة",
+        "مهين",
+        "صاغر",
+        "داخر",
+        "ارآزل",
+        "اسفل",
+        "خاسی"
+      ],
+      "search_keys_norm": "ازلة مهين صاغر داخر ارآزل اسفل خاسی"
+    },
+    {
+      "id": "dh5",
+      "topic": "To disgrace",
+      "topic_ur": "ذلیل کرنا",
+      "words_ar": [
+        "أذلة",
+        "اهان",
+        "أخزى",
+        "فظح",
+        "ازدری",
+        "کبت"
+      ],
+      "search_keys_norm": "أذلة اهان أخزى فظح ازدری کبت"
+    },
+    {
+      "id": "dh6",
+      "topic": "responsibility",
+      "topic_ur": "ذمہ داری",
+      "words_ar": [
+        "زمة",
+        "نحب"
+      ],
+      "search_keys_norm": "زمة نحب"
+    },
+    {
+      "id": "r1",
+      "topic": "night",
+      "topic_ur": "رات",
+      "words_ar": [
+        "لیل",
+        "بیاتا"
+      ],
+      "search_keys_norm": "لیل بیاتا"
+    },
+    {
+      "id": "r2",
+      "topic": "Actions in the night",
+      "topic_ur": "رات کے کام",
+      "words_ar": [
+        "بات",
+        "بيت",
+        "أسرى",
+        "طرق",
+        "نفش",
+        "تهجد"
+      ],
+      "search_keys_norm": "بات بيت أسرى طرق نفش تهجد"
+    },
+    {
+      "id": "r3",
+      "topic": "Path, way",
+      "topic_ur": "راہ - راستہ",
+      "words_ar": [
+        "طريق",
+        "صراط",
+        "سبيل",
+        "فج",
+        "امام",
+        "نجد",
+        "هدى",
+        "سبب"
+      ],
+      "search_keys_norm": "طريق صراط سبيل فج امام نجد هدى سبب"
+    },
+    {
+      "id": "r4",
+      "topic": "To establish",
+      "topic_ur": "راہ ڈالنا –رائج کرنا",
+      "words_ar": [
+        "سنة",
+        "شرع",
+        "ابتدع"
+      ],
+      "search_keys_norm": "سنة شرع ابتدع"
+    },
+    {
+      "id": "r5",
+      "topic": "To satisfy, to be pleased",
+      "topic_ur": "راضی کرنا - ہونا",
+      "words_ar": [
+        "رضی",
+        "طوع",
+        "اعتب"
+      ],
+      "search_keys_norm": "رضی طوع اعتب"
+    },
+    {
+      "id": "r6",
+      "topic": "To attain status",
+      "topic_ur": "رتبہ پانا",
+      "words_ar": [
+        "درجة",
+        "زلفى",
+        "قرب",
+        "مکن"
+      ],
+      "search_keys_norm": "درجة زلفى قرب مکن"
+    },
+    {
+      "id": "r7",
+      "topic": "To face",
+      "topic_ur": "رخ کرنا",
+      "words_ar": [
+        "ا",
+        "ت"
+      ],
+      "search_keys_norm": "ا ت"
+    },
+    {
+      "id": "r8",
+      "topic": "Worthless",
+      "topic_ur": "ردی – نا کارہ",
+      "words_ar": [
+        "ن",
+        "خ",
+        "د",
+        "ب",
+        "ا",
+        "م"
+      ],
+      "search_keys_norm": "ن خ د ب ا م"
+    },
+    {
+      "id": "r9",
+      "topic": "Rope",
+      "topic_ur": "رسسی",
+      "words_ar": [
+        "ح",
+        "س"
+      ],
+      "search_keys_norm": "ح س"
+    },
+    {
+      "id": "r10",
+      "topic": "Relative",
+      "topic_ur": "رشتہ  دار",
+      "words_ar": [
+        "ا",
+        "ن",
+        "ص"
+      ],
+      "search_keys_norm": "ا ن ص"
+    },
+    {
+      "id": "r11",
+      "topic": "Approval",
+      "topic_ur": "رضامندی [خوشنودی]",
+      "words_ar": [
+        "ر",
+        "و"
+      ],
+      "search_keys_norm": "ر و"
+    },
+    {
+      "id": "r12",
+      "topic": "To incline",
+      "topic_ur": "رغبت کرنا",
+      "words_ar": [
+        "ر",
+        "ت"
+      ],
+      "search_keys_norm": "ر ت"
+    },
+    {
+      "id": "r13",
+      "topic": "To put, place",
+      "topic_ur": "رکھنا",
+      "words_ar": [
+        "القى"
+      ],
+      "search_keys_norm": "القى"
+    },
+    {
+      "id": "r14",
+      "topic": "Colour",
+      "topic_ur": "رنگ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "r15",
+      "topic": "Light, to illuminate",
+      "topic_ur": "روشنی  روشن کرنا - ہونا",
+      "words_ar": [
+        "وھ",
+        "ا"
+      ],
+      "search_keys_norm": "وھ ا"
+    },
+    {
+      "id": "r16",
+      "topic": "Fasting person",
+      "topic_ur": "روزہ دار",
+      "words_ar": [
+        "ص",
+        "س",
+        "سیح",
+        "الس"
+      ],
+      "search_keys_norm": "ص س سیح الس"
+    },
+    {
+      "id": "r17",
+      "topic": "To prohibit, stop",
+      "topic_ur": "روکنا",
+      "words_ar": [
+        "ن",
+        "ع",
+        "ا",
+        "ص",
+        "ح",
+        "ک",
+        "ث",
+        "ذ"
+      ],
+      "search_keys_norm": "ن ع ا ص ح ک ث ذ"
+    },
+    {
+      "id": "r18",
+      "topic": "To stop",
+      "topic_ur": "رکنا",
+      "words_ar": [
+        "ا"
+      ],
+      "search_keys_norm": "ا"
+    },
+    {
+      "id": "r19",
+      "topic": "To trample",
+      "topic_ur": "روندنا",
+      "words_ar": [
+        "ح",
+        "و"
+      ],
+      "search_keys_norm": "ح و"
+    },
+    {
+      "id": "r20",
+      "topic": "Splendor, illumined, resplendent",
+      "topic_ur": "رونق",
+      "words_ar": [
+        "ز",
+        "ن",
+        "ب"
+      ],
+      "search_keys_norm": "ز ن ب"
+    },
+    {
+      "id": "r21",
+      "topic": "Sand",
+      "topic_ur": "ریت",
+      "words_ar": [
+        "س",
+        "ک",
+        "ا"
+      ],
+      "search_keys_norm": "س ک ا"
+    },
+    {
+      "id": "z1",
+      "topic": "surplus",
+      "topic_ur": "زائد",
+      "words_ar": [
+        "ع",
+        "ن"
+      ],
+      "search_keys_norm": "ع ن"
+    },
+    {
+      "id": "z2",
+      "topic": "To force",
+      "topic_ur": "زبردستی کرنا",
+      "words_ar": [
+        "ا",
+        "ج",
+        "ق",
+        "س",
+        "ر"
+      ],
+      "search_keys_norm": "ا ج ق س ر"
+    },
+    {
+      "id": "z3",
+      "topic": "Wound , gash",
+      "topic_ur": "زخم",
+      "words_ar": [
+        "ق",
+        "ج"
+      ],
+      "search_keys_norm": "ق ج"
+    },
+    {
+      "id": "z4",
+      "topic": "Period of time",
+      "topic_ur": "زمانہ",
+      "words_ar": [
+        "د",
+        "ق",
+        "ح",
+        "ر"
+      ],
+      "search_keys_norm": "د ق ح ر"
+    },
+    {
+      "id": "z5",
+      "topic": "Earth and its varieties",
+      "topic_ur": "زمین اور اسکی اقسام",
+      "words_ar": [
+        "ا"
+      ],
+      "search_keys_norm": "ا"
+    },
+    {
+      "id": "z6",
+      "topic": "Sink/collapse into the Earth",
+      "topic_ur": "زمین بوس ہونا – کرنا",
+      "words_ar": [
+        "د"
+      ],
+      "search_keys_norm": "د"
+    },
+    {
+      "id": "z7",
+      "topic": "Chains",
+      "topic_ur": "زنجیریں",
+      "words_ar": [
+        "س",
+        "ا"
+      ],
+      "search_keys_norm": "س ا"
+    },
+    {
+      "id": "z8",
+      "topic": "Bring to live",
+      "topic_ur": "زندہ کرنا",
+      "words_ar": [
+        "ا"
+      ],
+      "search_keys_norm": "ا"
+    },
+    {
+      "id": "z9",
+      "topic": "To be live",
+      "topic_ur": "زندہ ہونا - رہنا",
+      "words_ar": [
+        "ح",
+        "ا"
+      ],
+      "search_keys_norm": "ح ا"
+    },
+    {
+      "id": "z10",
+      "topic": "Elegance, beauty, ornaments",
+      "topic_ur": "زینت",
+      "words_ar": [
+        "ز",
+        "ر",
+        "ج"
+      ],
+      "search_keys_norm": "ز ر ج"
+    },
+    {
+      "id": "s1",
+      "topic": "Along with",
+      "topic_ur": "ساتھ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s2",
+      "topic": "companion",
+      "topic_ur": "ساتھی",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s3",
+      "topic": "Year",
+      "topic_ur": "سال",
+      "words_ar": [
+        "ع",
+        "س"
+      ],
+      "search_keys_norm": "ع س"
+    },
+    {
+      "id": "s4",
+      "topic": "Goods, provisions",
+      "topic_ur": "سامان",
+      "words_ar": [
+        "ع",
+        "أ",
+        "ر",
+        "ج",
+        "ز",
+        "ح"
+      ],
+      "search_keys_norm": "ع أ ر ج ز ح"
+    },
+    {
+      "id": "s5",
+      "topic": "To face, appear in front of",
+      "topic_ur": "سامنے آنا",
+      "words_ar": [
+        "ا",
+        "ب"
+      ],
+      "search_keys_norm": "ا ب"
+    },
+    {
+      "id": "s6",
+      "topic": "snake",
+      "topic_ur": "سانپ",
+      "words_ar": [
+        "ح",
+        "ج",
+        "ث"
+      ],
+      "search_keys_norm": "ح ج ث"
+    },
+    {
+      "id": "s7",
+      "topic": "All,  whole, entire",
+      "topic_ur": "سب سارے",
+      "words_ar": [
+        "ک"
+      ],
+      "search_keys_norm": "ک"
+    },
+    {
+      "id": "s8",
+      "topic": "To entrust",
+      "topic_ur": "سپرد [حوالے] کرنا",
+      "words_ar": [
+        "ا",
+        "و",
+        "س",
+        "ف"
+      ],
+      "search_keys_norm": "ا و س ف"
+    },
+    {
+      "id": "s9",
+      "topic": "truth",
+      "topic_ur": "سچ",
+      "words_ar": [
+        "ص",
+        "ح"
+      ],
+      "search_keys_norm": "ص ح"
+    },
+    {
+      "id": "s10",
+      "topic": "hard",
+      "topic_ur": "سخت",
+      "words_ar": [
+        "ا",
+        "ر",
+        "ع",
+        "ق",
+        "غ"
+      ],
+      "search_keys_norm": "ا ر ع ق غ"
+    },
+    {
+      "id": "s11",
+      "topic": "hardness",
+      "topic_ur": "سختی",
+      "words_ar": [
+        "ق",
+        "غ",
+        "ک"
+      ],
+      "search_keys_norm": "ق غ ک"
+    },
+    {
+      "id": "s12",
+      "topic": "To raise head",
+      "topic_ur": "سر اٹھانا",
+      "words_ar": [
+        "ا"
+      ],
+      "search_keys_norm": "ا"
+    },
+    {
+      "id": "s13",
+      "topic": "Chief , leader",
+      "topic_ur": "سردار",
+      "words_ar": [
+        "س",
+        "ر",
+        "نقیب"
+      ],
+      "search_keys_norm": "س ر نقیب"
+    },
+    {
+      "id": "s14",
+      "topic": "Cold , winter",
+      "topic_ur": "سردی",
+      "words_ar": [
+        "ص",
+        "ن",
+        "ز"
+      ],
+      "search_keys_norm": "ص ن ز"
+    },
+    {
+      "id": "s15",
+      "topic": "Reckless and arrogant",
+      "topic_ur": "سرکشی کرنا",
+      "words_ar": [
+        "ط",
+        "م"
+      ],
+      "search_keys_norm": "ط م"
+    },
+    {
+      "id": "s16",
+      "topic": "To whisper",
+      "topic_ur": "سرگوشی کرنا",
+      "words_ar": [
+        "ت"
+      ],
+      "search_keys_norm": "ت"
+    },
+    {
+      "id": "s17",
+      "topic": "tunnel",
+      "topic_ur": "سرنگ",
+      "words_ar": [
+        "ن",
+        "س"
+      ],
+      "search_keys_norm": "ن س"
+    },
+    {
+      "id": "s18",
+      "topic": "To be lazy, procastinate",
+      "topic_ur": "سستی کرنا",
+      "words_ar": [
+        "ک",
+        "و",
+        "ا"
+      ],
+      "search_keys_norm": "ک و ا"
+    },
+    {
+      "id": "s19",
+      "topic": "To travel",
+      "topic_ur": "سفر کرنا",
+      "words_ar": [
+        "س",
+        "ن"
+      ],
+      "search_keys_norm": "س ن"
+    },
+    {
+      "id": "s20",
+      "topic": "to understand, to advise",
+      "topic_ur": "سمجھنا - سمجھانا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s21",
+      "topic": "To listen",
+      "topic_ur": "سننا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s22",
+      "topic": "To adorn",
+      "topic_ur": "سنوارنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s23",
+      "topic": "To ride, to mount",
+      "topic_ur": "سوار ہونا - کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s24",
+      "topic": "except",
+      "topic_ur": "سوائے",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s25",
+      "topic": "To sleep",
+      "topic_ur": "سونا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s26",
+      "topic": "black",
+      "topic_ur": "سیاہ سیاہی",
+      "words_ar": [
+        "ا"
+      ],
+      "search_keys_norm": "ا"
+    },
+    {
+      "id": "s27",
+      "topic": "straight",
+      "topic_ur": "سیدھا سیدھی",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s28",
+      "topic": "Cause to travel",
+      "topic_ur": "سیر کرانا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s29",
+      "topic": "ladder",
+      "topic_ur": "سیڑھی",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "s30",
+      "topic": "To learn, teach",
+      "topic_ur": "سیکھنا سیکھانا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh1",
+      "topic": "branch",
+      "topic_ur": "شاخ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh2",
+      "topic": "evening",
+      "topic_ur": "شام",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh3",
+      "topic": "maybe",
+      "topic_ur": "شائد",
+      "words_ar": [
+        "ماضي",
+        "مضارع"
+      ],
+      "search_keys_norm": "ماضي مضارع"
+    },
+    {
+      "id": "sh4",
+      "topic": "Beer, wine",
+      "topic_ur": "شراب",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh5",
+      "topic": "To be shy",
+      "topic_ur": "شرمانا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh6",
+      "topic": "To start",
+      "topic_ur": "شروع کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh7",
+      "topic": "Private part",
+      "topic_ur": "شرمگاہ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh8",
+      "topic": "Accomplice, partner",
+      "topic_ur": "شریک",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh9",
+      "topic": "Flame",
+      "topic_ur": "شعلہ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh10",
+      "topic": "Doubt, suspicion",
+      "topic_ur": "شک و شبہ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh11",
+      "topic": "Shape, figure",
+      "topic_ur": "شکل و صورت",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh12",
+      "topic": "Give shape",
+      "topic_ur": "شکل و صورت بنانا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh13",
+      "topic": "split",
+      "topic_ur": "شگاف",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "sh14",
+      "topic": "Town, city",
+      "topic_ur": "شہر",
+      "words_ar": [
+        "مصور"
+      ],
+      "search_keys_norm": "مصور"
+    },
+    {
+      "id": "sh15",
+      "topic": "glass",
+      "topic_ur": "شیشہ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "SA1",
+      "topic": "To cleanse, wipe",
+      "topic_ur": "صاف کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "SA2",
+      "topic": "morning",
+      "topic_ur": "صبح",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "SA3",
+      "topic": "Actions related to the  morning",
+      "topic_ur": "صبح کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "SA4",
+      "topic": "To be patient",
+      "topic_ur": "صبر کرنا",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "SA5",
+      "topic": "Peace treaty",
+      "topic_ur": "صلح",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "DA1",
+      "topic": "guarantor",
+      "topic_ur": "ضامن",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "TA1",
+      "topic": "Strength",
+      "topic_ur": "Taaqat",
+      "words_ar": [
+        "طاقة",
+        "قوة",
+        "مرة",
+        "ركن",
+        "محل"
+      ],
+      "search_keys_norm": "طاقة قوة مرة ركن محل"
+    },
+    {
+      "id": "TA2",
+      "topic": "Having strength, strong",
+      "topic_ur": "Taaqat rakhna",
+      "words_ar": [
+        "أطاق",
+        "استطاع"
+      ],
+      "search_keys_norm": "أطاق استطاع"
+    },
+    {
+      "id": "TA3",
+      "topic": "Tradition",
+      "topic_ur": "Tareeqah, Dastoor",
+      "words_ar": [
+        "طريقة",
+        "سنة",
+        "أمة",
+        "شريعة",
+        "منهاج",
+        "منسك",
+        "شاكلة",
+        "معروف",
+        "خلق"
+      ],
+      "search_keys_norm": "طريقة سنة أمة شريعة منهاج منسك شاكلة معروف خلق"
+    },
+    {
+      "id": "TA4",
+      "topic": "Taunt",
+      "topic_ur": "Tanah deyna",
+      "words_ar": [
+        "طعن",
+        "لمز",
+        "همز"
+      ],
+      "search_keys_norm": "طعن لمز همز"
+    },
+    {
+      "id": "TA5",
+      "topic": "To put shackles",
+      "topic_ur": "Thawq dalna",
+      "words_ar": [
+        "طوق",
+        "غل"
+      ],
+      "search_keys_norm": "طوق غل"
+    },
+    {
+      "id": "TA6",
+      "topic": "To keep hope",
+      "topic_ur": "Tama3 rakhna",
+      "words_ar": [
+        "طمع",
+        "حرص",
+        "شح"
+      ],
+      "search_keys_norm": "طمع حرص شح"
+    },
+    {
+      "id": "TA7",
+      "topic": "To decide",
+      "topic_ur": "Tay karna",
+      "words_ar": [
+        "عبر",
+        "قطع"
+      ],
+      "search_keys_norm": "عبر قطع"
+    },
+    {
+      "id": "ZA1",
+      "topic": "To become manifest, revealed",
+      "topic_ur": "ظاہر ہونا",
+      "words_ar": [
+        "ظهر",
+        "جهر",
+        "بدا",
+        "عثر",
+        "تبين",
+        "استبان",
+        "حصحص",
+        "تجلى",
+        "شرعا"
+      ],
+      "search_keys_norm": "ظهر جهر بدا عثر تبين استبان حصحص تجلى شرعا"
+    },
+    {
+      "id": "ZA2",
+      "topic": "To reveal, manifest",
+      "topic_ur": "ظاہر کرنا",
+      "words_ar": [
+        "أظهر",
+        "أبدا",
+        "أعثر",
+        "جهر",
+        "أعلن"
+      ],
+      "search_keys_norm": "أظهر أبدا أعثر جهر أعلن"
+    },
+    {
+      "id": "E1",
+      "topic": "To be helpless, fall short",
+      "topic_ur": "عاجز آنا",
+      "words_ar": [
+        "عجز",
+        "عي",
+        "استكان"
+      ],
+      "search_keys_norm": "عجز عي استكان"
+    },
+    {
+      "id": "E2",
+      "topic": "To show humility",
+      "topic_ur": "عاجزی کرنا",
+      "words_ar": [
+        "أخبت",
+        "خشع",
+        "خضع",
+        "تضرع"
+      ],
+      "search_keys_norm": "أخبت خشع خضع تضرع"
+    },
+    {
+      "id": "E3",
+      "topic": "scholar",
+      "topic_ur": "عالم",
+      "words_ar": [
+        "عالم",
+        "أحبار",
+        "قسيسين"
+      ],
+      "search_keys_norm": "عالم أحبار قسيسين"
+    },
+    {
+      "id": "E4",
+      "topic": "Places of worships",
+      "topic_ur": "عبادت گاہیں",
+      "words_ar": [
+        "صوامع",
+        "بيع",
+        "صلوات",
+        "مساجد"
+      ],
+      "search_keys_norm": "صوامع بيع صلوات مساجد"
+    },
+    {
+      "id": "E5",
+      "topic": "punishment",
+      "topic_ur": "عزاب – سزا",
+      "words_ar": [
+        "عذاب",
+        "عقاب",
+        "بأس",
+        "نكير",
+        "نكال",
+        "وبال",
+        "مثلة"
+      ],
+      "search_keys_norm": "عذاب عقاب بأس نكير نكال وبال مثلة"
+    },
+    {
+      "id": "E6",
+      "topic": "To give punishment",
+      "topic_ur": "عزاب دینا",
+      "words_ar": [
+        "عذب",
+        "نكل"
+      ],
+      "search_keys_norm": "عذب نكل"
+    },
+    {
+      "id": "E7",
+      "topic": "Different types of punishments",
+      "topic_ur": "عزاب کی اقسام",
+      "words_ar": [
+        "حسبان",
+        "حاصب",
+        "صيحة",
+        "رجفة",
+        "زجر",
+        "خسف"
+      ],
+      "search_keys_norm": "حسبان حاصب صيحة رجفة زجر خسف"
+    },
+    {
+      "id": "E8",
+      "topic": "Confer honor/ dignity",
+      "topic_ur": "عزت بخشنا",
+      "words_ar": [
+        "أعز",
+        "أكرم",
+        "كرم"
+      ],
+      "search_keys_norm": "أعز أكرم كرم"
+    },
+    {
+      "id": "E9",
+      "topic": "Honorable, respectable",
+      "topic_ur": "عزت والا - معزز",
+      "words_ar": [
+        "أكرم",
+        "مكرم",
+        "حرام",
+        "محرم",
+        "وجيه"
+      ],
+      "search_keys_norm": "أكرم مكرم حرام محرم وجيه"
+    },
+    {
+      "id": "E10",
+      "topic": "Brain, intelligent",
+      "topic_ur": "عقل - عقلمند",
+      "words_ar": [
+        "حجر",
+        "عقل",
+        "حلم",
+        "أوليالألباب",
+        "أوليالأبصار",
+        "أوليالنهى"
+      ],
+      "search_keys_norm": "حجر عقل حلم أوليالألباب أوليالأبصار أوليالنهى"
+    },
+    {
+      "id": "E11",
+      "topic": "To lose his brains",
+      "topic_ur": "عقل کھودینا",
+      "words_ar": [
+        "إستفز",
+        "استخف"
+      ],
+      "search_keys_norm": "إستفز استخف"
+    },
+    {
+      "id": "E12",
+      "topic": "women",
+      "topic_ur": "عورت",
+      "words_ar": [
+        "أنثى",
+        "إمرأة",
+        "نساء",
+        "نسوة"
+      ],
+      "search_keys_norm": "أنثى إمرأة نساء نسوة"
+    },
+    {
+      "id": "E13",
+      "topic": "Promise , oath",
+      "topic_ur": "عہد - وعدہ",
+      "words_ar": [
+        "وعده",
+        "وعيد",
+        "موعدة",
+        "ميعاد",
+        "عهد",
+        "ذمة",
+        "إصر",
+        "ميثاق",
+        "عقود"
+      ],
+      "search_keys_norm": "وعده وعيد موعدة ميعاد عهد ذمة إصر ميثاق عقود"
+    },
+    {
+      "id": "gh1",
+      "topic": "Cave",
+      "topic_ur": "غار",
+      "words_ar": [
+        "غار",
+        "مغارات",
+        "كهف"
+      ],
+      "search_keys_norm": "غار مغارات كهف"
+    },
+    {
+      "id": "gh2",
+      "topic": "To be neglectful",
+      "topic_ur": "غافل ہونا – کرنا",
+      "words_ar": [
+        "غفل",
+        "أغفل",
+        "سها",
+        "سمد",
+        "ألهى"
+      ],
+      "search_keys_norm": "غفل أغفل سها سمد ألهى"
+    },
+    {
+      "id": "gh3",
+      "topic": "To become overpowered, to be overpowered,  to overpower,",
+      "topic_ur": "غالب آنا  ہونا کرنا",
+      "words_ar": [
+        "ظهر",
+        "عز",
+        "غلب",
+        "استعلى",
+        "قهر"
+      ],
+      "search_keys_norm": "ظهر عز غلب استعلى قهر"
+    },
+    {
+      "id": "gh4",
+      "topic": "Dust",
+      "topic_ur": "غبار",
+      "words_ar": [
+        "غبرة",
+        "نقع",
+        "هباء"
+      ],
+      "search_keys_norm": "غبرة نقع هباء"
+    },
+    {
+      "id": "gh5",
+      "topic": "Anger, temper",
+      "topic_ur": "غصہ",
+      "words_ar": [
+        "سخط",
+        "غيظ",
+        "غضب",
+        "حرد"
+      ],
+      "search_keys_norm": "سخط غيظ غضب حرد"
+    },
+    {
+      "id": "gh6",
+      "topic": "To enrage",
+      "topic_ur": "غصۃ دلانا",
+      "words_ar": [
+        "أسخط",
+        "غاض",
+        "آسف"
+      ],
+      "search_keys_norm": "أسخط غاض آسف"
+    },
+    {
+      "id": "gh7",
+      "topic": "Grief, sadness",
+      "topic_ur": "غم",
+      "words_ar": [
+        "غم",
+        "حزن",
+        "بث"
+      ],
+      "search_keys_norm": "غم حزن بث"
+    },
+    {
+      "id": "gh8",
+      "topic": "To be sad",
+      "topic_ur": "غمگین ہونا",
+      "words_ar": [
+        "حزن",
+        "أسى",
+        "أبلس",
+        "استيئس"
+      ],
+      "search_keys_norm": "حزن أسى أبلس استيئس"
+    },
+    {
+      "id": "gh9",
+      "topic": "To reflect",
+      "topic_ur": "غور کرنا",
+      "words_ar": [
+        "تفكر",
+        "تدبر",
+        "تفقه",
+        "ادكر",
+        "استنبط"
+      ],
+      "search_keys_norm": "تفكر تدبر تفقه ادكر استنبط"
+    },
+    {
+      "id": "f1",
+      "topic": "Benefit, to give benefit",
+      "topic_ur": "فائدہ – فائدہ دینا",
+      "words_ar": [
+        "نفع",
+        "متع",
+        "ربح",
+        "مآرب"
+      ],
+      "search_keys_norm": "نفع متع ربح مآرب"
+    },
+    {
+      "id": "f2",
+      "topic": "To conquer",
+      "topic_ur": "فتح ہونا -دینا",
+      "words_ar": [
+        "فتح",
+        "أظفر"
+      ],
+      "search_keys_norm": "فتح أظفر"
+    },
+    {
+      "id": "f3",
+      "topic": "Sufficient",
+      "topic_ur": "فراخی آسودگی",
+      "words_ar": [
+        "ميسرة",
+        "طول",
+        "بسطة",
+        "سعة"
+      ],
+      "search_keys_norm": "ميسرة طول بسطة سعة"
+    },
+    {
+      "id": "f4",
+      "topic": "To be broaden, to make space",
+      "topic_ur": "فراخ ہونا – کرنا",
+      "words_ar": [
+        "رحب",
+        "وسع",
+        "تفسح"
+      ],
+      "search_keys_norm": "رحب وسع تفسح"
+    },
+    {
+      "id": "f5",
+      "topic": "Angel",
+      "topic_ur": "فرشتہ",
+      "words_ar": [
+        "ملك",
+        "روح"
+      ],
+      "search_keys_norm": "ملك روح"
+    },
+    {
+      "id": "f6",
+      "topic": "Difference",
+      "topic_ur": "فرق",
+      "words_ar": [
+        "بعد",
+        "تفاوت"
+      ],
+      "search_keys_norm": "بعد تفاوت"
+    },
+    {
+      "id": "f7",
+      "topic": "Group of people",
+      "topic_ur": "فرقہ - گروہ",
+      "words_ar": [
+        "فرقة",
+        "فريق",
+        "طائفة",
+        "زمر",
+        "شيعة",
+        "أناس"
+      ],
+      "search_keys_norm": "فرقة فريق طائفة زمر شيعة أناس"
+    },
+    {
+      "id": "f8",
+      "topic": "Cry out for assistance",
+      "topic_ur": "فریاد رسی",
+      "words_ar": [
+        "استجاب",
+        "أصرخ"
+      ],
+      "search_keys_norm": "استجاب أصرخ"
+    },
+    {
+      "id": "f9",
+      "topic": "To implore",
+      "topic_ur": "فریاد کرنا",
+      "words_ar": [
+        "استسرخ",
+        "استغاث"
+      ],
+      "search_keys_norm": "استسرخ استغاث"
+    },
+    {
+      "id": "f10",
+      "topic": "To corrupt, to create problems",
+      "topic_ur": "فساد کرنا- ڈالنا",
+      "words_ar": [
+        "أفسد",
+        "عثا",
+        "نزغ"
+      ],
+      "search_keys_norm": "أفسد عثا نزغ"
+    },
+    {
+      "id": "f11",
+      "topic": "Useless talk",
+      "topic_ur": "فضول باتیں کرنا",
+      "words_ar": [
+        "ألغى",
+        "خاض",
+        "فكه",
+        "سمر",
+        "هجر"
+      ],
+      "search_keys_norm": "ألغى خاض فكه سمر هجر"
+    },
+    {
+      "id": "f12",
+      "topic": "To spend  excessively",
+      "topic_ur": "فضول خرچی کرنا",
+      "words_ar": [
+        "أسرف",
+        "بذر"
+      ],
+      "search_keys_norm": "أسرف بذر"
+    },
+    {
+      "id": "f13",
+      "topic": "To give honour",
+      "topic_ur": "فضیلت دینا",
+      "words_ar": [
+        "فضل",
+        "كرم"
+      ],
+      "search_keys_norm": "فضل كرم"
+    },
+    {
+      "id": "f14",
+      "topic": "To decree/make a decision",
+      "topic_ur": "فیصلہ کرنا",
+      "words_ar": [
+        "فتح",
+        "فصل",
+        "حكم",
+        "قضى",
+        "حتم"
+      ],
+      "search_keys_norm": "فتح فصل حكم قضى حتم"
+    },
+    {
+      "id": "q1",
+      "topic": "To gain control",
+      "topic_ur": "قابو پانا",
+      "words_ar": [
+        "قدر",
+        "أقرن",
+        "استحوذ",
+        "احتنك"
+      ],
+      "search_keys_norm": "قدر أقرن استحوذ احتنك"
+    },
+    {
+      "id": "q2",
+      "topic": "caravan",
+      "topic_ur": "قافلہ",
+      "words_ar": [
+        "سيارة",
+        "عير",
+        "ركب"
+      ],
+      "search_keys_norm": "سيارة عير ركب"
+    },
+    {
+      "id": "q3",
+      "topic": "grave",
+      "topic_ur": "قبر",
+      "words_ar": [
+        "قبر",
+        "مرقد",
+        "جدث"
+      ],
+      "search_keys_norm": "قبر مرقد جدث"
+    },
+    {
+      "id": "q4",
+      "topic": "To accept",
+      "topic_ur": "قبول کرنا",
+      "words_ar": [
+        "قبل",
+        "تقبل",
+        "أجاب",
+        "استجاب"
+      ],
+      "search_keys_norm": "قبل تقبل أجاب استجاب"
+    },
+    {
+      "id": "q5",
+      "topic": "Family,tribe",
+      "topic_ur": "قبیلہ خاندان",
+      "words_ar": [
+        "شعوب",
+        "قبائل",
+        "فصيلة",
+        "رهط",
+        "عشيرة",
+        "أسباط"
+      ],
+      "search_keys_norm": "شعوب قبائل فصيلة رهط عشيرة أسباط"
+    },
+    {
+      "id": "q6",
+      "topic": "To kill",
+      "topic_ur": "قتل کرنا",
+      "words_ar": [
+        "قتل",
+        "سفك",
+        "حس",
+        "أثخن"
+      ],
+      "search_keys_norm": "قتل سفك حس أثخن"
+    },
+    {
+      "id": "q7",
+      "topic": "step",
+      "topic_ur": "قدم",
+      "words_ar": [
+        "قدم",
+        "خطوة",
+        "أثر"
+      ],
+      "search_keys_norm": "قدم خطوة أثر"
+    },
+    {
+      "id": "q8",
+      "topic": "To have stability",
+      "topic_ur": "قرار پکڑنا",
+      "words_ar": [
+        "قر",
+        "استوىعلى"
+      ],
+      "search_keys_norm": "قر استوىعلى"
+    },
+    {
+      "id": "q9",
+      "topic": "Different names of the Quran",
+      "topic_ur": "قرآن کے مختلف نام",
+      "words_ar": [
+        "قرآن",
+        "فرقان",
+        "ذكر",
+        "تذكرة",
+        "كتابمبين",
+        "حديث"
+      ],
+      "search_keys_norm": "قرآن فرقان ذكر تذكرة كتابمبين حديث"
+    },
+    {
+      "id": "q10",
+      "topic": "Animal of sacrificeا",
+      "topic_ur": "قربانی کا جانور",
+      "words_ar": [
+        "بدن",
+        "نسك",
+        "هدي",
+        "قلائد"
+      ],
+      "search_keys_norm": "بدن نسك هدي قلائد"
+    },
+    {
+      "id": "q11",
+      "topic": "To take an oath",
+      "topic_ur": "قسم اٹھانا",
+      "words_ar": [
+        "و",
+        "ت",
+        "قسم",
+        "يمين",
+        "حلف",
+        "ألية",
+        "إيلاء"
+      ],
+      "search_keys_norm": "و ت قسم يمين حلف ألية إيلاء"
+    },
+    {
+      "id": "q12",
+      "topic": "To break an oath",
+      "topic_ur": "قسم توڑنا",
+      "words_ar": [
+        "نكث",
+        "نقض",
+        "حنث"
+      ],
+      "search_keys_norm": "نكث نقض حنث"
+    },
+    {
+      "id": "q13",
+      "topic": "fort",
+      "topic_ur": "قلعہ",
+      "words_ar": [
+        "حصون",
+        "صياصي",
+        "بروج",
+        "محاريب"
+      ],
+      "search_keys_norm": "حصون صياصي بروج محاريب"
+    },
+    {
+      "id": "q14",
+      "topic": "To strengthen",
+      "topic_ur": "قوت دینا",
+      "words_ar": [
+        "قميص",
+        "سرابيل"
+      ],
+      "search_keys_norm": "قميص سرابيل"
+    },
+    {
+      "id": "q15",
+      "topic": "Shirt, garment",
+      "topic_ur": "قمیص",
+      "words_ar": [
+        "أيد",
+        "آزر",
+        "عزز"
+      ],
+      "search_keys_norm": "أيد آزر عزز"
+    },
+    {
+      "id": "q16",
+      "topic": "Doomsday and its different names",
+      "topic_ur": "قیامت اور اسکے مختلف نام",
+      "words_ar": [
+        "قيامة",
+        "الساعة",
+        "يومالدين",
+        "يومالخروج",
+        "يومالحساب",
+        "يومالفصل",
+        "الغاشية",
+        "الحاقة",
+        "الصاخة",
+        "الآزفة",
+        "القارعة",
+        "الطامةالكبرى"
+      ],
+      "search_keys_norm": "قيامة الساعة يومالدين يومالخروج يومالحساب يومالفصل الغاشية الحاقة الصاخة الآزفة القارعة الطامةالكبرى"
+    },
+    {
+      "id": "q17",
+      "topic": "jail",
+      "topic_ur": "قید خانہ",
+      "words_ar": [
+        "سجن",
+        "حصير"
+      ],
+      "search_keys_norm": "سجن حصير"
+    },
+    {
+      "id": "q18",
+      "topic": "To imprison",
+      "topic_ur": "قید کرنا   قیدی بنانا",
+      "words_ar": [
+        "حبس",
+        "أثبت",
+        "أسر",
+        "سجن"
+      ],
+      "search_keys_norm": "حبس أثبت أسر سجن"
+    },
+    {
+      "id": "k1",
+      "topic": "To cut,",
+      "topic_ur": "کاٹنا",
+      "words_ar": [
+        "حصد",
+        "صرم",
+        "قطع",
+        "بتر",
+        "بتك",
+        "عض",
+        "خضد",
+        "جذ",
+        "عقر"
+      ],
+      "search_keys_norm": "حصد صرم قطع بتر بتك عض خضد جذ عقر"
+    },
+    {
+      "id": "k2",
+      "topic": "Cut",
+      "topic_ur": "کٹنا",
+      "words_ar": [
+        "تقطع",
+        "من"
+      ],
+      "search_keys_norm": "تقطع من"
+    },
+    {
+      "id": "k3",
+      "topic": "Paper",
+      "topic_ur": "کاغز",
+      "words_ar": [
+        "رق",
+        "قرطاس"
+      ],
+      "search_keys_norm": "رق قرطاس"
+    },
+    {
+      "id": "k4",
+      "topic": "To be enough",
+      "topic_ur": "کافی ہونا",
+      "words_ar": [
+        "كفى",
+        "حسب"
+      ],
+      "search_keys_norm": "كفى حسب"
+    },
+    {
+      "id": "k5",
+      "topic": "To be of use",
+      "topic_ur": "کام آنا",
+      "words_ar": [
+        "جزى",
+        "أغنى"
+      ],
+      "search_keys_norm": "جزى أغنى"
+    },
+    {
+      "id": "k6",
+      "topic": "Work, To work",
+      "topic_ur": "کام – کام کرنا",
+      "words_ar": [
+        "فعل",
+        "عمل",
+        "صنع",
+        "صدع",
+        "جرح",
+        "اجترح",
+        "تعمد",
+        "أمر",
+        "شأن"
+      ],
+      "search_keys_norm": "فعل عمل صنع صدع جرح اجترح تعمد أمر شأن"
+    },
+    {
+      "id": "k7",
+      "topic": "To be successful",
+      "topic_ur": "کامیاب ہونا",
+      "words_ar": [
+        "أفلح",
+        "فاز"
+      ],
+      "search_keys_norm": "أفلح فاز"
+    },
+    {
+      "id": "k8",
+      "topic": "Ears",
+      "topic_ur": "کان",
+      "words_ar": [
+        "زلزل",
+        "مار",
+        "رج",
+        "رجف"
+      ],
+      "search_keys_norm": "زلزل مار رج رجف"
+    },
+    {
+      "id": "k9",
+      "topic": "To tremble, shiver",
+      "topic_ur": "کانپنا",
+      "words_ar": [
+        "أيان",
+        "متى"
+      ],
+      "search_keys_norm": "أيان متى"
+    },
+    {
+      "id": "k10",
+      "topic": "When",
+      "topic_ur": "کب",
+      "words_ar": [
+        "كتاب",
+        "أسفار",
+        "سجل",
+        "نسخة",
+        "زبر",
+        "صحف"
+      ],
+      "search_keys_norm": "كتاب أسفار سجل نسخة زبر صحف"
+    },
+    {
+      "id": "k11",
+      "topic": "Book",
+      "topic_ur": "کتاب",
+      "words_ar": [
+        "زاور",
+        "قرض",
+        "حاد"
+      ],
+      "search_keys_norm": "زاور قرض حاد"
+    },
+    {
+      "id": "k12",
+      "topic": "To dodge, evade",
+      "topic_ur": "کترا جانا – بچ کر نکل جانا",
+      "words_ar": [
+        "كم",
+        "كأي",
+        "كأين"
+      ],
+      "search_keys_norm": "كم كأي كأين"
+    },
+    {
+      "id": "k13",
+      "topic": "How much, how many",
+      "topic_ur": "کتنا کتنے",
+      "words_ar": [
+        "بحث",
+        "بعثر"
+      ],
+      "search_keys_norm": "بحث بعثر"
+    },
+    {
+      "id": "k14",
+      "topic": "To scratch",
+      "topic_ur": "کریدنا",
+      "words_ar": [
+        "أمر",
+        "اجاج",
+        "خمط"
+      ],
+      "search_keys_norm": "أمر اجاج خمط"
+    },
+    {
+      "id": "k15",
+      "topic": "Bitter, unpalatable",
+      "topic_ur": "کڑوا",
+      "words_ar": [
+        "زراع",
+        "كفار"
+      ],
+      "search_keys_norm": "زراع كفار"
+    },
+    {
+      "id": "k16",
+      "topic": "Peasant, farmer",
+      "topic_ur": "کسان",
+      "words_ar": [
+        "جارية",
+        "سفينة",
+        "فلك"
+      ],
+      "search_keys_norm": "جارية سفينة فلك"
+    },
+    {
+      "id": "k17",
+      "topic": "ship",
+      "topic_ur": "کشتی جہاز",
+      "words_ar": [
+        "كعبة",
+        "البيت",
+        "البيتالعتيق",
+        "حرم",
+        "البيتالحرام",
+        "البيتالمحرم",
+        "المسجدالحرام"
+      ],
+      "search_keys_norm": "كعبة البيت البيتالعتيق حرم البيتالحرام البيتالمحرم المسجدالحرام"
+    },
+    {
+      "id": "k18",
+      "topic": "Kaaba and its different names",
+      "topic_ur": "کعبہ اور اسکے مختلف نام",
+      "words_ar": [
+        "أمس",
+        "غد"
+      ],
+      "search_keys_norm": "أمس غد"
+    },
+    {
+      "id": "k19",
+      "topic": "Yesterday, tomorrow",
+      "topic_ur": "کل",
+      "words_ar": [
+        "ظلم",
+        "إلا",
+        "قصر",
+        "ألت",
+        "هضم",
+        "فتر",
+        "قل",
+        "طفف",
+        "نقص",
+        "خسر",
+        "بخس",
+        "فرط",
+        "وتر"
+      ],
+      "search_keys_norm": "ظلم إلا قصر ألت هضم فتر قل طفف نقص خسر بخس فرط وتر"
+    },
+    {
+      "id": "k20",
+      "topic": "To decrease,",
+      "topic_ur": "گھٹانا  کم کرنا کمی کرنا",
+      "words_ar": [
+        "عمل",
+        "كسب",
+        "اكتسب",
+        "اقترف",
+        "جرح",
+        "اجترح"
+      ],
+      "search_keys_norm": "عمل كسب اكتسب اقترف جرح اجترح"
+    },
+    {
+      "id": "k21",
+      "topic": "To earn,",
+      "topic_ur": "کمانا – کمائی کرنا",
+      "words_ar": [
+        "حجرة",
+        "غرفة"
+      ],
+      "search_keys_norm": "حجرة غرفة"
+    },
+    {
+      "id": "k22",
+      "topic": "Room",
+      "topic_ur": "کمرہ",
+      "words_ar": [
+        "ضعيف",
+        "واهية",
+        "أوهن",
+        "أذلة"
+      ],
+      "search_keys_norm": "ضعيف واهية أوهن أذلة"
+    },
+    {
+      "id": "k23",
+      "topic": "Weak",
+      "topic_ur": "کمزور",
+      "words_ar": [
+        "طرف",
+        "حد",
+        "حرف",
+        "أفق",
+        "أقطار",
+        "أرجاء",
+        "شفا",
+        "معزل",
+        "شاطي",
+        "ساحل",
+        "أقصى",
+        "عدوة",
+        "صدف"
+      ],
+      "search_keys_norm": "طرف حد حرف أفق أقطار أرجاء شفا معزل شاطي ساحل أقصى عدوة صدف"
+    },
+    {
+      "id": "k24",
+      "topic": "Edge, brink",
+      "topic_ur": "کنارہ",
+      "words_ar": [
+        "بئر",
+        "جب",
+        "رس"
+      ],
+      "search_keys_norm": "بئر جب رس"
+    },
+    {
+      "id": "k25",
+      "topic": "Well",
+      "topic_ur": "کنواں",
+      "words_ar": [
+        "سوط",
+        "جلدة"
+      ],
+      "search_keys_norm": "سوط جلدة"
+    },
+    {
+      "id": "k26",
+      "topic": "Whip",
+      "topic_ur": "کوڑا",
+      "words_ar": [
+        "جهد",
+        "كدح"
+      ],
+      "search_keys_norm": "جهد كدح"
+    },
+    {
+      "id": "k27",
+      "topic": "To endeavor,",
+      "topic_ur": "کوشش کرنا",
+      "words_ar": [
+        "من",
+        "أي"
+      ],
+      "search_keys_norm": "من أي"
+    },
+    {
+      "id": "k28",
+      "topic": "Who",
+      "topic_ur": "کون",
+      "words_ar": [
+        "أحد",
+        "من"
+      ],
+      "search_keys_norm": "أحد من"
+    },
+    {
+      "id": "k29",
+      "topic": "Anybody, somebody",
+      "topic_ur": "کوئی",
+      "words_ar": [
+        "أن",
+        "كأن",
+        "كأنما",
+        "ألا"
+      ],
+      "search_keys_norm": "أن كأن كأنما ألا"
+    },
+    {
+      "id": "k30",
+      "topic": "Who , which, that, such as",
+      "topic_ur": "کہ گویا کہ",
+      "words_ar": [
+        "أين",
+        "أينما",
+        "أنى"
+      ],
+      "search_keys_norm": "أين أينما أنى"
+    },
+    {
+      "id": "k31",
+      "topic": "Where",
+      "topic_ur": "کہاں",
+      "words_ar": [
+        "أساطير",
+        "أحاديث",
+        "قصص"
+      ],
+      "search_keys_norm": "أساطير أحاديث قصص"
+    },
+    {
+      "id": "k32",
+      "topic": "Stories, legends, incidents",
+      "topic_ur": "کہانیاں  واقعات",
+      "words_ar": [
+        "جلد",
+        "شوى"
+      ],
+      "search_keys_norm": "جلد شوى"
+    },
+    {
+      "id": "k33",
+      "topic": "Skin",
+      "topic_ur": "کھال",
+      "words_ar": [
+        "سلخ",
+        "كشط"
+      ],
+      "search_keys_norm": "سلخ كشط"
+    },
+    {
+      "id": "k34",
+      "topic": "To remove the skin",
+      "topic_ur": "کھال اتارنا",
+      "words_ar": [
+        "أكل",
+        "طعم",
+        "رتع"
+      ],
+      "search_keys_norm": "أكل طعم رتع"
+    },
+    {
+      "id": "k35",
+      "topic": "Food",
+      "topic_ur": "کھانا",
+      "words_ar": [
+        "أطعم",
+        "رزق"
+      ],
+      "search_keys_norm": "أطعم رزق"
+    },
+    {
+      "id": "k36",
+      "topic": "To feed",
+      "topic_ur": "کھلانا",
+      "words_ar": [
+        "نخلة",
+        "نخل",
+        "نخيل",
+        "لينة",
+        "رطب"
+      ],
+      "search_keys_norm": "نخلة نخل نخيل لينة رطب"
+    },
+    {
+      "id": "k37",
+      "topic": "dates",
+      "topic_ur": "کھجور",
+      "words_ar": [
+        "قام",
+        "أقام",
+        "وقف",
+        "نتق",
+        "نشز"
+      ],
+      "search_keys_norm": "قام أقام وقف نتق نشز"
+    },
+    {
+      "id": "k38",
+      "topic": "To stand, cause to stand",
+      "topic_ur": "کھڑا ہونا - کرنا",
+      "words_ar": [
+        "آني",
+        "غلي"
+      ],
+      "search_keys_norm": "آني غلي"
+    },
+    {
+      "id": "k39",
+      "topic": "To boil",
+      "topic_ur": "کھولنا",
+      "words_ar": [
+        "بسط",
+        "فتح",
+        "حل",
+        "شرح",
+        "كشف",
+        "نشط",
+        "فرج"
+      ],
+      "search_keys_norm": "بسط فتح حل شرح كشف نشط فرج"
+    },
+    {
+      "id": "k40",
+      "topic": "To open",
+      "topic_ur": "کھولنا",
+      "words_ar": [
+        "حرث",
+        "زرع"
+      ],
+      "search_keys_norm": "حرث زرع"
+    },
+    {
+      "id": "k41",
+      "topic": "Fields  of crop",
+      "topic_ur": "کھیتی",
+      "words_ar": [
+        "مد",
+        "جر",
+        "اضطر",
+        "سلخ",
+        "نزع",
+        "سقع"
+      ],
+      "search_keys_norm": "مد جر اضطر سلخ نزع سقع"
+    },
+    {
+      "id": "k42",
+      "topic": "To pull",
+      "topic_ur": "کھینچنا",
+      "words_ar": [
+        "لعب",
+        "لهى",
+        "عبث"
+      ],
+      "search_keys_norm": "لعب لهى عبث"
+    },
+    {
+      "id": "k43",
+      "topic": "To play",
+      "topic_ur": "کھیلنا",
+      "words_ar": [
+        "ء",
+        "هل",
+        "ما",
+        "ماذا"
+      ],
+      "search_keys_norm": "ء هل ما ماذا"
+    },
+    {
+      "id": "k44",
+      "topic": "What",
+      "topic_ur": "کیا",
+      "words_ar": [
+        "كيف",
+        "أنى"
+      ],
+      "search_keys_norm": "كيف أنى"
+    },
+    {
+      "id": "k45",
+      "topic": "How",
+      "topic_ur": "کیسے",
+      "words_ar": [
+        "لم",
+        "لولا",
+        "لوما"
+      ],
+      "search_keys_norm": "لم لولا لوما"
+    },
+    {
+      "id": "k46",
+      "topic": "Why, why not",
+      "topic_ur": "کیوں – کیوں نہ",
+      "words_ar": [],
+      "search_keys_norm": null
+    },
+    {
+      "id": "gg1",
+      "topic": "To pitch/plant",
+      "topic_ur": "گاڑنا",
+      "words_ar": [
+        "نصب",
+        "أرسى",
+        "دس",
+        "وأد"
+      ],
+      "search_keys_norm": "نصب أرسى دس وأد"
+    },
+    {
+      "id": "gg2",
+      "topic": "Passage of time",
+      "topic_ur": "گردش ایام",
+      "words_ar": [
+        "ريبالمنون",
+        "دائرة",
+        "دولة"
+      ],
+      "search_keys_norm": "ريبالمنون دائرة دولة"
+    },
+    {
+      "id": "gg3",
+      "topic": "Neck",
+      "topic_ur": "گردن",
+      "words_ar": [
+        "عنق",
+        "جيد",
+        "رقبة",
+        "وتين"
+      ],
+      "search_keys_norm": "عنق جيد رقبة وتين"
+    },
+    {
+      "id": "gg4",
+      "topic": "To grasp, to arrest",
+      "topic_ur": "گرفت کرنا",
+      "words_ar": [
+        "آخذ",
+        "ثرب",
+        "لام"
+      ],
+      "search_keys_norm": "آخذ ثرب لام"
+    },
+    {
+      "id": "gg5",
+      "topic": "Heat, to heat, to be hot",
+      "topic_ur": "گرمی – گرم کرنا- ہونا",
+      "words_ar": [
+        "صيف",
+        "حر",
+        "حم",
+        "حمى",
+        "سقر",
+        "سموم"
+      ],
+      "search_keys_norm": "صيف حر حم حمى سقر سموم"
+    },
+    {
+      "id": "gg6",
+      "topic": "To obtain heat",
+      "topic_ur": "گرمی حاصل کرنا",
+      "words_ar": [
+        "دفء",
+        "اصطلى"
+      ],
+      "search_keys_norm": "دفء اصطلى"
+    },
+    {
+      "id": "gg7",
+      "topic": "To fall, cause to fall",
+      "topic_ur": "گرنا - گرانا",
+      "words_ar": [
+        "سقط",
+        "خر",
+        "هدم",
+        "هد",
+        "إنقض",
+        "هبط",
+        "وقع",
+        "هار",
+        "هوى",
+        "خوى",
+        "وجب",
+        "ردى",
+        "صرع",
+        "تل",
+        "تعس",
+        "ادارك",
+        "انهمر",
+        "صب",
+        "سكب"
+      ],
+      "search_keys_norm": "سقط خر هدم هد إنقض هبط وقع هار هوى خوى وجب ردى صرع تل تعس ادارك انهمر صب سكب"
+    },
+    {
+      "id": "gg8",
+      "topic": "To pawn",
+      "topic_ur": "گروی رکھنا",
+      "words_ar": [
+        "رهن",
+        "أبسل"
+      ],
+      "search_keys_norm": "رهن أبسل"
+    },
+    {
+      "id": "gg9",
+      "topic": "Ditch",
+      "topic_ur": "گڑھا",
+      "words_ar": [
+        "حفرة",
+        "جرف",
+        "أخدود",
+        "غائط"
+      ],
+      "search_keys_norm": "حفرة جرف أخدود غائط"
+    },
+    {
+      "id": "gg10",
+      "topic": "To pass by",
+      "topic_ur": "گزرنا",
+      "words_ar": [
+        "سبق",
+        "خلا",
+        "سلف",
+        "مر",
+        "مضى",
+        "انسلخ"
+      ],
+      "search_keys_norm": "سبق خلا سلف مر مضى انسلخ"
+    },
+    {
+      "id": "gg11",
+      "topic": "neck",
+      "topic_ur": "گلا",
+      "words_ar": [
+        "حلقوم",
+        "حناجر"
+      ],
+      "search_keys_norm": "حلقوم حناجر"
+    },
+    {
+      "id": "gg12",
+      "topic": "To be lost",
+      "topic_ur": "گم ہونا",
+      "words_ar": [
+        "فات",
+        "فقد",
+        "ضل"
+      ],
+      "search_keys_norm": "فات فقد ضل"
+    },
+    {
+      "id": "gg13",
+      "topic": "To think/have thoughts",
+      "topic_ur": "گمان کرنا",
+      "words_ar": [
+        "ظن",
+        "زعم",
+        "حسب"
+      ],
+      "search_keys_norm": "ظن زعم حسب"
+    },
+    {
+      "id": "gg14",
+      "topic": "Sin",
+      "topic_ur": "گناہ",
+      "words_ar": [
+        "ذنب",
+        "خطأ",
+        "حوب",
+        "حنث",
+        "إثم",
+        "اجرام",
+        "جناح",
+        "لمم"
+      ],
+      "search_keys_norm": "ذنب خطأ حوب حنث إثم اجرام جناح لمم"
+    },
+    {
+      "id": "gg15",
+      "topic": "Sinful",
+      "topic_ur": "گنہگار",
+      "words_ar": [
+        "آثم",
+        "أثيم",
+        "خاطيء",
+        "مجرم",
+        "فاسق",
+        "فاجر"
+      ],
+      "search_keys_norm": "آثم أثيم خاطيء مجرم فاسق فاجر"
+    },
+    {
+      "id": "gg16",
+      "topic": "Filth, impurity",
+      "topic_ur": "گند گی نجاست",
+      "words_ar": [
+        "تفث",
+        "رجز",
+        "رجس"
+      ],
+      "search_keys_norm": "تفث رجز رجس"
+    },
+    {
+      "id": "gg17",
+      "topic": "To count",
+      "topic_ur": "گننا",
+      "words_ar": [
+        "عد",
+        "حسب",
+        "أحصى"
+      ],
+      "search_keys_norm": "عد حسب أحصى"
+    },
+    {
+      "id": "gg18",
+      "topic": "Lap",
+      "topic_ur": "گود",
+      "words_ar": [
+        "مهد",
+        "حجور"
+      ],
+      "search_keys_norm": "مهد حجور"
+    },
+    {
+      "id": "gg19",
+      "topic": "Deep, deepness",
+      "topic_ur": "گہرا - گہرائی",
+      "words_ar": [
+        "لجة",
+        "غور",
+        "عميق"
+      ],
+      "search_keys_norm": "لجة غور عميق"
+    },
+    {
+      "id": "gg20",
+      "topic": "Watering place",
+      "topic_ur": "گھاٹ",
+      "words_ar": [
+        "مشرب",
+        "ورد"
+      ],
+      "search_keys_norm": "مشرب ورد"
+    },
+    {
+      "id": "gg21",
+      "topic": "Valley",
+      "topic_ur": "گھاٹی",
+      "words_ar": [
+        "نجد",
+        "عقبة"
+      ],
+      "search_keys_norm": "نجد عقبة"
+    },
+    {
+      "id": "gg22",
+      "topic": "House",
+      "topic_ur": "گھر",
+      "words_ar": [
+        "بيت",
+        "مسكن",
+        "دار",
+        "أهل"
+      ],
+      "search_keys_norm": "بيت مسكن دار أهل"
+    },
+    {
+      "id": "gg23",
+      "topic": "Time",
+      "topic_ur": "گھڑی",
+      "words_ar": [
+        "ساعة",
+        "أناء",
+        "زلف"
+      ],
+      "search_keys_norm": "ساعة أناء زلف"
+    },
+    {
+      "id": "gg24",
+      "topic": "Enter by force",
+      "topic_ur": "گھسنا",
+      "words_ar": [
+        "ولج",
+        "جاس"
+      ],
+      "search_keys_norm": "ولج جاس"
+    },
+    {
+      "id": "gg25",
+      "topic": "To drag",
+      "topic_ur": "گھسیٹنا",
+      "words_ar": [
+        "جر",
+        "سحب",
+        "عتل"
+      ],
+      "search_keys_norm": "جر سحب عتل"
+    },
+    {
+      "id": "gg26",
+      "topic": "horse",
+      "topic_ur": "گھوڑا",
+      "words_ar": [
+        "خيل",
+        "صافنات",
+        "جياد",
+        "عاديات"
+      ],
+      "search_keys_norm": "خيل صافنات جياد عاديات"
+    },
+    {
+      "id": "gg27",
+      "topic": "To surround",
+      "topic_ur": "گھیرنا",
+      "words_ar": [
+        "حف",
+        "أحاط",
+        "أحصر",
+        "حاق"
+      ],
+      "search_keys_norm": "حف أحاط أحصر حاق"
+    },
+    {
+      "id": "l1",
+      "topic": "Stick, staff",
+      "topic_ur": "لاٹھی",
+      "words_ar": [
+        "عصا",
+        "منسأة"
+      ],
+      "search_keys_norm": "عصا منسأة"
+    },
+    {
+      "id": "l2",
+      "topic": "To bring",
+      "topic_ur": "لانا",
+      "words_ar": [
+        "جاءب",
+        "أتىب",
+        "هلم",
+        "هاتوا",
+        "أجاء",
+        "أجلب"
+      ],
+      "search_keys_norm": "جاءب أتىب هلم هاتوا أجاء أجلب"
+    },
+    {
+      "id": "l3",
+      "topic": "To be capable",
+      "topic_ur": "لائق ہونا",
+      "words_ar": [
+        "ينبغي",
+        "أجدر",
+        "أولى",
+        "حق"
+      ],
+      "search_keys_norm": "ينبغي أجدر أولى حق"
+    },
+    {
+      "id": "l4",
+      "topic": "To coil , enwrap",
+      "topic_ur": "لپیٹنا لپٹنا",
+      "words_ar": [
+        "طوى",
+        "لف",
+        "كور"
+      ],
+      "search_keys_norm": "طوى لف كور"
+    },
+    {
+      "id": "l5",
+      "topic": "To hang, dangle",
+      "topic_ur": "لٹکنا لٹکانا",
+      "words_ar": [
+        "أدلى",
+        "تدلى",
+        "علق",
+        "تردد",
+        "ذبذب"
+      ],
+      "search_keys_norm": "أدلى تدلى علق تردد ذبذب"
+    },
+    {
+      "id": "l6",
+      "topic": "To regard",
+      "topic_ur": "لحاظ رکھنا",
+      "words_ar": [
+        "رعى",
+        "رقب"
+      ],
+      "search_keys_norm": "رعى رقب"
+    },
+    {
+      "id": "l7",
+      "topic": "Army",
+      "topic_ur": "لشکر",
+      "words_ar": [
+        "جند",
+        "فوج",
+        "حزب",
+        "نفير",
+        "فئة",
+        "ثبات"
+      ],
+      "search_keys_norm": "جند فوج حزب نفير فئة ثبات"
+    },
+    {
+      "id": "l8",
+      "topic": "Wood",
+      "topic_ur": "لکڑی",
+      "words_ar": [
+        "حطب",
+        "خشب"
+      ],
+      "search_keys_norm": "حطب خشب"
+    },
+    {
+      "id": "l9",
+      "topic": "To write",
+      "topic_ur": "لکھنا",
+      "words_ar": [
+        "خط",
+        "سطر",
+        "رقم",
+        "كتب"
+      ],
+      "search_keys_norm": "خط سطر رقم كتب"
+    },
+    {
+      "id": "l10",
+      "topic": "Cause to write",
+      "topic_ur": "لکھوانا",
+      "words_ar": [
+        "استنسخ",
+        "أمل",
+        "اكتتب"
+      ],
+      "search_keys_norm": "استنسخ أمل اكتتب"
+    },
+    {
+      "id": "l11",
+      "topic": "Writers",
+      "topic_ur": "لکھنے والے",
+      "words_ar": [
+        "كاتب",
+        "سفرة"
+      ],
+      "search_keys_norm": "كاتب سفرة"
+    },
+    {
+      "id": "l12",
+      "topic": "Continuous",
+      "topic_ur": "لگاتار پے در پے",
+      "words_ar": [
+        "تتر",
+        "علىفترة",
+        "حسوم",
+        "ردف",
+        "دأب",
+        "متتابع",
+        "وصل"
+      ],
+      "search_keys_norm": "تتر علىفترة حسوم ردف دأب متتابع وصل"
+    },
+    {
+      "id": "l13",
+      "topic": "To return",
+      "topic_ur": "لوٹانا لوٹنا  رجوع کرنا",
+      "words_ar": [
+        "رجع",
+        "آب",
+        "تاب",
+        "أناب",
+        "باء",
+        "فاء",
+        "صدر",
+        "أصدر",
+        "صار",
+        "رد",
+        "ارتد"
+      ],
+      "search_keys_norm": "رجع آب تاب أناب باء فاء صدر أصدر صار رد ارتد"
+    },
+    {
+      "id": "l14",
+      "topic": "Divine tablet recording and its various names",
+      "topic_ur": "لوح محفوظ اور اسکے مختلف نام",
+      "words_ar": [
+        "لوحمحفوظ",
+        "أمالكتاب",
+        "إماممبين",
+        "كتابمكنون"
+      ],
+      "search_keys_norm": "لوحمحفوظ أمالكتاب إماممبين كتابمكنون"
+    },
+    {
+      "id": "l15",
+      "topic": "Maid, servant",
+      "topic_ur": "لونڈی  غلام",
+      "words_ar": [
+        "عبد",
+        "أمة",
+        "رقبة",
+        "ملك",
+        "يمين"
+      ],
+      "search_keys_norm": "عبد أمة رقبة ملك يمين"
+    },
+    {
+      "id": "l16",
+      "topic": "To take",
+      "topic_ur": "لینا",
+      "words_ar": [
+        "أخذ",
+        "تلقى",
+        "هاؤم"
+      ],
+      "search_keys_norm": "أخذ تلقى هاؤم"
+    },
+    {
+      "id": "l17",
+      "topic": "To be involved in transactions",
+      "topic_ur": "لین دین کرنا",
+      "words_ar": [
+        "تداين",
+        "أدار"
+      ],
+      "search_keys_norm": "تداين أدار"
+    },
+    {
+      "id": "m1",
+      "topic": "To hit, beat, whip, stone",
+      "topic_ur": "مارنا",
+      "words_ar": [
+        "ضرب",
+        "وكز",
+        "صك",
+        "دع",
+        "دمغ",
+        "رجم",
+        "وقذ",
+        "نطح",
+        "أجلد"
+      ],
+      "search_keys_norm": "ضرب وكز صك دع دمغ رجم وقذ نطح أجلد"
+    },
+    {
+      "id": "m2",
+      "topic": "To kill, to die",
+      "topic_ur": "مار ڈالنا - مرنا",
+      "words_ar": [
+        "مات",
+        "أمات",
+        "قتل",
+        "هلك",
+        "أهلك",
+        "صلب",
+        "ذبح",
+        "رجم",
+        "انخنق",
+        "توفى",
+        "شهادة"
+      ],
+      "search_keys_norm": "مات أمات قتل هلك أهلك صلب ذبح رجم انخنق توفى شهادة"
+    },
+    {
+      "id": "m3",
+      "topic": "Goods wealth",
+      "topic_ur": "مال و دولت",
+      "words_ar": [
+        "مال",
+        "دولة",
+        "رزق",
+        "خير",
+        "فيء",
+        "مغانم",
+        "أنفال"
+      ],
+      "search_keys_norm": "مال دولة رزق خير فيء مغانم أنفال"
+    },
+    {
+      "id": "m4",
+      "topic": "Owner",
+      "topic_ur": "مالک",
+      "words_ar": [
+        "مالك",
+        "رب",
+        "أهل"
+      ],
+      "search_keys_norm": "مالك رب أهل"
+    },
+    {
+      "id": "m5",
+      "topic": "Mother",
+      "topic_ur": "ماں",
+      "words_ar": [
+        "والدة",
+        "أم"
+      ],
+      "search_keys_norm": "والدة أم"
+    },
+    {
+      "id": "m6",
+      "topic": "To ask, beg",
+      "topic_ur": "مانگنا",
+      "words_ar": [
+        "طلب",
+        "سأل",
+        "إدع",
+        "حفا",
+        "إعتر"
+      ],
+      "search_keys_norm": "طلب سأل إدع حفا إعتر"
+    },
+    {
+      "id": "m7",
+      "topic": "To erase",
+      "topic_ur": "مٹانا",
+      "words_ar": [
+        "طمس",
+        "محق",
+        "محا",
+        "نسخ"
+      ],
+      "search_keys_norm": "طمس محق محا نسخ"
+    },
+    {
+      "id": "m8",
+      "topic": "Soil and its different stages",
+      "topic_ur": "مٹی اور اسکی مختلف حالتیں",
+      "words_ar": [
+        "تراب",
+        "طين",
+        "لازب",
+        "حمأ",
+        "صلصال",
+        "سلالة",
+        "فخار",
+        "ثرى",
+        "صعيد"
+      ],
+      "search_keys_norm": "تراب طين لازب حمأ صلصال سلالة فخار ثرى صعيد"
+    },
+    {
+      "id": "m9",
+      "topic": "To copulate, intercourse",
+      "topic_ur": "مجامعت کرنا",
+      "words_ar": [
+        "باشر",
+        "قضىوطرا",
+        "تغشى",
+        "رفث",
+        "مس",
+        "لمس",
+        "طمث"
+      ],
+      "search_keys_norm": "باشر قضىوطرا تغشى رفث مس لمس طمث"
+    },
+    {
+      "id": "m10",
+      "topic": "Organization, meeting",
+      "topic_ur": "مجلس",
+      "words_ar": [
+        "مجلس",
+        "نادي"
+      ],
+      "search_keys_norm": "مجلس نادي"
+    },
+    {
+      "id": "m11",
+      "topic": "Fish",
+      "topic_ur": "مچھلی",
+      "words_ar": [
+        "حوت",
+        "نون"
+      ],
+      "search_keys_norm": "حوت نون"
+    },
+    {
+      "id": "m12",
+      "topic": "Love – to love",
+      "topic_ur": "محبت -  کرنا",
+      "words_ar": [
+        "حب",
+        "محبة",
+        "ود",
+        "ألف",
+        "شغف",
+        "عربا"
+      ],
+      "search_keys_norm": "حب محبة ود ألف شغف عربا"
+    },
+    {
+      "id": "m13",
+      "topic": "Palace",
+      "topic_ur": "محل",
+      "words_ar": [
+        "قصر",
+        "صرح"
+      ],
+      "search_keys_norm": "قصر صرح"
+    },
+    {
+      "id": "m14",
+      "topic": "To work hard, to endure hardship",
+      "topic_ur": "محنت کرنا – مشقت اٹھانا",
+      "words_ar": [
+        "عمل",
+        "جهد",
+        "نصب",
+        "كلف",
+        "كدح",
+        "كره",
+        "شق",
+        "شقة"
+      ],
+      "search_keys_norm": "عمل جهد نصب كلف كدح كره شق شقة"
+    },
+    {
+      "id": "m15",
+      "topic": "To actively oppose",
+      "topic_ur": "مخالفت کرنا",
+      "words_ar": [
+        "خالف",
+        "ضد",
+        "شاق",
+        "حاد",
+        "تعاسر",
+        "عند"
+      ],
+      "search_keys_norm": "خالف ضد شاق حاد تعاسر عند"
+    },
+    {
+      "id": "m16",
+      "topic": "Different, various",
+      "topic_ur": "مختلف",
+      "words_ar": [
+        "مختلف",
+        "شتى",
+        "أزواج"
+      ],
+      "search_keys_norm": "مختلف شتى أزواج"
+    },
+    {
+      "id": "m17",
+      "topic": "Time, length of time",
+      "topic_ur": "مدت",
+      "words_ar": [
+        "مدة",
+        "أمد",
+        "عدة",
+        "أمة",
+        "مليا",
+        "مهل",
+        "عمر"
+      ],
+      "search_keys_norm": "مدة أمد عدة أمة مليا مهل عمر"
+    },
+    {
+      "id": "m18",
+      "topic": "To help, assist, to wish for help",
+      "topic_ur": "مدد دینا – کرنا - چاہنا",
+      "words_ar": [
+        "أعان",
+        "استعان",
+        "نصر",
+        "استنصر",
+        "أيد",
+        "عزر",
+        "عزز",
+        "ظاهر",
+        "ردأ",
+        "أمد"
+      ],
+      "search_keys_norm": "أعان استعان نصر استنصر أيد عزر عزز ظاهر ردأ أمد"
+    },
+    {
+      "id": "m19",
+      "topic": "helper",
+      "topic_ur": "مدد گار",
+      "words_ar": [
+        "ناصر",
+        "نصير",
+        "أنصار",
+        "حواري",
+        "ولي",
+        "مولى",
+        "شهيد",
+        "ظهير",
+        "وزير",
+        "عضد"
+      ],
+      "search_keys_norm": "ناصر نصير أنصار حواري ولي مولى شهيد ظهير وزير عضد"
+    },
+    {
+      "id": "m20",
+      "topic": "To ridicule",
+      "topic_ur": "مزاق اڑانا",
+      "words_ar": [
+        "استهزأ",
+        "سخر",
+        "فند"
+      ],
+      "search_keys_norm": "استهزأ سخر فند"
+    },
+    {
+      "id": "m21",
+      "topic": "man",
+      "topic_ur": "مرد",
+      "words_ar": [
+        "رجل",
+        "إمرء",
+        "مرء",
+        "ذكر"
+      ],
+      "search_keys_norm": "رجل إمرء مرء ذكر"
+    },
+    {
+      "id": "m22",
+      "topic": "Taste",
+      "topic_ur": "مزا",
+      "words_ar": [
+        "ذائقة",
+        "طعم",
+        "لذة"
+      ],
+      "search_keys_norm": "ذائقة طعم لذة"
+    },
+    {
+      "id": "m23",
+      "topic": "To adorn, decorate",
+      "topic_ur": "مزین کرنا",
+      "words_ar": [
+        "زين",
+        "زخرف",
+        "سول"
+      ],
+      "search_keys_norm": "زين زخرف سول"
+    },
+    {
+      "id": "m24",
+      "topic": "traveller",
+      "topic_ur": "مسافر",
+      "words_ar": [
+        "ابنالسبيل",
+        "عابريسبيل",
+        "مقوين",
+        "سيارة"
+      ],
+      "search_keys_norm": "ابنالسبيل عابريسبيل مقوين سيارة"
+    },
+    {
+      "id": "m25",
+      "topic": "To harness",
+      "topic_ur": "مسخر کرنا",
+      "words_ar": [
+        "سخر",
+        "ذلل",
+        "ذلول"
+      ],
+      "search_keys_norm": "سخر ذلل ذلول"
+    },
+    {
+      "id": "m26",
+      "topic": "To subdued",
+      "topic_ur": "مسلط کرنا",
+      "words_ar": [
+        "سلط",
+        "قيض"
+      ],
+      "search_keys_norm": "سلط قيض"
+    },
+    {
+      "id": "m27",
+      "topic": "To be busy",
+      "topic_ur": "مشغول ہونا -",
+      "words_ar": [
+        "شغل",
+        "خاض",
+        "أفاض",
+        "سبح",
+        "محنة",
+        "مشقة"
+      ],
+      "search_keys_norm": "شغل خاض أفاض سبح محنة مشقة"
+    },
+    {
+      "id": "m28",
+      "topic": "To put in hardship",
+      "topic_ur": "مشقت میں ڈالنا",
+      "words_ar": [
+        "أعنت",
+        "اقتحم"
+      ],
+      "search_keys_norm": "أعنت اقتحم"
+    },
+    {
+      "id": "m29",
+      "topic": "To consult",
+      "topic_ur": "مشورہ کرنا",
+      "words_ar": [
+        "شاور",
+        "بيت",
+        "تناجى",
+        "إئتمر"
+      ],
+      "search_keys_norm": "شاور بيت تناجى إئتمر"
+    },
+    {
+      "id": "m30",
+      "topic": "To make famous",
+      "topic_ur": "مشہور کرنا",
+      "words_ar": [
+        "شاع",
+        "أذاع",
+        "أرجف",
+        "أهل"
+      ],
+      "search_keys_norm": "شاع أذاع أرجف أهل"
+    },
+    {
+      "id": "m31",
+      "topic": "Strong, fixed",
+      "topic_ur": "مضبوط",
+      "words_ar": [
+        "ثابت",
+        "راسخ",
+        "متين",
+        "محكم",
+        "قيمة",
+        "وثقى"
+      ],
+      "search_keys_norm": "ثابت راسخ متين محكم قيمة وثقى"
+    },
+    {
+      "id": "m32",
+      "topic": "To make it firm, strong",
+      "topic_ur": "مضبوط بنانا - کرنا",
+      "words_ar": [
+        "ثبت",
+        "أحكم",
+        "أوثق",
+        "شد",
+        "أتقن",
+        "ربط",
+        "آزر",
+        "عقد",
+        "وكد",
+        "سند",
+        "رص",
+        "شيد"
+      ],
+      "search_keys_norm": "ثبت أحكم أوثق شد أتقن ربط آزر عقد وكد سند رص شيد"
+    },
+    {
+      "id": "m33",
+      "topic": "To forgive, pardon",
+      "topic_ur": "معاف کرنا  بخشنا درگزر کرنا",
+      "words_ar": [
+        "عفا",
+        "أصفح",
+        "غفر",
+        "تصدق"
+      ],
+      "search_keys_norm": "عفا أصفح غفر تصدق"
+    },
+    {
+      "id": "m34",
+      "topic": "Deity",
+      "topic_ur": "معبود",
+      "words_ar": [
+        "تجاوز",
+        "كفر",
+        "حطة"
+      ],
+      "search_keys_norm": "تجاوز كفر حطة"
+    },
+    {
+      "id": "m35",
+      "topic": "Status and capacity",
+      "topic_ur": "مقدور - حیثیت",
+      "words_ar": [
+        "أله",
+        "الله"
+      ],
+      "search_keys_norm": "أله الله"
+    },
+    {
+      "id": "m36",
+      "topic": "To appoint,",
+      "topic_ur": "مقرر کرنا",
+      "words_ar": [
+        "وجد",
+        "سعة",
+        "قدر"
+      ],
+      "search_keys_norm": "وجد سعة قدر"
+    },
+    {
+      "id": "m37",
+      "topic": "fly",
+      "topic_ur": "مکھی",
+      "words_ar": [
+        "فرض",
+        "وكل",
+        "أجل"
+      ],
+      "search_keys_norm": "فرض وكل أجل"
+    },
+    {
+      "id": "m38",
+      "topic": "To meet",
+      "topic_ur": "ملنا",
+      "words_ar": [
+        "ذباب",
+        "نحل"
+      ],
+      "search_keys_norm": "ذباب نحل"
+    },
+    {
+      "id": "m39",
+      "topic": "To join, mix, blend",
+      "topic_ur": "ملانا",
+      "words_ar": [
+        "لقي",
+        "لحق",
+        "ولى",
+        "أصنا",
+        "اختلط",
+        "تجاور",
+        "رتق",
+        "تحيز",
+        "اشتمل"
+      ],
+      "search_keys_norm": "لقي لحق ولى أصنا اختلط تجاور رتق تحيز اشتمل"
+    },
+    {
+      "id": "m40",
+      "topic": "To turn your face away",
+      "topic_ur": "منہ پھیرنا",
+      "words_ar": [
+        "خلط",
+        "ألحق",
+        "وصل",
+        "ألف",
+        "لبس",
+        "ركب",
+        "ضم",
+        "مشج",
+        "مزج",
+        "مرج",
+        "شاب",
+        "ضغث"
+      ],
+      "search_keys_norm": "خلط ألحق وصل ألف لبس ركب ضم مشج مزج مرج شاب ضغث"
+    },
+    {
+      "id": "m41",
+      "topic": "To agree",
+      "topic_ur": "موافقت کرنا",
+      "words_ar": [
+        "أعرض",
+        "تولى",
+        "صدف"
+      ],
+      "search_keys_norm": "أعرض تولى صدف"
+    },
+    {
+      "id": "m42",
+      "topic": "To bend, turn",
+      "topic_ur": "موڑنا",
+      "words_ar": [
+        "رفق",
+        "وطأ"
+      ],
+      "search_keys_norm": "رفق وطأ"
+    },
+    {
+      "id": "m43",
+      "topic": "Merciful",
+      "topic_ur": "مہربان",
+      "words_ar": [
+        "ثنى",
+        "لوى"
+      ],
+      "search_keys_norm": "ثنى لوى"
+    },
+    {
+      "id": "m44",
+      "topic": "To stamp, to put a seal",
+      "topic_ur": "مہر لگانا",
+      "words_ar": [
+        "رحمان",
+        "رحيم",
+        "رؤوف",
+        "لطيف",
+        "حنان"
+      ],
+      "search_keys_norm": "رحمان رحيم رؤوف لطيف حنان"
+    },
+    {
+      "id": "m45",
+      "topic": "To give time, reprieve",
+      "topic_ur": "مہلت دینا",
+      "words_ar": [
+        "طبع",
+        "ختم"
+      ],
+      "search_keys_norm": "طبع ختم"
+    },
+    {
+      "id": "m46",
+      "topic": "Visitor",
+      "topic_ur": "مہمان",
+      "words_ar": [
+        "أمهل",
+        "مهل",
+        "أملى",
+        "نظرة"
+      ],
+      "search_keys_norm": "أمهل مهل أملى نظرة"
+    },
+    {
+      "id": "m47",
+      "topic": "Months",
+      "topic_ur": "مہینے",
+      "words_ar": [
+        "ضيف",
+        "وفد"
+      ],
+      "search_keys_norm": "ضيف وفد"
+    },
+    {
+      "id": "m48",
+      "topic": "Peg, nail",
+      "topic_ur": "میخ",
+      "words_ar": [
+        "شهور",
+        "أشهر"
+      ],
+      "search_keys_norm": "شهور أشهر"
+    },
+    {
+      "id": "n1",
+      "topic": "To be hopeless",
+      "topic_ur": "نا امید ہونا",
+      "words_ar": [
+        "يئيس",
+        "استيئس",
+        "قنط",
+        "أبلس"
+      ],
+      "search_keys_norm": "يئيس استيئس قنط أبلس"
+    },
+    {
+      "id": "n2",
+      "topic": "Impure, polluted,",
+      "topic_ur": "ناپاک",
+      "words_ar": [
+        "رجس",
+        "خبيث",
+        "نجس"
+      ],
+      "search_keys_norm": "رجس خبيث نجس"
+    },
+    {
+      "id": "n3",
+      "topic": "Disliked thing",
+      "topic_ur": "ناپسندیدہ",
+      "words_ar": [
+        "مكروه",
+        "إد",
+        "منكر",
+        "إمر",
+        "مذموم",
+        "مذؤوم",
+        "أف"
+      ],
+      "search_keys_norm": "مكروه إد منكر إمر مذموم مذؤوم أف"
+    },
+    {
+      "id": "n4",
+      "topic": "Ignorant, naive",
+      "topic_ur": "نادان",
+      "words_ar": [
+        "جاهل",
+        "سفهاء"
+      ],
+      "search_keys_norm": "جاهل سفهاء"
+    },
+    {
+      "id": "n5",
+      "topic": "Upset and angry",
+      "topic_ur": "ناراضگی",
+      "words_ar": [
+        "سخط",
+        "ضغن",
+        "غل"
+      ],
+      "search_keys_norm": "سخط ضغن غل"
+    },
+    {
+      "id": "n6",
+      "topic": "Ungrateful",
+      "topic_ur": "ناشکرا",
+      "words_ar": [
+        "كفور",
+        "كنود"
+      ],
+      "search_keys_norm": "كفور كنود"
+    },
+    {
+      "id": "n7",
+      "topic": "To disobey",
+      "topic_ur": "نافرمانی کرنا",
+      "words_ar": [
+        "عصى",
+        "فسق",
+        "فجر"
+      ],
+      "search_keys_norm": "عصى فسق فجر"
+    },
+    {
+      "id": "n8",
+      "topic": "Nose",
+      "topic_ur": "ناک",
+      "words_ar": [
+        "أنف",
+        "خرطوم"
+      ],
+      "search_keys_norm": "أنف خرطوم"
+    },
+    {
+      "id": "n9",
+      "topic": "Name, to keep a name",
+      "topic_ur": "نام - رکھنا",
+      "words_ar": [
+        "اسم",
+        "سمى",
+        "لقب",
+        "نبز",
+        "فلان"
+      ],
+      "search_keys_norm": "اسم سمى لقب نبز فلان"
+    },
+    {
+      "id": "n10",
+      "topic": "Inauspicious",
+      "topic_ur": "نامبارک",
+      "words_ar": [
+        "مشئمة",
+        "نحس",
+        "حسوم"
+      ],
+      "search_keys_norm": "مشئمة نحس حسوم"
+    },
+    {
+      "id": "n11",
+      "topic": "To be liberated",
+      "topic_ur": "نجات پانا",
+      "words_ar": [
+        "نجى",
+        "فاز"
+      ],
+      "search_keys_norm": "نجى فاز"
+    },
+    {
+      "id": "n12",
+      "topic": "Gifts and oblations",
+      "topic_ur": "نذر و نیاز",
+      "words_ar": [
+        "نذر",
+        "قربان"
+      ],
+      "search_keys_norm": "نذر قربان"
+    },
+    {
+      "id": "n13",
+      "topic": "To be soft, soften",
+      "topic_ur": "نرم ہونا - کرنا",
+      "words_ar": [
+        "لان",
+        "ألان",
+        "أدهن",
+        "آه",
+        "تلطف"
+      ],
+      "search_keys_norm": "لان ألان أدهن آه تلطف"
+    },
+    {
+      "id": "n14",
+      "topic": "To be near, to make it close",
+      "topic_ur": "نزدیک ہونا - کرنا",
+      "words_ar": [
+        "كاد",
+        "قرب",
+        "دنى",
+        "أزف",
+        "زلف",
+        "قاب",
+        "اقترن"
+      ],
+      "search_keys_norm": "كاد قرب دنى أزف زلف قاب اقترن"
+    },
+    {
+      "id": "n15",
+      "topic": "sign",
+      "topic_ur": "نشانی",
+      "words_ar": [
+        "أثر",
+        "علامة",
+        "آية",
+        "مبصرة",
+        "شرط",
+        "نصب",
+        "سيما",
+        "شعائر"
+      ],
+      "search_keys_norm": "أثر علامة آية مبصرة شرط نصب سيما شعائر"
+    },
+    {
+      "id": "n16",
+      "topic": "To place an emblem",
+      "topic_ur": "نشان لگانا",
+      "words_ar": [
+        "سوم",
+        "وسم"
+      ],
+      "search_keys_norm": "سوم وسم"
+    },
+    {
+      "id": "n17",
+      "topic": "Advice, to give , to attain",
+      "topic_ur": "نصیحت – کرنا – حاصل کرنا",
+      "words_ar": [
+        "نصح",
+        "ذكر",
+        "وعظ",
+        "وصى",
+        "اعتبر",
+        "عبرة"
+      ],
+      "search_keys_norm": "نصح ذكر وعظ وصى اعتبر عبرة"
+    },
+    {
+      "id": "n18",
+      "topic": "Grace, divine blessings",
+      "topic_ur": "نعمت",
+      "words_ar": [
+        "نعمة",
+        "آلاء"
+      ],
+      "search_keys_norm": "نعمة آلاء"
+    },
+    {
+      "id": "n19",
+      "topic": "To give blessings",
+      "topic_ur": "نعمت عطا کرنا",
+      "words_ar": [
+        "أنعم",
+        "خول",
+        "أترف",
+        "أغنى",
+        "أقنى"
+      ],
+      "search_keys_norm": "أنعم خول أترف أغنى أقنى"
+    },
+    {
+      "id": "n20",
+      "topic": "To have loss, incur loss",
+      "topic_ur": "نقصان ہونا - اٹھانا",
+      "words_ar": [
+        "ضر",
+        "ضير",
+        "خسر",
+        "كسد",
+        "بخس",
+        "بار",
+        "بوار",
+        "غرم"
+      ],
+      "search_keys_norm": "ضر ضير خسر كسد بخس بار بوار غرم"
+    },
+    {
+      "id": "n21",
+      "topic": "To marry, marry off",
+      "topic_ur": "نکاح کرنا - کرانا",
+      "words_ar": [
+        "نكح",
+        "أنكح",
+        "زوج"
+      ],
+      "search_keys_norm": "نكح أنكح زوج"
+    },
+    {
+      "id": "n22",
+      "topic": "To come out",
+      "topic_ur": "نکلنا",
+      "words_ar": [
+        "خرج",
+        "برز",
+        "نفر",
+        "غزى",
+        "زهق",
+        "نفذ",
+        "سلل",
+        "لواذا",
+        "دفق",
+        "شرق",
+        "طلع"
+      ],
+      "search_keys_norm": "خرج برز نفر غزى زهق نفذ سلل لواذا دفق شرق طلع"
+    },
+    {
+      "id": "n23",
+      "topic": "To take out",
+      "topic_ur": "نکالنا",
+      "words_ar": [
+        "أخرج",
+        "برز",
+        "طرد"
+      ],
+      "search_keys_norm": "أخرج برز طرد"
+    },
+    {
+      "id": "n24",
+      "topic": "Glance, sight",
+      "topic_ur": "نگاہ",
+      "words_ar": [
+        "طرف",
+        "بصر"
+      ],
+      "search_keys_norm": "طرف بصر"
+    },
+    {
+      "id": "n25",
+      "topic": "watchman",
+      "topic_ur": "نگہبان",
+      "words_ar": [
+        "حافظ",
+        "حفيظ",
+        "رقيب",
+        "مقيت",
+        "حرس",
+        "مهيمن"
+      ],
+      "search_keys_norm": "حافظ حفيظ رقيب مقيت حرس مهيمن"
+    },
+    {
+      "id": "n26",
+      "topic": "To swallow",
+      "topic_ur": "نگلنا",
+      "words_ar": [
+        "بلع",
+        "مرأ",
+        "أساغ",
+        "غص",
+        "لقف",
+        "إلتقم"
+      ],
+      "search_keys_norm": "بلع مرأ أساغ غص لقف إلتقم"
+    },
+    {
+      "id": "n27",
+      "topic": "To wash",
+      "topic_ur": "نہانا -دھونا",
+      "words_ar": [
+        "غسل",
+        "اغتسل",
+        "طهر",
+        "إطهر"
+      ],
+      "search_keys_norm": "غسل اغتسل طهر إطهر"
+    },
+    {
+      "id": "n28",
+      "topic": "No, nay",
+      "topic_ur": "نہیں",
+      "words_ar": [
+        "ليس",
+        "لا",
+        "لم",
+        "لن",
+        "إن",
+        "ما",
+        "هل",
+        "لما",
+        "بلى",
+        "كلا",
+        "إنما",
+        "لات"
+      ],
+      "search_keys_norm": "ليس لا لم لن إن ما هل لما بلى كلا إنما لات"
+    },
+    {
+      "id": "n29",
+      "topic": "New , to be fresh",
+      "topic_ur": "نیا – نیا ہونا",
+      "words_ar": [
+        "حدث",
+        "جد",
+        "بدع"
+      ],
+      "search_keys_norm": "حدث جد بدع"
+    },
+    {
+      "id": "n30",
+      "topic": "Under, lowest",
+      "topic_ur": "نیچے",
+      "words_ar": [
+        "تحت",
+        "أسفل",
+        "سافل",
+        "سفلى"
+      ],
+      "search_keys_norm": "تحت أسفل سافل سفلى"
+    },
+    {
+      "id": "n31",
+      "topic": "To lower",
+      "topic_ur": "نیچے [پست ] کرنا",
+      "words_ar": [
+        "خفض",
+        "غض",
+        "قصر",
+        "خشع"
+      ],
+      "search_keys_norm": "خفض غض قصر خشع"
+    },
+    {
+      "id": "n32",
+      "topic": "Pious, virtuous",
+      "topic_ur": "نیک  نیکبخت",
+      "words_ar": [
+        "صالح",
+        "أبرار",
+        "بررة",
+        "رشيد",
+        "سعيد",
+        "متقين",
+        "ربانيون"
+      ],
+      "search_keys_norm": "صالح أبرار بررة رشيد سعيد متقين ربانيون"
+    },
+    {
+      "id": "n33",
+      "topic": "Good, piety",
+      "topic_ur": "نیکی – نیک کام",
+      "words_ar": [
+        "عرف",
+        "معروف",
+        "حسنة",
+        "خير",
+        "بر"
+      ],
+      "search_keys_norm": "عرف معروف حسنة خير بر"
+    },
+    {
+      "id": "n34",
+      "topic": "To do good,",
+      "topic_ur": "نیکی کرنا",
+      "words_ar": [
+        "أحسن",
+        "أنعم"
+      ],
+      "search_keys_norm": "أحسن أنعم"
+    },
+    {
+      "id": "w1",
+      "topic": "plentiful",
+      "topic_ur": "وافر- بہت",
+      "words_ar": [
+        "كثير",
+        "كوثر",
+        "جم",
+        "مركوم",
+        "لبد",
+        "رغد",
+        "غدق",
+        "ثجاج",
+        "موفور"
+      ],
+      "search_keys_norm": "كثير كوثر جم مركوم لبد رغد غدق ثجاج موفور"
+    },
+    {
+      "id": "w2",
+      "topic": "The ones of/the people of",
+      "topic_ur": "والا-  والے",
+      "words_ar": [
+        "أصحاب",
+        "آل",
+        "أهل",
+        "ذو",
+        "أولو"
+      ],
+      "search_keys_norm": "أصحاب آل أهل ذو أولو"
+    },
+    {
+      "id": "w3",
+      "topic": "inheritance",
+      "topic_ur": "وراثت",
+      "words_ar": [
+        "ولاية",
+        "تراث",
+        "عهد",
+        "وعده"
+      ],
+      "search_keys_norm": "ولاية تراث عهد وعده"
+    },
+    {
+      "id": "w4",
+      "topic": "time",
+      "topic_ur": "وقت",
+      "words_ar": [
+        "وقت",
+        "ميقات",
+        "حين",
+        "حينئذ",
+        "آن",
+        "أنفا",
+        "أجل"
+      ],
+      "search_keys_norm": "وقت ميقات حين حينئذ آن أنفا أجل"
+    },
+    {
+      "id": "h1",
+      "topic": "Hand, either right hand or left hand, arm",
+      "topic_ur": "ہاتھ",
+      "words_ar": [
+        "يد",
+        "يمين",
+        "شمال",
+        "ذراع"
+      ],
+      "search_keys_norm": "يد يمين شمال ذراع"
+    },
+    {
+      "id": "h2",
+      "topic": "yes",
+      "topic_ur": "ہاں",
+      "words_ar": [
+        "نعم",
+        "إي",
+        "بلى"
+      ],
+      "search_keys_norm": "نعم إي بلى"
+    },
+    {
+      "id": "h3",
+      "topic": "To pant",
+      "topic_ur": "ہانپنا",
+      "words_ar": [
+        "ضبح",
+        "لهث"
+      ],
+      "search_keys_norm": "ضبح لهث"
+    },
+    {
+      "id": "h4",
+      "topic": "To remove",
+      "topic_ur": "ہٹانا",
+      "words_ar": [
+        "رفع",
+        "جنب",
+        "زحزح",
+        "درء",
+        "دع",
+        "دحر",
+        "خسأ"
+      ],
+      "search_keys_norm": "رفع جنب زحزح درء دع دحر خسأ"
+    },
+    {
+      "id": "h5",
+      "topic": "To receive guidance, to give guidance",
+      "topic_ur": "ہدایت دینا پانا",
+      "words_ar": [
+        "هدى",
+        "اهتدى",
+        "رشد"
+      ],
+      "search_keys_norm": "هدى اهتدى رشد"
+    },
+    {
+      "id": "h6",
+      "topic": "destruction",
+      "topic_ur": "ہلاکت",
+      "words_ar": [
+        "تب",
+        "تعس",
+        "قتل",
+        "ثبر",
+        "أولى",
+        "ويل"
+      ],
+      "search_keys_norm": "تب تعس قتل ثبر أولى ويل"
+    },
+    {
+      "id": "h7",
+      "topic": "To be perished, to destroy",
+      "topic_ur": "ہلاک ہونا - کرنا",
+      "words_ar": [
+        "هلك",
+        "أهلك",
+        "باد",
+        "ردى",
+        "تردى",
+        "بخع",
+        "دمر",
+        "دمدم",
+        "تبب",
+        "تبر",
+        "بار",
+        "أسحت",
+        "أوبق",
+        "قصم",
+        "فنى"
+      ],
+      "search_keys_norm": "هلك أهلك باد ردى تردى بخع دمر دمدم تبب تبر بار أسحت أوبق قصم فنى"
+    },
+    {
+      "id": "h8",
+      "topic": "To be light(in weight), to make light",
+      "topic_ur": "ہلکا ہونا - کرنا",
+      "words_ar": [
+        "خف",
+        "خفف",
+        "استخف",
+        "فتر",
+        "قصد"
+      ],
+      "search_keys_norm": "خف خفف استخف فتر قصد"
+    },
+    {
+      "id": "h9",
+      "topic": "To move, to shake",
+      "topic_ur": "ہلنا - ہلانا",
+      "words_ar": [
+        "حرك",
+        "هز",
+        "هش",
+        "لوى",
+        "نغض"
+      ],
+      "search_keys_norm": "حرك هز هش لوى نغض"
+    },
+    {
+      "id": "h10",
+      "topic": "Congruence",
+      "topic_ur": "ہم آہنگی - ہونا",
+      "words_ar": [
+        "قرين",
+        "أتراب",
+        "سمي",
+        "كفو",
+        "صف",
+        "ضاهى"
+      ],
+      "search_keys_norm": "قرين أتراب سمي كفو صف ضاهى"
+    },
+    {
+      "id": "h11",
+      "topic": "To lose heart",
+      "topic_ur": "ہمت ہارنا",
+      "words_ar": [
+        "فشل",
+        "استكان"
+      ],
+      "search_keys_norm": "فشل استكان"
+    },
+    {
+      "id": "h12",
+      "topic": "To make level",
+      "topic_ur": "ہموار کرنا",
+      "words_ar": [
+        "سطح",
+        "دك",
+        "مرد"
+      ],
+      "search_keys_norm": "سطح دك مرد"
+    },
+    {
+      "id": "h13",
+      "topic": "Always",
+      "topic_ur": "ہمیشہ",
+      "words_ar": [
+        "سرمد",
+        "أبد"
+      ],
+      "search_keys_norm": "سرمد أبد"
+    },
+    {
+      "id": "h14",
+      "topic": "To remain always",
+      "topic_ur": "ہمیشہ ہونا - رہنا",
+      "words_ar": [
+        "خلد",
+        "وصب",
+        "ظل",
+        "استمر",
+        "دام",
+        "زال",
+        "أبرح",
+        "فتا"
+      ],
+      "search_keys_norm": "خلد وصب ظل استمر دام زال أبرح فتا"
+    },
+    {
+      "id": "h15",
+      "topic": "To laugh",
+      "topic_ur": "ہنسنا",
+      "words_ar": [
+        "ضحك",
+        "تبسم"
+      ],
+      "search_keys_norm": "ضحك تبسم"
+    },
+    {
+      "id": "h16",
+      "topic": "Wind  and its different types",
+      "topic_ur": "ہوا اور اسکی اقسام",
+      "words_ar": [
+        "ريح",
+        "روح",
+        "ريحان",
+        "مبشرات",
+        "لوقح",
+        "عاصف",
+        "قاصف",
+        "حاصب",
+        "سموم",
+        "إعصار",
+        "حسبان",
+        "نفحة",
+        "صرصر",
+        "ريحعقيم"
+      ],
+      "search_keys_norm": "ريح روح ريحان مبشرات لوقح عاصف قاصف حاصب سموم إعصار حسبان نفحة صرصر ريحعقيم"
+    },
+    {
+      "id": "h17",
+      "topic": "To happen",
+      "topic_ur": "ہونا",
+      "words_ar": [
+        "كان",
+        "أصبح",
+        "صدر",
+        "أصدر",
+        "وقع"
+      ],
+      "search_keys_norm": "كان أصبح صدر أصدر وقع"
+    },
+    {
+      "id": "y1",
+      "topic": "or",
+      "topic_ur": "یا",
+      "words_ar": [
+        "أو",
+        "أم",
+        "إما"
+      ],
+      "search_keys_norm": "أو أم إما"
+    },
+    {
+      "id": "y2",
+      "topic": "To remember",
+      "topic_ur": "یاد کرنا – آنا - رکھنا",
+      "words_ar": [
+        "ذكر",
+        "إدكر",
+        "حفظ",
+        "وعى"
+      ],
+      "search_keys_norm": "ذكر إدكر حفظ وعى"
+    },
+    {
+      "id": "y3",
+      "topic": "To belief, to have faith",
+      "topic_ur": "یقین کرنا",
+      "words_ar": [
+        "أيقن",
+        "استيقن",
+        "ظن"
+      ],
+      "search_keys_norm": "أيقن استيقن ظن"
+    },
+    {
+      "id": "y4",
+      "topic": "To have complete devotion",
+      "topic_ur": "یکسو ہونا",
+      "words_ar": [
+        "حنف",
+        "تبتل"
+      ],
+      "search_keys_norm": "حنف تبتل"
+    }
+  ]
+}
