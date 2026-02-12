@@ -30,19 +30,29 @@ export class MorphologyTaskComponent {
   editModalTitle = 'Morphology JSON';
   editModalPlaceholder = JSON.stringify(
     {
-      word_location: '1:1:1',
-      surah: 1,
-      ayah: 1,
-      token_index: 1,
+      word_location: '',
+      surah: null,
+      ayah: null,
+      token_index: null,
       surface_ar: '',
       surface_norm: '',
       lemma_ar: '',
       lemma_norm: '',
       root_norm: '',
-      translation: null,
       pos: null,
-      morph_pattern: '',
-      morph_features: {},
+      morphology: {
+        singular: {
+          form_ar: '',
+          pattern: '',
+        },
+        plural: null,
+        morph_features: {},
+      },
+      translation: {
+        primary: '',
+        alternatives: [],
+        context: '',
+      },
       lexicon_id: null,
     },
     null,
@@ -93,6 +103,18 @@ export class MorphologyTaskComponent {
   }
 
   itemValue(item: Record<string, unknown>, key: string) {
+    if (key === 'morph_pattern') {
+      const direct = item[key];
+      if (direct != null) return direct;
+      const morphology = item['morphology'];
+      if (morphology && typeof morphology === 'object' && !Array.isArray(morphology)) {
+        const singular = (morphology as Record<string, unknown>)['singular'];
+        if (singular && typeof singular === 'object' && !Array.isArray(singular)) {
+          return (singular as Record<string, unknown>)['pattern'] ?? '';
+        }
+      }
+      return '';
+    }
     return item[key] ?? '';
   }
 
@@ -120,6 +142,17 @@ export class MorphologyTaskComponent {
       if (normalized) {
         item['root_norm'] = normalized;
       }
+    }
+    if (key === 'morph_pattern') {
+      const morphology = this.ensureMorphologyObject(item);
+      const singular = (morphology['singular'] ?? {}) as Record<string, unknown>;
+      morphology['singular'] = singular;
+      if (trimmed) {
+        singular['pattern'] = trimmed;
+      } else {
+        delete singular['pattern'];
+      }
+      item['morphology'] = morphology;
     }
     this.writeItems(items);
   }
@@ -244,7 +277,47 @@ export class MorphologyTaskComponent {
         next['word_location'] = `${surah}:${ayah}:${tokenIndex}`;
       }
     }
+    const morphology = this.ensureMorphologyObject(next);
+    if (!('singular' in morphology)) {
+      morphology['singular'] = { form_ar: '', pattern: '' };
+    }
+    if (!('plural' in morphology)) {
+      morphology['plural'] = null;
+    }
+    if (!('morph_features' in morphology)) {
+      morphology['morph_features'] = {};
+    }
+    next['morphology'] = morphology;
+
+    const translation = next['translation'];
+    if (typeof translation === 'string') {
+      next['translation'] = {
+        primary: translation,
+        alternatives: [],
+        context: '',
+      };
+    } else if (!translation || typeof translation !== 'object' || Array.isArray(translation)) {
+      next['translation'] = {
+        primary: '',
+        alternatives: [],
+        context: '',
+      };
+    } else {
+      const translationRecord = translation as Record<string, unknown>;
+      if (typeof translationRecord['primary'] !== 'string') translationRecord['primary'] = '';
+      if (!Array.isArray(translationRecord['alternatives'])) translationRecord['alternatives'] = [];
+      if (typeof translationRecord['context'] !== 'string') translationRecord['context'] = '';
+      next['translation'] = translationRecord;
+    }
     return next;
+  }
+
+  private ensureMorphologyObject(record: Record<string, unknown>) {
+    const existing = record['morphology'];
+    if (existing && typeof existing === 'object' && !Array.isArray(existing)) {
+      return { ...(existing as Record<string, unknown>) };
+    }
+    return {} as Record<string, unknown>;
   }
 
   private buildNewItemTemplate(): Record<string, unknown> {
@@ -258,10 +331,20 @@ export class MorphologyTaskComponent {
       lemma_ar: '',
       lemma_norm: '',
       root_norm: '',
-      translation: null,
       pos: null,
-      morph_pattern: '',
-      morph_features: {},
+      morphology: {
+        singular: {
+          form_ar: '',
+          pattern: '',
+        },
+        plural: null,
+        morph_features: {},
+      },
+      translation: {
+        primary: '',
+        alternatives: [],
+        context: '',
+      },
       lexicon_id: null,
     };
 

@@ -13,6 +13,7 @@
       <label class="d-block w-100">
         <span>JSON</span>
         <ngx-codemirror
+          #jsonEditor
           class="app-json-modal-editor"
           [options]="editorOptions"
           [(ngModel)]="draft"

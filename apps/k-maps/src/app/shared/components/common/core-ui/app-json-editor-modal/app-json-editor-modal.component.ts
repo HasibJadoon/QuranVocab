@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CodemirrorModule } from '@ctrl/ngx-codemirror';
+import { CodemirrorComponent, CodemirrorModule } from '@ctrl/ngx-codemirror';
 
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/addon/display/placeholder';
@@ -23,8 +23,12 @@ export class AppJsonEditorModalComponent implements OnChanges {
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<string>();
 
+  @ViewChild('jsonEditor')
+  private jsonEditor?: CodemirrorComponent;
+
   draft = '';
   formatError = '';
+  private focusTimeout: number | null = null;
 
   get editorOptions(): Record<string, unknown> {
     return {
@@ -35,6 +39,7 @@ export class AppJsonEditorModalComponent implements OnChanges {
       lineWrapping: true,
       tabSize: 2,
       indentUnit: 2,
+      autofocus: true,
       placeholder: this.placeholder,
     };
   }
@@ -42,6 +47,9 @@ export class AppJsonEditorModalComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['open'] || changes['value']) {
       this.draft = this.stringify(this.value);
+    }
+    if (changes['open']?.currentValue) {
+      this.queueFocus();
     }
   }
 
@@ -88,6 +96,20 @@ export class AppJsonEditorModalComponent implements OnChanges {
 
   get displayError() {
     return this.error || this.formatError;
+  }
+
+  private queueFocus() {
+    if (this.focusTimeout != null) {
+      clearTimeout(this.focusTimeout);
+    }
+    this.focusTimeout = window.setTimeout(() => {
+      this.focusTimeout = null;
+      const editor = this.jsonEditor?.codeMirror;
+      if (editor) {
+        editor.focus();
+        editor.refresh?.();
+      }
+    }, 0);
   }
 
   private stringify(value: unknown) {
