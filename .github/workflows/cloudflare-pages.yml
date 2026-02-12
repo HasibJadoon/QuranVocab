@@ -29,8 +29,7 @@ jobs:
         run: npm run sync:functions
 
       - name: Deploy to Cloudflare Pages
-        working-directory: apps/k-maps/dist/k-maps/browser
-        run: npx wrangler pages deploy . --project-name k-maps --branch main
+        run: npx wrangler pages deploy ${{ github.workspace }}/apps/k-maps/dist/k-maps/browser --project-name k-maps --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
