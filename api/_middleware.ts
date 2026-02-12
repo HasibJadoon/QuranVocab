@@ -1,4 +1,4 @@
-// functions/_middleware.ts
+// api/_middleware.ts
 
 import { verifyToken } from './_utils/jwt';
 

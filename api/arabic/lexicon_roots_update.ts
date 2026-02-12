@@ -1,4 +1,4 @@
-// functions/lexicon_roots_update.ts
+// api/lexicon_roots_update.ts
 import { requireAuth } from '../_utils/auth';
 
 interface Env {

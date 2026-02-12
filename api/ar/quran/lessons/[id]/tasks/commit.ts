@@ -87,7 +87,7 @@ function normalizeArabic(input: string): string {
   return input.normalize('NFKC').replace(ARABIC_DIACRITICS_RE, '').trim();
 }
 
-function normalizePos(value: string | null): string | null {
+function normalizeMorphPos(value: string | null): string | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -428,7 +428,10 @@ function normalizeRoot(raw: string): string {
   return canonicalize(raw).replace(/\s+/g, '');
 }
 
-function normalizePos(raw?: string | null, detail?: string | null): 'noun' | 'verb' | 'adj' | 'particle' | 'phrase' {
+function normalizeSentencePos(
+  raw?: string | null,
+  detail?: string | null
+): 'noun' | 'verb' | 'adj' | 'particle' | 'phrase' {
   const rawTrim = raw?.trim() ?? '';
   const rawLower = rawTrim.toLowerCase();
   if (['noun', 'verb', 'adj', 'particle', 'phrase'].includes(rawLower)) {
@@ -570,7 +573,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
           normalizeArabic(lemmaAr || surfaceAr);
         const rootRaw = asString(item['root_ar']) ?? asString(item['root']) ?? null;
         const rootNorm = normalizeRootValue(asString(item['root_norm']) ?? rootRaw);
-        const pos = normalizePos(asString(item['pos']));
+        const pos = normalizeMorphPos(asString(item['pos']));
         const morphology = asRecord(item['morphology']);
         const singular = asRecord(morphology?.['singular']);
         const plural = asRecord(morphology?.['plural']);
@@ -924,7 +927,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         const tokenIndex = asNumber(token.token_index) ?? i;
         const lemmaAr = asString(token.lemma) ?? asString(token.surface) ?? '';
         const lemmaNorm = canonicalize(lemmaAr || '');
-        const pos = normalizePos(asString(token.pos), asString(token.pos_detail));
+        const pos = normalizeSentencePos(asString(token.pos), asString(token.pos_detail));
         const rootRaw = asString(token.root);
         let arURoot = asString(token.ar_u_root);
         let rootNorm: string | null = asString(token.root_norm);

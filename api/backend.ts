@@ -1,4 +1,4 @@
-// functions/api/vocab.ts
+// api/vocab.ts
 export const onRequestGet: PagesFunction<{ DB: D1Database }> = async ({ env, request }) => {
   const url = new URL(request.url);
   const root   = url.searchParams.get("root");
