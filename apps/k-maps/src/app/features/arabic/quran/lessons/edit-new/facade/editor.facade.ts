@@ -1163,12 +1163,7 @@ export class QuranLessonEditorFacade {
 
   private normalizeMorphologyKey(value: string): string {
     if (!value) return '';
-    return this.stripArabicDiacritics(value)
-      .replace(/[إأآ]/g, 'ا')
-      .replace(/ؤ/g, 'و')
-      .replace(/ئ/g, 'ي')
-      .replace(/ى/g, 'ي')
-      .replace(/ة/g, 'ه');
+    return this.stripArabicDiacritics(value).replace(/[إأآٱ]/g, 'ا');
   }
 
   private parseMorphologyItems(raw: string): Array<Record<string, unknown>> {

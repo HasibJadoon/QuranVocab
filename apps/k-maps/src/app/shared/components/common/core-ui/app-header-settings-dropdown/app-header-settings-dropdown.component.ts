@@ -28,7 +28,28 @@ export class AppHeaderSettingsDropdownComponent {
   private readonly router = inject(Router);
 
   readonly scriptModes = ['Uthmani', 'IndoPak', 'Tajweed'];
-  readonly fontStyles = ['Uthmanic Hafs'];
+  readonly fontStyles = [
+    {
+      label: 'Uthmanic Hafs',
+      value: '"Uthmanic Hafs", "Scheherazade New", "Amiri", "Noto Naskh Arabic", "Cairo", serif',
+    },
+    {
+      label: 'Scheherazade New',
+      value: '"Scheherazade New", "Amiri", "Noto Naskh Arabic", "Cairo", serif',
+    },
+    {
+      label: 'Amiri',
+      value: '"Amiri", "Scheherazade New", "Noto Naskh Arabic", "Cairo", serif',
+    },
+    {
+      label: 'Noto Naskh Arabic',
+      value: '"Noto Naskh Arabic", "Amiri", "Scheherazade New", "Cairo", serif',
+    },
+    {
+      label: 'Cairo',
+      value: '"Cairo", "Noto Naskh Arabic", "Amiri", "Scheherazade New", serif',
+    },
+  ];
 
   selectedScriptMode = this.scriptModes[0];
   selectedFontStyle = this.fontStyles[0];
@@ -42,6 +63,7 @@ export class AppHeaderSettingsDropdownComponent {
   constructor() {
     this.loadFontSize();
     this.loadArabicFontSize();
+    this.loadArabicFontStyle();
     this.loadSystemTextSizes();
   }
 
@@ -63,6 +85,18 @@ export class AppHeaderSettingsDropdownComponent {
 
   selectScriptMode(mode: string) {
     this.selectedScriptMode = mode;
+  }
+
+  selectFontStyle(value: string) {
+    const match = this.fontStyles.find((option) => option.value === value || option.label === value);
+    this.selectedFontStyle = match ?? this.fontStyles[0];
+    this.applyArabicFontFamily(this.selectedFontStyle.value);
+  }
+
+  onFontStyleChange(event: Event) {
+    const target = event.target as HTMLSelectElement | null;
+    if (!target?.value) return;
+    this.selectFontStyle(target.value);
   }
 
   onArabicFontSizeInput(event: Event) {
@@ -115,6 +149,7 @@ export class AppHeaderSettingsDropdownComponent {
     this.selectedFontStyle = this.fontStyles[0];
     this.loadFontSize();
     this.loadArabicFontSize();
+    this.applyArabicFontFamily(this.selectedFontStyle.value);
     this.loadSystemTextSizes();
     this.activePreviewTab = 'arabic';
   }
@@ -177,6 +212,34 @@ export class AppHeaderSettingsDropdownComponent {
     }
     this.arabicFontSize = value;
     this.applyArabicFontSize(value);
+  }
+
+  private applyArabicFontFamily(value: string) {
+    const doc = (globalThis as any)?.document as any;
+    if (!doc?.documentElement) return;
+    doc.documentElement.style.setProperty('--app-font-ar', value);
+    try {
+      (globalThis as any)?.localStorage?.setItem('app_ar_font_family', String(value));
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  private loadArabicFontStyle() {
+    const doc = (globalThis as any)?.document as any;
+    if (!doc?.documentElement) return;
+    let value = this.fontStyles[0]?.value ?? '';
+    try {
+      const stored = String((globalThis as any)?.localStorage?.getItem('app_ar_font_family') ?? '');
+      if (stored) value = stored;
+    } catch {
+      // ignore storage errors
+    }
+    const match = this.fontStyles.find((option) => option.value === value || option.label === value);
+    this.selectedFontStyle = match ?? this.fontStyles[0];
+    if (this.selectedFontStyle?.value) {
+      this.applyArabicFontFamily(this.selectedFontStyle.value);
+    }
   }
 
   private loadSystemTextSizes() {

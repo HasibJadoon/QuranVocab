@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AppTabsComponent, type AppTabItem } from '../../../../../../../../shared/components';
+import {
+  AppJsonEditorModalComponent,
+  AppTabsComponent,
+  type AppTabItem,
+} from '../../../../../../../../shared/components';
 import { QuranLessonEditorFacade } from '../../../facade/editor.facade';
 import { EditorState, TaskTab } from '../../../models/editor.types';
 import { QuranLessonTaskJsonComponent } from '../task-json/task-json.component';
@@ -9,7 +13,7 @@ import { QuranLessonTaskJsonComponent } from '../task-json/task-json.component';
 @Component({
   selector: 'app-morphology-task',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppTabsComponent, QuranLessonTaskJsonComponent],
+  imports: [CommonModule, FormsModule, AppTabsComponent, QuranLessonTaskJsonComponent, AppJsonEditorModalComponent],
   templateUrl: './morphology-task.component.html',
 })
 export class MorphologyTaskComponent {
@@ -19,6 +23,31 @@ export class MorphologyTaskComponent {
     { id: 'json', label: 'Task JSON' },
   ];
   activeTabId: 'items' | 'json' = 'items';
+  editModalOpen = false;
+  editModalIndex: number | null = null;
+  editModalJson = '';
+  editModalError = '';
+  editModalTitle = 'Morphology JSON';
+  editModalPlaceholder = JSON.stringify(
+    {
+      word_location: '1:1:1',
+      surah: 1,
+      ayah: 1,
+      token_index: 1,
+      surface_ar: '',
+      surface_norm: '',
+      lemma_ar: '',
+      lemma_norm: '',
+      root_norm: '',
+      translation: null,
+      pos: null,
+      morph_pattern: '',
+      morph_features: {},
+      lexicon_id: null,
+    },
+    null,
+    2
+  );
 
   get state(): EditorState {
     return this.facade.state;
@@ -108,6 +137,73 @@ export class MorphologyTaskComponent {
     this.writeItems(items);
   }
 
+  openEditModal(event: Event, item: Record<string, unknown>, index: number) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.editModalIndex = index;
+    this.editModalError = '';
+    this.editModalTitle = 'Edit Morphology JSON';
+    try {
+      this.editModalJson = JSON.stringify({ ...item }, null, 2);
+    } catch (err: any) {
+      this.editModalError = err?.message ?? 'Failed to format JSON.';
+      this.editModalJson = '';
+    }
+    queueMicrotask(() => {
+      this.editModalOpen = true;
+    });
+  }
+
+  openCreateModal(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.editModalIndex = -1;
+    this.editModalError = '';
+    this.editModalTitle = 'Add Morphology JSON';
+    try {
+      this.editModalJson = JSON.stringify(this.buildNewItemTemplate(), null, 2);
+    } catch (err: any) {
+      this.editModalError = err?.message ?? 'Failed to format JSON.';
+      this.editModalJson = '';
+    }
+    queueMicrotask(() => {
+      this.editModalOpen = true;
+    });
+  }
+
+  closeEditModal() {
+    this.editModalOpen = false;
+    this.editModalIndex = null;
+    this.editModalJson = '';
+    this.editModalError = '';
+  }
+
+  submitEditModal() {
+    if (this.editModalIndex == null) return;
+    let parsed: unknown;
+    const trimmed = this.editModalJson.trim();
+    try {
+      parsed = trimmed ? JSON.parse(trimmed) : {};
+    } catch (err: any) {
+      this.editModalError = err?.message ?? 'Invalid JSON.';
+      return;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      this.editModalError = 'Morphology JSON must be an object.';
+      return;
+    }
+
+    const record = this.ensureMorphologyDefaults(parsed as Record<string, unknown>);
+    const items = this.items;
+    if (this.editModalIndex < 0) {
+      items.push(record);
+    } else if (this.editModalIndex < items.length) {
+      items[this.editModalIndex] = record;
+    }
+    this.writeItems(items);
+    this.closeEditModal();
+  }
+
   private writeItems(items: Array<Record<string, unknown>>) {
     const tab = this.tab;
     if (!tab) return;
@@ -128,5 +224,62 @@ export class MorphologyTaskComponent {
 
   private normalizeArabic(text: string) {
     return String(text ?? '').normalize('NFKC').replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '').trim();
+  }
+
+  private ensureMorphologyDefaults(record: Record<string, unknown>) {
+    const next = { ...record };
+    if (typeof next['lemma_ar'] === 'string' && !next['lemma_norm']) {
+      const normalized = this.normalizeArabic(next['lemma_ar']);
+      if (normalized) next['lemma_norm'] = normalized;
+    }
+    if (typeof next['root_norm'] === 'string') {
+      const normalized = this.normalizeArabic(next['root_norm']);
+      if (normalized) next['root_norm'] = normalized;
+    }
+    if (!next['word_location']) {
+      const surah = Number(next['surah']);
+      const ayah = Number(next['ayah']);
+      const tokenIndex = Number(next['token_index']);
+      if (Number.isFinite(surah) && Number.isFinite(ayah) && Number.isFinite(tokenIndex)) {
+        next['word_location'] = `${surah}:${ayah}:${tokenIndex}`;
+      }
+    }
+    return next;
+  }
+
+  private buildNewItemTemplate(): Record<string, unknown> {
+    const template: Record<string, unknown> = {
+      word_location: '',
+      surah: this.state.selectedSurah ?? null,
+      ayah: this.state.rangeStart ?? null,
+      token_index: null,
+      surface_ar: '',
+      surface_norm: '',
+      lemma_ar: '',
+      lemma_norm: '',
+      root_norm: '',
+      translation: null,
+      pos: null,
+      morph_pattern: '',
+      morph_features: {},
+      lexicon_id: null,
+    };
+
+    const items = this.items;
+    const last = items.length ? items[items.length - 1] : null;
+    const lastSurah = last ? Number(last['surah']) : NaN;
+    const lastAyah = last ? Number(last['ayah']) : NaN;
+    const lastToken = last ? Number(last['token_index']) : NaN;
+    if (Number.isFinite(lastSurah)) template['surah'] = lastSurah;
+    if (Number.isFinite(lastAyah)) template['ayah'] = lastAyah;
+    if (Number.isFinite(lastToken)) {
+      const nextToken = lastToken + 1;
+      template['token_index'] = nextToken;
+      if (Number.isFinite(template['surah']) && Number.isFinite(template['ayah'])) {
+        template['word_location'] = `${template['surah']}:${template['ayah']}:${nextToken}`;
+      }
+    }
+
+    return template;
   }
 }

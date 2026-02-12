@@ -30,7 +30,10 @@ export const MORPHOLOGY_SKIP_WORDS = new Set<string>([
   'لام',
   'ب',
   'ك',
+  'لي',
   'عن',
+  'عند',
+  'في',
   'من',
   'الى',
   'على',
@@ -57,6 +60,9 @@ export const MORPHOLOGY_SKIP_WORDS = new Set<string>([
   'كيفما',
   'متى',
   'ايان',
+  'قبل',
+  // Kana (verbs of being)
+  'كان',
   // Huruf muqattaʿat
   'الم',
   'الر',

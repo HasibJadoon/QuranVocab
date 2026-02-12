@@ -14,6 +14,7 @@
         <div class="sentence-card-head">
           <h4>Morphology Items</h4>
           <div class="action-row">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openCreateModal($event)">Add JSON</button>
             <button type="button" class="btn btn-ghost btn-sm" (click)="loadFromVerses()">Load from verses</button>
             <button
               type="button"
@@ -90,6 +91,9 @@
                   />
                 </td>
                 <td>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i)">
+                    JSON
+                  </button>
                   <button type="button" class="btn btn-ghost btn-sm" (click)="removeItem(i)">Remove</button>
                 </td>
               </tr>
@@ -107,3 +111,13 @@
     </ng-container>
   </div>
 </div>
+
+<app-json-editor-modal
+  [open]="editModalOpen"
+  [title]="editModalTitle"
+  [value]="editModalJson"
+  [placeholder]="editModalPlaceholder"
+  [error]="editModalError"
+  (close)="closeEditModal()"
+  (save)="editModalJson = $event; submitEditModal()"
+></app-json-editor-modal>

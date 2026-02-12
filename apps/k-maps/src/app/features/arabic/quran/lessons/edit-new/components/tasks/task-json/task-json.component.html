@@ -5,7 +5,7 @@
   </div>
   <label>
     <span>Task JSON</span>
-    <textarea rows="12" [(ngModel)]="jsonValue" placeholder='{\n  "items": []\n}'></textarea>
+    <app-json-code-editor [value]="jsonValue" (valueChange)="jsonValue = $event" height="360px"></app-json-code-editor>
   </label>
   <div class="action-row">
     <button

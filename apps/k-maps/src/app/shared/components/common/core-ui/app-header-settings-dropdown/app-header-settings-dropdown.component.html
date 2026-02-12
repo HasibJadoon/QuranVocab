@@ -63,7 +63,7 @@
               <div
                 *ngIf="activePreviewTab === 'arabic'"
                 class="preview-box preview-box--arabic"
-                [style.fontFamily]="selectedFontStyle"
+                [style.fontFamily]="selectedFontStyle.value"
                 [style.fontSize.px]="arabicFontSize"
               >
                 {{ previewArabicText }}
@@ -104,7 +104,14 @@
 
               <div class="setting-group">
                 <p class="setting-title">Font style</p>
-                <div class="font-style-chip">{{ selectedFontStyle }}</div>
+                <div class="font-style-chip">{{ selectedFontStyle.label }}</div>
+                <select
+                  class="form-select form-select-sm mt-2"
+                  [value]="selectedFontStyle.value"
+                  (change)="onFontStyleChange($event)"
+                >
+                  <option *ngFor="let font of fontStyles" [value]="font.value">{{ font.label }}</option>
+                </select>
               </div>
 
               <div class="setting-group">

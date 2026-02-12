@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AppJsonCodeEditorComponent } from '../../../../../../../../shared/components';
 import { QuranLessonEditorFacade } from '../../../facade/editor.facade';
 import { EditorState, TaskTab, TaskType } from '../../../models/editor.types';
 
 @Component({
   selector: 'app-quran-lesson-task-json',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppJsonCodeEditorComponent],
   templateUrl: './task-json.component.html',
 })
 export class QuranLessonTaskJsonComponent {
