@@ -23,9 +23,19 @@
       <p class="text-danger mt-2" *ngIf="displayError">{{ displayError }}</p>
     </div>
     <div class="app-json-modal-footer">
-      <button type="button" class="btn btn-ghost" (click)="close.emit()">Cancel</button>
-      <button type="button" class="btn btn-ghost" (click)="onFormat()">Format</button>
-      <button type="button" class="btn btn-primary" (click)="onSave()">Save</button>
+      <div class="app-json-modal-footer-nav" *ngIf="showNavigation">
+        <button type="button" class="btn btn-ghost" [disabled]="disablePrevious" (click)="onPrevious()">
+          Previous
+        </button>
+        <button type="button" class="btn btn-ghost" [disabled]="disableNext" (click)="onNext()">
+          Next
+        </button>
+      </div>
+      <div class="app-json-modal-footer-actions">
+        <button type="button" class="btn btn-ghost" (click)="close.emit()">Cancel</button>
+        <button type="button" class="btn btn-ghost" (click)="onFormat()">Format</button>
+        <button type="button" class="btn btn-primary" (click)="onSave()">Save</button>
+      </div>
     </div>
   </div>
 </div>

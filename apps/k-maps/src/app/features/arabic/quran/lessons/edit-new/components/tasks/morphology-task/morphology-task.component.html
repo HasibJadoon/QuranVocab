@@ -118,6 +118,11 @@
   [value]="editModalJson"
   [placeholder]="editModalPlaceholder"
   [error]="editModalError"
+  [showNavigation]="editModalIndex !== null && editModalIndex >= 0"
+  [disablePrevious]="!canNavigatePrev"
+  [disableNext]="!canNavigateNext"
   (close)="closeEditModal()"
   (save)="editModalJson = $event; submitEditModal()"
+  (previous)="onModalPrevious($event)"
+  (next)="onModalNext($event)"
 ></app-json-editor-modal>

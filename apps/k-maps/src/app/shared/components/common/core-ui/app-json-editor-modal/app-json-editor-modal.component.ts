@@ -19,9 +19,14 @@ export class AppJsonEditorModalComponent implements OnChanges {
   @Input() value: unknown;
   @Input() placeholder = '';
   @Input() error = '';
+  @Input() showNavigation = false;
+  @Input() disablePrevious = false;
+  @Input() disableNext = false;
 
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<string>();
+  @Output() previous = new EventEmitter<string>();
+  @Output() next = new EventEmitter<string>();
 
   @ViewChild('jsonEditor')
   private jsonEditor?: CodemirrorComponent;
@@ -71,6 +76,14 @@ export class AppJsonEditorModalComponent implements OnChanges {
     } catch (err: any) {
       this.formatError = err?.message ?? 'Invalid JSON.';
     }
+  }
+
+  onPrevious() {
+    this.previous.emit(this.draft);
+  }
+
+  onNext() {
+    this.next.emit(this.draft);
   }
 
   onFormat() {

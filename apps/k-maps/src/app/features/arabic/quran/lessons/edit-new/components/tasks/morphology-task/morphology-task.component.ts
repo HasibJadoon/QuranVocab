@@ -79,6 +79,18 @@ export class MorphologyTaskComponent {
     }
   }
 
+  get canNavigatePrev(): boolean {
+    return this.editModalIndex != null && this.editModalIndex > 0;
+  }
+
+  get canNavigateNext(): boolean {
+    return (
+      this.editModalIndex != null &&
+      this.editModalIndex >= 0 &&
+      this.editModalIndex < this.items.length - 1
+    );
+  }
+
   onTabChange(tab: AppTabItem) {
     this.activeTabId = tab.id === 'json' ? 'json' : 'items';
   }
@@ -174,16 +186,9 @@ export class MorphologyTaskComponent {
   openEditModal(event: Event, item: Record<string, unknown>, index: number) {
     event.preventDefault();
     event.stopPropagation();
-    this.editModalIndex = index;
-    this.editModalError = '';
-    this.editModalTitle = 'Edit Morphology JSON';
-    try {
-      const normalized = this.ensureMorphologyDefaults({ ...item });
-      this.editModalJson = JSON.stringify(normalized, null, 2);
-    } catch (err: any) {
-      this.editModalError = err?.message ?? 'Failed to format JSON.';
-      this.editModalJson = '';
-    }
+    const items = this.items;
+    const current = items[index] ?? item;
+    this.setEditModalFromItem(current, index, items.length);
     queueMicrotask(() => {
       this.editModalOpen = true;
     });
@@ -213,30 +218,32 @@ export class MorphologyTaskComponent {
     this.editModalError = '';
   }
 
-  submitEditModal() {
+  submitEditModal(options: { close?: boolean } = {}) {
     if (this.editModalIndex == null) return;
-    let parsed: unknown;
-    const trimmed = this.editModalJson.trim();
-    try {
-      parsed = trimmed ? JSON.parse(trimmed) : {};
-    } catch (err: any) {
-      this.editModalError = err?.message ?? 'Invalid JSON.';
-      return;
-    }
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      this.editModalError = 'Morphology JSON must be an object.';
-      return;
-    }
-
-    const record = this.ensureMorphologyDefaults(parsed as Record<string, unknown>);
+    const record = this.parseModalDraft(this.editModalJson);
+    if (!record) return;
     const items = this.items;
     if (this.editModalIndex < 0) {
       items.push(record);
+      const nextIndex = items.length - 1;
+      this.writeItems(items);
+      this.setEditModalFromItem(record, nextIndex, items.length);
     } else if (this.editModalIndex < items.length) {
       items[this.editModalIndex] = record;
+      this.writeItems(items);
+      this.setEditModalFromItem(record, this.editModalIndex, items.length);
     }
-    this.writeItems(items);
-    this.closeEditModal();
+    if (options.close) {
+      this.closeEditModal();
+    }
+  }
+
+  onModalPrevious(draft: string) {
+    this.navigateModal(-1, draft);
+  }
+
+  onModalNext(draft: string) {
+    this.navigateModal(1, draft);
   }
 
   private writeItems(items: Array<Record<string, unknown>>) {
@@ -259,6 +266,54 @@ export class MorphologyTaskComponent {
 
   private normalizeArabic(text: string) {
     return String(text ?? '').normalize('NFKC').replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '').trim();
+  }
+
+  private parseModalDraft(draft: string): Record<string, unknown> | null {
+    let parsed: unknown;
+    const trimmed = draft.trim();
+    try {
+      parsed = trimmed ? JSON.parse(trimmed) : {};
+    } catch (err: any) {
+      this.editModalError = err?.message ?? 'Invalid JSON.';
+      return null;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      this.editModalError = 'Morphology JSON must be an object.';
+      return null;
+    }
+    return this.ensureMorphologyDefaults(parsed as Record<string, unknown>);
+  }
+
+  private navigateModal(delta: number, draft: string) {
+    if (this.editModalIndex == null || this.editModalIndex < 0) return;
+    const items = this.items;
+    const currentIndex = this.editModalIndex;
+    const nextIndex = currentIndex + delta;
+    if (nextIndex < 0 || nextIndex >= items.length) return;
+
+    const record = this.parseModalDraft(draft);
+    if (!record) return;
+    items[currentIndex] = record;
+    this.writeItems(items);
+
+    this.setEditModalFromItem(items[nextIndex], nextIndex, items.length);
+  }
+
+  private setEditModalFromItem(
+    item: Record<string, unknown>,
+    index: number,
+    total: number
+  ) {
+    this.editModalIndex = index;
+    this.editModalError = '';
+    this.editModalTitle = total > 0 ? `Edit Morphology JSON (${index + 1}/${total})` : 'Edit Morphology JSON';
+    try {
+      const normalized = this.ensureMorphologyDefaults({ ...item });
+      this.editModalJson = JSON.stringify(normalized, null, 2);
+    } catch (err: any) {
+      this.editModalError = err?.message ?? 'Failed to format JSON.';
+      this.editModalJson = '';
+    }
   }
 
   private ensureMorphologyDefaults(record: Record<string, unknown>) {
