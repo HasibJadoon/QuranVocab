@@ -1,0 +1,87 @@
+export type BookSearchMode = 'sources' | 'pages' | 'chunks' | 'evidence' | 'lexicon' | 'reader';
+
+export type BookSearchSource = {
+  source_code: string;
+  title: string;
+  author: string | null;
+  publication_year: number | null;
+  language: string | null;
+  type: string;
+  chunk_count: number;
+};
+
+export type BookSearchChunkHit = {
+  chunk_id: string;
+  source_code: string;
+  page_no: number | null;
+  locator: string | null;
+  heading_raw: string | null;
+  heading_norm: string | null;
+  chunk_type: string;
+  hit: string | null;
+  rank: number | null;
+};
+
+export type BookSearchPageRow = {
+  chunk_id: string;
+  source_code: string;
+  page_no: number | null;
+  heading_raw: string | null;
+  heading_norm: string | null;
+  locator: string | null;
+};
+
+export type BookSearchEvidenceHit = {
+  ar_u_lexicon: string;
+  chunk_id: string;
+  source_code: string;
+  page_no: number | null;
+  heading_raw: string | null;
+  heading_norm: string | null;
+  link_role: string;
+  extract_hit: string | null;
+  notes_hit: string | null;
+  rank: number | null;
+};
+
+export type BookSearchLexiconEvidence = {
+  source_code: string;
+  title: string;
+  chunk_id: string;
+  page_no: number | null;
+  extract_text: string | null;
+  notes: string | null;
+};
+
+export type BookSearchResponse<T> = {
+  ok: boolean;
+  mode: BookSearchMode;
+  total: number;
+  limit: number;
+  offset: number;
+  results: T[];
+};
+
+export type BookSearchReaderChunk = {
+  chunk_id: string;
+  page_no: number | null;
+  heading_raw: string | null;
+  locator: string | null;
+  text: string;
+  source_code: string;
+  source_title: string;
+};
+
+export type BookSearchReaderNav = {
+  prev_chunk_id: string | null;
+  prev_page_no: number | null;
+  next_chunk_id: string | null;
+  next_page_no: number | null;
+};
+
+export type BookSearchReaderResponse = {
+  ok: boolean;
+  mode: 'reader';
+  chunk: BookSearchReaderChunk | null;
+  nav: BookSearchReaderNav;
+};

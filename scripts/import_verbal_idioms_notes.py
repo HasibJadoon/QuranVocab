@@ -124,6 +124,7 @@ def build_sql(
     author: str,
     language: str,
     source_type: str,
+    chunk_type: str,
 ) -> tuple[str, int, int]:
     items = data.get("items")
     if not isinstance(items, list):
@@ -187,15 +188,17 @@ def build_sql(
 
         lines.append(
             "INSERT INTO ar_source_chunks "
-            "(chunk_id, ar_u_source, page_no, locator, heading_raw, heading_norm, text, meta_json) "
+            "(chunk_id, ar_u_source, page_no, locator, heading_raw, heading_norm, chunk_type, text, meta_json) "
             f"VALUES ({sql_quote(chunk_id)}, {sql_quote(ar_u_source)}, {page}, {sql_quote(locator)}, "
-            f"{sql_quote(heading_raw)}, {sql_quote(heading_norm)}, {sql_quote(block_text)}, {sql_quote(chunk_meta)}) "
+            f"{sql_quote(heading_raw)}, {sql_quote(heading_norm)}, {sql_quote(chunk_type)}, "
+            f"{sql_quote(block_text)}, {sql_quote(chunk_meta)}) "
             "ON CONFLICT(chunk_id) DO UPDATE SET "
             "ar_u_source=excluded.ar_u_source, "
             "page_no=excluded.page_no, "
             "locator=excluded.locator, "
             "heading_raw=excluded.heading_raw, "
             "heading_norm=excluded.heading_norm, "
+            "chunk_type=excluded.chunk_type, "
             "text=excluded.text, "
             "meta_json=excluded.meta_json, "
             "updated_at=datetime('now');"
@@ -350,6 +353,12 @@ def run() -> None:
     parser.add_argument("--author", default="Professor Mir")
     parser.add_argument("--language", default="en")
     parser.add_argument("--type", default="book")
+    parser.add_argument(
+        "--chunk-type",
+        default="lexicon",
+        choices=["grammar", "literature", "lexicon", "reference", "other"],
+        help="Chunk classification for ar_source_chunks.chunk_type",
+    )
     parser.add_argument("--database", default="knowledgemap")
     parser.add_argument("--sql-out", default="/tmp/import_verbal_idioms_notes.sql")
     parser.add_argument("--apply", action="store_true", help="Execute generated SQL with wrangler")
@@ -368,6 +377,7 @@ def run() -> None:
         author=args.author,
         language=args.language,
         source_type=args.type,
+        chunk_type=args.chunk_type,
     )
 
     out_path = Path(args.sql_out)

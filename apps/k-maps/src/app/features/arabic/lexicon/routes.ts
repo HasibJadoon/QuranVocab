@@ -4,8 +4,26 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () =>
+      import('./menu/lexicon-menu.component').then(m => m.LexiconMenuComponent),
+    data: { title: 'Lexicon' }
+  },
+  {
+    path: 'roots',
+    loadComponent: () =>
+      import('../roots/roots/roots.component').then(m => m.RootsComponent),
+    data: { title: 'Root Registry' }
+  },
+  {
+    path: 'entry',
+    loadComponent: () =>
       import('./roots-desk/roots-desk.component').then(m => m.RootsDeskComponent),
     data: { title: 'Lexicon Desk' }
+  },
+  {
+    path: 'books',
+    loadComponent: () =>
+      import('./source-chunks/source-chunks-page.component').then(m => m.SourceChunksPageComponent),
+    data: { title: 'Books & Chunks' }
   },
   {
     path: 'idioms',

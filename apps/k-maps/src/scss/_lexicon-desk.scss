@@ -74,7 +74,7 @@
 
 .quran-edit-new.lexicon-desk .chunk-filter-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.6rem;
 }
 
@@ -110,9 +110,24 @@
   letter-spacing: 0.1em;
 }
 
+.quran-edit-new.lexicon-desk .chunk-source {
+  color: var(--paper-ink-soft);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .quran-edit-new.lexicon-desk .chunk-heading {
   margin-top: 0.25rem;
   font-size: 0.9rem;
+}
+
+.quran-edit-new.lexicon-desk .chunk-type {
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--paper-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .quran-edit-new.lexicon-desk .chunk-rank {

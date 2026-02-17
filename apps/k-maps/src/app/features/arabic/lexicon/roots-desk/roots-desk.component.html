@@ -56,6 +56,14 @@
           <button
             type="button"
             class="panel-chip source-pill"
+            [class.panel-chip--locked]="selectedSourceCode === ''"
+            (click)="selectSource('')"
+          >
+            All Sources
+          </button>
+          <button
+            type="button"
+            class="panel-chip source-pill"
             *ngFor="let source of sources"
             [class.panel-chip--locked]="source.source_code === selectedSourceCode"
             (click)="selectSource(source.source_code)"
@@ -69,6 +77,10 @@
           <span>· {{ selectedSource.author || 'Unknown author' }}</span>
           <span>· {{ selectedSource.chunk_count }} chunks indexed</span>
         </div>
+        <div class="source-meta" *ngIf="!selectedSource">
+          <strong>All sources selected</strong>
+          <span>· {{ sourceCountLabel() }} in scope</span>
+        </div>
       </div>
     </section>
 
@@ -78,7 +90,7 @@
           <h2>Search Book Chunks</h2>
           <p>Raw OCR full-text search by book, page range, and heading.</p>
         </div>
-        <span class="panel-chip" *ngIf="selectedSourceCode">{{ selectedSourceCode }}</span>
+        <span class="panel-chip">{{ selectedSourceLabel() }}</span>
       </header>
 
       <div class="panel-body">
@@ -91,6 +103,14 @@
               placeholder="mubin OR مبين"
               (keyup.enter)="runChunkSearch()"
             />
+          </label>
+          <label>
+            <span>Chunk type</span>
+            <select [(ngModel)]="chunkTypeFilter">
+              <option *ngFor="let option of chunkTypeOptions" [ngValue]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
           </label>
           <label>
             <span>Page from</span>
@@ -116,7 +136,7 @@
             type="button"
             class="btn btn-primary"
             (click)="runChunkSearch()"
-            [disabled]="chunksLoading || !selectedSourceCode"
+            [disabled]="chunksLoading"
           >
             {{ chunksLoading ? 'Searching…' : 'Search Book' }}
           </button>
@@ -132,7 +152,9 @@
           <article class="lesson-card chunk-card" *ngFor="let row of chunkResults">
             <div class="chunk-card-head">
               <div>
+                <div class="chunk-source">{{ row.source_code }}</div>
                 <div class="chunk-page">p. {{ row.page_no ?? '—' }}</div>
+                <div class="chunk-type">{{ row.chunk_type || 'lexicon' }}</div>
                 <div class="chunk-heading">{{ row.heading_raw || row.chunk_id }}</div>
               </div>
               <div class="chunk-rank" *ngIf="row.rank !== null">{{ row.rank | number: '1.0-3' }}</div>
@@ -142,7 +164,7 @@
         </div>
 
         <p class="feedback muted" *ngIf="!chunksLoading && !chunksError && !chunkResults.length">
-          No chunk hits yet. Choose a source and run search.
+          No chunk hits yet. Run a search in current scope.
         </p>
       </div>
     </section>
@@ -197,7 +219,7 @@
             type="button"
             class="btn btn-primary"
             (click)="runEvidenceSearch()"
-            [disabled]="evidenceLoading || !selectedSourceCode"
+            [disabled]="evidenceLoading"
           >
             {{ evidenceLoading ? 'Searching…' : 'Search Evidence' }}
           </button>
@@ -211,6 +233,7 @@
         <div class="lesson-grid evidence-grid" *ngIf="evidenceResults.length">
           <article class="lesson-card evidence-card" *ngFor="let row of evidenceResults">
             <header>
+              <div>{{ row.source_code }}</div>
               <div>{{ row.chunk_id }}</div>
               <div>p. {{ row.page_no ?? '—' }}</div>
             </header>

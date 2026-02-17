@@ -1068,6 +1068,8 @@ CREATE TABLE IF NOT EXISTS ar_source_chunks (
   locator        TEXT,                -- e.g. pdf_page:167
   heading_raw    TEXT,
   heading_norm   TEXT,
+  chunk_type     TEXT NOT NULL DEFAULT 'lexicon'
+                 CHECK (chunk_type IN ('grammar', 'literature', 'lexicon', 'reference', 'other')),
 
   text           TEXT NOT NULL,       -- OCR / plain text
   meta_json      JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
@@ -1107,6 +1109,9 @@ CREATE INDEX IF NOT EXISTS idx_chunks_source_page
 
 CREATE INDEX IF NOT EXISTS idx_chunks_source_heading
   ON ar_source_chunks(ar_u_source, heading_norm);
+
+CREATE INDEX IF NOT EXISTS idx_chunks_source_type
+  ON ar_source_chunks(ar_u_source, chunk_type);
 
 CREATE INDEX IF NOT EXISTS idx_lex_ev_source_page
   ON ar_u_lexicon_evidence(ar_u_source, page_no);

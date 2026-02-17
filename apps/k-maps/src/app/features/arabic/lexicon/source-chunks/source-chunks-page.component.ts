@@ -1,0 +1,508 @@
+import { CommonModule } from '@angular/common';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { firstValueFrom } from 'rxjs';
+
+import { BookSearchService } from '../../../../shared/services/book-search.service';
+import type {
+  BookSearchChunkHit,
+  BookSearchPageRow,
+  BookSearchReaderChunk,
+  BookSearchReaderNav,
+  BookSearchSource,
+} from '../../../../shared/models/arabic/book-search.model';
+
+type ViewMode = 'search' | 'read';
+type MobileTab = 'books' | 'results' | 'reader';
+
+type SearchRow = {
+  chunk_id: string;
+  page_no: number | null;
+  heading_raw: string | null;
+  snippet_html: SafeHtml;
+};
+
+@Component({
+  selector: 'app-source-chunks-page',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './source-chunks-page.component.html',
+  styleUrls: ['./source-chunks-page.component.scss'],
+})
+export class SourceChunksPageComponent implements OnInit, OnDestroy {
+  @ViewChild('readerViewport') readerViewport?: ElementRef<HTMLDivElement>;
+
+  books: BookSearchSource[] = [];
+  booksLoading = false;
+  booksError = '';
+
+  selectedSourceCode = '';
+  viewMode: ViewMode = 'read';
+
+  pageFrom: number | null = null;
+  pageTo: number | null = null;
+  headingFilter = '';
+  jumpPageNo: number | null = null;
+
+  query = '';
+
+  searchLoading = false;
+  searchError = '';
+  searchTotal = 0;
+  searchRows: SearchRow[] = [];
+
+  readLoading = false;
+  readError = '';
+  readTotal = 0;
+  readRows: BookSearchPageRow[] = [];
+
+  selectedChunk: BookSearchReaderChunk | null = null;
+  activeChunkId = '';
+  readerLoading = false;
+  readerError = '';
+  readerNav: BookSearchReaderNav = {
+    prev_chunk_id: null,
+    prev_page_no: null,
+    next_chunk_id: null,
+    next_page_no: null,
+  };
+
+  fontSize = 17;
+  arabicFriendlyLineHeight = true;
+  monospace = false;
+  wrapText = true;
+
+  isCompact = false;
+  mobileTab: MobileTab = 'books';
+
+  private readonly onResize = () => this.updateResponsiveState();
+  private initialChunkId = '';
+
+  constructor(
+    private readonly bookSearch: BookSearchService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly sanitizer: DomSanitizer
+  ) {}
+
+  ngOnInit(): void {
+    this.applyQueryParams();
+    this.updateResponsiveState();
+    window.addEventListener('resize', this.onResize);
+    void this.loadBooksAndBootstrap();
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('resize', this.onResize);
+  }
+
+  get scopeLabel(): string {
+    if (!this.selectedSourceCode) return 'Select a book';
+    const source = this.books.find((b) => b.source_code === this.selectedSourceCode);
+    return source ? `${source.source_code} — ${source.title}` : this.selectedSourceCode;
+  }
+
+  get currentTotal(): number {
+    return this.viewMode === 'search' ? this.searchTotal : this.readTotal;
+  }
+
+  get tableCountLabel(): string {
+    return `${this.currentTotal} table`;
+  }
+
+  get listEmptyMessage(): string {
+    return this.viewMode === 'search' ? 'No results' : 'No pages imported for this book';
+  }
+
+  get readerEmptyMessage(): string {
+    return this.viewMode === 'search' ? 'Select a result to read' : 'Select a page to read';
+  }
+
+  panelActive(tab: MobileTab): boolean {
+    return !this.isCompact || this.mobileTab === tab;
+  }
+
+  setMobileTab(tab: MobileTab): void {
+    this.mobileTab = tab;
+  }
+
+  onBookChange(): void {
+    this.clearReaderSelection();
+    this.searchError = '';
+    this.readError = '';
+    void this.loadCurrentList(true);
+    this.syncUrl();
+  }
+
+  setViewMode(mode: ViewMode): void {
+    if (this.viewMode === mode) return;
+    this.viewMode = mode;
+    this.clearReaderSelection();
+    void this.loadCurrentList(true);
+    this.syncUrl();
+  }
+
+  runSearch(): void {
+    if (this.viewMode !== 'search') return;
+    void this.loadSearchRows(true);
+    this.syncUrl();
+  }
+
+  refreshReadRows(): void {
+    if (this.viewMode !== 'read') return;
+    void this.loadReadRows(true);
+    this.syncUrl();
+  }
+
+  applyFilters(): void {
+    if (this.viewMode === 'search') {
+      void this.loadSearchRows(true);
+    } else {
+      void this.loadReadRows(true);
+    }
+    this.syncUrl();
+  }
+
+  clearFilters(): void {
+    this.pageFrom = null;
+    this.pageTo = null;
+    this.headingFilter = '';
+    void this.loadCurrentList(true);
+    this.syncUrl();
+  }
+
+  openJumpPage(): void {
+    const sourceCode = this.selectedSourceCode;
+    const pageNo = this.jumpPageNo;
+    if (!sourceCode || pageNo === null || !Number.isFinite(Number(pageNo))) return;
+    void this.openChunkByPage(sourceCode, pageNo, true);
+  }
+
+  openSearchRow(row: SearchRow): void {
+    void this.openChunkById(row.chunk_id, true);
+  }
+
+  openReadRow(row: BookSearchPageRow): void {
+    void this.openChunkById(row.chunk_id, true);
+  }
+
+  openPrev(): void {
+    if (!this.readerNav.prev_chunk_id) return;
+    void this.openChunkById(this.readerNav.prev_chunk_id, true);
+  }
+
+  openNext(): void {
+    if (!this.readerNav.next_chunk_id) return;
+    void this.openChunkById(this.readerNav.next_chunk_id, true);
+  }
+
+  async copyChunkText(): Promise<void> {
+    if (!this.selectedChunk?.text) return;
+    try {
+      await navigator.clipboard.writeText(this.selectedChunk.text);
+    } catch {
+      this.readerError = 'Copy failed. Clipboard may be blocked.';
+    }
+  }
+
+  readerTextStyle(): Record<string, string> {
+    return {
+      'font-size.px': String(this.fontSize),
+      'line-height': this.arabicFriendlyLineHeight ? '1.95' : '1.45',
+      'font-family': this.monospace
+        ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+        : 'var(--arabic-font)',
+      'white-space': this.wrapText ? 'pre-wrap' : 'pre',
+    };
+  }
+
+  trackByChunkId = (_: number, row: { chunk_id: string }) => row.chunk_id;
+
+  private async loadBooksAndBootstrap(): Promise<void> {
+    this.booksLoading = true;
+    this.booksError = '';
+    try {
+      const res = await firstValueFrom(this.bookSearch.listSources({ limit: 300, offset: 0 }));
+      this.books = res.results ?? [];
+
+      if (this.selectedSourceCode && !this.books.some((b) => b.source_code === this.selectedSourceCode)) {
+        this.selectedSourceCode = '';
+      }
+      if (!this.selectedSourceCode && this.books.length) {
+        this.selectedSourceCode = this.books[0].source_code;
+      }
+
+      await this.loadCurrentList(false);
+
+      const chunkId = this.initialChunkId;
+      if (chunkId) {
+        await this.openChunkById(chunkId, false);
+      }
+      this.initialChunkId = '';
+      this.syncUrl();
+    } catch (err: unknown) {
+      this.booksError = err instanceof Error ? err.message : 'Failed to load books.';
+    } finally {
+      this.booksLoading = false;
+    }
+  }
+
+  private async loadCurrentList(moveToResultsTab: boolean): Promise<void> {
+    if (this.viewMode === 'search') {
+      await this.loadSearchRows(moveToResultsTab);
+      return;
+    }
+    await this.loadReadRows(moveToResultsTab);
+  }
+
+  private async loadSearchRows(moveToResultsTab: boolean): Promise<void> {
+    this.searchLoading = true;
+    this.searchError = '';
+
+    try {
+      if (!this.selectedSourceCode) {
+        this.searchRows = [];
+        this.searchTotal = 0;
+        this.searchError = 'Select a book first.';
+        return;
+      }
+
+      const query = this.query.trim();
+      if (!query) {
+        this.searchRows = [];
+        this.searchTotal = 0;
+        return;
+      }
+
+      const res = await firstValueFrom(
+        this.bookSearch.searchChunks({
+          source_code: this.selectedSourceCode,
+          q: query,
+          page_from: this.pageFrom ?? undefined,
+          page_to: this.pageTo ?? undefined,
+          heading_norm: this.headingFilter.trim() || undefined,
+          limit: 50,
+          offset: 0,
+        })
+      );
+
+      this.searchTotal = res.total ?? 0;
+      this.searchRows = (res.results ?? []).map((row: BookSearchChunkHit) => ({
+        chunk_id: row.chunk_id,
+        page_no: row.page_no,
+        heading_raw: row.heading_raw,
+        snippet_html: this.snippetHtml(row.hit),
+      }));
+    } catch (err: unknown) {
+      this.searchRows = [];
+      this.searchTotal = 0;
+      this.searchError = err instanceof Error ? err.message : 'Search failed.';
+    } finally {
+      this.searchLoading = false;
+      if (moveToResultsTab && this.isCompact) {
+        this.mobileTab = 'results';
+      }
+    }
+  }
+
+  private async loadReadRows(moveToResultsTab: boolean): Promise<void> {
+    this.readLoading = true;
+    this.readError = '';
+
+    try {
+      if (!this.selectedSourceCode) {
+        this.readRows = [];
+        this.readTotal = 0;
+        this.readError = 'Select a book first.';
+        return;
+      }
+
+      const res = await firstValueFrom(
+        this.bookSearch.listPages({
+          source_code: this.selectedSourceCode,
+          page_from: this.pageFrom ?? undefined,
+          page_to: this.pageTo ?? undefined,
+          heading_norm: this.headingFilter.trim() || undefined,
+          limit: 250,
+          offset: 0,
+        })
+      );
+
+      this.readRows = res.results ?? [];
+      this.readTotal = res.total ?? this.readRows.length;
+    } catch (err: unknown) {
+      this.readRows = [];
+      this.readTotal = 0;
+      this.readError = err instanceof Error ? err.message : 'Failed to load pages.';
+    } finally {
+      this.readLoading = false;
+      if (moveToResultsTab && this.isCompact) {
+        this.mobileTab = 'results';
+      }
+    }
+  }
+
+  private async openChunkById(chunkId: string, moveToReaderTab: boolean): Promise<void> {
+    if (!chunkId) return;
+    this.readerLoading = true;
+    this.readerError = '';
+
+    try {
+      const res = await firstValueFrom(this.bookSearch.getReaderChunk({ chunk_id: chunkId }));
+      if (!res.chunk) {
+        this.readerError = 'Chunk not found.';
+        this.clearReaderSelection();
+        return;
+      }
+
+      if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
+        this.selectedSourceCode = res.chunk.source_code;
+        await this.loadCurrentList(false);
+      }
+
+      this.selectedChunk = res.chunk;
+      this.readerNav = res.nav;
+      this.activeChunkId = res.chunk.chunk_id;
+      this.jumpPageNo = res.chunk.page_no;
+      this.scrollReaderTop();
+      this.syncUrl();
+
+      if (moveToReaderTab && this.isCompact) {
+        this.mobileTab = 'reader';
+      }
+    } catch (err: unknown) {
+      this.readerError = err instanceof Error ? err.message : 'Unable to load chunk.';
+    } finally {
+      this.readerLoading = false;
+    }
+  }
+
+  private async openChunkByPage(sourceCode: string, pageNo: number, moveToReaderTab: boolean): Promise<void> {
+    this.readerLoading = true;
+    this.readerError = '';
+
+    try {
+      const res = await firstValueFrom(this.bookSearch.getReaderChunk({ source_code: sourceCode, page_no: pageNo }));
+      if (!res.chunk) {
+        this.readerError = `No chunk found at page ${pageNo}.`;
+        return;
+      }
+
+      if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
+        this.selectedSourceCode = res.chunk.source_code;
+        await this.loadCurrentList(false);
+      }
+
+      this.selectedChunk = res.chunk;
+      this.readerNav = res.nav;
+      this.activeChunkId = res.chunk.chunk_id;
+      this.jumpPageNo = res.chunk.page_no;
+      this.scrollReaderTop();
+      this.syncUrl();
+
+      if (moveToReaderTab && this.isCompact) {
+        this.mobileTab = 'reader';
+      }
+    } catch (err: unknown) {
+      this.readerError = err instanceof Error ? err.message : 'Unable to open page.';
+    } finally {
+      this.readerLoading = false;
+    }
+  }
+
+  private applyQueryParams(): void {
+    const qp = this.route.snapshot.queryParamMap;
+
+    const sourceCode = (qp.get('source_code') ?? '').trim();
+    if (sourceCode) {
+      this.selectedSourceCode = sourceCode;
+    }
+
+    const mode = (qp.get('view_mode') ?? '').trim().toLowerCase();
+    if (mode === 'search' || mode === 'read') {
+      this.viewMode = mode;
+    }
+
+    this.query = qp.get('q') ?? '';
+    this.headingFilter = qp.get('heading') ?? '';
+    this.pageFrom = this.toIntOrNull(qp.get('page_from'));
+    this.pageTo = this.toIntOrNull(qp.get('page_to'));
+    this.initialChunkId = (qp.get('chunk_id') ?? '').trim();
+
+    const jump = this.toIntOrNull(qp.get('jump_page'));
+    this.jumpPageNo = jump;
+  }
+
+  private syncUrl(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        source_code: this.selectedSourceCode || null,
+        view_mode: this.viewMode,
+        q: this.query.trim() || null,
+        page_from: this.pageFrom ?? null,
+        page_to: this.pageTo ?? null,
+        heading: this.headingFilter.trim() || null,
+        jump_page: this.jumpPageNo ?? null,
+        chunk_id: this.selectedChunk?.chunk_id ?? null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private toIntOrNull(value: string | null): number | null {
+    const parsed = Number.parseInt(String(value ?? ''), 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private updateResponsiveState(): void {
+    this.isCompact = window.innerWidth <= 1140;
+    if (!this.isCompact) {
+      this.mobileTab = 'results';
+      return;
+    }
+
+    if (this.selectedChunk) {
+      this.mobileTab = 'reader';
+      return;
+    }
+
+    const hasRows = this.viewMode === 'search' ? this.searchRows.length > 0 : this.readRows.length > 0;
+    this.mobileTab = hasRows ? 'results' : 'books';
+  }
+
+  private clearReaderSelection(): void {
+    this.selectedChunk = null;
+    this.activeChunkId = '';
+    this.readerNav = {
+      prev_chunk_id: null,
+      prev_page_no: null,
+      next_chunk_id: null,
+      next_page_no: null,
+    };
+  }
+
+  private scrollReaderTop(): void {
+    setTimeout(() => {
+      this.readerViewport?.nativeElement.scrollTo({ top: 0, behavior: 'auto' });
+    }, 0);
+  }
+
+  private snippetHtml(value: string | null | undefined): SafeHtml {
+    const escaped = this.escapeHtml(String(value ?? ''));
+    const html = escaped.replace(/\[([^\]]+)\]/g, '<mark>$1</mark>');
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+}

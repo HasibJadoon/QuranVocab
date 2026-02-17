@@ -14,6 +14,7 @@ import {
 
 type LexiconTab = 'semantic' | 'derivatives' | 'quran' | 'philology' | 'theology';
 type LexiconSubMenu = 'evidence' | 'entries' | 'surah';
+type ChunkTypeFilter = 'all' | 'grammar' | 'literature' | 'lexicon' | 'reference' | 'other';
 
 type LexiconEntryRow = {
   ar_u_lexicon: string;
@@ -77,6 +78,15 @@ export class RootsDeskComponent implements OnInit, OnDestroy {
   selectedSourceCode = '';
 
   chunkQuery = 'mubin OR مبين';
+  chunkTypeFilter: ChunkTypeFilter = 'lexicon';
+  readonly chunkTypeOptions: { value: ChunkTypeFilter; label: string }[] = [
+    { value: 'all', label: 'All types' },
+    { value: 'lexicon', label: 'Lexicon' },
+    { value: 'grammar', label: 'Grammar' },
+    { value: 'literature', label: 'Literature' },
+    { value: 'reference', label: 'Reference' },
+    { value: 'other', label: 'Other' },
+  ];
   pageFrom: number | null = 150;
   pageTo: number | null = 220;
   headingNorm = '';
@@ -168,18 +178,11 @@ export class RootsDeskComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.sources = res.results ?? [];
-          if (!this.selectedSourceCode && this.sources.length) {
-            this.selectedSourceCode = this.sources[0].source_code;
-            this.runChunkSearch();
-            this.runEvidenceSearch();
-          } else if (
-            this.selectedSourceCode &&
-            !this.sources.find((s) => s.source_code === this.selectedSourceCode)
-          ) {
-            this.selectedSourceCode = this.sources[0]?.source_code ?? '';
-            this.runChunkSearch();
-            this.runEvidenceSearch();
+          if (this.selectedSourceCode && !this.sources.find((s) => s.source_code === this.selectedSourceCode)) {
+            this.selectedSourceCode = '';
           }
+          this.runChunkSearch();
+          this.runEvidenceSearch();
           this.sourcesLoading = false;
         },
         error: (err) => {
@@ -205,19 +208,14 @@ export class RootsDeskComponent implements OnInit, OnDestroy {
   }
 
   runChunkSearch(): void {
-    if (!this.selectedSourceCode) {
-      this.chunkResults = [];
-      this.chunksTotal = 0;
-      return;
-    }
-
     this.chunksLoading = true;
     this.chunksError = '';
 
     const sub = this.bookSearch
       .searchChunks({
-        source_code: this.selectedSourceCode,
+        source_code: this.selectedSourceCode || undefined,
         q: this.chunkQuery.trim() || undefined,
+        chunk_type: this.chunkTypeFilter === 'all' ? undefined : this.chunkTypeFilter,
         page_from: this.pageFrom ?? undefined,
         page_to: this.pageTo ?? undefined,
         heading_norm: this.headingNorm.trim() || undefined,
@@ -240,18 +238,12 @@ export class RootsDeskComponent implements OnInit, OnDestroy {
   }
 
   runEvidenceSearch(): void {
-    if (!this.selectedSourceCode) {
-      this.evidenceResults = [];
-      this.evidenceTotal = 0;
-      return;
-    }
-
     this.evidenceLoading = true;
     this.evidenceError = '';
 
     const sub = this.bookSearch
       .searchEvidence({
-        source_code: this.selectedSourceCode,
+        source_code: this.selectedSourceCode || undefined,
         q: this.evidenceQuery.trim() || undefined,
         limit: 60,
         offset: 0,
@@ -311,11 +303,6 @@ export class RootsDeskComponent implements OnInit, OnDestroy {
   }
 
   refreshDerivedViews(): void {
-    if (!this.selectedSourceCode) {
-      this.resetDerivedViews();
-      return;
-    }
-
     this.entriesLoading = true;
     this.surahLoading = true;
     this.entriesError = '';
@@ -513,6 +500,11 @@ export class RootsDeskComponent implements OnInit, OnDestroy {
     const count = this.sources.length;
     if (count === 1) return '1 source';
     return `${count} sources`;
+  }
+
+  selectedSourceLabel(): string {
+    if (!this.selectedSourceCode) return 'ALL SOURCES';
+    return this.selectedSourceCode;
   }
 
   stripHit(value: string | null | undefined): string {

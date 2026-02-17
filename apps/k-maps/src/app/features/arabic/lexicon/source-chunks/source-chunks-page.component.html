@@ -1,0 +1,245 @@
+<section class="quran-edit-new source-chunks-workspace">
+  <header class="edit-hero">
+    <div>
+      <p class="hero-kicker">K-Maps Workspace</p>
+      <h1>Source Chunks</h1>
+      <p class="hero-intent">
+        Browse imported pages and run FTS5 search per selected book.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <span class="panel-chip">{{ scopeLabel }}</span>
+      <span class="panel-chip">{{ tableCountLabel }}</span>
+    </div>
+  </header>
+
+  <nav class="mobile-tabs" *ngIf="isCompact">
+    <button type="button" [class.active]="mobileTab === 'books'" (click)="setMobileTab('books')">Books</button>
+    <button type="button" [class.active]="mobileTab === 'results'" (click)="setMobileTab('results')">Results</button>
+    <button type="button" [class.active]="mobileTab === 'reader'" (click)="setMobileTab('reader')">Reader</button>
+  </nav>
+
+  <div class="workspace-grid">
+    <aside class="edit-panel workspace-panel panel-books" [class.mobile-active]="panelActive('books')">
+      <header class="panel-head panel-head-tight">
+        <div>
+          <h2>Book + Controls</h2>
+          <p>Select source, set mode, apply filters, and jump to a page.</p>
+        </div>
+      </header>
+
+      <div class="panel-body panel-body-tight">
+        <label>
+          <span>Select Book</span>
+          <select [(ngModel)]="selectedSourceCode" (change)="onBookChange()">
+            <option *ngFor="let source of books" [value]="source.source_code">
+              {{ source.source_code }} — {{ source.title }}
+            </option>
+          </select>
+        </label>
+
+        <div class="toggle-group">
+          <span>Mode</span>
+          <div class="toggle-buttons">
+            <button type="button" [class.active]="viewMode === 'search'" (click)="setViewMode('search')">Search</button>
+            <button type="button" [class.active]="viewMode === 'read'" (click)="setViewMode('read')">Read</button>
+          </div>
+        </div>
+
+        <div class="filter-grid">
+          <label>
+            <span>Page From</span>
+            <input type="number" [(ngModel)]="pageFrom" />
+          </label>
+          <label>
+            <span>Page To</span>
+            <input type="number" [(ngModel)]="pageTo" />
+          </label>
+        </div>
+
+        <label>
+          <span>Heading contains</span>
+          <input type="text" [(ngModel)]="headingFilter" placeholder="e.g. revelation clarity" (keyup.enter)="applyFilters()" />
+        </label>
+
+        <label>
+          <span>Jump to page</span>
+          <div class="jump-controls">
+            <input type="number" [(ngModel)]="jumpPageNo" placeholder="Page #" (keyup.enter)="openJumpPage()" />
+            <button type="button" class="btn btn-primary btn-sm" (click)="openJumpPage()" [disabled]="!selectedSourceCode">Open</button>
+          </div>
+        </label>
+
+        <div class="panel-actions">
+          <button type="button" class="btn btn-primary" (click)="applyFilters()" [disabled]="!selectedSourceCode">
+            Apply
+          </button>
+          <button type="button" class="btn btn-ghost" (click)="clearFilters()">
+            Clear filters
+          </button>
+        </div>
+
+        <p class="feedback error" *ngIf="booksError">{{ booksError }}</p>
+        <p class="feedback muted" *ngIf="booksLoading">Loading books…</p>
+      </div>
+    </aside>
+
+    <section class="edit-panel workspace-panel panel-results" [class.mobile-active]="panelActive('results')">
+      <header class="panel-head panel-head-tight">
+        <div>
+          <h2>{{ viewMode === 'search' ? 'Search Results' : 'Pages' }}</h2>
+          <p *ngIf="viewMode === 'search'">Use FTS syntax like quotes, <code>OR</code>, and prefix <code>*</code>.</p>
+          <p *ngIf="viewMode === 'read'">Browse pages/sections imported for the selected book.</p>
+        </div>
+        <span class="panel-chip">{{ tableCountLabel }}</span>
+      </header>
+
+      <div class="panel-body panel-body-tight">
+        <div class="search-row" *ngIf="viewMode === 'search'">
+          <input
+            type="text"
+            [(ngModel)]="query"
+            placeholder='FTS query: "clear revelation" OR mubin*'
+            (keyup.enter)="runSearch()"
+          />
+          <button type="button" class="btn btn-primary" (click)="runSearch()" [disabled]="searchLoading || !selectedSourceCode">
+            {{ searchLoading ? 'Searching…' : 'Search' }}
+          </button>
+        </div>
+
+        <div class="search-row" *ngIf="viewMode === 'read'">
+          <button type="button" class="btn btn-primary" (click)="refreshReadRows()" [disabled]="readLoading || !selectedSourceCode">
+            {{ readLoading ? 'Loading…' : 'Refresh pages' }}
+          </button>
+        </div>
+
+        <p class="feedback error" *ngIf="viewMode === 'search' && searchError">{{ searchError }}</p>
+        <p class="feedback error" *ngIf="viewMode === 'read' && readError">{{ readError }}</p>
+
+        <div class="table-shell">
+          <table class="workspace-table" *ngIf="viewMode === 'search'; else readModeTable">
+            <thead>
+              <tr>
+                <th>Page</th>
+                <th>Heading</th>
+                <th>Snippet</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="searchLoading">
+                <td colspan="4" class="state-cell">Loading results…</td>
+              </tr>
+              <tr *ngIf="!searchLoading && !searchRows.length">
+                <td colspan="4" class="state-cell">No results</td>
+              </tr>
+              <tr
+                *ngFor="let row of searchRows; trackBy: trackByChunkId"
+                [class.is-active]="row.chunk_id === activeChunkId"
+                (click)="openSearchRow(row)"
+              >
+                <td>{{ row.page_no ?? '—' }}</td>
+                <td>{{ row.heading_raw || 'No heading' }}</td>
+                <td><span class="snippet" [innerHTML]="row.snippet_html"></span></td>
+                <td>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="openSearchRow(row); $event.stopPropagation()">Open</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <ng-template #readModeTable>
+            <table class="workspace-table">
+              <thead>
+                <tr>
+                  <th>Page</th>
+                  <th>Heading</th>
+                  <th>Locator</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="readLoading">
+                  <td colspan="4" class="state-cell">Loading pages…</td>
+                </tr>
+                <tr *ngIf="!readLoading && !readRows.length">
+                  <td colspan="4" class="state-cell">No pages imported for this book</td>
+                </tr>
+                <tr
+                  *ngFor="let row of readRows; trackBy: trackByChunkId"
+                  [class.is-active]="row.chunk_id === activeChunkId"
+                  (click)="openReadRow(row)"
+                >
+                  <td>{{ row.page_no ?? '—' }}</td>
+                  <td>{{ row.heading_raw || 'No heading' }}</td>
+                  <td>{{ row.locator || '—' }}</td>
+                  <td>
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="openReadRow(row); $event.stopPropagation()">Open</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </ng-template>
+        </div>
+      </div>
+    </section>
+
+    <section class="edit-panel workspace-panel panel-reader" [class.mobile-active]="panelActive('reader')">
+      <header class="panel-head panel-head-tight">
+        <div>
+          <h2>Chunk Reader</h2>
+          <p>Full page/section text for the selected chunk.</p>
+        </div>
+      </header>
+
+      <div class="panel-body panel-body-tight">
+        <div *ngIf="readerLoading" class="reader-state">Loading chunk…</div>
+        <div *ngIf="readerError" class="reader-state error">{{ readerError }}</div>
+
+        <ng-container *ngIf="selectedChunk as chunk; else emptyReader">
+          <div class="reader-header">
+            <div class="reader-meta-line">
+              <strong>{{ chunk.source_code }}</strong>
+              <span>Page {{ chunk.page_no ?? '—' }}</span>
+              <span>{{ chunk.heading_raw || 'No heading' }}</span>
+            </div>
+            <div class="reader-id">{{ chunk.chunk_id }}</div>
+          </div>
+
+          <div class="reader-controls">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openPrev()" [disabled]="!readerNav.prev_chunk_id">Prev</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openNext()" [disabled]="!readerNav.next_chunk_id">Next</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="copyChunkText()">Copy</button>
+          </div>
+
+          <div class="reader-controls reader-controls-secondary">
+            <label class="inline-control range-control">
+              <span>Font {{ fontSize }}px</span>
+              <input type="range" min="13" max="30" step="1" [(ngModel)]="fontSize" />
+            </label>
+            <label class="inline-control">
+              <input type="checkbox" [(ngModel)]="arabicFriendlyLineHeight" />
+              <span>Arabic line-height</span>
+            </label>
+            <label class="inline-control">
+              <input type="checkbox" [(ngModel)]="monospace" />
+              <span>Monospace</span>
+            </label>
+            <label class="inline-control">
+              <input type="checkbox" [(ngModel)]="wrapText" />
+              <span>Wrap</span>
+            </label>
+          </div>
+
+          <div class="reader-viewport" #readerViewport>
+            <pre class="reader-text" [ngStyle]="readerTextStyle()">{{ chunk.text }}</pre>
+          </div>
+        </ng-container>
+
+        <ng-template #emptyReader>
+          <div class="reader-placeholder">{{ readerEmptyMessage }}</div>
+        </ng-template>
+      </div>
+    </section>
+  </div>
+</section>

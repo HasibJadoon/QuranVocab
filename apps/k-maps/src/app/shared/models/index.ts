@@ -49,6 +49,19 @@ export type {
   QuranLemmaLocationListResponse,
 } from './arabic/quran-data.model';
 
+export type {
+  BookSearchMode,
+  BookSearchPageRow,
+  BookSearchSource,
+  BookSearchChunkHit,
+  BookSearchEvidenceHit,
+  BookSearchLexiconEvidence,
+  BookSearchResponse,
+  BookSearchReaderChunk,
+  BookSearchReaderNav,
+  BookSearchReaderResponse,
+} from './arabic/book-search.model';
+
 export { RootModel } from './arabic/root.model';
 export type { Root } from './arabic/root.model';
 

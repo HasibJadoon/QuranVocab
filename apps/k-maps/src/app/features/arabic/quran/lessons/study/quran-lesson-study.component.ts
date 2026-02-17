@@ -308,7 +308,7 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.router.navigate(['/arabic/roots'], { queryParams: { q: root } });
+      this.router.navigate(['/arabic/lexicon/roots'], { queryParams: { q: root } });
     } catch (error: unknown) {
       this.lexiconError = error instanceof Error ? error.message : 'Unable to open lexicon.';
     } finally {

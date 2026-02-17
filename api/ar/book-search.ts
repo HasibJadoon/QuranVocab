@@ -12,9 +12,11 @@ const jsonHeaders = {
   'cache-control': 'no-store',
 };
 
-type SearchMode = 'sources' | 'chunks' | 'evidence' | 'lexicon';
+type SearchMode = 'sources' | 'pages' | 'chunks' | 'evidence' | 'lexicon' | 'reader';
+type ChunkType = 'grammar' | 'literature' | 'lexicon' | 'reference' | 'other';
 
 type SqlBind = string | number;
+const CHUNK_TYPE_SET = new Set<ChunkType>(['grammar', 'literature', 'lexicon', 'reference', 'other']);
 
 function toInt(value: string | null, fallback: number) {
   const parsed = Number.parseInt(String(value ?? ''), 10);
@@ -28,9 +30,22 @@ function normalizeHeading(value: string) {
     .replace(/\s+/g, ' ');
 }
 
+function normalizeChunkType(value: string | null): string {
+  return (value ?? '')
+    .trim()
+    .toLowerCase();
+}
+
 function normalizeMode(value: string | null): SearchMode {
   const mode = (value ?? 'chunks').trim().toLowerCase();
-  if (mode === 'sources' || mode === 'chunks' || mode === 'evidence' || mode === 'lexicon') {
+  if (
+    mode === 'sources' ||
+    mode === 'pages' ||
+    mode === 'chunks' ||
+    mode === 'evidence' ||
+    mode === 'lexicon' ||
+    mode === 'reader'
+  ) {
     return mode;
   }
   return 'chunks';
@@ -53,8 +68,18 @@ type ChunkRow = {
   locator: string | null;
   heading_raw: string | null;
   heading_norm: string | null;
+  chunk_type: ChunkType;
   hit: string | null;
   rank: number | null;
+};
+
+type PageRow = {
+  chunk_id: string;
+  source_code: string;
+  page_no: number | null;
+  heading_raw: string | null;
+  heading_norm: string | null;
+  locator: string | null;
 };
 
 type EvidenceRow = {
@@ -62,6 +87,8 @@ type EvidenceRow = {
   chunk_id: string;
   source_code: string;
   page_no: number | null;
+  heading_raw: string | null;
+  heading_norm: string | null;
   link_role: string;
   extract_hit: string | null;
   notes_hit: string | null;
@@ -75,6 +102,21 @@ type LexiconEvidenceRow = {
   page_no: number | null;
   extract_text: string | null;
   notes: string | null;
+};
+
+type ReaderChunkRow = {
+  chunk_id: string;
+  page_no: number | null;
+  heading_raw: string | null;
+  locator: string | null;
+  text: string;
+  source_code: string;
+  source_title: string;
+};
+
+type ReaderNavRow = {
+  chunk_id: string;
+  page_no: number | null;
 };
 
 async function runSourceSearch(db: D1Database, q: string, limit: number, offset: number) {
@@ -130,6 +172,7 @@ async function runChunkSearch(
   db: D1Database,
   q: string,
   sourceCode: string,
+  chunkType: string,
   headingNormRaw: string,
   pageFrom: number | null,
   pageTo: number | null,
@@ -143,6 +186,10 @@ async function runChunkSearch(
     whereParts.push('f.source_code = ?');
     binds.push(sourceCode);
   }
+  if (chunkType) {
+    whereParts.push('c.chunk_type = ?');
+    binds.push(chunkType);
+  }
   if (pageFrom !== null) {
     whereParts.push('c.page_no >= ?');
     binds.push(pageFrom);
@@ -152,8 +199,8 @@ async function runChunkSearch(
     binds.push(pageTo);
   }
   if (headingNormRaw) {
-    whereParts.push('c.heading_norm = ?');
-    binds.push(normalizeHeading(headingNormRaw));
+    whereParts.push('c.heading_norm LIKE ?');
+    binds.push(`%${normalizeHeading(headingNormRaw)}%`);
   }
   if (q) {
     whereParts.push('ar_source_chunks_fts MATCH ?');
@@ -187,6 +234,7 @@ async function runChunkSearch(
       c.locator,
       c.heading_raw,
       c.heading_norm,
+      c.chunk_type,
       ${hitExpr}
     FROM ar_source_chunks_fts f
     JOIN ar_source_chunks c ON c.chunk_id = f.chunk_id
@@ -209,10 +257,90 @@ async function runChunkSearch(
     offset,
     filters: {
       source_code: sourceCode || null,
+      chunk_type: chunkType || null,
       page_from: pageFrom,
       page_to: pageTo,
       heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
       q: q || null,
+    },
+    results,
+  };
+}
+
+async function runPageList(
+  db: D1Database,
+  sourceCode: string,
+  headingNormRaw: string,
+  pageFrom: number | null,
+  pageTo: number | null,
+  limit: number,
+  offset: number
+) {
+  const whereParts: string[] = [];
+  const binds: SqlBind[] = [];
+
+  if (sourceCode) {
+    whereParts.push('s.source_code = ?');
+    binds.push(sourceCode);
+  }
+  if (pageFrom !== null) {
+    whereParts.push('c.page_no >= ?');
+    binds.push(pageFrom);
+  }
+  if (pageTo !== null) {
+    whereParts.push('c.page_no <= ?');
+    binds.push(pageTo);
+  }
+  if (headingNormRaw) {
+    whereParts.push('c.heading_norm LIKE ?');
+    binds.push(`%${normalizeHeading(headingNormRaw)}%`);
+  }
+  const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+
+  const countSql = `
+    SELECT COUNT(*) AS total
+    FROM ar_source_chunks c
+    JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+    ${whereClause}
+  `;
+  const countRow = await db
+    .prepare(countSql)
+    .bind(...binds)
+    .first<{ total: number }>();
+  const total = Number(countRow?.total ?? 0);
+
+  const dataSql = `
+    SELECT
+      c.chunk_id,
+      s.source_code,
+      c.page_no,
+      c.heading_raw,
+      c.heading_norm,
+      c.locator
+    FROM ar_source_chunks c
+    JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+    ${whereClause}
+    ORDER BY c.page_no ASC, c.chunk_id ASC
+    LIMIT ?
+    OFFSET ?
+  `;
+
+  const { results = [] } = await db
+    .prepare(dataSql)
+    .bind(...binds, limit, offset)
+    .all<PageRow>();
+
+  return {
+    ok: true,
+    mode: 'pages' as const,
+    total,
+    limit,
+    offset,
+    filters: {
+      source_code: sourceCode || null,
+      heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
+      page_from: pageFrom,
+      page_to: pageTo,
     },
     results,
   };
@@ -223,6 +351,7 @@ async function runEvidenceSearch(
   q: string,
   sourceCode: string,
   arULexicon: string,
+  headingNormRaw: string,
   pageFrom: number | null,
   pageTo: number | null,
   limit: number,
@@ -238,6 +367,10 @@ async function runEvidenceSearch(
   if (arULexicon) {
     whereParts.push('e.ar_u_lexicon = ?');
     binds.push(arULexicon);
+  }
+  if (headingNormRaw) {
+    whereParts.push('c.heading_norm LIKE ?');
+    binds.push(`%${normalizeHeading(headingNormRaw)}%`);
   }
   if (pageFrom !== null) {
     whereParts.push('e.page_no >= ?');
@@ -259,6 +392,8 @@ async function runEvidenceSearch(
     JOIN ar_u_lexicon_evidence e
       ON e.chunk_id = ef.chunk_id
      AND e.ar_u_lexicon = ef.ar_u_lexicon
+    JOIN ar_source_chunks c
+      ON c.chunk_id = e.chunk_id
     ${whereClause}
   `;
 
@@ -283,12 +418,16 @@ async function runEvidenceSearch(
       e.chunk_id,
       ef.source_code,
       e.page_no,
+      c.heading_raw,
+      c.heading_norm,
       e.link_role,
       ${hitExpr}
     FROM ar_u_lexicon_evidence_fts ef
     JOIN ar_u_lexicon_evidence e
       ON e.chunk_id = ef.chunk_id
      AND e.ar_u_lexicon = ef.ar_u_lexicon
+    JOIN ar_source_chunks c
+      ON c.chunk_id = e.chunk_id
     ${whereClause}
     ${orderBy}
     LIMIT ?
@@ -309,6 +448,7 @@ async function runEvidenceSearch(
     filters: {
       source_code: sourceCode || null,
       ar_u_lexicon: arULexicon || null,
+      heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
       page_from: pageFrom,
       page_to: pageTo,
       q: q || null,
@@ -386,6 +526,119 @@ async function runLexiconEvidence(
   );
 }
 
+async function runReaderChunk(
+  db: D1Database,
+  chunkId: string,
+  sourceCode: string,
+  pageNo: number | null
+) {
+  let chunk: ReaderChunkRow | null = null;
+
+  if (chunkId) {
+    chunk = await db
+      .prepare(
+        `
+          SELECT
+            c.chunk_id,
+            c.page_no,
+            c.heading_raw,
+            c.locator,
+            c.text,
+            s.source_code,
+            s.title AS source_title
+          FROM ar_source_chunks c
+          JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+          WHERE c.chunk_id = ?
+          LIMIT 1
+        `
+      )
+      .bind(chunkId)
+      .first<ReaderChunkRow>();
+  }
+
+  if (!chunk && sourceCode && pageNo !== null) {
+    chunk = await db
+      .prepare(
+        `
+          SELECT
+            c.chunk_id,
+            c.page_no,
+            c.heading_raw,
+            c.locator,
+            c.text,
+            s.source_code,
+            s.title AS source_title
+          FROM ar_source_chunks c
+          JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+          WHERE s.source_code = ?
+            AND c.page_no = ?
+          ORDER BY c.chunk_id ASC
+          LIMIT 1
+        `
+      )
+      .bind(sourceCode, pageNo)
+      .first<ReaderChunkRow>();
+  }
+
+  if (!chunk) {
+    return {
+      ok: true,
+      mode: 'reader' as const,
+      chunk: null,
+      nav: {
+        prev_chunk_id: null,
+        prev_page_no: null,
+        next_chunk_id: null,
+        next_page_no: null,
+      },
+    };
+  }
+
+  const safePage = Number.isFinite(Number(chunk.page_no)) ? Number(chunk.page_no) : -1;
+
+  const prev = await db
+    .prepare(
+      `
+        SELECT c.chunk_id, c.page_no
+        FROM ar_source_chunks c
+        JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+        WHERE s.source_code = ?
+          AND (c.page_no < ? OR (c.page_no = ? AND c.chunk_id < ?))
+        ORDER BY c.page_no DESC, c.chunk_id DESC
+        LIMIT 1
+      `
+    )
+    .bind(chunk.source_code, safePage, safePage, chunk.chunk_id)
+    .first<ReaderNavRow>();
+
+  const next = await db
+    .prepare(
+      `
+        SELECT c.chunk_id, c.page_no
+        FROM ar_source_chunks c
+        JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+        WHERE s.source_code = ?
+          AND (c.page_no > ? OR (c.page_no = ? AND c.chunk_id > ?))
+        ORDER BY c.page_no ASC, c.chunk_id ASC
+        LIMIT 1
+      `
+    )
+    .bind(chunk.source_code, safePage, safePage, chunk.chunk_id)
+    .first<ReaderNavRow>();
+
+  return {
+    ok: true,
+    mode: 'reader' as const,
+    chunk,
+    nav: {
+      prev_chunk_id: prev?.chunk_id ?? null,
+      prev_page_no: prev?.page_no ?? null,
+      next_chunk_id: next?.chunk_id ?? null,
+      next_page_no: next?.page_no ?? null,
+    },
+  };
+}
+
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   const user = await requireAuth(ctx);
   if (!user) {
@@ -399,8 +652,12 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   const mode = normalizeMode(url.searchParams.get('mode'));
   const q = (url.searchParams.get('q') ?? '').trim();
   const sourceCode = (url.searchParams.get('source_code') ?? '').trim();
+  const chunkType = normalizeChunkType(url.searchParams.get('chunk_type'));
   const headingNormRaw = (url.searchParams.get('heading_norm') ?? '').trim();
   const arULexicon = (url.searchParams.get('ar_u_lexicon') ?? '').trim();
+  const chunkId = (url.searchParams.get('chunk_id') ?? '').trim();
+  const pageNoRaw = (url.searchParams.get('page_no') ?? '').trim();
+  const pageNo = pageNoRaw ? toInt(pageNoRaw, Number.NaN) : null;
 
   const limit = Math.min(200, Math.max(1, toInt(url.searchParams.get('limit'), 50)));
   const offset = Math.max(0, toInt(url.searchParams.get('offset'), 0));
@@ -415,6 +672,24 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       headers: jsonHeaders,
     });
   }
+  if (pageNoRaw && !Number.isFinite(pageNo)) {
+    return new Response(JSON.stringify({ ok: false, error: 'page_no must be an integer' }), {
+      status: 400,
+      headers: jsonHeaders,
+    });
+  }
+  if (chunkType && !CHUNK_TYPE_SET.has(chunkType as ChunkType)) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error: 'chunk_type must be one of: grammar, literature, lexicon, reference, other',
+      }),
+      {
+        status: 400,
+        headers: jsonHeaders,
+      }
+    );
+  }
 
   try {
     if (mode === 'sources') {
@@ -422,8 +697,26 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       return new Response(JSON.stringify(payload), { headers: jsonHeaders });
     }
 
+    if (mode === 'pages') {
+      const payload = await runPageList(
+        ctx.env.DB,
+        sourceCode,
+        headingNormRaw,
+        pageFrom,
+        pageTo,
+        limit,
+        offset
+      );
+      return new Response(JSON.stringify(payload), { headers: jsonHeaders });
+    }
+
     if (mode === 'lexicon') {
       return runLexiconEvidence(ctx.env.DB, arULexicon, sourceCode, limit, offset);
+    }
+
+    if (mode === 'reader') {
+      const payload = await runReaderChunk(ctx.env.DB, chunkId, sourceCode, pageNo);
+      return new Response(JSON.stringify(payload), { headers: jsonHeaders });
     }
 
     if (mode === 'chunks') {
@@ -431,6 +724,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
         ctx.env.DB,
         q,
         sourceCode,
+        chunkType,
         headingNormRaw,
         pageFrom,
         pageTo,
@@ -445,6 +739,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       q,
       sourceCode,
       arULexicon,
+      headingNormRaw,
       pageFrom,
       pageTo,
       limit,

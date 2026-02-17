@@ -4,56 +4,24 @@ import { Observable } from 'rxjs';
 
 import { AuthService } from './AuthService';
 import { API_BASE } from '../api-base';
-
-export type BookSearchSource = {
-  source_code: string;
-  title: string;
-  author: string | null;
-  publication_year: number | null;
-  language: string | null;
-  type: string;
-  chunk_count: number;
-};
-
-export type BookSearchChunkHit = {
-  chunk_id: string;
-  source_code: string;
-  page_no: number | null;
-  locator: string | null;
-  heading_raw: string | null;
-  heading_norm: string | null;
-  hit: string | null;
-  rank: number | null;
-};
-
-export type BookSearchEvidenceHit = {
-  ar_u_lexicon: string;
-  chunk_id: string;
-  source_code: string;
-  page_no: number | null;
-  link_role: string;
-  extract_hit: string | null;
-  notes_hit: string | null;
-  rank: number | null;
-};
-
-export type BookSearchLexiconEvidence = {
-  source_code: string;
-  title: string;
-  chunk_id: string;
-  page_no: number | null;
-  extract_text: string | null;
-  notes: string | null;
-};
-
-export type BookSearchResponse<T> = {
-  ok: boolean;
-  mode: 'sources' | 'chunks' | 'evidence' | 'lexicon';
-  total: number;
-  limit: number;
-  offset: number;
-  results: T[];
-};
+import type {
+  BookSearchChunkHit,
+  BookSearchEvidenceHit,
+  BookSearchLexiconEvidence,
+  BookSearchPageRow,
+  BookSearchReaderResponse,
+  BookSearchResponse,
+  BookSearchSource,
+} from '../models/arabic/book-search.model';
+export type {
+  BookSearchChunkHit,
+  BookSearchEvidenceHit,
+  BookSearchLexiconEvidence,
+  BookSearchPageRow,
+  BookSearchReaderResponse,
+  BookSearchResponse,
+  BookSearchSource,
+} from '../models/arabic/book-search.model';
 
 type QueryValue = string | number | boolean | null | undefined;
 
@@ -75,6 +43,7 @@ export class BookSearchService {
   searchChunks(params: {
     q?: string;
     source_code?: string;
+    chunk_type?: string;
     page_from?: number;
     page_to?: number;
     heading_norm?: string;
@@ -84,10 +53,22 @@ export class BookSearchService {
     return this.get<BookSearchChunkHit>({ mode: 'chunks', ...params });
   }
 
+  listPages(params: {
+    source_code?: string;
+    page_from?: number;
+    page_to?: number;
+    heading_norm?: string;
+    limit?: number;
+    offset?: number;
+  }): Observable<BookSearchResponse<BookSearchPageRow>> {
+    return this.get<BookSearchPageRow>({ mode: 'pages', ...params });
+  }
+
   searchEvidence(params: {
     q?: string;
     source_code?: string;
     ar_u_lexicon?: string;
+    heading_norm?: string;
     page_from?: number;
     page_to?: number;
     limit?: number;
@@ -105,7 +86,19 @@ export class BookSearchService {
     return this.get<BookSearchLexiconEvidence>({ mode: 'lexicon', ...params });
   }
 
+  getReaderChunk(params: {
+    chunk_id?: string;
+    source_code?: string;
+    page_no?: number;
+  }): Observable<BookSearchReaderResponse> {
+    return this.httpGet<BookSearchReaderResponse>({ mode: 'reader', ...params });
+  }
+
   private get<T>(query: Record<string, QueryValue>): Observable<BookSearchResponse<T>> {
+    return this.httpGet<BookSearchResponse<T>>(query);
+  }
+
+  private httpGet<T>(query: Record<string, QueryValue>): Observable<T> {
     const headers = new HttpHeaders({
       'content-type': 'application/json',
       ...this.auth.authHeaders(),
@@ -117,7 +110,7 @@ export class BookSearchService {
       params = params.set(key, String(value));
     }
 
-    return this.http.get<BookSearchResponse<T>>(this.baseUrl, {
+    return this.http.get<T>(this.baseUrl, {
       headers,
       params,
     });
