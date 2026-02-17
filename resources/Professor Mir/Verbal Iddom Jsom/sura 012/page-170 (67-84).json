@@ -1,0 +1,170 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 170,
+  "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF-170.jpg",
+  "output_filename": "page-170 (67-84).json",
+  "verse_range": "12:67-84",
+  "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|غنى|اغنى_عن_من|أَغْنَى عَنْ مِن|To avail/save somebody against/from something",
+      "lemma_ar": "أَغْنَى",
+      "lemma_norm": "اغنى",
+      "pos": "VERB",
+      "root_norm": "غني",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|غني|اغنى_عن_من",
+      "gloss_primary": "To be of avail to somebody against something; to save somebody from something",
+      "gloss_secondary_json": {
+        "construction": "أَغْنَى عَنْ مِن",
+        "type": "verb + two prepositions",
+        "prepositions": ["عَنْ", "مِن"],
+        "quran_examples": [
+          { "surah": 12, "ayah": 67, "phrase": "مَا أُغْنِي عَنكُم مِّنَ اللَّهِ مِن شَيْءٍ" }
+        ],
+        "page": 170,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|قضى|قضى_حاجة|قَضَى حَاجَةً|To satisfy one’s need",
+      "lemma_ar": "قَضَى",
+      "lemma_norm": "قضى",
+      "pos": "VERB",
+      "root_norm": "قضي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|قضي|قضى_حاجة",
+      "gloss_primary": "To achieve something; to satisfy one's need",
+      "gloss_secondary_json": {
+        "construction": "قَضَى حَاجَةً",
+        "type": "verb + object",
+        "quran_examples": [
+          { "surah": 12, "ayah": 68, "phrase": "إِلَّا حَاجَةً فِي نَفْسِ يَعْقُوبَ قَضَاهَا" }
+        ],
+        "page": 170,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|كان|ما_كان_لي|مَا كَانَ لِي أَنْ|Not in a position to do something",
+      "lemma_ar": "كَانَ",
+      "lemma_norm": "كان",
+      "pos": "VERB",
+      "root_norm": "كون",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|كون|ما_كان_لي",
+      "gloss_primary": "One is not in a position to do something; one cannot",
+      "gloss_secondary_json": {
+        "construction": "مَا كَانَ لِي أَنْ",
+        "type": "verb + predicate structure",
+        "quran_examples": [
+          { "surah": 12, "ayah": 76, "phrase": "مَا كَانَ لِيَأْخُذَ أَخَاهُ فِي دِينِ الْمَلِكِ" }
+        ],
+        "page": 170,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+        "note": "Implies inability according to law or circumstance."
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أخذ|أخذ_على|أَخَذَ عَلَى|To take from somebody a binding commitment",
+      "lemma_ar": "أَخَذَ",
+      "lemma_norm": "اخذ",
+      "pos": "VERB",
+      "root_norm": "أخذ",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|اخذ|اخذ_على",
+      "gloss_primary": "To take from somebody a binding/solemn commitment",
+      "gloss_secondary_json": {
+        "construction": "أَخَذَ عَلَى",
+        "type": "verb + object + preposition",
+        "preposition": "عَلَى",
+        "quran_examples": [
+          { "surah": 12, "ayah": 80, "phrase": "أَلَمْ تَعْلَمُوا أَنَّ أَبَاكُمْ قَدْ أَخَذَ عَلَيْكُم مَّوْثِقًا" }
+        ],
+        "page": 170,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|حفظ|حفظ_الغيب|حَفِظَ الْغَيْبَ|To have knowledge of the unseen",
+      "lemma_ar": "حَفِظَ",
+      "lemma_norm": "حفظ",
+      "pos": "VERB",
+      "root_norm": "حفظ",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|حفظ|حفظ_الغيب",
+      "gloss_primary": "To have knowledge of the unseen",
+      "gloss_secondary_json": {
+        "construction": "حَفِظَ الْغَيْبَ",
+        "type": "verb + object (idiomatic meaning)",
+        "quran_examples": [
+          { "surah": 12, "ayah": 81, "phrase": "وَمَا كُنَّا لِلْغَيْبِ حَافِظِينَ" }
+        ],
+        "page": 170,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|سول|سول_له|سَوَّلَ لَهُ|To trick/dupe somebody into something",
+      "lemma_ar": "سَوَّلَ",
+      "lemma_norm": "سول",
+      "pos": "VERB",
+      "root_norm": "سول",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|سول|سول_له",
+      "gloss_primary": "To talk/trick somebody into something",
+      "gloss_secondary_json": {
+        "construction": "سَوَّلَ لَهُ",
+        "type": "verb + object + preposition",
+        "preposition": "لِ",
+        "quran_examples": [
+          { "surah": 12, "ayah": 83, "phrase": "بَلْ سَوَّلَتْ لَكُمْ أَنفُسُكُمْ أَمْرًا" }
+        ],
+        "page": 170,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ابيض|ابيضت_عيناه|ابْيَضَّتْ عَيْنَاهُ|To lose one’s eyesight (eyes turn white)",
+      "lemma_ar": "ابْيَضَّ",
+      "lemma_norm": "ابيض",
+      "pos": "VERB",
+      "root_norm": "بيض",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|بيض|ابيضت_عيناه",
+      "gloss_primary": "To lose one’s eyesight (literally: eyes turned white)",
+      "gloss_secondary_json": {
+        "construction": "ابْيَضَّتْ عَيْنَاهُ",
+        "type": "verb (idiomatic physical expression)",
+        "quran_examples": [
+          { "surah": 12, "ayah": 84, "phrase": "وَابْيَضَّتْ عَيْنَاهُ مِنَ الْحُزْنِ" }
+        ],
+        "page": 170,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    }
+
+  ]
+}

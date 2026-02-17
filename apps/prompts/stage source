@@ -1,0 +1,118 @@
+✅ TABLE 1 — Universal Staging (Search Only)
+
+This table stores raw extracted chunks from any book.
+
+CREATE TABLE ar_staging (
+  source_id     TEXT NOT NULL,       -- SRC:SINAI, SRC:HDO, SRC:MIR, SRC:RAGHIB
+  chunk_id      TEXT NOT NULL,       -- unique within source (term:ayah, root:اتي, p:123, etc.)
+  title         TEXT,                -- display title (āyah, أ/ت/ي, etc.)
+  locator       TEXT,                -- p.123–127, pdf:45, root أ/ت/ي
+  text          TEXT NOT NULL,       -- full staging text
+
+  meta_json     JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at    TEXT,
+
+  PRIMARY KEY (source_id, chunk_id)
+);
+
+CREATE INDEX idx_staging_source ON ar_staging(source_id);
+
+🔎 Add Full Text Search (very important)
+CREATE VIRTUAL TABLE ar_staging_fts
+USING fts5(
+  source_id,
+  chunk_id,
+  title,
+  text,
+  content='ar_staging',
+  content_rowid='rowid'
+);
+
+FTS sync triggers
+CREATE TRIGGER ar_staging_ai AFTER INSERT ON ar_staging BEGIN
+  INSERT INTO ar_staging_fts(rowid, source_id, chunk_id, title, text)
+  VALUES (new.rowid, new.source_id, new.chunk_id, new.title, new.text);
+END;
+
+CREATE TRIGGER ar_staging_ad AFTER DELETE ON ar_staging BEGIN
+  INSERT INTO ar_staging_fts(ar_staging_fts, rowid, source_id, chunk_id, title, text)
+  VALUES ('delete', old.rowid, old.source_id, old.chunk_id, old.title, old.text);
+END;
+
+CREATE TRIGGER ar_staging_au AFTER UPDATE ON ar_staging BEGIN
+  INSERT INTO ar_staging_fts(ar_staging_fts, rowid, source_id, chunk_id, title, text)
+  VALUES ('delete', old.rowid, old.source_id, old.chunk_id, old.title, old.text);
+  INSERT INTO ar_staging_fts(rowid, source_id, chunk_id, title, text)
+  VALUES (new.rowid, new.source_id, new.chunk_id, new.title, new.text);
+END;
+
+🔎 Example search query
+SELECT
+  source_id,
+  chunk_id,
+  snippet(ar_staging_fts, 3, '[', ']', '…', 20) AS hit
+FROM ar_staging_fts
+WHERE ar_staging_fts MATCH 'آية OR ayah'
+ORDER BY rank
+LIMIT 20;
+
+
+This gives you instant search across all books.
+
+✅ TABLE 2 — Notes (Linked to Lexicon)
+
+This is clean, manual, curated.
+
+CREATE TABLE ar_lexicon_notes (
+  note_id        TEXT PRIMARY KEY,       -- uuid or hash
+  ar_u_lexicon   TEXT NOT NULL,          -- FK to your Ar_uLexicon
+  source_id      TEXT NOT NULL,          -- SRC:SINAI, SRC:HDO etc.
+
+  locator        TEXT,                   -- p.123–127
+  excerpt        TEXT,                   -- short snippet (optional)
+  summary        TEXT NOT NULL,          -- your own explanation (required)
+
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT,
+
+  FOREIGN KEY (ar_u_lexicon)
+    REFERENCES Ar_uLexicon(ar_u_lexicon)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX idx_notes_lexicon ON ar_lexicon_notes(ar_u_lexicon);
+CREATE INDEX idx_notes_source  ON ar_lexicon_notes(source_id);
+
+🎯 Your Study Workflow
+1️⃣ Search staging
+
+You search for:
+
+Arabic root
+
+Arabic word
+
+English concept
+
+transliteration
+
+2️⃣ Open staging chunk
+
+You read full entry.
+
+3️⃣ Create note manually
+
+You paste:
+
+locator
+
+short excerpt (optional)
+
+your summary
+
+link to ar_u_lexicon
+
+4️⃣ Lexicon page shows all notes
+
+Clean, academic, structured.

@@ -1,0 +1,92 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 173,
+  "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF-173.jpg",
+  "output_filename": "page-173 (105-111).json",
+  "verse_range": "12:105-111",
+  "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|مر|مر_على|مَرَّ عَلَى|To observe/review something",
+      "lemma_ar": "مَرَّ",
+      "lemma_norm": "مر",
+      "pos": "VERB",
+      "root_norm": "مرر",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|مرر|مر_على",
+      "gloss_primary": "To observe/review something",
+      "gloss_secondary_json": {
+        "construction": "مَرَّ عَلَى",
+        "type": "verb + preposition",
+        "preposition": "عَلَى",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 105,
+            "phrase": "وَكَأَيِّن مِّنْ آيَةٍ فِي السَّمَاوَاتِ وَالْأَرْضِ يَمُرُّونَ عَلَيْهَا"
+          }
+        ],
+        "page": 173,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|صدق|صدق_الأمر|صَدَقَ الأَمْر|To actualize/materialize/fulfill something",
+      "lemma_ar": "صَدَقَ",
+      "lemma_norm": "صدق",
+      "pos": "VERB",
+      "root_norm": "صدق",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|صدق|صدق_الأمر",
+      "gloss_primary": "To actualize/materialize/fulfill something",
+      "gloss_secondary_json": {
+        "construction": "صَدَقَ الأَمْر",
+        "type": "verb + object (idiomatic)",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 111,
+            "phrase": "لَقَدْ كَانَ فِي قَصَصِهِمْ عِبْرَةٌ"
+          }
+        ],
+        "note": "Expression indicates realization/confirmation of a matter.",
+        "page": 173,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|افترى|افترى|افْتَرَى|To fabricate a lie",
+      "lemma_ar": "افْتَرَى",
+      "lemma_norm": "افترى",
+      "pos": "VERB",
+      "root_norm": "فري",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|فري|افترى",
+      "gloss_primary": "To fabricate/invent a lie",
+      "gloss_secondary_json": {
+        "construction": "افْتَرَى",
+        "type": "verb (intransitive idiomatic usage)",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 111,
+            "phrase": "مَا كَانَ حَدِيثًا يُفْتَرَى"
+          }
+        ],
+        "page": 173,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    }
+
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 168,
+  "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF-168.jpg",
+  "verse_range": "12:48-56",
+  "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أكل|أكل_الشيء|أَكَلَ الشَّيْءَ|To consume/use up",
+      "lemma_ar": "أَكَلَ",
+      "lemma_norm": "اكل",
+      "pos": "VERB",
+      "root_norm": "أكل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|أكل|أكل_الشيء",
+      "gloss_primary": "To consume something; to use something up",
+      "gloss_secondary_json": {
+        "construction": "أَكَلَ الشَّيْءَ",
+        "type": "verb + object",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 48,
+            "phrase": "يَأْكُلْنَ مَا قَدَّمْتُمْ لَهُنَّ"
+          }
+        ],
+        "page": 168,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أحصن|أحصن_الشيء|أَحْصَنَ الشَّيْءَ|To store something",
+      "lemma_ar": "أَحْصَنَ",
+      "lemma_norm": "احصن",
+      "pos": "VERB",
+      "root_norm": "حصن",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|حصن|احصن_الشيء",
+      "gloss_primary": "To store something up; to put aside",
+      "gloss_secondary_json": {
+        "construction": "أَحْصَنَ الشَّيْءَ",
+        "type": "verb + object",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 48,
+            "phrase": "إِلَّا قَلِيلًا مِّمَّا تُحْصِنُونَ"
+          }
+        ],
+        "page": 168,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|قدم|قدم_الشيء_ل|قَدَّمَ الشَّيْءَ لِ|To lay up for someone",
+      "lemma_ar": "قَدَّمَ",
+      "lemma_norm": "قدم",
+      "pos": "VERB",
+      "root_norm": "قدم",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|قدم|قدم_الشيء_ل",
+      "gloss_primary": "To lay something up for someone; send ahead for someone",
+      "gloss_secondary_json": {
+        "construction": "قَدَّمَ الشَّيْءَ لِ",
+        "type": "verb + object + preposition",
+        "preposition": "لِ",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 48,
+            "phrase": "مَا قَدَّمْتُمْ لَهُنَّ"
+          }
+        ],
+        "page": 168,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|راود|راود_عن|رَاوَدَ عَنْ|To tempt/seduce",
+      "lemma_ar": "رَاوَدَ",
+      "lemma_norm": "راود",
+      "pos": "VERB",
+      "root_norm": "رود",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رود|راود_عن",
+      "gloss_primary": "(Of a woman) to tempt a man; to try to seduce him",
+      "gloss_secondary_json": {
+        "construction": "رَاوَدَ عَنْ",
+        "type": "verb + object + preposition",
+        "preposition": "عَنْ",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 51,
+            "phrase": "مَا خَطْبُكُنَّ إِذْ رَاوَدتُّنَّ يُوسُفَ"
+          }
+        ],
+        "page": 168,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|علم|علم_على|عَلِمَ عَلَى|To be aware of",
+      "lemma_ar": "عَلِمَ",
+      "lemma_norm": "علم",
+      "pos": "VERB",
+      "root_norm": "علم",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|علم|علم_على",
+      "gloss_primary": "To be aware of something (often negated)",
+      "gloss_secondary_json": {
+        "construction": "عَلِمَ عَلَى",
+        "type": "verb + object + preposition",
+        "preposition": "عَلَى",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 51,
+            "phrase": "مَا عَلِمْنَا عَلَيْهِ مِن سُوءٍ"
+          }
+        ],
+        "page": 168,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|جعل|جعل_على|جَعَلَ عَلَى|To put in charge of",
+      "lemma_ar": "جَعَلَ",
+      "lemma_norm": "جعل",
+      "pos": "VERB",
+      "root_norm": "جعل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|جعل|جعل_على",
+      "gloss_primary": "To appoint someone over something; put in charge",
+      "gloss_secondary_json": {
+        "construction": "جَعَلَ عَلَى",
+        "type": "verb + object + preposition",
+        "preposition": "عَلَى",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 55,
+            "phrase": "اجْعَلْنِي عَلَى خَزَائِنِ الْأَرْضِ"
+          }
+        ],
+        "page": 168,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أضاع|أضاع_الأجر|أَضَاعَ أَجْرَ|To deprive of reward",
+      "lemma_ar": "أَضَاعَ",
+      "lemma_norm": "اضاع",
+      "pos": "VERB",
+      "root_norm": "ضيع",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ضيع|اضاع_الأجر",
+      "gloss_primary": "(Of God) to deprive someone of reward",
+      "gloss_secondary_json": {
+        "construction": "أَضَاعَ أَجْرَ",
+        "type": "verb + object",
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 56,
+            "phrase": "لَا نُضِيعُ أَجْرَ الْمُحْسِنِينَ"
+          }
+        ],
+        "page": 168,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    }
+
+  ]
+}

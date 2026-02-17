@@ -1,0 +1,147 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 172,
+  "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF-172.jpg",
+  "output_filename": "page-172 (92-102).json",
+  "verse_range": "12:92-102",
+  "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ثرب|ثرب_على|ثَرَّبَ عَلَى|To reproach/castigate somebody",
+      "lemma_ar": "ثَرَّبَ",
+      "lemma_norm": "ثرب",
+      "pos": "VERB",
+      "root_norm": "ثرب",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ثرب|ثرب_على",
+      "gloss_primary": "To reproach/castigate somebody",
+      "gloss_secondary_json": {
+        "construction": "ثَرَّبَ عَلَى",
+        "type": "verb + preposition",
+        "preposition": "عَلَى",
+        "quran_examples": [
+          { "surah": 12, "ayah": 92, "phrase": "لَا تَثْرِيبَ عَلَيْكُمُ الْيَوْمَ" }
+        ],
+        "page": 172,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أتى|أتى_كذا|أَتَى كَذَا|To become so and so",
+      "lemma_ar": "أَتَى",
+      "lemma_norm": "اتى",
+      "pos": "VERB",
+      "root_norm": "أتى",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|أتى|اتى_كذا",
+      "gloss_primary": "To become so and so",
+      "gloss_secondary_json": {
+        "construction": "أَتَى + حال",
+        "type": "verb with circumstantial state (حال)",
+        "quran_examples": [
+          { "surah": 12, "ayah": 93, "phrase": "يَأْتِ بَصِيرًا" }
+        ],
+        "note": "Compared to use of جاء in similar structure.",
+        "page": 172,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|وجد|وجد_ريح|وَجَدَ + object|To sense/feel/experience something",
+      "lemma_ar": "وَجَدَ",
+      "lemma_norm": "وجد",
+      "pos": "VERB",
+      "root_norm": "وجد",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|وجد|وجد_شيء",
+      "gloss_primary": "To sense/feel/experience something",
+      "gloss_secondary_json": {
+        "construction": "وَجَدَ + object",
+        "type": "verb + object",
+        "quran_examples": [
+          { "surah": 12, "ayah": 94, "phrase": "إِنِّي لَأَجِدُ رِيحَ يُوسُفَ" }
+        ],
+        "page": 172,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ارتد|ارتد_كذا|ارْتَدَّ كَذَا|To become so and so",
+      "lemma_ar": "ارْتَدَّ",
+      "lemma_norm": "ارتد",
+      "pos": "VERB",
+      "root_norm": "ردد",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ردد|ارتد_كذا",
+      "gloss_primary": "To become so and so",
+      "gloss_secondary_json": {
+        "construction": "ارْتَدَّ + حال",
+        "type": "verb with circumstantial state",
+        "quran_examples": [
+          { "surah": 12, "ayah": 96, "phrase": "ارْتَدَّ بَصِيرًا" }
+        ],
+        "page": 172,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|نزع|نزع_بين|نَزَغَ بَيْنَ|To cause dissension among people",
+      "lemma_ar": "نَزَغَ",
+      "lemma_norm": "نزغ",
+      "pos": "VERB",
+      "root_norm": "نزغ",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|نزغ|نزغ_بين",
+      "gloss_primary": "To cause dissension/a rift among people",
+      "gloss_secondary_json": {
+        "construction": "نَزَغَ بَيْنَ",
+        "type": "verb + preposition",
+        "preposition": "بَيْنَ",
+        "quran_examples": [
+          { "surah": 12, "ayah": 100, "phrase": "نَزَغَ الشَّيْطَانُ بَيْنِي وَبَيْنَ إِخْوَتِي" }
+        ],
+        "page": 172,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أجمع|أجمع_أمر|أَجْمَعَ أَمْرَهُ|To reach an accord; agree on a plan",
+      "lemma_ar": "أَجْمَعَ",
+      "lemma_norm": "اجمع",
+      "pos": "VERB",
+      "root_norm": "جمع",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|جمع|اجمع_امر",
+      "gloss_primary": "To reach an accord; agree on a plan; make a unanimous resolution",
+      "gloss_secondary_json": {
+        "construction": "أَجْمَعَ أَمْرَهُ",
+        "type": "verb + object (idiomatic)",
+        "quran_examples": [
+          { "surah": 12, "ayah": 102, "phrase": "أَجْمِعُوا أَمْرَكُمْ" }
+        ],
+        "page": 172,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    }
+
+  ]
+}

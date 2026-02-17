@@ -1,0 +1,163 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 169,
+  "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF-169.jpg",
+  "output_filename": "page-169 (56-66).json",
+  "verse_range": "12:56-66",
+  "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+  "rows": [
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|مكّن|مكن_ل_في|مَكَّنَ لِـ فِي|To give somebody power/authority in a land",
+      "lemma_ar": "مَكَّنَ",
+      "lemma_norm": "مكن",
+      "pos": "VERB",
+      "root_norm": "مكن",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|مكن|مكن_ل_في",
+      "gloss_primary": "To give somebody great power/authority in a land",
+      "gloss_secondary_json": {
+        "construction": "مَكَّنَ لِـ فِي",
+        "type": "verb + prepositions",
+        "prepositions": ["لِ", "فِي"],
+        "quran_examples": [
+          { "surah": 12, "ayah": 56, "phrase": "مَكَّنَّا لِيُوسُفَ فِي الْأَرْضِ" }
+        ],
+        "page": 169,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|نزل|نزل_ضيف|أَنْزَلَ (ضيفًا)|To serve as host",
+      "lemma_ar": "أَنْزَلَ",
+      "lemma_norm": "انزل",
+      "pos": "VERB",
+      "root_norm": "نزل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|نزل|انزل_ضيف",
+      "gloss_primary": "To serve as host (provide lodging/hospitality)",
+      "gloss_secondary_json": {
+        "construction": "أَنْزَلَ (ضيفًا)",
+        "type": "verb (idiomatic usage)",
+        "quran_examples": [
+          { "surah": 12, "ayah": 59, "phrase": "فَلَمَّا جَهَّزَهُم بِجَهَازِهِمْ" }
+        ],
+        "page": 169,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|وفى|وفى_الكيل|أَوْفَى الْكَيْلَ/الْمِكْيَالَ|To give full measure",
+      "lemma_ar": "أَوْفَى",
+      "lemma_norm": "اوفى",
+      "pos": "VERB",
+      "root_norm": "وفي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|وفي|اوفى_الكيل",
+      "gloss_primary": "To give full measure",
+      "gloss_secondary_json": {
+        "construction": "أَوْفَى الْكَيْلَ/الْمِكْيَالَ",
+        "type": "verb + object",
+        "quran_examples": [
+          { "surah": 12, "ayah": 59, "phrase": "أَلَا تَرَوْنَ أَنِّي أُوفِي الْكَيْلَ" }
+        ],
+        "page": 169,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|قرب|لا_تقرب|لَا تَقْرَبْ|Do not approach (used as prohibition/deny access)",
+      "lemma_ar": "تَقْرَبْ",
+      "lemma_norm": "تقرب",
+      "pos": "VERB",
+      "root_norm": "قرب",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|قرب|لا_تقرب",
+      "gloss_primary": "Do not approach; do not come to me / into my presence (prohibition / denial of access)",
+      "gloss_secondary_json": {
+        "construction": "لَا تَقْرَبْ",
+        "type": "prohibitive verb expression",
+        "quran_examples": [
+          { "surah": 12, "ayah": 60, "phrase": "فَلَا تَقْرَبُونِ" }
+        ],
+        "page": 169,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+        "note": "Used for prohibition/denial of access; the book notes examples including 12:60."
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|راود|راود_عن|رَاوَدَ عَنْ|To try to persuade someone in regard to something",
+      "lemma_ar": "رَاوَدَ",
+      "lemma_norm": "راود",
+      "pos": "VERB",
+      "root_norm": "رود",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رود|راود_عن",
+      "gloss_primary": "To try to bring someone round / persuade someone in regard to something",
+      "gloss_secondary_json": {
+        "construction": "رَاوَدَ عَنْ",
+        "type": "verb + object + preposition",
+        "preposition": "عَنْ",
+        "quran_examples": [
+          { "surah": 12, "ayah": 61, "phrase": "سَنُرَاوِدُ عَنْهُ أَبَاهُ" }
+        ],
+        "page": 169,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+        "note": "Same construction as earlier ‘tempt/seduce’; here used in the sense of persuasion."
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أتى|آتى_الشيء|آتَى الشَّيْءَ|To give somebody one’s word (pledge)",
+      "lemma_ar": "آتَى",
+      "lemma_norm": "اتى",
+      "pos": "VERB",
+      "root_norm": "أتي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|أتي|آتى_الشيء",
+      "gloss_primary": "To give somebody one’s word; give a pledge",
+      "gloss_secondary_json": {
+        "construction": "آتَى الشَّيْءَ",
+        "type": "verb + two objects (idiomatic pledge)",
+        "quran_examples": [
+          { "surah": 12, "ayah": 66, "phrase": "حَتَّى تُؤْتُونِ مَوْثِقًا مِّنَ اللَّهِ" }
+        ],
+        "page": 169,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أحاط|احاط_ب|أَحَاطَ بِـ|To be surrounded/caught in a difficult situation",
+      "lemma_ar": "أَحَاطَ",
+      "lemma_norm": "احاط",
+      "pos": "VERB",
+      "root_norm": "حوط",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|حوط|احاط_ب",
+      "gloss_primary": "To be surrounded; to be caught in a difficult situation",
+      "gloss_secondary_json": {
+        "construction": "أَحَاطَ بِـ",
+        "type": "verb + preposition",
+        "preposition": "بِ",
+        "quran_examples": [
+          { "surah": 12, "ayah": 66, "phrase": "إِلَّا أَن يُحَاطَ بِكُمْ" }
+        ],
+        "page": 169,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    }
+  ]
+}

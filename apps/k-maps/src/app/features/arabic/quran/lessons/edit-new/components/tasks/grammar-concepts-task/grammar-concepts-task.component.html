@@ -30,6 +30,7 @@
               <tr>
                 <th>Concept</th>
                 <th class="sentences-col">Sentences</th>
+                <th class="remove-col"></th>
               </tr>
             </thead>
             <tbody>
@@ -37,13 +38,6 @@
                 <td class="concept-cell">
                   <div class="concept-row-head">
                     <span class="concept-chip">{{ group.label }}</span>
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-sm concept-remove-btn"
-                      (click)="removeItem(group.itemIndex)"
-                    >
-                      Remove
-                    </button>
                   </div>
                 </td>
                 <td class="sentences-col">
@@ -53,6 +47,15 @@
                     </div>
                     <div class="concept-sentence text-muted" *ngIf="!group.sentences.length">—</div>
                   </div>
+                </td>
+                <td class="remove-col">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm concept-remove-btn"
+                    (click)="removeItem(group.itemIndex)"
+                  >
+                    Remove
+                  </button>
                 </td>
               </tr>
             </tbody>

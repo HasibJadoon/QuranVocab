@@ -1,0 +1,162 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 167,
+  "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|بَدَا|بدا_له|بَدَا لَهُ|To occur to someone",
+      "lemma_ar": "بَدَا",
+      "lemma_norm": "بدا",
+      "pos": "VERB",
+      "root_norm": "بدو",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|بدو|بدا_له",
+      "gloss_primary": "(Of a thought) to occur to someone; seem appropriate",
+      "gloss_secondary_json": {
+        "construction": "بَدَا لَهُ",
+        "type": "verb + preposition",
+        "preposition": "لِ",
+        "text_examples": [
+          "بَدَا لَهُ كَذَا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 35,
+            "phrase": "ثُمَّ بَدَا لَهُم مِّن بَعْدِ مَا رَأَوُا الْآيَاتِ"
+          }
+        ],
+        "page": 167,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|رَأَى|رأى_رؤيا|رَأَى رُؤْيَا|To see in a dream",
+      "lemma_ar": "رَأَى",
+      "lemma_norm": "راى",
+      "pos": "VERB",
+      "root_norm": "رأي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رأي|رأى_رؤيا",
+      "gloss_primary": "To see something in a dream",
+      "gloss_secondary_json": {
+        "construction": "رَأَى رُؤْيَا",
+        "type": "verb + object",
+        "text_examples": [
+          "رَأَى رُؤْيَا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 36,
+            "phrase": "إِنِّي أَرَىٰ خَمْرًا"
+          },
+          {
+            "surah": 12,
+            "ayah": 43,
+            "phrase": "إِنِّي أَرَىٰ سَبْعَ بَقَرَاتٍ"
+          }
+        ],
+        "note": "Occurs multiple times in Surah 12.",
+        "page": 167,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|كَانَ|ما_كان_ل|مَا كَانَ لِـ|It is not proper for",
+      "lemma_ar": "كَانَ",
+      "lemma_norm": "كان",
+      "pos": "VERB",
+      "root_norm": "كون",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|كون|ما_كان_ل",
+      "gloss_primary": "It is not proper/allowed for someone to do something",
+      "gloss_secondary_json": {
+        "construction": "مَا كَانَ لِـ أَنْ",
+        "type": "negative verbal construction",
+        "text_examples": [
+          "مَا كَانَ لَهُ أَنْ يَفْعَلَ كَذَا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 38,
+            "phrase": "مَا كَانَ لَنَا أَنْ نُشْرِكَ بِاللَّهِ مِن شَيْءٍ"
+          }
+        ],
+        "page": 167,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَنْزَلَ|انزل_سلطانا|أَنْزَلَ سُلْطَانًا|To send down sanction",
+      "lemma_ar": "أَنْزَلَ",
+      "lemma_norm": "انزل",
+      "pos": "VERB",
+      "root_norm": "نزل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|نزل|انزل_سلطانا",
+      "gloss_primary": "To send down sanction/support",
+      "gloss_secondary_json": {
+        "construction": "أَنْزَلَ سُلْطَانًا",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "أَنْزَلَ اللَّهُ سُلْطَانًا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 40,
+            "phrase": "مَا أَنْزَلَ اللَّهُ بِهَا مِن سُلْطَانٍ"
+          }
+        ],
+        "page": 167,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ذَكَرَ|ذكر_عند|ذَكَرَ عِنْدَ|To mention to someone",
+      "lemma_ar": "ذَكَرَ",
+      "lemma_norm": "ذكر",
+      "pos": "VERB",
+      "root_norm": "ذكر",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ذكر|ذكر_عند",
+      "gloss_primary": "To mention somebody to somebody",
+      "gloss_secondary_json": {
+        "construction": "ذَكَرَ عِنْدَ",
+        "type": "verb + object + preposition",
+        "preposition": "عِنْدَ",
+        "text_examples": [
+          "اذْكُرْنِي عِنْدَ رَبِّكَ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 42,
+            "phrase": "اذْكُرْنِي عِندَ رَبِّكَ"
+          }
+        ],
+        "page": 167,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    }
+
+  ]
+}

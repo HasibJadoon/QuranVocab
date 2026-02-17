@@ -1,0 +1,251 @@
+{
+  "table": "ar_u_lexicon",
+  "rows": [
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ذَهَبَ|ذهب_ب|ذَهَبَ بِـ|To take something away; deprive somebody of something",
+      "lemma_ar": "ذَهَبَ",
+      "lemma_norm": "ذهب",
+      "pos": "VERB",
+      "root_norm": "ذهب",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ذهب|ذهب_ب",
+      "gloss_primary": "To take something away; deprive somebody of something",
+      "gloss_secondary_json": {
+        "construction": "ذَهَبَ بِـ",
+        "type": "verb + preposition",
+        "preposition": "بِ",
+        "text_examples": ["ذَهَبَ بِهِ"],
+        "quran_examples": [
+          { "surah": 2, "ayah": 17, "phrase": "ذَهَبَ اللَّهُ بِنُورِهِمْ" },
+          { "surah": 2, "ayah": 20, "phrase": "لَذَهَبَ بِسَمْعِهِمْ وَأَبْصَارِهِمْ" }
+        ],
+        "page": 2,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_10": "1607852241",
+          "isbn_13": "9781607852247",
+          "url": "https://books.google.com.au/books/about/Verbal_Idioms_of_the_Qur_%C4%81n.html?id=DGD_sgEACAAJ&redir_esc=y"
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|جَعَلَ|جعل_في|جَعَلَ + object + فِي|To stuff one's fingers into one's ears",
+      "lemma_ar": "جَعَلَ",
+      "lemma_norm": "جعل",
+      "pos": "VERB",
+      "root_norm": "جعل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|جعل|جعل_في",
+      "gloss_primary": "To stuff one’s fingers into one’s ears [so as to avoid hearing something]",
+      "gloss_secondary_json": {
+        "construction": "جَعَلَ + object + فِي",
+        "type": "verb + object + preposition",
+        "preposition": "فِي",
+        "text_examples": ["جَعَلَهُ فِيهِ", "جَعَلَ أَصَابِعَهُ فِي أُذُنِهِ"],
+        "quran_examples": [
+          { "surah": 2, "ayah": 19, "phrase": "يَجْعَلُونَ أَصَابِعَهُمْ فِي آذَانِهِمْ" }
+        ],
+        "page": 2,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_10": "1607852241",
+          "isbn_13": "9781607852247",
+          "url": "https://books.google.com.au/books/about/Verbal_Idioms_of_the_Qur_%C4%81n.html?id=DGD_sgEACAAJ&redir_esc=y"
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَحَاطَ|احاط_ب|أَحَاطَ بِـ|To encircle/surround somebody/something",
+      "lemma_ar": "أَحَاطَ",
+      "lemma_norm": "احاط",
+      "pos": "VERB",
+      "root_norm": "حوط",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|حوط|احاط_ب",
+      "gloss_primary": "To encircle/surround somebody/something, cutting off its means of escape",
+      "gloss_secondary_json": {
+        "construction": "أَحَاطَ بِـ",
+        "type": "verb + preposition",
+        "preposition": "بِ",
+        "text_examples": ["أَحَاطَ بِهِ"],
+        "quran_examples": [
+          { "surah": 2, "ayah": 19, "phrase": "وَاللَّهُ مُحِيطٌ بِالْكَافِرِينَ" }
+        ],
+        "page": 2,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_10": "1607852241",
+          "isbn_13": "9781607852247",
+          "url": "https://books.google.com.au/books/about/Verbal_Idioms_of_the_Qur_%C4%81n.html?id=DGD_sgEACAAJ&redir_esc=y"
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|خَطِفَ|خطف_obj|خَطِفَ + object|To dazzle somebody's eyes",
+      "lemma_ar": "خَطِفَ",
+      "lemma_norm": "خطف",
+      "pos": "VERB",
+      "root_norm": "خطف",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|خطف|خطف_obj",
+      "gloss_primary": "(Of lightning) to dazzle somebody’s eyes, have a blinding effect on somebody",
+      "gloss_secondary_json": {
+        "construction": "خَطِفَ + object",
+        "type": "verb + object",
+        "text_examples": ["خَطِفَ الْبَرْقُ بَصَرَهُ"],
+        "quran_examples": [
+          { "surah": 2, "ayah": 20, "phrase": "يَكَادُ الْبَرْقُ يَخْطَفُ أَبْصَارَهُمْ" }
+        ],
+        "page": 2,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_10": "1607852241",
+          "isbn_13": "9781607852247",
+          "url": "https://books.google.com.au/books/about/Verbal_Idioms_of_the_Qur_%C4%81n.html?id=DGD_sgEACAAJ&redir_esc=y"
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَظْلَمَ|اظلم_على|أَظْلَمَ عَلَى|Of darkness: to envelop somebody",
+      "lemma_ar": "أَظْلَمَ",
+      "lemma_norm": "اظلم",
+      "pos": "VERB",
+      "root_norm": "ظلم",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ظلم|اظلم_على",
+      "gloss_primary": "(Of darkness) to envelop somebody",
+      "gloss_secondary_json": {
+        "construction": "أَظْلَمَ عَلَى",
+        "type": "verb + preposition",
+        "preposition": "عَلَى",
+        "text_examples": ["أَظْلَمَ عَلَيْهِ"],
+        "quran_examples": [
+          { "surah": 2, "ayah": 20, "phrase": "وَإِذَا أَظْلَمَ عَلَيْهِمْ" }
+        ],
+        "page": 2,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_10": "1607852241",
+          "isbn_13": "9781607852247",
+          "url": "https://books.google.com.au/books/about/Verbal_Idioms_of_the_Qur_%C4%81n.html?id=DGD_sgEACAAJ&redir_esc=y"
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|دَعَا|دعا_obj|دَعَا + object|To call somebody for help",
+      "lemma_ar": "دَعَا",
+      "lemma_norm": "دعا",
+      "pos": "VERB",
+      "root_norm": "دعو",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|دعو|دعا_obj",
+      "gloss_primary": "To call somebody for help",
+      "gloss_secondary_json": {
+        "construction": "دَعَا + object",
+        "type": "verb + object",
+        "text_examples": ["دَعَاهُ"],
+        "quran_examples": [
+          { "surah": 2, "ayah": 23, "phrase": "وَادْعُوا شُهَدَاءَكُمْ" }
+        ],
+        "page": 2,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_10": "1607852241",
+          "isbn_13": "9781607852247",
+          "url": "https://books.google.com.au/books/about/Verbal_Idioms_of_the_Qur_%C4%81n.html?id=DGD_sgEACAAJ&redir_esc=y"
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَرَادَ|اراد_obj|أَرَادَ + object|To imply/drive at something",
+      "lemma_ar": "أَرَادَ",
+      "lemma_norm": "اراد",
+      "pos": "VERB",
+      "root_norm": "رود",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رود|اراد_obj",
+      "gloss_primary": "To imply/drive at something",
+      "gloss_secondary_json": {
+        "construction": "أَرَادَ + object",
+        "type": "verb + object",
+        "text_examples": ["أَرَادَهُ"],
+        "quran_examples": [
+          { "surah": 2, "ayah": 26, "phrase": "مَاذَا أَرَادَ اللَّهُ بِهَذَا مَثَلًا" }
+        ],
+        "page": 2,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_10": "1607852241",
+          "isbn_13": "9781607852247",
+          "url": "https://books.google.com.au/books/about/Verbal_Idioms_of_the_Qur_%C4%81n.html?id=DGD_sgEACAAJ&redir_esc=y"
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ضَرَبَ|ضرب_مثلا|ضَرَبَ مَثَلًا|To cite an example/parable",
+      "lemma_ar": "ضَرَبَ",
+      "lemma_norm": "ضرب",
+      "pos": "VERB",
+      "root_norm": "ضرب",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ضرب|ضرب_مثلا",
+      "gloss_primary": "To cite an example/parable, strike a similitude",
+      "gloss_secondary_json": {
+        "construction": "ضَرَبَ مَثَلًا",
+        "type": "verb + object (idiomatic)",
+        "text_examples": ["ضَرَبَ مَثَلًا"],
+        "quran_examples": [
+          { "surah": 14, "ayah": 45, "phrase": "وَيَضْرِبُ اللَّهُ لِلنَّاسِ الْأَمْثَالَ" }
+        ],
+        "note": "Many verses in this category contain the preposition لِ, but it is not essential to the idiom.",
+        "page": 2,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_10": "1607852241",
+          "isbn_13": "9781607852247",
+          "url": "https://books.google.com.au/books/about/Verbal_Idioms_of_the_Qur_%C4%81n.html?id=DGD_sgEACAAJ&redir_esc=y"
+        }
+      }
+    }
+  ]
+}

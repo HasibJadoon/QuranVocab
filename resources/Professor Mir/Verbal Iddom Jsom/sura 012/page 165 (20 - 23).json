@@ -1,0 +1,176 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 165,
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|شَرَى|شرى_ب|شَرَى بِـ|To sell something for something",
+      "lemma_ar": "شَرَى",
+      "lemma_norm": "شرى",
+      "pos": "VERB",
+      "root_norm": "شري",
+      "sense_key": "idiom|verb|شري|شرى_ب",
+      "gloss_primary": "To sell something for something; exchange for",
+      "gloss_secondary_json": {
+        "construction": "شَرَى بِـ",
+        "type": "verb + object + preposition",
+        "preposition": "بِ",
+        "text_examples": [
+          "شَرَى بِكَذَا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 20,
+            "phrase": "وَشَرَوْهُ بِثَمَنٍ بَخْسٍ"
+          }
+        ],
+        "page": 165,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|غَلَبَ|غلب_على|غَلَبَ عَلَى|To have control over something",
+      "lemma_ar": "غَلَبَ",
+      "lemma_norm": "غلب",
+      "pos": "VERB",
+      "root_norm": "غلب",
+      "sense_key": "idiom|verb|غلب|غلب_على",
+      "gloss_primary": "To have control over something; overcome; prevail over",
+      "gloss_secondary_json": {
+        "construction": "غَلَبَ عَلَى",
+        "type": "verb + preposition",
+        "preposition": "عَلَى",
+        "text_examples": [
+          "غَلَبَ عَلَيْهِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 21,
+            "phrase": "وَاللَّهُ غَالِبٌ عَلَى أَمْرِهِ"
+          }
+        ],
+        "page": 165,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|مَكَّنَ|مكن_له_في|مَكَّنَ لَهُ فِي|To pave the way for somebody in a land",
+      "lemma_ar": "مَكَّنَ",
+      "lemma_norm": "مكن",
+      "pos": "VERB",
+      "root_norm": "مكن",
+      "sense_key": "idiom|verb|مكن|مكن_له_في",
+      "gloss_primary": "To establish someone securely in a land; give firm footing",
+      "gloss_secondary_json": {
+        "construction": "مَكَّنَ لَهُ فِي",
+        "type": "verb + preposition",
+        "prepositions": ["لِ", "فِي"],
+        "text_examples": [
+          "مَكَّنَ لَهُ فِي الْأَرْضِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 21,
+            "phrase": "وَكَذَٰلِكَ مَكَّنَّا لِيُوسُفَ فِي الْأَرْضِ"
+          }
+        ],
+        "page": 165,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|بَلَغَ|بلغ_أشده|بَلَغَ أَشُدَّهُ|To become fully mature",
+      "lemma_ar": "بَلَغَ",
+      "lemma_norm": "بلغ",
+      "pos": "VERB",
+      "root_norm": "بلغ",
+      "sense_key": "idiom|verb|بلغ|بلغ_أشده",
+      "gloss_primary": "To reach full maturity; come of age",
+      "gloss_secondary_json": {
+        "construction": "بَلَغَ أَشُدَّهُ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "بَلَغَ أَشُدَّهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 22,
+            "phrase": "وَلَمَّا بَلَغَ أَشُدَّهُ"
+          }
+        ],
+        "page": 165,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَحْسَنَ|أحسن_مثواه|أَحْسَنَ مَثْوَاهُ|To treat somebody well; deal kindly with somebody",
+      "lemma_ar": "أَحْسَنَ",
+      "lemma_norm": "احسن",
+      "pos": "VERB",
+      "root_norm": "حسن",
+      "sense_key": "idiom|verb|حسن|احسن_مثواه",
+      "gloss_primary": "To treat somebody with kindness/honor; deal well with somebody",
+      "gloss_secondary_json": {
+        "construction": "أَحْسَنَ مَثْوَاهُ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "أَحْسَنَ مَثْوَاهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 23,
+            "phrase": "إِنَّهُ رَبِّي أَحْسَنَ مَثْوَايَ"
+          }
+        ],
+        "page": 165,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    }
+
+  ]
+}

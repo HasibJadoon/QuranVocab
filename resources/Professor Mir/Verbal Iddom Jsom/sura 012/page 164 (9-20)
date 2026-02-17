@@ -1,0 +1,151 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|صَلُحَ|صلح_فلان|صَلُحَ فُلَانٌ|To be rid of worries; have peace of mind",
+      "lemma_ar": "صَلُحَ",
+      "lemma_norm": "صلح",
+      "pos": "VERB",
+      "root_norm": "صلح",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|صلح|صلح_فلان",
+      "gloss_primary": "To be rid of one’s worries/concerns; have peace of mind",
+      "gloss_secondary_json": {
+        "construction": "صَلُحَ فُلَانٌ",
+        "type": "verb (idiomatic usage)",
+        "text_examples": [
+          "صَلُحَ فُلَانٌ",
+          "صَلُحَ بَالُ فُلَانٍ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 9,
+            "phrase": "وَتَكُونُوا مِن بَعْدِهِ قَوْمًا صَالِحِينَ"
+          }
+        ],
+        "page": 164,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|رَتَعَ|رتع|رَتَعَ|To eat and drink freely; enjoy oneself",
+      "lemma_ar": "رَتَعَ",
+      "lemma_norm": "رتع",
+      "pos": "VERB",
+      "root_norm": "رتع",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رتع|رتع",
+      "gloss_primary": "To eat and drink freely; enjoy oneself",
+      "gloss_secondary_json": {
+        "construction": "رَتَعَ",
+        "type": "verb",
+        "text_examples": [
+          "رَتَعَتِ الْمَاشِيَةُ",
+          "رَتَعَ الْقَوْمُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 12,
+            "phrase": "يَرْتَعْ وَيَلْعَبْ"
+          }
+        ],
+        "page": 164,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|سَوَّلَ|سول_له|سَوَّلَ لَهُ الْأَمْرَ|To trick/dupe somebody into something",
+      "lemma_ar": "سَوَّلَ",
+      "lemma_norm": "سول",
+      "pos": "VERB",
+      "root_norm": "سول",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|سول|سول_له",
+      "gloss_primary": "To talk/trick somebody into something",
+      "gloss_secondary_json": {
+        "construction": "سَوَّلَ لَهُ الْأَمْرَ",
+        "type": "verb + object + preposition (لِ)",
+        "preposition": "لِ",
+        "text_examples": [
+          "سَوَّلَ لَهُ نَفْسُهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 18,
+            "phrase": "بَلْ سَوَّلَتْ لَكُمْ أَنْفُسُكُمْ أَمْرًا"
+          }
+        ],
+        "page": 164,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَزْدَرَى|ازدرى|أَزْدَرَى|To regard with contempt; to disdain",
+      "lemma_ar": "أَزْدَرَى",
+      "lemma_norm": "ازدرى",
+      "pos": "VERB",
+      "root_norm": "زري",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|زري|ازدرى",
+      "gloss_primary": "To be indifferent; to show disdain/contempt",
+      "gloss_secondary_json": {
+        "construction": "أَزْدَرَى",
+        "type": "verb",
+        "text_examples": [
+          "أَزْدَرَى فُلَانًا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 20,
+            "phrase": "وَكَانُوا فِيهِ مِنَ الزَّاهِدِينَ"
+          }
+        ],
+        "page": 164,
+        "note": "Entry discusses active participle usage.",
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    }
+
+  ]
+}

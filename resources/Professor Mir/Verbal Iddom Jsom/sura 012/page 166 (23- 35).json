@@ -1,0 +1,141 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 166,
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|رَاوَدَ|راود_عن|رَاوَدَ عَنْ|To tempt/seduce someone",
+      "lemma_ar": "رَاوَدَ",
+      "lemma_norm": "راود",
+      "pos": "VERB",
+      "root_norm": "رود",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رود|راود_عن",
+      "gloss_primary": "(Of a woman) to tempt a man; try to seduce him",
+      "gloss_secondary_json": {
+        "construction": "رَاوَدَ عَنْ",
+        "type": "verb + object + preposition",
+        "preposition": "عَنْ",
+        "text_examples": [
+          "رَاوَدَتْهُ عَنْ نَفْسِهِ"
+        ],
+        "quran_examples": [
+          { "surah": 12, "ayah": 23, "phrase": "وَرَاوَدَتْهُ عَنْ نَفْسِهِ" },
+          { "surah": 12, "ayah": 26, "phrase": "إِن كَانَ قَمِيصُهُ قُدَّ مِن قُبُلٍ فَصَدَقَتْ وَهُوَ مِنَ الْكَاذِبِينَ" },
+          { "surah": 12, "ayah": 30, "phrase": "قَدْ شَغَفَهَا حُبًّا" },
+          { "surah": 12, "ayah": 32, "phrase": "وَلَقَدْ رَاوَدتُّهُ عَن نَّفْسِهِ فَاسْتَعْصَمَ" }
+        ],
+        "note": "See also 12:61 and 54:37 (as referenced in source).",
+        "page": 166,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَرْسَلَ|ارسل_الى|أَرْسَلَ إِلَى|To send for/invite someone",
+      "lemma_ar": "أَرْسَلَ",
+      "lemma_norm": "ارسل",
+      "pos": "VERB",
+      "root_norm": "رسل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رسل|ارسل_الى",
+      "gloss_primary": "To send for; invite someone",
+      "gloss_secondary_json": {
+        "construction": "أَرْسَلَ إِلَى",
+        "type": "verb + preposition",
+        "preposition": "إِلَى",
+        "text_examples": [
+          "أَرْسَلَ إِلَيْهِ"
+        ],
+        "quran_examples": [
+          { "surah": 12, "ayah": 31, "phrase": "فَأَرْسَلَتْ إِلَيْهِنَّ" }
+        ],
+        "page": 166,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|صَبَا|صبا_الى|صَبَا إِلَى|To become infatuated with someone",
+      "lemma_ar": "صَبَا",
+      "lemma_norm": "صبا",
+      "pos": "VERB",
+      "root_norm": "صبو",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|صبو|صبا_الى",
+      "gloss_primary": "To take a fancy to; become infatuated with someone",
+      "gloss_secondary_json": {
+        "construction": "صَبَا إِلَى",
+        "type": "verb + preposition",
+        "preposition": "إِلَى",
+        "text_examples": [
+          "صَبَا إِلَى الْمَرْأَةِ"
+        ],
+        "quran_examples": [
+          { "surah": 12, "ayah": 33, "phrase": "إِلَّا تَصْرِفْ عَنِّي كَيْدَهُنَّ أَصْبُ إِلَيْهِنَّ" }
+        ],
+        "page": 166,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|بَدَا|بدا_ل|بَدَا لِـ|To strike someone as appropriate",
+      "lemma_ar": "بَدَا",
+      "lemma_norm": "بدا",
+      "pos": "VERB",
+      "root_norm": "بدو",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|بدو|بدا_ل",
+      "gloss_primary": "(Of a suggestion/course of action) to appear appropriate or expedient to someone",
+      "gloss_secondary_json": {
+        "construction": "بَدَا لِـ",
+        "type": "verb + preposition",
+        "preposition": "لِ",
+        "text_examples": [
+          "بَدَا لَهُ"
+        ],
+        "quran_examples": [
+          { "surah": 12, "ayah": 35, "phrase": "ثُمَّ بَدَا لَهُم مِّن بَعْدِ مَا رَأَوُا الْآيَاتِ" }
+        ],
+        "page": 166,
+        "source": {
+          "title": "Verbal Idioms of the Qur'ān",
+          "author": "Mustansir Mir",
+          "publisher": "MPublishing",
+          "year": 2011,
+          "isbn_13": "9781607852247"
+        }
+      }
+    }
+
+  ]
+}
+

@@ -1,0 +1,1593 @@
+{
+  "collection": "surah-verbal-idioms",
+  "surah": 12,
+  "surah_name_en": "Yusuf",
+  "source_file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+  "pages_in_source": [
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173
+  ],
+  "ayah_range": {
+    "from": 9,
+    "to": 111
+  },
+  "generated_at": "2026-02-13T11:12:55.131142Z",
+  "items": [
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|صَلُحَ|صلح_فلان|صَلُحَ فُلَانٌ|To be rid of one’s worries/concerns; have peace of mind",
+      "lemma_ar": "صَلُحَ",
+      "lemma_norm": "صلح",
+      "pos": "VERB",
+      "root_norm": "صلح",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|صلح|صلح_فلان",
+      "gloss_primary": "To be rid of one’s worries/concerns; have peace of mind",
+      "gloss_secondary_json": {
+        "construction": "صَلُحَ فُلَانٌ",
+        "type": "verb (intransitive) (idiomatic usage)",
+        "text_examples": [
+          "صَلُحَ فُلَانٌ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 9,
+            "phrase": "صَلُحَ فُلَانٌ"
+          }
+        ],
+        "note": "Used in 12:9 in the sense: ‘you will be at peace with yourselves / have peace of mind (after …)’.",
+        "page": 164,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 164
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|رَتَعَ|رتع|رَتَعَ (فِي ...)|To eat and drink freely; enjoy oneself (picnic/play)",
+      "lemma_ar": "رَتَعَ",
+      "lemma_norm": "رتع",
+      "pos": "VERB",
+      "root_norm": "رتع",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رتع|رتع",
+      "gloss_primary": "To eat and drink freely; enjoy oneself (picnic/play)",
+      "gloss_secondary_json": {
+        "construction": "رَتَعَ (فِي ...)",
+        "type": "verb (intransitive) (idiomatic usage)",
+        "text_examples": [
+          "رَتَعَ (فِي ...)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 12,
+            "phrase": "يَرْتَعْ وَيَلْعَبْ"
+          }
+        ],
+        "note": "Describes carefree enjoyment; also used of cattle grazing freely.",
+        "page": 164,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 164
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|سَوَّلَ|سول_له_الامر|سَوَّلَ لَهُ الأَمْرَ|To talk/trick somebody into something; to tempt/dupe",
+      "lemma_ar": "سَوَّلَ",
+      "lemma_norm": "سول",
+      "pos": "VERB",
+      "root_norm": "سول",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|سول|سول_له_الامر",
+      "gloss_primary": "To talk/trick somebody into something; to tempt/dupe",
+      "gloss_secondary_json": {
+        "construction": "سَوَّلَ لَهُ الأَمْرَ",
+        "type": "verb + object + preposition (ل) (idiomatic)",
+        "text_examples": [
+          "سَوَّلَ لَهُ الأَمْرَ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 18,
+            "phrase": "سَوَّلَتْ لَكُمْ أَنفُسُكُمْ أَمْرًا"
+          },
+          {
+            "surah": 12,
+            "ayah": 83,
+            "phrase": "سَوَّلَتْ لَكُمْ أَنفُسُكُمْ أَمْرًا"
+          }
+        ],
+        "note": "Often appears with ‘لـ’ but ‘لـ’ is part of this construction here.",
+        "page": 164,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 164
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|زَهِدَ|زهد_في|زَهِدَ فِي (شَيْء)|To be indifferent; have little regard; be uninterested",
+      "lemma_ar": "زَهِدَ",
+      "lemma_norm": "زهد",
+      "pos": "VERB",
+      "root_norm": "زهد",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|زهد|زهد_في",
+      "gloss_primary": "To be indifferent; have little regard; be uninterested",
+      "gloss_secondary_json": {
+        "construction": "زَهِدَ فِي (شَيْء)",
+        "type": "verb + preposition (في) (sense reflected via active participle)",
+        "text_examples": [
+          "زَهِدَ فِي (شَيْء)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 20,
+            "phrase": "وَكَانُوا فِيهِ مِنَ الزَّاهِدِينَ"
+          }
+        ],
+        "note": "In 12:20 the meaning is ‘to be indifferent/uninterested’; the Qur’anic wording uses the active participle (زاهدين).",
+        "page": 164,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 164
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|شَرَى|شرى_بثمن|شَرَى بِـ(ثَمَنٍ ...)|To sell (or buy) for a paltry price; exchange for",
+      "lemma_ar": "شَرَى",
+      "lemma_norm": "شرى",
+      "pos": "VERB",
+      "root_norm": "شري",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|شري|شرى_بثمن",
+      "gloss_primary": "To sell (or buy) for a paltry price; exchange for",
+      "gloss_secondary_json": {
+        "construction": "شَرَى بِـ(ثَمَنٍ ...)",
+        "type": "verb + object + preposition (ب) (idiomatic)",
+        "text_examples": [
+          "شَرَى بِـ(ثَمَنٍ ...)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 20,
+            "phrase": "وَشَرَوْهُ بِثَمَنٍ بَخْسٍ"
+          }
+        ],
+        "note": "In 12:20: ‘they sold him for a paltry price’.",
+        "page": 165,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 165
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|غَلَبَ|غلب_عليه|غَلَبَ عَلَيْهِ|To have control of something; get the better of",
+      "lemma_ar": "غَلَبَ",
+      "lemma_norm": "غلب",
+      "pos": "VERB",
+      "root_norm": "غلب",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|غلب|غلب_عليه",
+      "gloss_primary": "To have control of something; get the better of",
+      "gloss_secondary_json": {
+        "construction": "غَلَبَ عَلَيْهِ",
+        "type": "verb + preposition (على) (idiomatic)",
+        "text_examples": [
+          "غَلَبَ عَلَيْهِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 21,
+            "phrase": "وَاللَّهُ غَالِبٌ عَلَىٰ أَمْرِهِ"
+          }
+        ],
+        "note": "In 12:21: ‘God has complete control over His affairs’.",
+        "page": 165,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 165
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|مَكَّنَ|مكن_له_في_الارض|مَكَّنَ لَهُ فِي الأَرْضِ|To give somebody a footing / establish somebody in a land; pave the way",
+      "lemma_ar": "مَكَّنَ",
+      "lemma_norm": "مكن",
+      "pos": "VERB",
+      "root_norm": "مكن",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|مكن|مكن_له_في_الارض",
+      "gloss_primary": "To give somebody a footing / establish somebody in a land; pave the way",
+      "gloss_secondary_json": {
+        "construction": "مَكَّنَ لَهُ فِي الأَرْضِ",
+        "type": "verb + prepositions (ل، في) (idiomatic)",
+        "text_examples": [
+          "مَكَّنَ لَهُ فِي الأَرْضِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 21,
+            "phrase": "وَكَذَٰلِكَ مَكَّنَّا لِيُوسُفَ فِي الأَرْضِ"
+          }
+        ],
+        "note": "Used for granting stable position/authority in a land.",
+        "page": 165,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 165
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|بَلَغَ|بلغ_اشده|بَلَغَ أَشُدَّهُ|To become fully mature; reach one’s prime",
+      "lemma_ar": "بَلَغَ",
+      "lemma_norm": "بلغ",
+      "pos": "VERB",
+      "root_norm": "بلغ",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|بلغ|بلغ_اشده",
+      "gloss_primary": "To become fully mature; reach one’s prime",
+      "gloss_secondary_json": {
+        "construction": "بَلَغَ أَشُدَّهُ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "بَلَغَ أَشُدَّهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 22,
+            "phrase": "وَلَمَّا بَلَغَ أَشُدَّهُ"
+          }
+        ],
+        "note": "Common idiom for reaching maturity/prime strength.",
+        "page": 165,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 165
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَحْسَنَ|احسن_مثواه|أَحْسَنَ مَثْوَاهُ|To treat somebody with kindness/honor; deal well with somebody",
+      "lemma_ar": "أَحْسَنَ",
+      "lemma_norm": "احسن",
+      "pos": "VERB",
+      "root_norm": "حسن",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|حسن|احسن_مثواه",
+      "gloss_primary": "To treat somebody with kindness/honor; deal well with somebody",
+      "gloss_secondary_json": {
+        "construction": "أَحْسَنَ مَثْوَاهُ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "أَحْسَنَ مَثْوَاهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 23,
+            "phrase": "وَأَحْسَنَ مَثْوَايَ"
+          }
+        ],
+        "note": "In 12:23: ‘(your husband) treated me well / honored my stay’.",
+        "page": 165,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 165
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|رَاوَدَ|راود_عن_نفسه|رَاوَدَتْهُ عَنْ نَفْسِهِ|(Of a woman) to tempt a man; try to seduce/persuade him",
+      "lemma_ar": "رَاوَدَ",
+      "lemma_norm": "راود",
+      "pos": "VERB",
+      "root_norm": "رود",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رود|راود_عن_نفسه",
+      "gloss_primary": "To tempt/seduce; to try to persuade (depending on context)",
+      "gloss_secondary_json": {
+        "construction": "رَاوَدَتْهُ عَنْ نَفْسِهِ",
+        "type": "verb + object + preposition (عن) (idiomatic)",
+        "text_examples": [
+          "رَاوَدَتْهُ عَنْ نَفْسِهِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 23,
+            "phrase": "وَرَاوَدَتْهُ الَّتِي هُوَ فِي بَيْتِهَا عَنْ نَفْسِهِ"
+          },
+          {
+            "surah": 12,
+            "ayah": 26,
+            "phrase": "رَاوَدَتْنِي عَنْ نَفْسِي"
+          },
+          {
+            "surah": 12,
+            "ayah": 30,
+            "phrase": "تُرَاوِدُ فَتَاهَا عَنْ نَفْسِهِ"
+          },
+          {
+            "surah": 12,
+            "ayah": 32,
+            "phrase": "وَلَقَدْ رَاوَدْتُّهُ عَنْ نَفْسِهِ"
+          },
+          {
+            "surah": 12,
+            "ayah": 51,
+            "phrase": "أَنَا رَاوَدْتُّهُ عَن نَّفْسِهِ"
+          },
+          {
+            "surah": 12,
+            "ayah": 61,
+            "phrase": "لَنُرَاوِدَنَّ عَنْهُ أَبَاهُ"
+          }
+        ],
+        "note": "Occurs with عَنْ in Sūrat Yūsuf; meaning ranges from seduction/temptation (12:23 etc.) to persuasion (12:61).",
+        "page": 166,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 166
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَرْسَلَ|ارسل_الى|أَرْسَلَ إِلَى (فُلَانٍ)|To send for / invite somebody",
+      "lemma_ar": "أَرْسَلَ",
+      "lemma_norm": "ارسل",
+      "pos": "VERB",
+      "root_norm": "رسل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|رسل|ارسل_الى",
+      "gloss_primary": "To send for / invite somebody",
+      "gloss_secondary_json": {
+        "construction": "أَرْسَلَ إِلَى (فُلَانٍ)",
+        "type": "verb + preposition (إلى) (idiomatic)",
+        "text_examples": [
+          "أَرْسَلَ إِلَى (فُلَانٍ)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 31,
+            "phrase": "وَأَرْسَلَتْ إِلَيْهِنَّ"
+          }
+        ],
+        "note": null,
+        "page": 166,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 166
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|صَبَا|صبا_الى|صَبَا إِلَى الْمَرْأَةِ|To take a fancy to / become infatuated with (a woman)",
+      "lemma_ar": "صَبَا",
+      "lemma_norm": "صبا",
+      "pos": "VERB",
+      "root_norm": "صبو",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|صبو|صبا_الى",
+      "gloss_primary": "To take a fancy to / become infatuated with (a woman)",
+      "gloss_secondary_json": {
+        "construction": "صَبَا إِلَى الْمَرْأَةِ",
+        "type": "verb + preposition (إلى) (idiomatic)",
+        "text_examples": [
+          "صَبَا إِلَى الْمَرْأَةِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 33,
+            "phrase": "أَصْبُ إِلَيْهِنَّ"
+          }
+        ],
+        "note": "Used for inclination/infatuation; broader Arabic usage includes inclination toward good or other desires.",
+        "page": 166,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 166
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|بَدَا|بدا_له|بَدَا لَهُ (أَنْ ... / كَذَا)|(Of a thought/plan) to occur/appear to somebody; strike somebody as expedient/politic",
+      "lemma_ar": "بَدَا",
+      "lemma_norm": "بدا",
+      "pos": "VERB",
+      "root_norm": "بدو",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|بدو|بدا_له",
+      "gloss_primary": "(Of a thought/plan) to occur/appear to somebody; strike somebody as expedient/politic",
+      "gloss_secondary_json": {
+        "construction": "بَدَا لَهُ (أَنْ ... / كَذَا)",
+        "type": "verb + preposition (ل) (idiomatic)",
+        "text_examples": [
+          "بَدَا لَهُ (أَنْ ... / كَذَا)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 35,
+            "phrase": "ثُمَّ بَدَا لَهُم مِّنۢ بَعْدِ مَا رَأَوُا الْآيَاتِ لَيَسْجُنُنَّهُ"
+          }
+        ],
+        "note": "Often used for ‘it seemed to him/them (the right thing)’.",
+        "page": 166,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 166
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|رَأَى|راى_في_المنام|رَأَى رُؤْيَا/مَنَامًا|To see something in a dream",
+      "lemma_ar": "رَأَى",
+      "lemma_norm": "راى",
+      "pos": "VERB",
+      "root_norm": "راي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|راي|راى_في_المنام",
+      "gloss_primary": "To see something in a dream",
+      "gloss_secondary_json": {
+        "construction": "رَأَى رُؤْيَا/مَنَامًا",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "رَأَى (فِي الْمَنَامِ)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 36,
+            "phrase": "إِنِّي أَرَانِي أَعْصِرُ خَمْرًا"
+          },
+          {
+            "surah": 12,
+            "ayah": 43,
+            "phrase": "إِنِّي أَرَىٰ سَبْعَ بَقَرَاتٍ سِمَانٍ"
+          }
+        ],
+        "note": "Listed as occurring twice in Sūrat Yūsuf (dream contexts).",
+        "page": 167,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 167
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|كَانَ|ما_كان_له_ان|مَا كَانَ لَهُ أَنْ يَفْعَلَ كَذَا|One is not in a position to do something / it is not for one to do so",
+      "lemma_ar": "كَانَ",
+      "lemma_norm": "كان",
+      "pos": "VERB",
+      "root_norm": "كون",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|كون|ما_كان_له_ان",
+      "gloss_primary": "One is not in a position to do something / it is not for one to do so",
+      "gloss_secondary_json": {
+        "construction": "مَا كَانَ لَهُ أَنْ يَفْعَلَ كَذَا",
+        "type": "kāna-construction with predicate (idiomatic)",
+        "text_examples": [
+          "مَا كَانَ لَهُ أَنْ يَفْعَلَ كَذَا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 38,
+            "phrase": "مَا كَانَ لَنَا أَن نُّشْرِكَ بِاللَّهِ مِن شَيْءٍ"
+          }
+        ],
+        "note": "Used to express moral/religious impropriety or impossibility (‘it is not for us/him to…’).",
+        "page": 167,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 167
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَنْزَلَ|انزل_به_سلطانا|أَنْزَلَ اللَّهُ بِهِ سُلْطَانًا|To send down sanction/authority in support of something",
+      "lemma_ar": "أَنْزَلَ",
+      "lemma_norm": "انزل",
+      "pos": "VERB",
+      "root_norm": "نزل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|نزل|انزل_به_سلطانا",
+      "gloss_primary": "To send down sanction/authority in support of something",
+      "gloss_secondary_json": {
+        "construction": "أَنْزَلَ اللَّهُ بِهِ سُلْطَانًا",
+        "type": "verb + object + preposition (ب) (idiomatic)",
+        "text_examples": [
+          "أَنْزَلَ اللَّهُ بِهِ سُلْطَانًا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 40,
+            "phrase": "مَا أَنزَلَ اللَّهُ بِهَا مِن سُلْطَانٍ"
+          }
+        ],
+        "note": "Used for ‘to grant/send down authority/proof’; in 12:40 it occurs in the negative.",
+        "page": 167,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 167
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ذَكَرَ|ذكر_عند|ذَكَرَهُ عِندَ (فُلَانٍ)|To mention somebody to somebody",
+      "lemma_ar": "ذَكَرَ",
+      "lemma_norm": "ذكر",
+      "pos": "VERB",
+      "root_norm": "ذكر",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ذكر|ذكر_عند",
+      "gloss_primary": "To mention somebody to somebody",
+      "gloss_secondary_json": {
+        "construction": "ذَكَرَهُ عِندَ (فُلَانٍ)",
+        "type": "verb + object + preposition (عند) (idiomatic)",
+        "text_examples": [
+          "ذَكَرَهُ عِندَ (فُلَانٍ)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 42,
+            "phrase": "اذْكُرْنِي عِندَ رَبِّكَ"
+          }
+        ],
+        "note": null,
+        "page": 167,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 167
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَكَلَ|اكل|أَكَلَ (شَيْئًا)|To consume something; use something up",
+      "lemma_ar": "أَكَلَ",
+      "lemma_norm": "اكل",
+      "pos": "VERB",
+      "root_norm": "اكل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|اكل|اكل",
+      "gloss_primary": "To consume something; use something up",
+      "gloss_secondary_json": {
+        "construction": "أَكَلَ (شَيْئًا)",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "أَكَلَ (شَيْئًا)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 48,
+            "phrase": "يَأْكُلْنَ مَا قَدَّمْتُمْ لَهُنَّ"
+          }
+        ],
+        "note": null,
+        "page": 168,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 168
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَحْصَنَ|احصن|أَحْصَنَ (شَيْئًا)|To store something up; put/lay something by",
+      "lemma_ar": "أَحْصَنَ",
+      "lemma_norm": "احصن",
+      "pos": "VERB",
+      "root_norm": "حصن",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|حصن|احصن",
+      "gloss_primary": "To store something up; put/lay something by",
+      "gloss_secondary_json": {
+        "construction": "أَحْصَنَ (شَيْئًا)",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "أَحْصَنَ (شَيْئًا)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 48,
+            "phrase": "إِلَّا قَلِيلًا مِّمَّا تُحْصِنُونَ"
+          }
+        ],
+        "note": null,
+        "page": 168,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 168
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|قَدَّمَ|قدم_له|قَدَّمَ الشَّيْءَ لَهُ|To lay something up for somebody; send something in advance for somebody",
+      "lemma_ar": "قَدَّمَ",
+      "lemma_norm": "قدم",
+      "pos": "VERB",
+      "root_norm": "قدم",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|قدم|قدم_له",
+      "gloss_primary": "To lay something up for somebody; send something in advance for somebody",
+      "gloss_secondary_json": {
+        "construction": "قَدَّمَ الشَّيْءَ لَهُ",
+        "type": "verb + object + preposition (ل) (idiomatic)",
+        "text_examples": [
+          "قَدَّمَ الشَّيْءَ لَهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 48,
+            "phrase": "مَا قَدَّمْتُمْ لَهُنَّ"
+          }
+        ],
+        "note": "In 12:48 the object is understood: ‘(the years) will consume what you have laid up for them’ [object understood].",
+        "page": 168,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 168
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|عَلِمَ|علم_عليه|عَلِمَ عَلَيْهِ (شَيْئًا)|To be aware of / know (no evil) on somebody’s part",
+      "lemma_ar": "عَلِمَ",
+      "lemma_norm": "علم",
+      "pos": "VERB",
+      "root_norm": "علم",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|علم|علم_عليه",
+      "gloss_primary": "To be aware of / know (no evil) on somebody’s part",
+      "gloss_secondary_json": {
+        "construction": "عَلِمَ عَلَيْهِ (شَيْئًا)",
+        "type": "verb + object (understood) + preposition (على) (idiomatic)",
+        "text_examples": [
+          "عَلِمَ عَلَيْهِ (شَيْئًا)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 51,
+            "phrase": "مَا عَلِمْنَا عَلَيْهِ مِن سُوءٍ"
+          }
+        ],
+        "note": "Literal sense: ‘We know nothing against him.’",
+        "page": 168,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 168
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|جَعَلَ|جعلني_على|جَعَلَهُ عَلَيْهِ|To put somebody in charge of something",
+      "lemma_ar": "جَعَلَ",
+      "lemma_norm": "جعل",
+      "pos": "VERB",
+      "root_norm": "جعل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|جعل|جعلني_على",
+      "gloss_primary": "To put somebody in charge of something",
+      "gloss_secondary_json": {
+        "construction": "جَعَلَهُ عَلَيْهِ",
+        "type": "verb + object + preposition (على) (idiomatic)",
+        "text_examples": [
+          "جَعَلَهُ عَلَيْهِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 55,
+            "phrase": "اجْعَلْنِي عَلَىٰ خَزَائِنِ الْأَرْضِ"
+          }
+        ],
+        "note": null,
+        "page": 168,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 168
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَضَاعَ|لا_يضيع_اجر|أَضَاعَ لَهُ أَجْرَهُ|(Of God) to deprive somebody of reward / not let reward be lost",
+      "lemma_ar": "أَضَاعَ",
+      "lemma_norm": "اضاع",
+      "pos": "VERB",
+      "root_norm": "ضيع",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ضيع|لا_يضيع_اجر",
+      "gloss_primary": "(Of God) to deprive somebody of reward / not let reward be lost",
+      "gloss_secondary_json": {
+        "construction": "أَضَاعَ لَهُ أَجْرَهُ",
+        "type": "verb + object + preposition (ل) (idiomatic)",
+        "text_examples": [
+          "أَضَاعَ لَهُ أَجْرَهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 56,
+            "phrase": "لَا نُضِيعُ أَجْرَ الْمُحْسِنِينَ"
+          },
+          {
+            "surah": 12,
+            "ayah": 90,
+            "phrase": "إِنَّ اللَّهَ لَا يُضِيعُ أَجْرَ الْمُحْسِنِينَ"
+          }
+        ],
+        "note": "Qur’anic form appears as ‘نُضِيعُ’ (we do not let the reward be lost).",
+        "page": 168,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 168
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|مَكَّنَ|مكن_له_في_الارض_سلطة|مَكَّنَ لَهُ فِي الأَرْضِ|To give somebody great power/authority in the land",
+      "lemma_ar": "مَكَّنَ",
+      "lemma_norm": "مكن",
+      "pos": "VERB",
+      "root_norm": "مكن",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|مكن|مكن_له_في_الارض_سلطة",
+      "gloss_primary": "To give somebody great power/authority in the land",
+      "gloss_secondary_json": {
+        "construction": "مَكَّنَ لَهُ فِي الأَرْضِ",
+        "type": "verb + prepositions (ل، في) (idiomatic)",
+        "text_examples": [
+          "مَكَّنَ لَهُ فِي الأَرْضِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 56,
+            "phrase": "وَكَذَٰلِكَ مَكَّنَّا لِيُوسُفَ فِي الأَرْضِ"
+          }
+        ],
+        "note": "Here the focus is on granting power/authority (as in 12:56).",
+        "page": 169,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 169
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَنْزَلَ|خير_المنزلين|أَنْزَلَ (ضَيْفًا)|To serve as host; lodge/entertain",
+      "lemma_ar": "أَنْزَلَ",
+      "lemma_norm": "انزل",
+      "pos": "VERB",
+      "root_norm": "نزل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|نزل|خير_المنزلين",
+      "gloss_primary": "To serve as host; lodge/entertain",
+      "gloss_secondary_json": {
+        "construction": "أَنْزَلَ (ضَيْفًا)",
+        "type": "verb + object (idiomatic; reflected via active participle)",
+        "text_examples": [
+          "أَنْزَلَ (ضَيْفًا)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 59,
+            "phrase": "وَأَنَا خَيْرُ الْمُنزِلِينَ"
+          }
+        ],
+        "note": "The Qur’anic wording uses the active participle (المنزلين) meaning ‘hosts’.",
+        "page": 169,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 169
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَوْفَى|اوفى_الكيل|أَوْفَى الْكَيْلَ/الْمِكْيَالَ|To give full measure",
+      "lemma_ar": "أَوْفَى",
+      "lemma_norm": "اوفى",
+      "pos": "VERB",
+      "root_norm": "وفي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|وفي|اوفى_الكيل",
+      "gloss_primary": "To give full measure",
+      "gloss_secondary_json": {
+        "construction": "أَوْفَى الْكَيْلَ/الْمِكْيَالَ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "أَوْفَى الْكَيْلَ/الْمِكْيَالَ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 59,
+            "phrase": "أُوفِي الْكَيْلَ"
+          },
+          {
+            "surah": 12,
+            "ayah": 88,
+            "phrase": "وَأَوْفِ لَنَا الْكَيْلَ"
+          }
+        ],
+        "note": null,
+        "page": 169,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 169
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|قَرُبَ|لا_تقربون|لَا تَقْرَبْ (إِلَيَّ)|To deny access / prohibit someone from coming near",
+      "lemma_ar": "قَرُبَ",
+      "lemma_norm": "قرب",
+      "pos": "VERB",
+      "root_norm": "قرب",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|قرب|لا_تقربون",
+      "gloss_primary": "To deny access / prohibit someone from coming near",
+      "gloss_secondary_json": {
+        "construction": "لَا تَقْرَبْ (إِلَيَّ)",
+        "type": "prohibition expression (idiomatic)",
+        "text_examples": [
+          "لَا تَقْرَبْهُ / لَا تَقْرَبُونِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 60,
+            "phrase": "وَلَا تَقْرَبُونِ"
+          }
+        ],
+        "note": "Used for denial of access: ‘Do not come to me / into my presence.’",
+        "page": 169,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 169
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|آتَى|اوتوا_موثقا|آتَاهُ مَوْثِقًا|To give somebody one’s word / pledge",
+      "lemma_ar": "آتَى",
+      "lemma_norm": "اتى",
+      "pos": "VERB",
+      "root_norm": "اتي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|اتي|اوتوا_موثقا",
+      "gloss_primary": "To give somebody one’s word / pledge",
+      "gloss_secondary_json": {
+        "construction": "آتَاهُ مَوْثِقًا",
+        "type": "verb with two objects (idiomatic)",
+        "text_examples": [
+          "آتَاهُ مَوْثِقًا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 66,
+            "phrase": "حَتَّىٰ تُؤْتُونِ مَوْثِقًا مِّنَ اللَّهِ"
+          }
+        ],
+        "note": "Jacob asks his sons to give a solemn pledge/oath.",
+        "page": 169,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 169
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَحَاطَ|احاط_به|أَحَاطَ بِهِ|To be surrounded; be caught in a difficult situation",
+      "lemma_ar": "أَحَاطَ",
+      "lemma_norm": "احاط",
+      "pos": "VERB",
+      "root_norm": "حوط",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|حوط|احاط_به",
+      "gloss_primary": "To be surrounded; be caught in a difficult situation",
+      "gloss_secondary_json": {
+        "construction": "أَحَاطَ بِهِ",
+        "type": "verb + preposition (ب) (idiomatic)",
+        "text_examples": [
+          "أَحَاطَ بِهِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 66,
+            "phrase": "إِلَّا أَن يُحَاطَ بِكُمْ"
+          }
+        ],
+        "note": "In 12:66: ‘except if you are surrounded / hemmed in’.",
+        "page": 169,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 169
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَغْنَى|اغنى_عنه_منه|أَغْنَى عَنْهُ مِنْهُ|To be of avail to somebody against something; save/protect somebody from something",
+      "lemma_ar": "أَغْنَى",
+      "lemma_norm": "اغنى",
+      "pos": "VERB",
+      "root_norm": "غني",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|غني|اغنى_عنه_منه",
+      "gloss_primary": "To be of avail to somebody against something; save/protect somebody from something",
+      "gloss_secondary_json": {
+        "construction": "أَغْنَى عَنْهُ مِنْهُ",
+        "type": "verb + two prepositions (عن، من) (idiomatic)",
+        "text_examples": [
+          "أَغْنَى عَنْهُ مِنْهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 67,
+            "phrase": "لَا أُغْنِي عَنكُم مِّنَ اللَّهِ مِن شَيْءٍ"
+          },
+          {
+            "surah": 12,
+            "ayah": 68,
+            "phrase": "مَا كَانَ يُغْنِي عَنْهُم مِّنَ اللَّهِ مِن شَيْءٍ"
+          }
+        ],
+        "note": null,
+        "page": 170,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 170
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|قَضَى|قضى_حاجة|قَضَى حَاجَتَهُ|To achieve something; satisfy one’s need",
+      "lemma_ar": "قَضَى",
+      "lemma_norm": "قضى",
+      "pos": "VERB",
+      "root_norm": "قضي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|قضي|قضى_حاجة",
+      "gloss_primary": "To achieve something; satisfy one’s need",
+      "gloss_secondary_json": {
+        "construction": "قَضَى حَاجَتَهُ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "قَضَى حَاجَتَهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 68,
+            "phrase": "وَلَمَّا قَضَوْا مِنْهُ حَاجَتَهُمْ"
+          }
+        ],
+        "note": null,
+        "page": 170,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 170
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|كَانَ|ما_كان_لياخذ|مَا كَانَ لِيَفْعَلَ (كَذَا)|One could not do (something) / was not able to (according to law)",
+      "lemma_ar": "كَانَ",
+      "lemma_norm": "كان",
+      "pos": "VERB",
+      "root_norm": "كون",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|كون|ما_كان_لياخذ",
+      "gloss_primary": "One could not do (something) / was not able to (according to law)",
+      "gloss_secondary_json": {
+        "construction": "مَا كَانَ لِيَفْعَلَ (كَذَا)",
+        "type": "kāna-construction (idiomatic)",
+        "text_examples": [
+          "مَا كَانَ لِيَفْعَلَ (كَذَا)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 76,
+            "phrase": "مَا كَانَ لِيَأْخُذَ أَخَاهُ فِي دِينِ الْمَلِكِ"
+          }
+        ],
+        "note": "In 12:76 it implies Joseph could not have detained his brother according to the law of the king.",
+        "page": 170,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 170
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَخَذَ|اخذ_عليه_موثقا|أَخَذَ عَلَيْهِ الْمِيثَاقَ/الْمَوْثِقَ|To take from somebody a binding/solemn commitment regarding something",
+      "lemma_ar": "أَخَذَ",
+      "lemma_norm": "اخذ",
+      "pos": "VERB",
+      "root_norm": "اخذ",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|اخذ|اخذ_عليه_موثقا",
+      "gloss_primary": "To take from somebody a binding/solemn commitment regarding something",
+      "gloss_secondary_json": {
+        "construction": "أَخَذَ عَلَيْهِ الْمِيثَاقَ/الْمَوْثِقَ",
+        "type": "verb + object + preposition (على) (idiomatic)",
+        "text_examples": [
+          "أَخَذَ عَلَيْهِ الْمِيثَاقَ/الْمَوْثِقَ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 80,
+            "phrase": "أَخَذَ عَلَيْكُم مَّوْثِقًا مِّنَ اللَّهِ"
+          }
+        ],
+        "note": null,
+        "page": 170,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 170
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|حَفِظَ|حفظ_الغيب|حَفِظَ الْغَيْبَ|To have knowledge of the unseen",
+      "lemma_ar": "حَفِظَ",
+      "lemma_norm": "حفظ",
+      "pos": "VERB",
+      "root_norm": "حفظ",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|حفظ|حفظ_الغيب",
+      "gloss_primary": "To have knowledge of the unseen",
+      "gloss_secondary_json": {
+        "construction": "حَفِظَ الْغَيْبَ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "حَفِظَ الْغَيْبَ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 81,
+            "phrase": "وَمَا شَهِدْنَا إِلَّا بِمَا عَلِمْنَا وَمَا كُنَّا لِلْغَيْبِ حَافِظِينَ"
+          }
+        ],
+        "note": "In 12:81 appears as the active participle (حافظين).",
+        "page": 170,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 170
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ابْيَضَّ|ابيضت_عيناه|ابْيَضَّتْ عَيْنَاهُ|To lose one’s eyesight (literally: for one’s eyes to turn white)",
+      "lemma_ar": "ابْيَضَّ",
+      "lemma_norm": "ابيض",
+      "pos": "VERB",
+      "root_norm": "بيض",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|بيض|ابيضت_عيناه",
+      "gloss_primary": "To lose one’s eyesight (literally: for one’s eyes to turn white)",
+      "gloss_secondary_json": {
+        "construction": "ابْيَضَّتْ عَيْنَاهُ",
+        "type": "verb (intransitive) (idiomatic)",
+        "text_examples": [
+          "ابْيَضَّتْ عَيْنَاهُ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 84,
+            "phrase": "وَابْيَضَّتْ عَيْنَاهُ مِنَ الْحُزْنِ"
+          }
+        ],
+        "note": "Used for loss of vision caused by grief.",
+        "page": 170,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 170
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|كَظَمَ|كظيم|كَظَمَ (غَيْظَهُ/حُزْنَهُ)|To be filled with grief; be deeply despondent (lit. oppressed with sorrow)",
+      "lemma_ar": "كَظَمَ",
+      "lemma_norm": "كظم",
+      "pos": "VERB",
+      "root_norm": "كظم",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|كظم|كظيم",
+      "gloss_primary": "To be filled with grief; be deeply despondent (lit. oppressed with sorrow)",
+      "gloss_secondary_json": {
+        "construction": "كَظَمَ (غَيْظَهُ/حُزْنَهُ)",
+        "type": "verb + object (idiomatic; verse uses adjective/participle)",
+        "text_examples": [
+          "كَظَمَ (غَيْظَهُ/حُزْنَهُ)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 84,
+            "phrase": "فَهُوَ كَظِيمٌ"
+          }
+        ],
+        "note": "Interpreted here as passive-participle sense (مكظوم): ‘oppressed with sorrow’.",
+        "page": 171,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 171
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|فَعَلَ|فعل_به_كذا|فَعَلَ بِهِ كَذَا|To treat/deal with somebody in a certain way (often unspecified)",
+      "lemma_ar": "فَعَلَ",
+      "lemma_norm": "فعل",
+      "pos": "VERB",
+      "root_norm": "فعل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|فعل|فعل_به_كذا",
+      "gloss_primary": "To treat/deal with somebody in a certain way (often unspecified)",
+      "gloss_secondary_json": {
+        "construction": "فَعَلَ بِهِ كَذَا",
+        "type": "verb + object + preposition (ب) (idiomatic)",
+        "text_examples": [
+          "فَعَلَ بِهِ كَذَا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 89,
+            "phrase": "وَفَعَلْتُم مَّا فَعَلْتُم بِيُوسُفَ وَأَخِيهِ"
+          }
+        ],
+        "note": "In 12:89 ‘ما’ is often understood as an unspecified object: ‘what you did…’ (object understood).",
+        "page": 171,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 171
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ثَرَّبَ|ثرب_عليه|ثَرَّبَ عَلَيْهِ|To reproach/castigate somebody",
+      "lemma_ar": "ثَرَّبَ",
+      "lemma_norm": "ثرب",
+      "pos": "VERB",
+      "root_norm": "ثرب",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ثرب|ثرب_عليه",
+      "gloss_primary": "To reproach/castigate somebody",
+      "gloss_secondary_json": {
+        "construction": "ثَرَّبَ عَلَيْهِ",
+        "type": "verb + preposition (على) (idiomatic)",
+        "text_examples": [
+          "ثَرَّبَ عَلَيْهِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 92,
+            "phrase": "لَا تَثْرِيبَ عَلَيْكُمُ الْيَوْمَ"
+          }
+        ],
+        "note": "Verse uses the noun (تثريب) to mean ‘reproach/blame’.",
+        "page": 172,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 172
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَتَى|اتى_كذا|أَتَى كَذَا|To become/come as such-and-such (ḥāl construction)",
+      "lemma_ar": "أَتَى",
+      "lemma_norm": "اتى",
+      "pos": "VERB",
+      "root_norm": "اتي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|اتي|اتى_كذا",
+      "gloss_primary": "To become/come as such-and-such (ḥāl construction)",
+      "gloss_secondary_json": {
+        "construction": "أَتَى كَذَا",
+        "type": "verb with ḥāl (idiomatic)",
+        "text_examples": [
+          "أَتَى كَذَا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 93,
+            "phrase": "يَأْتِ بَصِيرًا"
+          }
+        ],
+        "note": "In 12:93 it means ‘he will regain vision/come seeing’ (state expressed as ḥāl).",
+        "page": 172,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 172
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|وَجَدَ|اجد_ريح|وَجَدَ (شَيْئًا)|To sense/feel/experience something",
+      "lemma_ar": "وَجَدَ",
+      "lemma_norm": "وجد",
+      "pos": "VERB",
+      "root_norm": "وجد",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|وجد|اجد_ريح",
+      "gloss_primary": "To sense/feel/experience something",
+      "gloss_secondary_json": {
+        "construction": "وَجَدَ (شَيْئًا)",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "وَجَدَ (شَيْئًا)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 94,
+            "phrase": "إِنِّي لَأَجِدُ رِيحَ يُوسُفَ"
+          }
+        ],
+        "note": null,
+        "page": 172,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 172
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ارْتَدَّ|ارتد_بصيرا|ارْتَدَّ كَذَا|To become so and so (especially: regain one’s eyesight)",
+      "lemma_ar": "ارْتَدَّ",
+      "lemma_norm": "ارتد",
+      "pos": "VERB",
+      "root_norm": "ردد",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ردد|ارتد_بصيرا",
+      "gloss_primary": "To become so and so (especially: regain one’s eyesight)",
+      "gloss_secondary_json": {
+        "construction": "ارْتَدَّ كَذَا",
+        "type": "verb with ḥāl (idiomatic)",
+        "text_examples": [
+          "ارْتَدَّ كَذَا"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 96,
+            "phrase": "فَارْتَدَّ بَصِيرًا"
+          }
+        ],
+        "note": "Used for returning to a state; here: regaining eyesight.",
+        "page": 172,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 172
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|نَزَغَ|نزغ_بين|نَزَغَ بَيْنَ (النَّاسِ)|To cause dissension/a rift among people",
+      "lemma_ar": "نَزَغَ",
+      "lemma_norm": "نزغ",
+      "pos": "VERB",
+      "root_norm": "نزغ",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|نزغ|نزغ_بين",
+      "gloss_primary": "To cause dissension/a rift among people",
+      "gloss_secondary_json": {
+        "construction": "نَزَغَ بَيْنَ (النَّاسِ)",
+        "type": "verb + preposition (بين) (idiomatic)",
+        "text_examples": [
+          "نَزَغَ بَيْنَ (النَّاسِ)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 100,
+            "phrase": "نَزَغَ الشَّيْطَانُ بَيْنِي وَبَيْنَ إِخْوَتِي"
+          }
+        ],
+        "note": null,
+        "page": 172,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 172
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|أَجْمَعَ|اجمعوا_امرهم|أَجْمَعُوا أَمْرَهُمْ|(Of a group) to reach an accord; agree on a plan; make a unanimous resolve",
+      "lemma_ar": "أَجْمَعَ",
+      "lemma_norm": "اجمع",
+      "pos": "VERB",
+      "root_norm": "جمع",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|جمع|اجمعوا_امرهم",
+      "gloss_primary": "(Of a group) to reach an accord; agree on a plan; make a unanimous resolve",
+      "gloss_secondary_json": {
+        "construction": "أَجْمَعُوا أَمْرَهُمْ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "أَجْمَعُوا أَمْرَهُمْ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 102,
+            "phrase": "أَجْمَعُوا أَمْرَهُمْ"
+          }
+        ],
+        "note": null,
+        "page": 172,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 172
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|مَرَّ|مر_عليه|مَرَّ عَلَيْهِ|To observe/review something; pass by and take notice",
+      "lemma_ar": "مَرَّ",
+      "lemma_norm": "مر",
+      "pos": "VERB",
+      "root_norm": "مرر",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|مرر|مر_عليه",
+      "gloss_primary": "To observe/review something; pass by and take notice",
+      "gloss_secondary_json": {
+        "construction": "مَرَّ عَلَيْهِ",
+        "type": "verb + preposition (على) (idiomatic)",
+        "text_examples": [
+          "مَرَّ عَلَيْهِ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 105,
+            "phrase": "وَكَأَيِّن مِّنْ آيَةٍ فِي السَّمَاوَاتِ وَالْأَرْضِ يَمُرُّونَ عَلَيْهَا"
+          }
+        ],
+        "note": "Here understood as observing/reviewing as they ‘pass by’ signs.",
+        "page": 173,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 173
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|صَدَّقَ|صدق_الامر|صَدَّقَ الأَمْرَ|To actualize/materialize/fulfill something",
+      "lemma_ar": "صَدَّقَ",
+      "lemma_norm": "صدق",
+      "pos": "VERB",
+      "root_norm": "صدق",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|صدق|صدق_الامر",
+      "gloss_primary": "To actualize/materialize/fulfill something",
+      "gloss_secondary_json": {
+        "construction": "صَدَّقَ الأَمْرَ",
+        "type": "verb + object (idiomatic)",
+        "text_examples": [
+          "صَدَّقَ الأَمْرَ"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 111,
+            "phrase": "مَا كَانَ حَدِيثًا يُفْتَرَىٰ وَلَٰكِن تَصْدِيقَ الَّذِي بَيْنَ يَدَيْهِ"
+          }
+        ],
+        "note": "In 12:111 appears as the noun (تَصْدِيق) ‘confirmation/fulfillment’.",
+        "page": 173,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 173
+        }
+      }
+    },
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|افْتَرَى|افترى|افْتَرَى (كَذِبًا)|A blatant lie; to fabricate",
+      "lemma_ar": "افْتَرَى",
+      "lemma_norm": "افترى",
+      "pos": "VERB",
+      "root_norm": "فري",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|فري|افترى",
+      "gloss_primary": "A blatant lie; to fabricate",
+      "gloss_secondary_json": {
+        "construction": "افْتَرَى (كَذِبًا)",
+        "type": "verb (often passive in expression) (idiomatic)",
+        "text_examples": [
+          "افْتَرَى (كَذِبًا)"
+        ],
+        "quran_examples": [
+          {
+            "surah": 12,
+            "ayah": 111,
+            "phrase": "حَدِيثًا يُفْتَرَىٰ"
+          }
+        ],
+        "note": "In 12:111 it occurs in the passive: ‘a story/statement invented (fabricated).’",
+        "page": 173,
+        "source_ref": {
+          "source_id": null,
+          "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF",
+          "page": 173
+        }
+      }
+    }
+  ]
+}

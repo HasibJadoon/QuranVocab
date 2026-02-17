@@ -1,0 +1,103 @@
+{
+  "table": "ar_u_lexicon",
+  "surah": 12,
+  "page": 171,
+  "file": "Verbal-Idioms-Mushaf-Order-Version-2-PDF-171.jpg",
+  "output_filename": "page-171 (84-90).json",
+  "verse_range": "12:84-90",
+  "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011",
+  "rows": [
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|كظم|كظم_الغم|كَظَمَ الْغَمَّ|To be filled with grief",
+      "lemma_ar": "كَظَمَ",
+      "lemma_norm": "كظم",
+      "pos": "VERB",
+      "root_norm": "كظم",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|كظم|كظم_الغم",
+      "gloss_primary": "To be filled with grief; to suppress sorrow",
+      "gloss_secondary_json": {
+        "construction": "كَظِيم (passive participle form)",
+        "type": "verb used adjectivally (active/passive participle discussion)",
+        "quran_examples": [
+          { "surah": 12, "ayah": 84, "phrase": "فَهُوَ كَظِيمٌ" }
+        ],
+        "note": "Interpreted as passive participle (مَكْظُوم) in sense of oppressed with sorrow.",
+        "page": 171,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|وفى|أوفى_الكيل|أَوْفَى الْكَيْلَ|To give full measure",
+      "lemma_ar": "أَوْفَى",
+      "lemma_norm": "اوفى",
+      "pos": "VERB",
+      "root_norm": "وفي",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|وفي|اوفى_الكيل",
+      "gloss_primary": "To give somebody full measure",
+      "gloss_secondary_json": {
+        "construction": "أَوْفَى الْكَيْلَ",
+        "type": "verb + object",
+        "quran_examples": [
+          { "surah": 12, "ayah": 88, "phrase": "فَأَوْفِ لَنَا الْكَيْلَ" }
+        ],
+        "page": 171,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|فعل|فعل_به|فَعَلَ بِهِ|To treat somebody in a certain way",
+      "lemma_ar": "فَعَلَ",
+      "lemma_norm": "فعل",
+      "pos": "VERB",
+      "root_norm": "فعل",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|فعل|فعل_به",
+      "gloss_primary": "To treat somebody/something in a certain way; to deal with somebody",
+      "gloss_secondary_json": {
+        "construction": "فَعَلَ بِـ",
+        "type": "verb + object + preposition",
+        "preposition": "بِ",
+        "quran_examples": [
+          { "surah": 12, "ayah": 89, "phrase": "هَلْ عَلِمْتُم مَّا فَعَلْتُم بِيُوسُفَ" }
+        ],
+        "note": "Used in the Qur'an in the sense of treating someone ill.",
+        "page": 171,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    },
+
+    {
+      "ar_u_lexicon": null,
+      "canonical_input": "lexicon|verb|ضاع|أضاع_أجره|أَضَاعَ أَجْرَهُ|To deprive somebody of reward",
+      "lemma_ar": "أَضَاعَ",
+      "lemma_norm": "اضاع",
+      "pos": "VERB",
+      "root_norm": "ضيع",
+      "ar_u_root": null,
+      "valency_id": null,
+      "sense_key": "idiom|verb|ضيع|اضاع_اجر",
+      "gloss_primary": "(Of God) to deprive somebody of reward",
+      "gloss_secondary_json": {
+        "construction": "أَضَاعَ أَجْرَهُ",
+        "type": "verb + object",
+        "quran_examples": [
+          { "surah": 12, "ayah": 90, "phrase": "إِنَّ اللَّهَ لَا يُضِيعُ أَجْرَ الْمُحْسِنِينَ" }
+        ],
+        "page": 171,
+        "source_ref_id": "SRC_VERBAL_IDIOMS_MIR_2011"
+      }
+    }
+
+  ]
+}
