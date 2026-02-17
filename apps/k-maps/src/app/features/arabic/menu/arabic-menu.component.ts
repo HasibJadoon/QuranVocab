@@ -76,6 +76,15 @@ export class ArabicMenuComponent {
           imageAlt: 'assets/images/app-icons/dashboard/arabic-root-card.png',
           themeClass: 'theme-roots',
         },
+        {
+          id: 'lexicon',
+          title: 'Lexicon',
+          description: 'Dark-mode lexicon desk with source search.',
+          route: ['/arabic/lexicon'],
+          image: 'assets/images/app-icons/dashboard/card-lexicon.svg',
+          imageAlt: 'assets/images/app-icons/dashboard/arabic-lexicon-card.png',
+          themeClass: 'theme-lexicon',
+        },
       ],
     },
   ];

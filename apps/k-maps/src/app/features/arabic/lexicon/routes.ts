@@ -5,7 +5,7 @@ export const routes: Routes = [
     path: '',
     loadComponent: () =>
       import('./roots-desk/roots-desk.component').then(m => m.RootsDeskComponent),
-    data: { title: 'Roots Desk' }
+    data: { title: 'Lexicon Desk' }
   },
   {
     path: 'idioms',

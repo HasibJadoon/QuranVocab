@@ -37,5 +37,10 @@ export const routes: Routes = [
     path: 'roots',
     loadChildren: () => import('./roots/routes').then(m => m.routes),
     data: { title: 'Roots' }
+  },
+  {
+    path: 'lexicon',
+    loadChildren: () => import('./lexicon/routes').then(m => m.routes),
+    data: { title: 'Lexicon' }
   }
 ];

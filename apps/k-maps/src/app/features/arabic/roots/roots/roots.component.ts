@@ -83,7 +83,7 @@ export class RootsComponent implements OnInit, OnDestroy {
   private abort?: AbortController;
 
   // ---------------- endpoints ----------------
-  private readonly listEndpoint = `${API_BASE}/lexicon_roots`;
+  private readonly listEndpoints = [`${API_BASE}/lexicon_roots`, `${API_BASE}/ar/roots`];
   private readonly updateEndpoint = `${API_BASE}/lexicon_roots_update`;
   private readonly createEndpoint = `${API_BASE}/lexicon_roots`;
 
@@ -282,20 +282,7 @@ export class RootsComponent implements OnInit, OnDestroy {
       params.set('page', String(this.page));
       params.set('pageSize', String(this.pageSize));
 
-      const res = await fetch(
-        `${this.listEndpoint}?${params.toString()}`,
-        {
-          signal: this.abort.signal,
-          headers: {
-            ...this.authHeaders(),
-          },
-        }
-      );
-
-      if (res.status === 401) this.handle401();
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const data = (await res.json()) as RootsApiResponse;
+      const data = await this.fetchRootsList(params, this.abort.signal);
 
       if (data?.ok === false) {
         throw new Error(data?.error ?? 'API returned ok=false');
@@ -314,6 +301,46 @@ export class RootsComponent implements OnInit, OnDestroy {
     } finally {
       this.loading = false;
     }
+  }
+
+  private async fetchRootsList(params: URLSearchParams, signal: AbortSignal): Promise<RootsApiResponse> {
+    let nonAbortErr: Error | null = null;
+
+    for (const endpoint of this.listEndpoints) {
+      const url = `${endpoint}?${params.toString()}`;
+      try {
+        const res = await fetch(url, {
+          signal,
+          headers: {
+            ...this.authHeaders(),
+          },
+        });
+
+        if (res.status === 401) this.handle401();
+
+        const raw = await res.text();
+        const data = raw ? this.safeJsonParse(raw) : null;
+
+        if (!res.ok) {
+          const htmlLike = raw.trim().startsWith('<');
+          if (res.status === 404 || htmlLike) continue;
+          throw new Error(data?.error ?? raw ?? `HTTP ${res.status}`);
+        }
+
+        if (!data || typeof data !== 'object') {
+          if (raw.trim().startsWith('<')) continue;
+          throw new Error(`Invalid JSON from ${endpoint}`);
+        }
+
+        return data as RootsApiResponse;
+      } catch (e: any) {
+        if (e?.name === 'AbortError') throw e;
+        nonAbortErr = e instanceof Error ? e : new Error(String(e));
+      }
+    }
+
+    if (nonAbortErr) throw nonAbortErr;
+    throw new Error('No valid roots API endpoint found (received non-JSON response).');
   }
 
   // =====================================================
@@ -475,12 +502,12 @@ export class RootsComponent implements OnInit, OnDestroy {
   // save cards
   // =====================================================
 
-  async saveCardsJson(payload: { id: string; cardsJson: string }) {
+  async saveCardsJson(payload: { id: string | number; cardsJson: string }) {
     this.savingCards = true;
     this.cardsError = '';
 
     try {
-      const id = payload.id.trim();
+      const id = String(payload.id ?? '').trim();
       if (!id) {
         throw new Error('Invalid id (missing id in table results?)');
       }

@@ -1114,16 +1114,14 @@ CREATE INDEX IF NOT EXISTS idx_lex_ev_source_page
 CREATE INDEX IF NOT EXISTS idx_lex_ev_chunk
   ON ar_u_lexicon_evidence(chunk_id);
 
---------------------------------------------------------------------------------
--- FTS5 (contentless): keep rows in sync from app code on INSERT/UPDATE/DELETE
+-- FTS5 (contentful): stores searchable and filter columns directly
 --------------------------------------------------------------------------------
 
 CREATE VIRTUAL TABLE IF NOT EXISTS ar_source_chunks_fts USING fts5(
   chunk_id UNINDEXED,
   source_code,
   heading_norm,
-  text,
-  content=''
+  text
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS ar_u_lexicon_evidence_fts USING fts5(
@@ -1131,8 +1129,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS ar_u_lexicon_evidence_fts USING fts5(
   chunk_id UNINDEXED,
   source_code,
   extract_text,
-  notes,
-  content=''
+  notes
 );
 
 CREATE TABLE ar_grammar_units (

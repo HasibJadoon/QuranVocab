@@ -29,6 +29,9 @@
 // Global styles for the Quran lesson editor (authoring).
 @use "quran-lesson-editor-new";
 
+// Global styles for Arabic lexicon desk.
+@use "lexicon-desk";
+
 // Examples
 // We use those styles to show code examples, you should remove them in your application.
 @use "examples";
