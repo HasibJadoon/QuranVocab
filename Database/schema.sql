@@ -1039,6 +1039,102 @@ CREATE INDEX IF NOT EXISTS idx_lex_pos              ON ar_u_lexicon(pos);
 CREATE INDEX IF NOT EXISTS idx_lex_sense_key        ON ar_u_lexicon(sense_key);
 CREATE INDEX IF NOT EXISTS idx_lex_valency_id       ON ar_u_lexicon(valency_id);
 
+--------------------------------------------------------------------------------
+-- ar_u_sources + chunk/evidence search (book-level search backbone)
+--------------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS ar_u_sources (
+  ar_u_source       TEXT PRIMARY KEY,
+  canonical_input   TEXT NOT NULL UNIQUE,
+  source_code       TEXT NOT NULL UNIQUE,  -- e.g. SRC:HDO_2008
+
+  title             TEXT NOT NULL,
+  author            TEXT,
+  publisher         TEXT,
+  publication_year  INTEGER,
+  language          TEXT,
+  type              TEXT NOT NULL DEFAULT 'book',
+
+  meta_json         JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at        TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at        TEXT
+);
+
+CREATE TABLE IF NOT EXISTS ar_source_chunks (
+  chunk_id       TEXT PRIMARY KEY,    -- e.g. SRC:HDO_2008:p:0167
+  ar_u_source    TEXT NOT NULL,
+
+  page_no        INTEGER,
+  locator        TEXT,                -- e.g. pdf_page:167
+  heading_raw    TEXT,
+  heading_norm   TEXT,
+
+  text           TEXT NOT NULL,       -- OCR / plain text
+  meta_json      JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT,
+
+  FOREIGN KEY (ar_u_source) REFERENCES ar_u_sources(ar_u_source)
+);
+
+CREATE TABLE IF NOT EXISTS ar_u_lexicon_evidence (
+  ar_u_lexicon   TEXT NOT NULL,
+  chunk_id       TEXT NOT NULL,
+  ar_u_source    TEXT NOT NULL,
+
+  page_no        INTEGER,
+  link_role      TEXT NOT NULL DEFAULT 'mentions',
+
+  span_start     INTEGER,
+  span_end       INTEGER,
+
+  extract_text   TEXT,
+  notes          TEXT,
+
+  meta_json      JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT,
+
+  PRIMARY KEY (ar_u_lexicon, chunk_id),
+  FOREIGN KEY (ar_u_lexicon) REFERENCES ar_u_lexicon(ar_u_lexicon) ON DELETE CASCADE,
+  FOREIGN KEY (chunk_id) REFERENCES ar_source_chunks(chunk_id) ON DELETE CASCADE,
+  FOREIGN KEY (ar_u_source) REFERENCES ar_u_sources(ar_u_source)
+);
+
+CREATE INDEX IF NOT EXISTS idx_chunks_source_page
+  ON ar_source_chunks(ar_u_source, page_no);
+
+CREATE INDEX IF NOT EXISTS idx_chunks_source_heading
+  ON ar_source_chunks(ar_u_source, heading_norm);
+
+CREATE INDEX IF NOT EXISTS idx_lex_ev_source_page
+  ON ar_u_lexicon_evidence(ar_u_source, page_no);
+
+CREATE INDEX IF NOT EXISTS idx_lex_ev_chunk
+  ON ar_u_lexicon_evidence(chunk_id);
+
+--------------------------------------------------------------------------------
+-- FTS5 (contentless): keep rows in sync from app code on INSERT/UPDATE/DELETE
+--------------------------------------------------------------------------------
+
+CREATE VIRTUAL TABLE IF NOT EXISTS ar_source_chunks_fts USING fts5(
+  chunk_id UNINDEXED,
+  source_code,
+  heading_norm,
+  text,
+  content=''
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS ar_u_lexicon_evidence_fts USING fts5(
+  ar_u_lexicon UNINDEXED,
+  chunk_id UNINDEXED,
+  source_code,
+  extract_text,
+  notes,
+  content=''
+);
+
 CREATE TABLE ar_grammar_units (
   id          TEXT PRIMARY KEY,
   parent_id   TEXT,
