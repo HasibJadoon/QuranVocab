@@ -54,6 +54,8 @@ export type {
   BookSearchPageRow,
   BookSearchSource,
   BookSearchChunkHit,
+  BookSearchChunkUpdatePayload,
+  BookSearchChunkUpdateResponse,
   BookSearchEvidenceHit,
   BookSearchLexiconEvidence,
   BookSearchResponse,

@@ -33,7 +33,7 @@ export type BookSearchPageRow = {
 
 export type BookSearchEvidenceHit = {
   ar_u_lexicon: string;
-  chunk_id: string;
+  chunk_id: string | null;
   source_code: string;
   page_no: number | null;
   heading_raw: string | null;
@@ -47,7 +47,7 @@ export type BookSearchEvidenceHit = {
 export type BookSearchLexiconEvidence = {
   source_code: string;
   title: string;
-  chunk_id: string;
+  chunk_id: string | null;
   page_no: number | null;
   extract_text: string | null;
   notes: string | null;
@@ -67,6 +67,7 @@ export type BookSearchReaderChunk = {
   page_no: number | null;
   heading_raw: string | null;
   locator: string | null;
+  chunk_type: string | null;
   text: string;
   source_code: string;
   source_title: string;
@@ -82,6 +83,23 @@ export type BookSearchReaderNav = {
 export type BookSearchReaderResponse = {
   ok: boolean;
   mode: 'reader';
+  chunk: BookSearchReaderChunk | null;
+  nav: BookSearchReaderNav;
+};
+
+export type BookSearchChunkUpdatePayload = {
+  chunk_id: string;
+  page_no?: number | null;
+  heading_raw?: string | null;
+  heading_norm?: string | null;
+  locator?: string | null;
+  chunk_type?: string | null;
+  text?: string;
+};
+
+export type BookSearchChunkUpdateResponse = {
+  ok: boolean;
+  saved: boolean;
   chunk: BookSearchReaderChunk | null;
   nav: BookSearchReaderNav;
 };

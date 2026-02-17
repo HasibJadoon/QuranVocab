@@ -227,10 +227,38 @@
   padding: 0.85rem;
 }
 
+.source-chunks-workspace .editor-panel {
+  border: 1px solid var(--paper-line);
+  border-radius: 12px;
+  padding: 0.65rem;
+  background: rgba(17, 23, 32, 0.78);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.source-chunks-workspace .editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.source-chunks-workspace .editor-panel textarea {
+  min-height: 190px;
+  resize: vertical;
+  font-family: var(--arabic-font);
+}
+
 .source-chunks-workspace .reader-text {
   margin: 0;
   color: var(--paper-ink);
   word-break: break-word;
+}
+
+.source-chunks-workspace .reader-text mark {
+  background: rgba(247, 204, 90, 0.28);
+  color: #ffeab9;
+  border-radius: 4px;
+  padding: 0 0.08rem;
 }
 
 .source-chunks-workspace .reader-state,
@@ -312,5 +340,9 @@
   .source-chunks-workspace .reader-controls-secondary {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .source-chunks-workspace .editor-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -3,6 +3,9 @@
 Route: `GET /ar/book-search`  
 Auth: `Authorization: Bearer <jwt>`
 
+Update Route: `PUT /ar/book-search`  
+Auth: `Authorization: Bearer <jwt>`
+
 ## Modes
 
 `mode=sources`
@@ -25,6 +28,21 @@ Auth: `Authorization: Bearer <jwt>`
 `mode=reader`
 - Loads one full chunk for the reader panel (plus prev/next pointers in same source).
 - Params: `chunk_id` OR (`source_code` + `page_no`).
+
+## Update Chunk
+
+`PUT /ar/book-search`
+- Updates one chunk row in `ar_source_chunks`.
+- Required body field: `chunk_id`
+- Editable fields:
+  - `page_no` (integer or `null`)
+  - `heading_raw` (string or `null`)
+  - `heading_norm` (string or `null`)  
+    If omitted but `heading_raw` is provided, `heading_norm` is auto-derived.
+  - `locator` (string or `null`)
+  - `chunk_type` (`grammar | literature | lexicon | reference | other | null`)
+  - `text` (string)
+- Response returns updated reader payload (`chunk` + `nav`).
 
 ## Examples
 
@@ -74,4 +92,19 @@ Load chunk reader by id:
 
 ```http
 GET /ar/book-search?mode=reader&chunk_id=SRC:SINAI_KEY_TERMS:p:0150
+```
+
+Update a chunk:
+
+```http
+PUT /ar/book-search
+Content-Type: application/json
+Authorization: Bearer <jwt>
+
+{
+  "chunk_id": "SRC:SINAI_KEY_TERMS:p:0150",
+  "heading_raw": "Page 150",
+  "chunk_type": "lexicon",
+  "text": "Updated text..."
+}
 ```

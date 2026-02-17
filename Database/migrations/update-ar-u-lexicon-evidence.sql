@@ -1,41 +1,19 @@
-PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys=OFF;
+PRAGMA defer_foreign_keys=TRUE;
+BEGIN;
 
---------------------------------------------------------------------------------
--- Book/source search backbone
---------------------------------------------------------------------------------
+-- This migration upgrades the legacy evidence table shape:
+--   PK (ar_u_lexicon, chunk_id) + ar_u_source/notes/span_*
+-- to:
+--   PK (ar_u_lexicon, evidence_id) + locator model + note_md.
+DROP TABLE IF EXISTS ar_u_lexicon_evidence__raw;
+CREATE TABLE ar_u_lexicon_evidence__raw AS
+SELECT * FROM ar_u_lexicon_evidence;
 
-CREATE TABLE IF NOT EXISTS ar_u_sources (
-  ar_u_source       TEXT PRIMARY KEY,
-  canonical_input   TEXT NOT NULL UNIQUE,
-  source_code       TEXT NOT NULL UNIQUE,
-  title             TEXT NOT NULL,
-  author            TEXT,
-  publisher         TEXT,
-  publication_year  INTEGER,
-  language          TEXT,
-  type              TEXT NOT NULL DEFAULT 'book',
-  meta_json         JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-  created_at        TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at        TEXT
-);
+DROP TRIGGER IF EXISTS trg_ar_u_lexicon_evidence_updated_at;
+DROP TABLE IF EXISTS ar_u_lexicon_evidence;
 
-CREATE TABLE IF NOT EXISTS ar_source_chunks (
-  chunk_id       TEXT PRIMARY KEY,
-  ar_u_source    TEXT NOT NULL,
-  page_no        INTEGER,
-  locator        TEXT,
-  heading_raw    TEXT,
-  heading_norm   TEXT,
-  chunk_type     TEXT NOT NULL DEFAULT 'lexicon'
-                 CHECK (chunk_type IN ('grammar', 'literature', 'lexicon', 'reference', 'other')),
-  text           TEXT NOT NULL,
-  meta_json      JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at     TEXT,
-  FOREIGN KEY (ar_u_source) REFERENCES ar_u_sources(ar_u_source)
-);
-
-CREATE TABLE IF NOT EXISTS ar_u_lexicon_evidence (
+CREATE TABLE ar_u_lexicon_evidence (
   ar_u_lexicon        TEXT NOT NULL,
   evidence_id         TEXT NOT NULL,     -- sha256 canonical key
 
@@ -121,20 +99,99 @@ CREATE TABLE IF NOT EXISTS ar_u_lexicon_evidence (
   )
 );
 
-CREATE INDEX IF NOT EXISTS idx_chunks_source_page
-  ON ar_source_chunks(ar_u_source, page_no);
+WITH normalized AS (
+  SELECT
+    r.ar_u_lexicon,
+    'legacy:' || COALESCE(NULLIF(trim(r.chunk_id), ''), r.ar_u_lexicon) AS evidence_id,
+    'chunk' AS locator_type,
+    COALESCE(NULLIF(trim(r.ar_u_source), ''), c.ar_u_source) AS source_id,
+    'book' AS source_type,
+    NULLIF(trim(r.chunk_id), '') AS chunk_id,
+    COALESCE(r.page_no, c.page_no) AS page_no,
+    NULLIF(trim(c.heading_raw), '') AS heading_raw,
+    NULLIF(trim(c.heading_norm), '') AS heading_norm,
+    NULL AS url,
+    NULL AS app_payload_json,
+    CASE
+      WHEN lower(trim(r.link_role)) IN (
+        'headword','definition','usage','example',
+        'mentions','grouped_with','crossref_target',
+        'index_redirect','supports','disputes','variant'
+      ) THEN lower(trim(r.link_role))
+      WHEN lower(trim(r.link_role)) = 'verbal_idiom_note' THEN 'usage'
+      ELSE 'supports'
+    END AS link_role,
+    'lexical' AS evidence_kind,
+    'supporting' AS evidence_strength,
+    r.extract_text AS extract_text,
+    NULLIF(trim(r.notes), '') AS note_md,
+    CASE
+      WHEN r.meta_json IS NULL OR length(trim(r.meta_json)) = 0 THEN NULL
+      WHEN json_valid(r.meta_json) THEN r.meta_json
+      ELSE json_quote(r.meta_json)
+    END AS meta_json,
+    COALESCE(NULLIF(trim(r.created_at), ''), datetime('now')) AS created_at,
+    NULLIF(trim(r.updated_at), '') AS updated_at
+  FROM ar_u_lexicon_evidence__raw r
+  LEFT JOIN ar_source_chunks c
+    ON c.chunk_id = r.chunk_id
+)
+INSERT INTO ar_u_lexicon_evidence (
+  ar_u_lexicon,
+  evidence_id,
+  locator_type,
+  source_id,
+  source_type,
+  chunk_id,
+  page_no,
+  heading_raw,
+  heading_norm,
+  url,
+  app_payload_json,
+  link_role,
+  evidence_kind,
+  evidence_strength,
+  extract_text,
+  note_md,
+  meta_json,
+  created_at,
+  updated_at
+)
+SELECT
+  ar_u_lexicon,
+  evidence_id,
+  locator_type,
+  source_id,
+  source_type,
+  chunk_id,
+  page_no,
+  heading_raw,
+  heading_norm,
+  url,
+  app_payload_json,
+  link_role,
+  evidence_kind,
+  evidence_strength,
+  extract_text,
+  note_md,
+  meta_json,
+  created_at,
+  updated_at
+FROM normalized;
 
-CREATE INDEX IF NOT EXISTS idx_chunks_source_heading
-  ON ar_source_chunks(ar_u_source, heading_norm);
-
-CREATE INDEX IF NOT EXISTS idx_chunks_source_type
-  ON ar_source_chunks(ar_u_source, chunk_type);
+DROP TABLE IF EXISTS ar_u_lexicon_evidence__raw;
 
 CREATE INDEX IF NOT EXISTS idx_lex_ev_source_page
   ON ar_u_lexicon_evidence(source_id, page_no);
 
 CREATE INDEX IF NOT EXISTS idx_lex_ev_chunk
   ON ar_u_lexicon_evidence(chunk_id);
+
+CREATE INDEX IF NOT EXISTS idx_lex_ev_locator_type
+  ON ar_u_lexicon_evidence(locator_type);
+
+CREATE INDEX IF NOT EXISTS idx_lex_ev_link_role
+  ON ar_u_lexicon_evidence(link_role);
 
 CREATE TRIGGER IF NOT EXISTS trg_ar_u_lexicon_evidence_updated_at
 AFTER UPDATE ON ar_u_lexicon_evidence
@@ -147,21 +204,7 @@ BEGIN
     AND evidence_id = NEW.evidence_id;
 END;
 
---------------------------------------------------------------------------------
--- FTS tables (contentful)
--- Rebuild on each migration execution to normalize earlier contentless variants.
---------------------------------------------------------------------------------
-
-DROP TABLE IF EXISTS ar_source_chunks_fts;
 DROP TABLE IF EXISTS ar_u_lexicon_evidence_fts;
-
-CREATE VIRTUAL TABLE ar_source_chunks_fts USING fts5(
-  chunk_id UNINDEXED,
-  source_code,
-  heading_norm,
-  text
-);
-
 CREATE VIRTUAL TABLE ar_u_lexicon_evidence_fts USING fts5(
   ar_u_lexicon UNINDEXED,
   evidence_id UNINDEXED,
@@ -170,15 +213,6 @@ CREATE VIRTUAL TABLE ar_u_lexicon_evidence_fts USING fts5(
   extract_text,
   note_md
 );
-
-INSERT INTO ar_source_chunks_fts(chunk_id, source_code, heading_norm, text)
-SELECT
-  c.chunk_id,
-  s.source_code,
-  COALESCE(c.heading_norm, ''),
-  c.text
-FROM ar_source_chunks c
-JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source;
 
 INSERT INTO ar_u_lexicon_evidence_fts(ar_u_lexicon, evidence_id, chunk_id, source_code, extract_text, note_md)
 SELECT
@@ -189,4 +223,8 @@ SELECT
   COALESCE(e.extract_text, ''),
   COALESCE(e.note_md, '')
 FROM ar_u_lexicon_evidence e
-LEFT JOIN ar_u_sources s ON s.ar_u_source = e.source_id;
+LEFT JOIN ar_u_sources s
+  ON s.ar_u_source = e.source_id;
+
+COMMIT;
+PRAGMA foreign_keys=ON;

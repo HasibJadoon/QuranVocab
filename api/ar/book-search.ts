@@ -15,7 +15,7 @@ const jsonHeaders = {
 type SearchMode = 'sources' | 'pages' | 'chunks' | 'evidence' | 'lexicon' | 'reader';
 type ChunkType = 'grammar' | 'literature' | 'lexicon' | 'reference' | 'other';
 
-type SqlBind = string | number;
+type SqlBind = string | number | null;
 const CHUNK_TYPE_SET = new Set<ChunkType>(['grammar', 'literature', 'lexicon', 'reference', 'other']);
 
 function toInt(value: string | null, fallback: number) {
@@ -84,7 +84,8 @@ type PageRow = {
 
 type EvidenceRow = {
   ar_u_lexicon: string;
-  chunk_id: string;
+  evidence_id: string;
+  chunk_id: string | null;
   source_code: string;
   page_no: number | null;
   heading_raw: string | null;
@@ -98,7 +99,7 @@ type EvidenceRow = {
 type LexiconEvidenceRow = {
   source_code: string;
   title: string;
-  chunk_id: string;
+  chunk_id: string | null;
   page_no: number | null;
   extract_text: string | null;
   notes: string | null;
@@ -109,6 +110,7 @@ type ReaderChunkRow = {
   page_no: number | null;
   heading_raw: string | null;
   locator: string | null;
+  chunk_type: string | null;
   text: string;
   source_code: string;
   source_title: string;
@@ -369,7 +371,7 @@ async function runEvidenceSearch(
     binds.push(arULexicon);
   }
   if (headingNormRaw) {
-    whereParts.push('c.heading_norm LIKE ?');
+    whereParts.push("COALESCE(e.heading_norm, c.heading_norm, '') LIKE ?");
     binds.push(`%${normalizeHeading(headingNormRaw)}%`);
   }
   if (pageFrom !== null) {
@@ -390,9 +392,9 @@ async function runEvidenceSearch(
     SELECT COUNT(*) AS total
     FROM ar_u_lexicon_evidence_fts ef
     JOIN ar_u_lexicon_evidence e
-      ON e.chunk_id = ef.chunk_id
+      ON e.evidence_id = ef.evidence_id
      AND e.ar_u_lexicon = ef.ar_u_lexicon
-    JOIN ar_source_chunks c
+    LEFT JOIN ar_source_chunks c
       ON c.chunk_id = e.chunk_id
     ${whereClause}
   `;
@@ -404,29 +406,32 @@ async function runEvidenceSearch(
   const total = Number(countRow?.total ?? 0);
 
   const hitExpr = q
-    ? `snippet(ar_u_lexicon_evidence_fts, 3, '[', ']', '…', 12) AS extract_hit,
-       snippet(ar_u_lexicon_evidence_fts, 4, '[', ']', '…', 12) AS notes_hit,
+    ? `snippet(ar_u_lexicon_evidence_fts, 4, '[', ']', '…', 12) AS extract_hit,
+       snippet(ar_u_lexicon_evidence_fts, 5, '[', ']', '…', 12) AS notes_hit,
        bm25(ar_u_lexicon_evidence_fts) AS rank`
     : `substr(COALESCE(e.extract_text, ''), 1, 260) AS extract_hit,
-       substr(COALESCE(e.notes, ''), 1, 260) AS notes_hit,
+       substr(COALESCE(e.note_md, ''), 1, 260) AS notes_hit,
        NULL AS rank`;
-  const orderBy = q ? 'ORDER BY rank ASC, e.page_no ASC, e.chunk_id ASC' : 'ORDER BY e.page_no ASC, e.chunk_id ASC';
+  const orderBy = q
+    ? 'ORDER BY rank ASC, e.page_no ASC, COALESCE(e.chunk_id, e.evidence_id) ASC'
+    : 'ORDER BY e.page_no ASC, COALESCE(e.chunk_id, e.evidence_id) ASC';
 
   const dataSql = `
     SELECT
       e.ar_u_lexicon,
+      e.evidence_id,
       e.chunk_id,
       ef.source_code,
       e.page_no,
-      c.heading_raw,
-      c.heading_norm,
+      COALESCE(e.heading_raw, c.heading_raw) AS heading_raw,
+      COALESCE(e.heading_norm, c.heading_norm) AS heading_norm,
       e.link_role,
       ${hitExpr}
     FROM ar_u_lexicon_evidence_fts ef
     JOIN ar_u_lexicon_evidence e
-      ON e.chunk_id = ef.chunk_id
+      ON e.evidence_id = ef.evidence_id
      AND e.ar_u_lexicon = ef.ar_u_lexicon
-    JOIN ar_source_chunks c
+    LEFT JOIN ar_source_chunks c
       ON c.chunk_id = e.chunk_id
     ${whereClause}
     ${orderBy}
@@ -482,7 +487,7 @@ async function runLexiconEvidence(
   const countSql = `
     SELECT COUNT(*) AS total
     FROM ar_u_lexicon_evidence e
-    JOIN ar_u_sources s ON s.ar_u_source = e.ar_u_source
+    LEFT JOIN ar_u_sources s ON s.ar_u_source = e.source_id
     ${whereClause}
   `;
   const countRow = await db.prepare(countSql).bind(...binds).first<{ total: number }>();
@@ -490,16 +495,16 @@ async function runLexiconEvidence(
 
   const dataSql = `
     SELECT
-      s.source_code,
-      s.title,
+      COALESCE(s.source_code, '') AS source_code,
+      COALESCE(s.title, '') AS title,
       e.chunk_id,
       e.page_no,
       e.extract_text,
-      e.notes
+      e.note_md AS notes
     FROM ar_u_lexicon_evidence e
-    JOIN ar_u_sources s ON s.ar_u_source = e.ar_u_source
+    LEFT JOIN ar_u_sources s ON s.ar_u_source = e.source_id
     ${whereClause}
-    ORDER BY s.source_code ASC, e.page_no ASC, e.chunk_id ASC
+    ORDER BY COALESCE(s.source_code, '') ASC, e.page_no ASC, COALESCE(e.chunk_id, e.evidence_id) ASC
     LIMIT ?
     OFFSET ?
   `;
@@ -543,6 +548,7 @@ async function runReaderChunk(
             c.page_no,
             c.heading_raw,
             c.locator,
+            c.chunk_type,
             c.text,
             s.source_code,
             s.title AS source_title
@@ -565,6 +571,7 @@ async function runReaderChunk(
             c.page_no,
             c.heading_raw,
             c.locator,
+            c.chunk_type,
             c.text,
             s.source_code,
             s.title AS source_title
@@ -637,6 +644,43 @@ async function runReaderChunk(
       next_page_no: next?.page_no ?? null,
     },
   };
+}
+
+async function syncChunkFts(db: D1Database, chunkId: string) {
+  const chunk = await db
+    .prepare(
+      `
+        SELECT
+          c.chunk_id,
+          c.heading_norm,
+          c.text,
+          s.source_code
+        FROM ar_source_chunks c
+        JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+        WHERE c.chunk_id = ?
+        LIMIT 1
+      `
+    )
+    .bind(chunkId)
+    .first<{
+      chunk_id: string;
+      heading_norm: string | null;
+      text: string;
+      source_code: string;
+    }>();
+
+  if (!chunk) return;
+
+  await db.prepare(`DELETE FROM ar_source_chunks_fts WHERE chunk_id = ?`).bind(chunkId).run();
+  await db
+    .prepare(
+      `
+        INSERT INTO ar_source_chunks_fts (chunk_id, source_code, heading_norm, text)
+        VALUES (?, ?, ?, ?)
+      `
+    )
+    .bind(chunk.chunk_id, chunk.source_code, chunk.heading_norm ?? '', chunk.text ?? '')
+    .run();
 }
 
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
@@ -773,4 +817,152 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       headers: jsonHeaders,
     });
   }
+};
+
+export const onRequestPut: PagesFunction<Env> = async (ctx) => {
+  const user = await requireAuth(ctx);
+  if (!user) {
+    return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
+      status: 401,
+      headers: jsonHeaders,
+    });
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = (await ctx.request.json()) as Record<string, unknown>;
+  } catch {
+    return new Response(JSON.stringify({ ok: false, error: 'Invalid JSON body' }), {
+      status: 400,
+      headers: jsonHeaders,
+    });
+  }
+
+  const chunkId = String(body.chunk_id ?? '').trim();
+  if (!chunkId) {
+    return new Response(JSON.stringify({ ok: false, error: 'chunk_id is required' }), {
+      status: 400,
+      headers: jsonHeaders,
+    });
+  }
+
+  const exists = await ctx.env.DB
+    .prepare(`SELECT 1 AS ok FROM ar_source_chunks WHERE chunk_id = ? LIMIT 1`)
+    .bind(chunkId)
+    .first<{ ok: 1 }>();
+  if (!exists) {
+    return new Response(JSON.stringify({ ok: false, error: 'Chunk not found' }), {
+      status: 404,
+      headers: jsonHeaders,
+    });
+  }
+
+  const updates: string[] = [];
+  const binds: SqlBind[] = [];
+
+  let headingWasUpdated = false;
+  let textWasUpdated = false;
+
+  if (Object.prototype.hasOwnProperty.call(body, 'page_no')) {
+    const raw = body.page_no;
+    if (raw === null || raw === '') {
+      updates.push(`page_no = NULL`);
+    } else {
+      const num = Number.parseInt(String(raw), 10);
+      if (!Number.isFinite(num)) {
+        return new Response(JSON.stringify({ ok: false, error: 'page_no must be an integer or null' }), {
+          status: 400,
+          headers: jsonHeaders,
+        });
+      }
+      updates.push(`page_no = ?`);
+      binds.push(num);
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'heading_raw')) {
+    const headingRaw = body.heading_raw === null ? null : String(body.heading_raw ?? '').trim();
+    updates.push(`heading_raw = ?`);
+    binds.push(headingRaw);
+    headingWasUpdated = true;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'heading_norm')) {
+    const headingNorm = body.heading_norm === null ? null : normalizeHeading(String(body.heading_norm ?? ''));
+    updates.push(`heading_norm = ?`);
+    binds.push(headingNorm);
+    headingWasUpdated = true;
+  } else if (Object.prototype.hasOwnProperty.call(body, 'heading_raw')) {
+    const headingRaw = body.heading_raw === null ? '' : String(body.heading_raw ?? '');
+    updates.push(`heading_norm = ?`);
+    binds.push(normalizeHeading(headingRaw));
+    headingWasUpdated = true;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'locator')) {
+    const locator = body.locator === null ? null : String(body.locator ?? '').trim();
+    updates.push(`locator = ?`);
+    binds.push(locator);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'chunk_type')) {
+    const rawChunkType = body.chunk_type;
+    const normalizedChunkType = rawChunkType === null ? null : normalizeChunkType(String(rawChunkType));
+    if (normalizedChunkType !== null && normalizedChunkType !== '' && !CHUNK_TYPE_SET.has(normalizedChunkType as ChunkType)) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: 'chunk_type must be one of: grammar, literature, lexicon, reference, other',
+        }),
+        {
+          status: 400,
+          headers: jsonHeaders,
+        }
+      );
+    }
+    updates.push(`chunk_type = ?`);
+    binds.push(normalizedChunkType && normalizedChunkType !== '' ? normalizedChunkType : null);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'text')) {
+    const text = String(body.text ?? '');
+    updates.push(`text = ?`);
+    binds.push(text);
+    textWasUpdated = true;
+  }
+
+  if (!updates.length) {
+    return new Response(JSON.stringify({ ok: false, error: 'No editable fields supplied' }), {
+      status: 400,
+      headers: jsonHeaders,
+    });
+  }
+
+  updates.push(`updated_at = datetime('now')`);
+
+  await ctx.env.DB
+    .prepare(
+      `
+        UPDATE ar_source_chunks
+        SET ${updates.join(', ')}
+        WHERE chunk_id = ?
+      `
+    )
+    .bind(...binds, chunkId)
+    .run();
+
+  if (textWasUpdated || headingWasUpdated) {
+    await syncChunkFts(ctx.env.DB, chunkId);
+  }
+
+  const readerPayload = await runReaderChunk(ctx.env.DB, chunkId, '', null);
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      saved: true,
+      chunk: readerPayload.chunk,
+      nav: readerPayload.nav,
+    }),
+    { headers: jsonHeaders }
+  );
 };

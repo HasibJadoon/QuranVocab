@@ -6,6 +6,8 @@ import { AuthService } from './AuthService';
 import { API_BASE } from '../api-base';
 import type {
   BookSearchChunkHit,
+  BookSearchChunkUpdatePayload,
+  BookSearchChunkUpdateResponse,
   BookSearchEvidenceHit,
   BookSearchLexiconEvidence,
   BookSearchPageRow,
@@ -15,6 +17,8 @@ import type {
 } from '../models/arabic/book-search.model';
 export type {
   BookSearchChunkHit,
+  BookSearchChunkUpdatePayload,
+  BookSearchChunkUpdateResponse,
   BookSearchEvidenceHit,
   BookSearchLexiconEvidence,
   BookSearchPageRow,
@@ -92,6 +96,14 @@ export class BookSearchService {
     page_no?: number;
   }): Observable<BookSearchReaderResponse> {
     return this.httpGet<BookSearchReaderResponse>({ mode: 'reader', ...params });
+  }
+
+  updateChunk(payload: BookSearchChunkUpdatePayload): Observable<BookSearchChunkUpdateResponse> {
+    const headers = new HttpHeaders({
+      'content-type': 'application/json',
+      ...this.auth.authHeaders(),
+    });
+    return this.http.put<BookSearchChunkUpdateResponse>(this.baseUrl, payload, { headers });
   }
 
   private get<T>(query: Record<string, QueryValue>): Observable<BookSearchResponse<T>> {

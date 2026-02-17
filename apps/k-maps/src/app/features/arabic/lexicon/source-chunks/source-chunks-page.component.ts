@@ -69,6 +69,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     next_page_no: null,
   };
 
+  readonly chunkTypeOptions = ['grammar', 'literature', 'lexicon', 'reference', 'other'] as const;
+  editorEditing = false;
+  editorSaving = false;
+  editorError = '';
+  editorMessage = '';
+  editPageNo: number | null = null;
+  editHeadingRaw = '';
+  editLocator = '';
+  editChunkType = 'lexicon';
+  editText = '';
+
   fontSize = 17;
   arabicFriendlyLineHeight = true;
   monospace = false;
@@ -198,6 +209,76 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     void this.openChunkById(this.readerNav.next_chunk_id, true);
   }
 
+  openLinearPrevPage(): void {
+    const chunk = this.selectedChunk;
+    if (!chunk || chunk.page_no === null) return;
+    const target = Number(chunk.page_no) - 1;
+    if (!Number.isFinite(target) || target < 0) return;
+    void this.openChunkByPage(chunk.source_code, target, true);
+  }
+
+  openLinearNextPage(): void {
+    const chunk = this.selectedChunk;
+    if (!chunk || chunk.page_no === null) return;
+    const target = Number(chunk.page_no) + 1;
+    if (!Number.isFinite(target)) return;
+    void this.openChunkByPage(chunk.source_code, target, true);
+  }
+
+  startEdit(): void {
+    if (!this.selectedChunk) return;
+    this.editorEditing = true;
+    this.editorError = '';
+    this.editorMessage = '';
+    this.populateEditorFromChunk(this.selectedChunk);
+  }
+
+  cancelEdit(): void {
+    this.editorEditing = false;
+    this.editorError = '';
+    if (this.selectedChunk) {
+      this.populateEditorFromChunk(this.selectedChunk);
+    }
+  }
+
+  async saveEdit(): Promise<void> {
+    if (!this.selectedChunk) return;
+    this.editorSaving = true;
+    this.editorError = '';
+    this.editorMessage = '';
+
+    try {
+      const payload = {
+        chunk_id: this.selectedChunk.chunk_id,
+        page_no: this.editPageNo,
+        heading_raw: this.editHeadingRaw.trim() || null,
+        locator: this.editLocator.trim() || null,
+        chunk_type: this.editChunkType.trim().toLowerCase() || null,
+        text: this.editText,
+      };
+
+      const res = await firstValueFrom(this.bookSearch.updateChunk(payload));
+      if (!res.chunk) {
+        this.editorError = 'Save succeeded but chunk reload failed.';
+        return;
+      }
+
+      this.selectedChunk = res.chunk;
+      this.readerNav = res.nav;
+      this.activeChunkId = res.chunk.chunk_id;
+      this.jumpPageNo = res.chunk.page_no;
+      this.populateEditorFromChunk(res.chunk);
+      this.editorEditing = false;
+      this.editorMessage = 'Saved.';
+      await this.loadCurrentList(false);
+      this.syncUrl();
+    } catch (err: unknown) {
+      this.editorError = err instanceof Error ? err.message : 'Save failed.';
+    } finally {
+      this.editorSaving = false;
+    }
+  }
+
   async copyChunkText(): Promise<void> {
     if (!this.selectedChunk?.text) return;
     try {
@@ -216,6 +297,13 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
         : 'var(--arabic-font)',
       'white-space': this.wrapText ? 'pre-wrap' : 'pre',
     };
+  }
+
+  readerTextHtml(): SafeHtml {
+    const raw = this.editorEditing ? this.editText : this.selectedChunk?.text ?? '';
+    const terms = this.editorEditing ? [] : this.searchTermsFromQuery(this.query);
+    const html = this.highlightText(raw, terms);
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   trackByChunkId = (_: number, row: { chunk_id: string }) => row.chunk_id;
@@ -366,6 +454,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       this.readerNav = res.nav;
       this.activeChunkId = res.chunk.chunk_id;
       this.jumpPageNo = res.chunk.page_no;
+      this.populateEditorFromChunk(res.chunk);
+      this.editorEditing = false;
+      this.editorError = '';
+      this.editorMessage = '';
       this.scrollReaderTop();
       this.syncUrl();
 
@@ -399,6 +491,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       this.readerNav = res.nav;
       this.activeChunkId = res.chunk.chunk_id;
       this.jumpPageNo = res.chunk.page_no;
+      this.populateEditorFromChunk(res.chunk);
+      this.editorEditing = false;
+      this.editorError = '';
+      this.editorMessage = '';
       this.scrollReaderTop();
       this.syncUrl();
 
@@ -483,6 +579,15 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       next_chunk_id: null,
       next_page_no: null,
     };
+    this.editorEditing = false;
+    this.editorSaving = false;
+    this.editorError = '';
+    this.editorMessage = '';
+    this.editPageNo = null;
+    this.editHeadingRaw = '';
+    this.editLocator = '';
+    this.editChunkType = 'lexicon';
+    this.editText = '';
   }
 
   private scrollReaderTop(): void {
@@ -497,6 +602,67 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
+  private searchTermsFromQuery(query: string): string[] {
+    const q = query.trim();
+    if (!q) return [];
+
+    const phrases: string[] = [];
+    const phraseRegex = /"([^"]+)"|'([^']+)'/g;
+    let match: RegExpExecArray | null;
+    while ((match = phraseRegex.exec(q)) !== null) {
+      const phrase = (match[1] ?? match[2] ?? '').trim();
+      if (phrase) phrases.push(phrase);
+    }
+
+    const cleaned = q
+      .replace(/"[^"]+"/g, ' ')
+      .replace(/'[^']+'/g, ' ')
+      .replace(/[()]/g, ' ');
+
+    const tokens = cleaned
+      .split(/\s+/)
+      .map((token) => token.trim())
+      .filter((token) => token.length > 0)
+      .filter((token) => !/^(AND|OR|NOT)$/i.test(token))
+      .map((token) => token.replace(/[*]+$/g, ''))
+      .map((token) => token.replace(/^[^:\s]+:/, ''))
+      .filter((token) => token.length > 0);
+
+    const merged = [...phrases, ...tokens];
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const token of merged) {
+      const key = token.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(token);
+    }
+
+    unique.sort((a, b) => b.length - a.length);
+    return unique;
+  }
+
+  private highlightText(raw: string, terms: string[]): string {
+    if (!raw) return '';
+    if (!terms.length) return this.escapeHtml(raw);
+
+    const pattern = terms.map((term) => this.escapeRegex(term)).join('|');
+    if (!pattern) return this.escapeHtml(raw);
+
+    const regex = new RegExp(pattern, 'giu');
+    let out = '';
+    let cursor = 0;
+    for (const match of raw.matchAll(regex)) {
+      const hit = match[0];
+      const start = match.index ?? 0;
+      out += this.escapeHtml(raw.slice(cursor, start));
+      out += `<mark>${this.escapeHtml(hit)}</mark>`;
+      cursor = start + hit.length;
+    }
+    out += this.escapeHtml(raw.slice(cursor));
+    return out;
+  }
+
   private escapeHtml(value: string): string {
     return value
       .replace(/&/g, '&amp;')
@@ -504,5 +670,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  private escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private populateEditorFromChunk(chunk: BookSearchReaderChunk): void {
+    this.editPageNo = chunk.page_no;
+    this.editHeadingRaw = chunk.heading_raw ?? '';
+    this.editLocator = chunk.locator ?? '';
+    this.editChunkType = (chunk.chunk_type ?? 'lexicon').toLowerCase();
+    this.editText = chunk.text ?? '';
   }
 }

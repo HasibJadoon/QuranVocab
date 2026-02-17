@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS ar_occ_token;
 DROP TABLE IF EXISTS ar_u_grammar_relations;
 DROP TABLE IF EXISTS ar_u_grammar;
 DROP TABLE IF EXISTS ar_u_valency;
+DROP TABLE IF EXISTS ar_u_morphology;
 DROP TABLE IF EXISTS ar_u_lexicon;
 DROP TABLE IF EXISTS ar_u_expressions;
 DROP TABLE IF EXISTS ar_u_sentences;

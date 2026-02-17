@@ -207,9 +207,27 @@
           </div>
 
           <div class="reader-controls">
-            <button type="button" class="btn btn-ghost btn-sm" (click)="openPrev()" [disabled]="!readerNav.prev_chunk_id">Prev</button>
-            <button type="button" class="btn btn-ghost btn-sm" (click)="openNext()" [disabled]="!readerNav.next_chunk_id">Next</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openPrev()" [disabled]="!readerNav.prev_chunk_id">Prev Chunk</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openNext()" [disabled]="!readerNav.next_chunk_id">Next Chunk</button>
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              (click)="openLinearPrevPage()"
+              [disabled]="chunk.page_no === null || chunk.page_no <= 0"
+            >
+              Prev Page
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openLinearNextPage()" [disabled]="chunk.page_no === null">
+              Next Page
+            </button>
             <button type="button" class="btn btn-ghost btn-sm" (click)="copyChunkText()">Copy</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="startEdit()" *ngIf="!editorEditing">Edit</button>
+            <button type="button" class="btn btn-primary btn-sm" (click)="saveEdit()" [disabled]="editorSaving" *ngIf="editorEditing">
+              {{ editorSaving ? 'Saving…' : 'Save' }}
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="cancelEdit()" [disabled]="editorSaving" *ngIf="editorEditing">
+              Cancel
+            </button>
           </div>
 
           <div class="reader-controls reader-controls-secondary">
@@ -231,8 +249,38 @@
             </label>
           </div>
 
+          <div class="editor-panel" *ngIf="editorEditing">
+            <div class="editor-grid">
+              <label>
+                <span>Page</span>
+                <input type="number" [(ngModel)]="editPageNo" />
+              </label>
+              <label>
+                <span>Heading</span>
+                <input type="text" [(ngModel)]="editHeadingRaw" />
+              </label>
+              <label>
+                <span>Locator</span>
+                <input type="text" [(ngModel)]="editLocator" />
+              </label>
+              <label>
+                <span>Type</span>
+                <select [(ngModel)]="editChunkType">
+                  <option *ngFor="let option of chunkTypeOptions" [value]="option">{{ option }}</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              <span>Text</span>
+              <textarea [(ngModel)]="editText" rows="16"></textarea>
+            </label>
+          </div>
+
+          <p class="feedback error" *ngIf="editorError">{{ editorError }}</p>
+          <p class="feedback muted" *ngIf="editorMessage">{{ editorMessage }}</p>
+
           <div class="reader-viewport" #readerViewport>
-            <pre class="reader-text" [ngStyle]="readerTextStyle()">{{ chunk.text }}</pre>
+            <pre class="reader-text" [ngStyle]="readerTextStyle()" [innerHTML]="readerTextHtml()"></pre>
           </div>
         </ng-container>
 

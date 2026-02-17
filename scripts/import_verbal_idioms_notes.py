@@ -238,6 +238,8 @@ def build_sql(
         if page is None:
             raise ValueError(f"Item missing page: {canonical_input}")
         chunk_id = f"{source_code}:p:{page:04d}"
+        heading_raw = f"Page {page}"
+        heading_norm = norm_text(heading_raw)
 
         q_examples = g.get("quran_examples") if isinstance(g.get("quran_examples"), list) else []
         references_json = {
@@ -301,24 +303,35 @@ def build_sql(
             extract_parts.append(f"Quran: {qtext}")
         extract_text = " | ".join(extract_parts) or construction or gloss_primary
 
+        link_role = "usage"
+        evidence_canonical = f"lexicon_evidence|{lexicon_id}|chunk|{ar_u_source}|{chunk_id}|{link_role}"
+        evidence_id = sha256_hex(evidence_canonical)
         evidence_meta = {
             "canonical_input": canonical_input,
             "sense_key": sense_key,
             "quran_examples": q_examples,
             "source_file": data.get("source_file"),
+            "evidence_canonical": evidence_canonical,
         }
 
         lines.append(
             "INSERT INTO ar_u_lexicon_evidence "
-            "(ar_u_lexicon, chunk_id, ar_u_source, page_no, link_role, extract_text, notes, meta_json) "
-            f"VALUES ({sql_quote(lexicon_id)}, {sql_quote(chunk_id)}, {sql_quote(ar_u_source)}, {page}, "
-            f"{sql_quote('verbal_idiom_note')}, {sql_quote(extract_text)}, {sql_quote(note)}, {sql_quote(evidence_meta)}) "
-            "ON CONFLICT(ar_u_lexicon, chunk_id) DO UPDATE SET "
-            "ar_u_source=excluded.ar_u_source, "
+            "(ar_u_lexicon, evidence_id, locator_type, source_id, source_type, chunk_id, page_no, heading_raw, heading_norm, "
+            "link_role, evidence_kind, evidence_strength, extract_text, note_md, meta_json) "
+            f"VALUES ({sql_quote(lexicon_id)}, {sql_quote(evidence_id)}, 'chunk', {sql_quote(ar_u_source)}, "
+            f"{sql_quote(source_type)}, {sql_quote(chunk_id)}, {page}, {sql_quote(heading_raw)}, {sql_quote(heading_norm)}, "
+            f"{sql_quote(link_role)}, 'lexical', 'supporting', {sql_quote(extract_text)}, {sql_quote(note)}, {sql_quote(evidence_meta)}) "
+            "ON CONFLICT(ar_u_lexicon, evidence_id) DO UPDATE SET "
+            "source_id=excluded.source_id, "
+            "source_type=excluded.source_type, "
             "page_no=excluded.page_no, "
+            "heading_raw=excluded.heading_raw, "
+            "heading_norm=excluded.heading_norm, "
             "link_role=excluded.link_role, "
+            "evidence_kind=excluded.evidence_kind, "
+            "evidence_strength=excluded.evidence_strength, "
             "extract_text=excluded.extract_text, "
-            "notes=excluded.notes, "
+            "note_md=excluded.note_md, "
             "meta_json=excluded.meta_json, "
             "updated_at=datetime('now');"
         )
@@ -335,10 +348,10 @@ def build_sql(
     )
     lines.append(f"DELETE FROM ar_u_lexicon_evidence_fts WHERE source_code = {sql_quote(source_code)};")
     lines.append(
-        "INSERT INTO ar_u_lexicon_evidence_fts(ar_u_lexicon, chunk_id, source_code, extract_text, notes) "
-        "SELECT e.ar_u_lexicon, e.chunk_id, s.source_code, COALESCE(e.extract_text, ''), COALESCE(e.notes, '') "
+        "INSERT INTO ar_u_lexicon_evidence_fts(ar_u_lexicon, evidence_id, chunk_id, source_code, extract_text, note_md) "
+        "SELECT e.ar_u_lexicon, e.evidence_id, e.chunk_id, s.source_code, COALESCE(e.extract_text, ''), COALESCE(e.note_md, '') "
         "FROM ar_u_lexicon_evidence e "
-        "JOIN ar_u_sources s ON s.ar_u_source = e.ar_u_source "
+        "JOIN ar_u_sources s ON s.ar_u_source = e.source_id "
         f"WHERE s.source_code = {sql_quote(source_code)};"
     )
 
