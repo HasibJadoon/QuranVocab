@@ -463,11 +463,12 @@ async function runChunkSearch(
     OFFSET ?
   `;
 
-  const dataBinds = [...binds];
+  const dataBinds: SqlBind[] = [];
+  // Placeholder order follows SQL order: SELECT expressions first, then WHERE, then LIMIT/OFFSET.
   if (primaryTerm) {
     dataBinds.push(primaryTerm, primaryLike, primaryLike);
   }
-  dataBinds.push(limit, offset);
+  dataBinds.push(...binds, limit, offset);
 
   const { results = [] } = await db
     .prepare(dataSql)
