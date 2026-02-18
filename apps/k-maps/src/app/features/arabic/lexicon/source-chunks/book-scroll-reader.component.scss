@@ -47,6 +47,13 @@
   gap: 0.6rem;
 }
 
+.chunk-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.chunk-copy-btn,
 .chunk-edit-btn,
 .chunk-save-btn,
 .chunk-cancel-btn {

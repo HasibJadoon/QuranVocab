@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
@@ -15,7 +15,7 @@ import { BookScrollReaderService } from '../../../../shared/services/book-scroll
   templateUrl: './book-scroll-reader.component.html',
   styleUrls: ['./book-scroll-reader.component.scss'],
 })
-export class BookScrollReaderComponent implements OnChanges {
+export class BookScrollReaderComponent implements OnChanges, OnDestroy {
   @Input() sourceCode = '';
   @Input() query = '';
   @Input() fontSize = 17;
@@ -38,6 +38,7 @@ export class BookScrollReaderComponent implements OnChanges {
   editSaving = false;
   editError = '';
   editMessage = '';
+  private copyMessageTimer: ReturnType<typeof setTimeout> | null = null;
 
   private readonly pageSet = new Set<number>();
   private readonly loadLimit = 10;
@@ -61,6 +62,10 @@ export class BookScrollReaderComponent implements OnChanges {
         void this.loadInitialRange();
       }
     }
+  }
+
+  ngOnDestroy(): void {
+    this.clearCopyMessageTimer();
   }
 
   async jumpToPage(pageNo: number, sourceOverride?: string): Promise<void> {
@@ -192,6 +197,24 @@ export class BookScrollReaderComponent implements OnChanges {
     }
   }
 
+  async copyChunkText(chunk: BookScrollReaderChunk): Promise<void> {
+    const raw = this.isEditing(chunk) ? this.editText : chunk.text_raw ?? '';
+    const text = String(raw ?? '');
+    if (!text.trim()) {
+      this.editError = 'Nothing to copy.';
+      return;
+    }
+
+    try {
+      await this.writeTextToClipboard(text);
+      this.editError = '';
+      this.editMessage = 'Copied.';
+      this.resetCopyMessageTimer();
+    } catch {
+      this.editError = 'Clipboard copy failed.';
+    }
+  }
+
   private async loadInitialRange(): Promise<void> {
     const source = String(this.sourceCode ?? '').trim();
     if (!source) {
@@ -315,6 +338,7 @@ export class BookScrollReaderComponent implements OnChanges {
     this.nextStart = null;
     this.sourceBootstrapped = '';
     this.cancelEdit();
+    this.clearCopyMessageTimer();
   }
 
   private searchTermsFromQuery(query: string): string[] {
@@ -404,5 +428,45 @@ export class BookScrollReaderComponent implements OnChanges {
 
   private escapeRegex(value: string): string {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private async writeTextToClipboard(text: string): Promise<void> {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    if (typeof document === 'undefined') {
+      throw new Error('Clipboard unavailable');
+    }
+
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.setAttribute('readonly', '');
+    textArea.style.position = 'absolute';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    const copied = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    if (!copied) {
+      throw new Error('Clipboard unavailable');
+    }
+  }
+
+  private resetCopyMessageTimer(): void {
+    this.clearCopyMessageTimer();
+    this.copyMessageTimer = setTimeout(() => {
+      if (this.editMessage === 'Copied.') {
+        this.editMessage = '';
+      }
+      this.copyMessageTimer = null;
+    }, 1500);
+  }
+
+  private clearCopyMessageTimer(): void {
+    if (this.copyMessageTimer) {
+      clearTimeout(this.copyMessageTimer);
+      this.copyMessageTimer = null;
+    }
   }
 }

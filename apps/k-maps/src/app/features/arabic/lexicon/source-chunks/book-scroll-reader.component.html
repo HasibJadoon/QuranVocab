@@ -10,7 +10,10 @@
       <div class="chunk-block" *ngFor="let chunk of page.chunks; trackBy: trackByChunkId">
         <div class="chunk-toolbar">
           <div *ngIf="chunk.heading_raw" class="chunk-heading">{{ chunk.heading_raw }}</div>
-          <button type="button" class="chunk-edit-btn" *ngIf="!isEditing(chunk)" (click)="startEdit(chunk, page)">Edit</button>
+          <div class="chunk-toolbar-actions">
+            <button type="button" class="chunk-copy-btn" (click)="copyChunkText(chunk)">Copy</button>
+            <button type="button" class="chunk-edit-btn" *ngIf="!isEditing(chunk)" (click)="startEdit(chunk, page)">Edit</button>
+          </div>
         </div>
 
         <div class="chunk-editor" *ngIf="isEditing(chunk)">
