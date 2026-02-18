@@ -10,3 +10,4 @@ database_name = "knowledgemap"
 # Replace with your D1 database id
 # Example: "ef164d27-6e98-41c5-beca-03903d658976"
 database_id = "<YOUR_D1_DATABASE_ID>"
+migrations_dir = "database/migrations"
