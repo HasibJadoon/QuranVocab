@@ -473,6 +473,27 @@ async function runTocList(
             AND p.locator = t.locator
           ORDER BY p.page_no ASC, p.chunk_id ASC
           LIMIT 1
+        ),
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = t.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND t.pdf_page_index IS NOT NULL
+            AND p.locator LIKE 'pdf_page:%'
+            AND CAST(substr(p.locator, 10) AS INTEGER) = t.pdf_page_index
+          ORDER BY p.page_no ASC, p.chunk_id ASC
+          LIMIT 1
+        ),
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = t.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND t.pdf_page_index IS NOT NULL
+            AND p.locator LIKE 'pdf_page:%'
+          ORDER BY ABS(CAST(substr(p.locator, 10) AS INTEGER) - t.pdf_page_index), p.page_no ASC, p.chunk_id ASC
+          LIMIT 1
         )
       ) AS target_chunk_id
     FROM ar_source_toc t

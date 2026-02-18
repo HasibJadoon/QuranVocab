@@ -190,36 +190,33 @@
             </tbody>
           </table>
 
-          <table class="workspace-table" *ngIf="readTab === 'toc'">
-            <thead>
-              <tr>
-                <th>TOC</th>
-                <th>Page</th>
-                <th>Open</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngIf="readLoading">
-                <td colspan="3" class="state-cell">Loading TOC…</td>
-              </tr>
-              <tr *ngIf="!readLoading && !tocRows.length">
-                <td colspan="3" class="state-cell">{{ listEmptyMessage }}</td>
-              </tr>
-              <tr
-                *ngFor="let row of tocRows; trackBy: trackByTocId"
-                [class.is-active]="row.target_chunk_id === activeChunkId"
-                (click)="openTocRow(row)"
-              >
-                <td class="toc-title-cell">
-                  <span [style.padding-left.rem]="row.depth > 1 ? (row.depth - 1) * 0.55 : 0">{{ row.index_path }} {{ row.title_raw }}</span>
-                </td>
-                <td>{{ row.page_no ?? '—' }}</td>
-                <td>
-                  <button type="button" class="btn btn-ghost btn-sm" (click)="openTocRow(row); $event.stopPropagation()">Open</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <section class="toc-catalog" *ngIf="readTab === 'toc'">
+            <header class="toc-catalog-head">
+              <strong>TOC Directory</strong>
+              <span>{{ tocRows.length }} items</span>
+            </header>
+
+            <div class="toc-catalog-state" *ngIf="readLoading">Loading TOC…</div>
+            <div class="toc-catalog-state" *ngIf="!readLoading && !tocRows.length">{{ listEmptyMessage }}</div>
+
+            <button
+              type="button"
+              class="toc-card"
+              *ngFor="let row of tocRows; trackBy: trackByTocId"
+              [class.is-active]="row.target_chunk_id === activeChunkId"
+              (click)="openTocRow(row)"
+            >
+              <span class="toc-level-pill">L{{ row.depth }}</span>
+              <span class="toc-card-main">
+                <span class="toc-card-title" [style.padding-left.rem]="row.depth > 1 ? (row.depth - 1) * 0.5 : 0">
+                  {{ row.title_raw }}
+                </span>
+                <span class="toc-card-path">{{ row.index_path }}</span>
+              </span>
+              <span class="toc-card-page">p. {{ row.page_no ?? '—' }}</span>
+              <span class="toc-card-open">Open</span>
+            </button>
+          </section>
         </div>
 
         <section class="search-results" *ngIf="query.trim() || searchLoading || searchRows.length || searchError">
