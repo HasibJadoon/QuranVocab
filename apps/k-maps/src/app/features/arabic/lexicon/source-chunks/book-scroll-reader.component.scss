@@ -115,6 +115,14 @@
   margin-bottom: 1rem;
 }
 
+.chunk-text p {
+  margin: 0 0 0.95rem;
+}
+
+.chunk-text p:last-child {
+  margin-bottom: 0;
+}
+
 .chunk-text mark {
   background: rgba(247, 204, 90, 0.3);
   color: #fff0c8;

@@ -105,10 +105,17 @@ export class BookScrollReaderComponent implements OnChanges {
   }
 
   chunkTextHtml(raw: string): SafeHtml {
-    const text = String(raw ?? '');
+    const text = this.normalizeChunkText(String(raw ?? ''));
     const terms = this.searchTermsFromQuery(this.query);
-    const highlighted = this.highlightText(text, terms).replace(/\n/g, '<br>');
-    return this.sanitizer.bypassSecurityTrustHtml(highlighted);
+    const highlighted = this.highlightText(text, terms);
+    const paragraphs = highlighted
+      .split(/\n{2,}/)
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0)
+      .map((part) => `<p>${part.replace(/\n/g, ' ')}</p>`)
+      .join('');
+    const html = paragraphs || '<p></p>';
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   chunkTextStyle(): Record<string, string> {
@@ -118,7 +125,7 @@ export class BookScrollReaderComponent implements OnChanges {
       'font-family': this.monospace
         ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
         : 'var(--arabic-font)',
-      'white-space': this.wrapText ? 'pre-wrap' : 'pre',
+      'white-space': this.wrapText ? 'normal' : 'pre',
       'text-align': 'justify',
       'text-align-last': 'start',
       'text-justify': 'inter-word',
@@ -347,6 +354,22 @@ export class BookScrollReaderComponent implements OnChanges {
     }
     unique.sort((a, b) => b.length - a.length);
     return unique;
+  }
+
+  private normalizeChunkText(raw: string): string {
+    if (!raw) return '';
+    const normalized = raw.replace(/\r\n?/g, '\n');
+    const dehyphenated = normalized.replace(/([A-Za-z\u0600-\u06FF])-\s*\n\s*([A-Za-z\u0600-\u06FF])/g, '$1$2');
+    const paragraphs = dehyphenated
+      .split(/\n{2,}/)
+      .map((part) =>
+        part
+          .replace(/\s*\n\s*/g, ' ')
+          .replace(/[ \t]{2,}/g, ' ')
+          .trim()
+      )
+      .filter((part) => part.length > 0);
+    return paragraphs.join('\n\n');
   }
 
   private highlightText(raw: string, terms: string[]): string {
