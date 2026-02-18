@@ -223,6 +223,7 @@ type ReaderNavRow = {
 type TocReaderRow = {
   toc_id: string;
   ar_u_source: string;
+  source_match_key: string;
   source_code: string;
   source_title: string;
   depth: number;
@@ -513,6 +514,7 @@ async function runTocList(
   const hasTitleRaw = tocColumns.has('title_raw');
   const hasTitleNorm = tocColumns.has('title_norm');
   const hasLocator = tocColumns.has('locator');
+  const hasMetaJson = tocColumns.has('meta_json');
 
   const tocDepthExpr = hasDepth ? 't.depth' : '1';
   const tocIndexPathExpr = hasIndexPath
@@ -530,6 +532,14 @@ async function runTocList(
         ELSE NULL
       END`
     : 'NULL';
+  const tocMetaSourceCodeExpr = hasMetaJson
+    ? "NULLIF(CAST(json_extract(t.meta_json, '$.source_code') AS TEXT), '')"
+    : 'NULL';
+  const tocMetaSourceRowExpr = hasMetaJson
+    ? "NULLIF(CAST(json_extract(t.meta_json, '$.source_row_ar_u_source') AS TEXT), '')"
+    : 'NULL';
+  const tocSourceCodeExpr = `COALESCE(s.source_code, ${tocMetaSourceCodeExpr}, ${tocMetaSourceRowExpr}, t.ar_u_source)`;
+  const tocChunkSourceExpr = `COALESCE(${tocMetaSourceRowExpr}, ${tocMetaSourceCodeExpr}, t.ar_u_source)`;
 
   const tocTargetCandidates: string[] = [];
   if (hasPageNo) {
@@ -537,7 +547,7 @@ async function runTocList(
         (
           SELECT p.chunk_id
           FROM ar_source_chunks p
-          WHERE p.ar_u_source = t.ar_u_source
+          WHERE p.ar_u_source = ${tocChunkSourceExpr}
             AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
             AND t.page_no IS NOT NULL
             AND p.page_no = t.page_no
@@ -550,7 +560,7 @@ async function runTocList(
         (
           SELECT p.chunk_id
           FROM ar_source_chunks p
-          WHERE p.ar_u_source = t.ar_u_source
+          WHERE p.ar_u_source = ${tocChunkSourceExpr}
             AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
             AND t.locator IS NOT NULL
             AND p.locator = t.locator
@@ -563,7 +573,7 @@ async function runTocList(
         (
           SELECT p.chunk_id
           FROM ar_source_chunks p
-          WHERE p.ar_u_source = t.ar_u_source
+          WHERE p.ar_u_source = ${tocChunkSourceExpr}
             AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
             AND ${tocPdfPageExpr} IS NOT NULL
             AND p.locator LIKE 'pdf_page:%'
@@ -575,7 +585,7 @@ async function runTocList(
         (
           SELECT p.chunk_id
           FROM ar_source_chunks p
-          WHERE p.ar_u_source = t.ar_u_source
+          WHERE p.ar_u_source = ${tocChunkSourceExpr}
             AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
             AND ${tocPdfPageExpr} IS NOT NULL
             AND p.locator LIKE 'pdf_page:%'
@@ -590,7 +600,7 @@ async function runTocList(
   const binds: SqlBind[] = [];
 
   if (sourceCode) {
-    whereParts.push('s.source_code = ?');
+    whereParts.push(`${tocSourceCodeExpr} = ? COLLATE NOCASE`);
     binds.push(sourceCode);
   }
   if (hasPageNo && pageFrom !== null) {
@@ -620,7 +630,7 @@ async function runTocList(
   const countSql = `
     SELECT COUNT(*) AS total
     FROM ar_source_toc t
-    JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
+    LEFT JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
     ${whereClause}
   `;
   const countRow = await db
@@ -632,7 +642,7 @@ async function runTocList(
   const dataSql = `
     SELECT
       t.toc_id,
-      s.source_code,
+      ${tocSourceCodeExpr} AS source_code,
       ${tocDepthExpr} AS depth,
       ${tocIndexPathExpr} AS index_path,
       ${tocTitleRawExpr} AS title_raw,
@@ -642,7 +652,7 @@ async function runTocList(
       ${tocPdfPageExpr} AS pdf_page_index,
       ${targetChunkExpr} AS target_chunk_id
     FROM ar_source_toc t
-    JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
+    LEFT JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
     ${whereClause}
     ORDER BY ${hasIndexPath ? 't.index_path ASC,' : hasPageNo ? 't.page_no ASC,' : ''} t.toc_id ASC
     LIMIT ?
@@ -1000,6 +1010,7 @@ async function runReaderChunk(
     const hasTitleNorm = tocColumns.has('title_norm');
     const hasPageNo = tocColumns.has('page_no');
     const hasLocator = tocColumns.has('locator');
+    const hasMetaJson = tocColumns.has('meta_json');
 
     const tocDepthExpr = hasDepth ? 't.depth' : '1';
     const tocIndexPathExpr = hasIndexPath ? 't.index_path' : 't.toc_id';
@@ -1012,6 +1023,14 @@ async function runReaderChunk(
           ELSE NULL
         END`
       : 'NULL';
+    const tocMetaSourceCodeExpr = hasMetaJson
+      ? "NULLIF(CAST(json_extract(t.meta_json, '$.source_code') AS TEXT), '')"
+      : 'NULL';
+    const tocMetaSourceRowExpr = hasMetaJson
+      ? "NULLIF(CAST(json_extract(t.meta_json, '$.source_row_ar_u_source') AS TEXT), '')"
+      : 'NULL';
+    const tocResolvedSourceCodeExpr = `COALESCE(s.source_code, ${tocMetaSourceCodeExpr}, ${tocMetaSourceRowExpr}, t.ar_u_source)`;
+    const tocResolvedSourceKeyExpr = `COALESCE(${tocMetaSourceRowExpr}, ${tocMetaSourceCodeExpr}, t.ar_u_source)`;
     const navPageExpr = hasPageNo ? 't.page_no' : 'NULL AS page_no';
 
     const toc = await db
@@ -1020,8 +1039,9 @@ async function runReaderChunk(
           SELECT
             t.toc_id,
             t.ar_u_source,
-            s.source_code,
-            s.title AS source_title,
+            ${tocResolvedSourceKeyExpr} AS source_match_key,
+            ${tocResolvedSourceCodeExpr} AS source_code,
+            COALESCE(s.title, ${tocResolvedSourceCodeExpr}) AS source_title,
             ${tocDepthExpr} AS depth,
             ${tocIndexPathExpr} AS index_path,
             ${tocTitleRawExpr} AS title_raw,
@@ -1029,7 +1049,7 @@ async function runReaderChunk(
             ${tocLocatorExpr} AS locator,
             ${tocPdfPageExpr} AS pdf_page_index
           FROM ar_source_toc t
-          JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
+          LEFT JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
           WHERE t.toc_id = ?
           LIMIT 1
         `
@@ -1056,7 +1076,7 @@ async function runReaderChunk(
             LIMIT 1
           `
         )
-        .bind(toc.ar_u_source, toc.locator)
+        .bind(toc.source_match_key, toc.locator)
         .first<{ page_no: number | null }>();
       startPage = byLocator?.page_no ?? null;
     }
@@ -1075,7 +1095,7 @@ async function runReaderChunk(
             LIMIT 1
           `
         )
-        .bind(toc.ar_u_source, toc.pdf_page_index)
+        .bind(toc.source_match_key, toc.pdf_page_index)
         .first<{ page_no: number | null }>();
       startPage = byPdfPage?.page_no ?? null;
     }
@@ -1185,7 +1205,7 @@ async function runReaderChunk(
           ORDER BY c.page_no ASC, c.chunk_id ASC
         `
       )
-      .bind(toc.ar_u_source, startPage, endPage, endPage)
+      .bind(toc.source_match_key, startPage, endPage, endPage)
       .all<ReaderPageTextRow>();
 
     const text =
