@@ -1071,6 +1071,7 @@ CREATE TABLE IF NOT EXISTS ar_source_chunks (
   locator        TEXT,                -- e.g. pdf_page:167
   heading_raw    TEXT,
   heading_norm   TEXT,
+  sub_heading    TEXT,
   chunk_type     TEXT NOT NULL DEFAULT 'lexicon'
                  CHECK (chunk_type IN ('grammar', 'literature', 'lexicon', 'reference', 'other')),
 

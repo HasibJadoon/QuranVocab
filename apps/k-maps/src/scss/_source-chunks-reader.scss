@@ -93,6 +93,7 @@
   margin: 0;
   font-size: 1.06rem;
   letter-spacing: 0.01em;
+  color: #ffd84f;
 }
 
 .source-chunks-workspace .workspace-head p {
@@ -234,8 +235,12 @@
 .source-chunks-workspace .toc-card-title {
   display: block;
   font-size: 0.86rem;
-  color: var(--book-paper-ink);
+  color: #ffd84f;
   line-height: 1.35;
+}
+
+.source-chunks-workspace .app-sticky-panel-head h3 {
+  color: #ffd84f;
 }
 
 .source-chunks-workspace .toc-index-card.toc-index-card-page .toc-card-title {

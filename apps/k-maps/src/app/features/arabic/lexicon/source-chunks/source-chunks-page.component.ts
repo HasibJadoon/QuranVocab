@@ -1386,23 +1386,44 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private syncUrl(): void {
+    const queryParams = {
+      source_code: this.selectedSourceCode || null,
+      view_mode: 'read',
+      read_tab: this.readTab,
+      q: this.query.trim() || null,
+      page_from: this.pageFrom ?? null,
+      page_to: this.pageTo ?? null,
+      heading: this.headingFilter.trim() || null,
+      jump_page: this.jumpPageNo ?? null,
+      chunk_id: null,
+      toc_id: this.activeTocId || null,
+    };
+    if (this.isSameQueryState(queryParams)) return;
+
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: {
-        source_code: this.selectedSourceCode || null,
-        view_mode: 'read',
-        read_tab: this.readTab,
-        q: this.query.trim() || null,
-        page_from: this.pageFrom ?? null,
-        page_to: this.pageTo ?? null,
-        heading: this.headingFilter.trim() || null,
-        jump_page: this.jumpPageNo ?? null,
-        chunk_id: null,
-        toc_id: this.activeTocId || null,
-      },
+      queryParams,
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
+  }
+
+  private isSameQueryState(next: Record<string, string | number | null>): boolean {
+    const current = this.route.snapshot.queryParamMap;
+    for (const [key, value] of Object.entries(next)) {
+      const currentValue = this.normalizeQueryValue(current.get(key));
+      const nextValue = this.normalizeQueryValue(value);
+      if (currentValue !== nextValue) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private normalizeQueryValue(value: unknown): string | null {
+    if (value === null || value === undefined) return null;
+    const text = String(value).trim();
+    return text ? text : null;
   }
 
   private toIntOrNull(value: string | null): number | null {

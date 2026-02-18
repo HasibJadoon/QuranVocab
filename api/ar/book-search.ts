@@ -107,6 +107,36 @@ function toSafeFtsQuery(value: string): string {
   return deduped.map((term) => `"${term.replace(/"/g, '""')}"`).join(' AND ');
 }
 
+function extractPrimarySearchTerm(value: string): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  const phraseMatch = raw.match(/"([^"]+)"|'([^']+)'/);
+  if (phraseMatch) {
+    const phrase = (phraseMatch[1] ?? phraseMatch[2] ?? '').trim();
+    return phrase ? normalizeSearchText(phrase) : '';
+  }
+
+  const stripped = raw
+    .replace(/"[^"]*"/g, ' ')
+    .replace(/'[^']*'/g, ' ')
+    .replace(/[()]/g, ' ');
+
+  const firstToken = stripped
+    .split(/\s+/)
+    .map((part) =>
+      part
+        .normalize('NFKC')
+        .replace(/^[^:\s]+:/, '')
+        .replace(/\*+/g, '')
+        .replace(/[^\p{L}\p{N}_-]+/gu, '')
+        .trim()
+    )
+    .find((token) => token.length > 0 && !/^(AND|OR|NOT)$/i.test(token));
+
+  return firstToken ? normalizeSearchText(firstToken) : '';
+}
+
 function normalizeMode(value: string | null): SearchMode {
   const mode = (value ?? 'chunks').trim().toLowerCase();
   if (
@@ -332,6 +362,8 @@ async function runChunkSearch(
   offset: number
 ) {
   const ftsQuery = q ? toSafeFtsQuery(q) : '';
+  const primaryTerm = extractPrimarySearchTerm(q);
+  const primaryLike = primaryTerm ? `%${escapeLike(primaryTerm)}%` : '';
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
   whereParts.push("COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'");
@@ -378,7 +410,17 @@ async function runChunkSearch(
   const hitExpr = ftsQuery
     ? `snippet(ar_source_chunks_fts, 3, '[', ']', '…', 12) AS hit, bm25(ar_source_chunks_fts) AS rank`
     : `substr(c.text, 1, 260) AS hit, NULL AS rank`;
-  const orderBy = ftsQuery ? 'ORDER BY rank ASC, c.page_no ASC, c.chunk_id ASC' : 'ORDER BY c.page_no ASC, c.chunk_id ASC';
+  const mainTermPriorityExpr = primaryTerm
+    ? `CASE
+        WHEN COALESCE(f.heading_norm, '') = ? THEN 0
+        WHEN COALESCE(f.heading_norm, '') LIKE ? ESCAPE '\\' THEN 1
+        WHEN COALESCE(f.text_search, '') LIKE ? ESCAPE '\\' THEN 2
+        ELSE 3
+      END AS main_term_priority`
+    : '0 AS main_term_priority';
+  const orderBy = ftsQuery
+    ? 'ORDER BY main_term_priority ASC, rank ASC, c.page_no ASC, c.chunk_id ASC'
+    : 'ORDER BY main_term_priority ASC, c.page_no ASC, c.chunk_id ASC';
 
   const dataSql = `
     SELECT
@@ -389,6 +431,7 @@ async function runChunkSearch(
       c.heading_raw,
       c.heading_norm,
       c.chunk_type,
+      ${mainTermPriorityExpr},
       ${hitExpr}
     FROM ar_source_chunks_fts f
     JOIN ar_source_chunks c ON c.chunk_id = f.chunk_id
@@ -398,9 +441,15 @@ async function runChunkSearch(
     OFFSET ?
   `;
 
+  const dataBinds = [...binds];
+  if (primaryTerm) {
+    dataBinds.push(primaryTerm, primaryLike, primaryLike);
+  }
+  dataBinds.push(limit, offset);
+
   const { results = [] } = await db
     .prepare(dataSql)
-    .bind(...binds, limit, offset)
+    .bind(...dataBinds)
     .all<ChunkRow>();
 
   return {
