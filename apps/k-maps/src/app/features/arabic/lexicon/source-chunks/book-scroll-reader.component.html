@@ -1,0 +1,20 @@
+<div class="reader-viewport continuous-reader-viewport" #scrollViewport (scroll)="onViewportScroll()">
+  <div class="reader-state" *ngIf="loadingInitial && !pages.length">Loading book…</div>
+  <div class="reader-state error" *ngIf="error && !pages.length">{{ error }}</div>
+  <div class="reader-state" *ngIf="!loadingInitial && !error && !pages.length">Select a TOC row to read</div>
+
+  <div class="book-container" *ngIf="pages.length">
+    <section [attr.id]="'page-' + page.page_no" class="book-page" *ngFor="let page of pages; trackBy: trackByPageNo">
+      <div class="page-divider">Page {{ page.page_no }}</div>
+
+      <div *ngFor="let chunk of page.chunks; trackBy: trackByChunkId">
+        <div *ngIf="chunk.heading_raw" class="chunk-heading">{{ chunk.heading_raw }}</div>
+        <div class="chunk-text" [ngStyle]="chunkTextStyle()" [innerHTML]="chunkTextHtml(chunk.text_raw)"></div>
+      </div>
+    </section>
+
+    <div class="reader-tail" *ngIf="loadingMore">Loading more pages…</div>
+    <div class="reader-tail" *ngIf="!loadingMore && !hasMore">End of book</div>
+    <div class="reader-tail error" *ngIf="error && pages.length">{{ error }}</div>
+  </div>
+</div>

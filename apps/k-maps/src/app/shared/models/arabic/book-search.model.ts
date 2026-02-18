@@ -136,3 +136,25 @@ export type BookSearchChunkUpdateResponse = {
   chunk: BookSearchReaderChunk | null;
   nav: BookSearchReaderNav;
 };
+
+export type BookScrollReaderChunk = {
+  chunk_id: string;
+  heading_raw: string | null;
+  text_raw: string;
+  order_index: number;
+};
+
+export type BookScrollReaderPage = {
+  page_no: number;
+  pdf_page_index: number | null;
+  chunks: BookScrollReaderChunk[];
+};
+
+export type BookScrollReaderRangeResponse = {
+  source_id: string;
+  start: number;
+  limit: number;
+  pages: BookScrollReaderPage[];
+  has_more: boolean;
+  next_start: number | null;
+};
