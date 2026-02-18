@@ -46,6 +46,10 @@ function normalizeChunkType(value: string | null): string {
     .toLowerCase();
 }
 
+function escapeLike(value: string): string {
+  return String(value ?? '').replace(/[\\%_]/g, '\\$&');
+}
+
 function toSafeFtsQuery(value: string): string {
   const raw = String(value ?? '').trim();
   if (!raw) return '';
@@ -533,10 +537,10 @@ async function runTocList(
       END`
     : 'NULL';
   const tocMetaSourceCodeExpr = hasMetaJson
-    ? "NULLIF(CAST(json_extract(t.meta_json, '$.source_code') AS TEXT), '')"
+    ? "NULLIF(CASE WHEN json_valid(t.meta_json) THEN CAST(json_extract(t.meta_json, '$.source_code') AS TEXT) END, '')"
     : 'NULL';
   const tocMetaSourceRowExpr = hasMetaJson
-    ? "NULLIF(CAST(json_extract(t.meta_json, '$.source_row_ar_u_source') AS TEXT), '')"
+    ? "NULLIF(CASE WHEN json_valid(t.meta_json) THEN CAST(json_extract(t.meta_json, '$.source_row_ar_u_source') AS TEXT) END, '')"
     : 'NULL';
   const tocSourceCodeExpr = `COALESCE(s.source_code, ${tocMetaSourceCodeExpr}, ${tocMetaSourceRowExpr}, t.ar_u_source)`;
   const tocChunkSourceExpr = `COALESCE(${tocMetaSourceRowExpr}, ${tocMetaSourceCodeExpr}, t.ar_u_source)`;
@@ -676,6 +680,134 @@ async function runTocList(
       page_from: pageFrom,
       page_to: pageTo,
       q: q || null,
+    },
+    results,
+  };
+}
+
+async function runTocListBestEffort(
+  db: D1Database,
+  q: string,
+  sourceCode: string,
+  headingNormRaw: string,
+  pageFrom: number | null,
+  pageTo: number | null,
+  limit: number,
+  offset: number
+) {
+  const tocColumns = await getTableColumns(db, 'ar_source_toc');
+  const hasPageNo = tocColumns.has('page_no');
+  const hasDepth = tocColumns.has('depth');
+  const hasIndexPath = tocColumns.has('index_path');
+  const hasTitleRaw = tocColumns.has('title_raw');
+  const hasTitleNorm = tocColumns.has('title_norm');
+  const hasLocator = tocColumns.has('locator');
+  const hasPdfPageIndex = tocColumns.has('pdf_page_index');
+  const hasMetaJson = tocColumns.has('meta_json');
+
+  const tocDepthExpr = hasDepth ? 't.depth' : '1';
+  const tocIndexPathExpr = hasIndexPath ? 't.index_path' : 't.toc_id';
+  const tocTitleRawExpr = hasTitleRaw ? 't.title_raw' : hasTitleNorm ? 't.title_norm' : 't.toc_id';
+  const tocTitleNormExpr = hasTitleNorm ? 't.title_norm' : `LOWER(${tocTitleRawExpr})`;
+  const tocPageNoExpr = hasPageNo ? 't.page_no' : 'NULL';
+  const tocLocatorExpr = hasLocator ? 't.locator' : 'NULL';
+  const tocPdfExpr = hasPdfPageIndex ? 't.pdf_page_index' : 'NULL';
+  const tocMetaSourceCodeExpr = hasMetaJson
+    ? "NULLIF(CASE WHEN json_valid(t.meta_json) THEN CAST(json_extract(t.meta_json, '$.source_code') AS TEXT) END, '')"
+    : 'NULL';
+  const tocMetaSourceRowExpr = hasMetaJson
+    ? "NULLIF(CASE WHEN json_valid(t.meta_json) THEN CAST(json_extract(t.meta_json, '$.source_row_ar_u_source') AS TEXT) END, '')"
+    : 'NULL';
+  const tocSourceCodeExpr = `COALESCE(s.source_code, ${tocMetaSourceCodeExpr}, ${tocMetaSourceRowExpr}, t.ar_u_source)`;
+
+  const whereParts: string[] = [];
+  const binds: SqlBind[] = [];
+
+  if (sourceCode) {
+    const sourceLike = `%\"source_code\":\"${escapeLike(sourceCode)}\"%`;
+    const sourceRowLike = `%\"source_row_ar_u_source\":\"${escapeLike(sourceCode)}\"%`;
+    const sourceParts = [
+      `${tocSourceCodeExpr} = ? COLLATE NOCASE`,
+      't.ar_u_source = ? COLLATE NOCASE',
+    ];
+    binds.push(sourceCode, sourceCode);
+    if (hasMetaJson) {
+      sourceParts.push(`CAST(t.meta_json AS TEXT) LIKE ? ESCAPE '\\'`);
+      sourceParts.push(`CAST(t.meta_json AS TEXT) LIKE ? ESCAPE '\\'`);
+      binds.push(sourceLike, sourceRowLike);
+    }
+    whereParts.push(`(${sourceParts.join(' OR ')})`);
+  }
+
+  if (hasPageNo && pageFrom !== null) {
+    whereParts.push('t.page_no >= ?');
+    binds.push(pageFrom);
+  }
+  if (hasPageNo && pageTo !== null) {
+    whereParts.push('t.page_no <= ?');
+    binds.push(pageTo);
+  }
+  if (headingNormRaw) {
+    whereParts.push(`${tocTitleNormExpr} LIKE ?`);
+    binds.push(`%${normalizeHeading(headingNormRaw)}%`);
+  }
+  if (q) {
+    const like = `%${q}%`;
+    whereParts.push(`(${tocTitleRawExpr} LIKE ? OR ${tocTitleNormExpr} LIKE ? OR ${tocIndexPathExpr} LIKE ?)`);
+    binds.push(like, like, like);
+  }
+  const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+
+  const countSql = `
+    SELECT COUNT(*) AS total
+    FROM ar_source_toc t
+    LEFT JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
+    ${whereClause}
+  `;
+  const countRow = await db
+    .prepare(countSql)
+    .bind(...binds)
+    .first<{ total: number }>();
+  const total = Number(countRow?.total ?? 0);
+
+  const dataSql = `
+    SELECT
+      t.toc_id,
+      ${tocSourceCodeExpr} AS source_code,
+      ${tocDepthExpr} AS depth,
+      ${tocIndexPathExpr} AS index_path,
+      ${tocTitleRawExpr} AS title_raw,
+      ${tocTitleNormExpr} AS title_norm,
+      ${tocPageNoExpr} AS page_no,
+      ${tocLocatorExpr} AS locator,
+      ${tocPdfExpr} AS pdf_page_index,
+      NULL AS target_chunk_id
+    FROM ar_source_toc t
+    LEFT JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
+    ${whereClause}
+    ORDER BY ${hasIndexPath ? 't.index_path ASC,' : hasPageNo ? 't.page_no ASC,' : ''} t.toc_id ASC
+    LIMIT ?
+    OFFSET ?
+  `;
+
+  const { results = [] } = await db
+    .prepare(dataSql)
+    .bind(...binds, limit, offset)
+    .all<TocRow>();
+
+  return {
+    ok: true,
+    mode: 'toc' as const,
+    total,
+    limit,
+    offset,
+    filters: {
+      source_code: sourceCode || null,
+      heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
+      page_from: pageFrom,
+      page_to: pageTo,
+      q: q || null,
+      fallback: 'best_effort',
     },
     results,
   };
@@ -1539,16 +1671,30 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     }
 
     if (mode === 'toc') {
-      const payload = await runTocList(
-        ctx.env.DB,
-        q,
-        sourceCode,
-        headingNormRaw,
-        pageFrom,
-        pageTo,
-        limit,
-        offset
-      );
+      let payload;
+      try {
+        payload = await runTocList(
+          ctx.env.DB,
+          q,
+          sourceCode,
+          headingNormRaw,
+          pageFrom,
+          pageTo,
+          limit,
+          offset
+        );
+      } catch {
+        payload = await runTocListBestEffort(
+          ctx.env.DB,
+          q,
+          sourceCode,
+          headingNormRaw,
+          pageFrom,
+          pageTo,
+          limit,
+          offset
+        );
+      }
       return new Response(JSON.stringify(payload), { headers: jsonHeaders });
     }
 

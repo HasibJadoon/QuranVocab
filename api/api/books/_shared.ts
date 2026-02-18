@@ -209,11 +209,12 @@ export async function fetchPagesByRange(
     next?.page_no !== null && next?.page_no !== undefined && Number.isFinite(Number(next.page_no))
       ? Number(next.page_no)
       : null;
+  const safeNextStart = nextStart !== null && nextStart > start ? nextStart : null;
 
   return {
     pages,
-    has_more: nextStart !== null,
-    next_start: nextStart,
+    has_more: safeNextStart !== null,
+    next_start: safeNextStart,
   };
 }
 
@@ -244,10 +245,11 @@ export async function fetchSinglePage(
     next?.page_no !== null && next?.page_no !== undefined && Number.isFinite(Number(next.page_no))
       ? Number(next.page_no)
       : null;
+  const safeNextStart = nextStart !== null && nextStart > pageNo ? nextStart : null;
 
   return {
     page: null,
-    has_more: nextStart !== null,
-    next_start: nextStart,
+    has_more: safeNextStart !== null,
+    next_start: safeNextStart,
   };
 }
