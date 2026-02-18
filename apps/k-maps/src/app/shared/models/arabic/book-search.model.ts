@@ -29,6 +29,7 @@ export type BookSearchPageRow = {
   heading_raw: string | null;
   heading_norm: string | null;
   locator: string | null;
+  chunk_scope: string | null;
 };
 
 export type BookSearchEvidenceHit = {

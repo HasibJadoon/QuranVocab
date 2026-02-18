@@ -45,6 +45,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   pageTo: number | null = null;
   headingFilter = '';
   jumpPageNo: number | null = null;
+  selectedTermChunkId = '';
+  termRows: BookSearchPageRow[] = [];
+  termsLoading = false;
+  termsError = '';
 
   query = '';
 
@@ -143,6 +147,8 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     this.clearReaderSelection();
     this.searchError = '';
     this.readError = '';
+    this.selectedTermChunkId = '';
+    void this.loadTermRows();
     void this.loadCurrentList(true);
     this.syncUrl();
   }
@@ -189,6 +195,11 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     const pageNo = this.jumpPageNo;
     if (!sourceCode || pageNo === null || !Number.isFinite(Number(pageNo))) return;
     void this.openChunkByPage(sourceCode, pageNo, true);
+  }
+
+  openSelectedTerm(): void {
+    if (!this.selectedTermChunkId) return;
+    void this.openChunkById(this.selectedTermChunkId, true);
   }
 
   openSearchRow(row: SearchRow): void {
@@ -308,6 +319,12 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
   trackByChunkId = (_: number, row: { chunk_id: string }) => row.chunk_id;
 
+  termLabel(row: BookSearchPageRow): string {
+    const heading = row.heading_raw?.trim() || row.heading_norm?.trim() || row.chunk_id;
+    const page = row.page_no ?? '—';
+    return `${heading} (p.${page})`;
+  }
+
   private async loadBooksAndBootstrap(): Promise<void> {
     this.booksLoading = true;
     this.booksError = '';
@@ -322,6 +339,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
         this.selectedSourceCode = this.books[0].source_code;
       }
 
+      await this.loadTermRows();
       await this.loadCurrentList(false);
 
       const chunkId = this.initialChunkId;
@@ -432,6 +450,33 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  private async loadTermRows(): Promise<void> {
+    this.termsLoading = true;
+    this.termsError = '';
+    this.termRows = [];
+
+    try {
+      if (!this.selectedSourceCode) return;
+
+      const res = await firstValueFrom(
+        this.bookSearch.listPages({
+          source_code: this.selectedSourceCode,
+          limit: 5000,
+          offset: 0,
+        })
+      );
+
+      this.termRows = (res.results ?? []).filter((row) => row.chunk_scope === 'term');
+      if (this.selectedTermChunkId && !this.termRows.some((row) => row.chunk_id === this.selectedTermChunkId)) {
+        this.selectedTermChunkId = '';
+      }
+    } catch (err: unknown) {
+      this.termsError = err instanceof Error ? err.message : 'Failed to load terms.';
+    } finally {
+      this.termsLoading = false;
+    }
+  }
+
   private async openChunkById(chunkId: string, moveToReaderTab: boolean): Promise<void> {
     if (!chunkId) return;
     this.readerLoading = true;
@@ -447,6 +492,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
       if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
         this.selectedSourceCode = res.chunk.source_code;
+        await this.loadTermRows();
         await this.loadCurrentList(false);
       }
 
@@ -484,6 +530,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
       if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
         this.selectedSourceCode = res.chunk.source_code;
+        await this.loadTermRows();
         await this.loadCurrentList(false);
       }
 

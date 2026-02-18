@@ -70,6 +70,23 @@
           </div>
         </label>
 
+        <label>
+          <span>Jump to term</span>
+          <div class="jump-controls">
+            <select [(ngModel)]="selectedTermChunkId" [disabled]="termsLoading || !termRows.length">
+              <option value="">{{ termsLoading ? 'Loading terms…' : 'Select term' }}</option>
+              <option *ngFor="let row of termRows; trackBy: trackByChunkId" [value]="row.chunk_id">
+                {{ termLabel(row) }}
+              </option>
+            </select>
+            <button type="button" class="btn btn-primary btn-sm" (click)="openSelectedTerm()" [disabled]="!selectedTermChunkId">
+              Open
+            </button>
+          </div>
+          <span class="feedback muted" *ngIf="!termsLoading && termRows.length">Loaded {{ termRows.length }} terms</span>
+          <span class="feedback error" *ngIf="termsError">{{ termsError }}</span>
+        </label>
+
         <div class="panel-actions">
           <button type="button" class="btn btn-primary" (click)="applyFilters()" [disabled]="!selectedSourceCode">
             Apply

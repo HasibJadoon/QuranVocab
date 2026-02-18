@@ -90,6 +90,7 @@ type PageRow = {
   heading_raw: string | null;
   heading_norm: string | null;
   locator: string | null;
+  chunk_scope: string | null;
 };
 
 type EvidenceRow = {
@@ -122,6 +123,7 @@ type ReaderChunkRow = {
   locator: string | null;
   chunk_type: string | null;
   chunk_scope: string | null;
+  parent_chunk_id: string | null;
   text: string;
   source_code: string;
   source_title: string;
@@ -329,7 +331,8 @@ async function runPageList(
       c.page_no,
       c.heading_raw,
       c.heading_norm,
-      c.locator
+      c.locator,
+      COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') AS chunk_scope
     FROM ar_source_chunks c
     JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
     ${whereClause}
@@ -556,6 +559,7 @@ async function runReaderChunk(
       c.locator,
       c.chunk_type,
       COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') AS chunk_scope,
+      json_extract(c.content_json, '$.parent_chunk_id') AS parent_chunk_id,
       c.text,
       s.source_code,
       s.title AS source_title
@@ -593,25 +597,77 @@ async function runReaderChunk(
       .first<ReaderChunkRow>();
   }
 
-  // TOC entries point to a source locator; jump directly to the corresponding page chunk.
-  if (chunk && chunk.chunk_scope === 'toc' && chunk.locator) {
-    const targetChunk = await db
-      .prepare(
-        `
-          ${readerSelect}
-          WHERE s.source_code = ?
-            AND c.locator = ?
-            AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
-          ORDER BY c.page_no ASC, c.chunk_id ASC
-          LIMIT 1
-        `
-      )
-      .bind(chunk.source_code, chunk.locator)
-      .first<ReaderChunkRow>();
+  // TOC/term rows are navigation handles: resolve to a concrete page chunk.
+  if (chunk && (chunk.chunk_scope === 'toc' || chunk.chunk_scope === 'term')) {
+    let targetChunk: ReaderChunkRow | null = null;
 
-    if (targetChunk) {
-      chunk = targetChunk;
+    if (chunk.parent_chunk_id) {
+      targetChunk = await db
+        .prepare(
+          `
+            ${readerSelect}
+            WHERE c.chunk_id = ?
+              AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
+            LIMIT 1
+          `
+        )
+        .bind(chunk.parent_chunk_id)
+        .first<ReaderChunkRow>();
     }
+
+    if (!targetChunk && chunk.locator) {
+      targetChunk = await db
+        .prepare(
+          `
+            ${readerSelect}
+            WHERE s.source_code = ?
+              AND c.locator = ?
+              AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
+            ORDER BY c.page_no ASC, c.chunk_id ASC
+            LIMIT 1
+          `
+        )
+        .bind(chunk.source_code, chunk.locator)
+        .first<ReaderChunkRow>();
+    }
+
+    if (!targetChunk && chunk.locator) {
+      const locatorMatch = chunk.locator.match(/pdf_page:(\d+)/i);
+      const locatorIndex = locatorMatch ? Number.parseInt(locatorMatch[1], 10) : Number.NaN;
+      if (Number.isFinite(locatorIndex)) {
+        targetChunk = await db
+          .prepare(
+            `
+              ${readerSelect}
+              WHERE s.source_code = ?
+                AND c.locator LIKE 'pdf_page:%'
+                AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
+              ORDER BY ABS(CAST(substr(c.locator, 10) AS INTEGER) - ?), c.page_no ASC, c.chunk_id ASC
+              LIMIT 1
+            `
+          )
+          .bind(chunk.source_code, locatorIndex)
+          .first<ReaderChunkRow>();
+      }
+    }
+
+    if (!targetChunk && chunk.page_no !== null) {
+      targetChunk = await db
+        .prepare(
+          `
+            ${readerSelect}
+            WHERE s.source_code = ?
+              AND c.page_no = ?
+              AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
+            ORDER BY c.chunk_id ASC
+            LIMIT 1
+          `
+        )
+        .bind(chunk.source_code, chunk.page_no)
+        .first<ReaderChunkRow>();
+    }
+
+    if (targetChunk) chunk = targetChunk;
   }
 
   if (!chunk) {
@@ -730,7 +786,8 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   const pageNoRaw = (url.searchParams.get('page_no') ?? '').trim();
   const pageNo = pageNoRaw ? toInt(pageNoRaw, Number.NaN) : null;
 
-  const limit = Math.min(200, Math.max(1, toInt(url.searchParams.get('limit'), 50)));
+  const maxLimit = mode === 'pages' ? 5000 : 200;
+  const limit = Math.min(maxLimit, Math.max(1, toInt(url.searchParams.get('limit'), 50)));
   const offset = Math.max(0, toInt(url.searchParams.get('offset'), 0));
   const pageFromRaw = (url.searchParams.get('page_from') ?? '').trim();
   const pageToRaw = (url.searchParams.get('page_to') ?? '').trim();
