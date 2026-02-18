@@ -305,7 +305,10 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
       this.refreshLoadMoreObserver();
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'Unable to load more pages.';
-      this.lastRequestedStart = null;
+      // Pause auto-load on failure to avoid hammering the same range request in a loop.
+      this.hasMore = false;
+      this.nextStart = null;
+      this.lastRequestedStart = start;
     } finally {
       this.loadingMore = false;
     }

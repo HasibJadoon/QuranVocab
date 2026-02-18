@@ -69,6 +69,13 @@
   overflow: hidden;
 }
 
+.source-chunks-workspace .panel-books {
+  position: sticky;
+  top: 0.75rem;
+  align-self: start;
+  max-height: calc(100vh - 1.5rem);
+}
+
 .source-chunks-workspace .workspace-head {
   display: flex;
   justify-content: space-between;
@@ -115,6 +122,23 @@
   flex-direction: column;
   gap: 0.72rem;
   min-height: 0;
+}
+
+.source-chunks-workspace .indexes-body {
+  overflow: auto;
+}
+
+.source-chunks-workspace .indexes-sticky-panel {
+  min-height: 0;
+}
+
+.source-chunks-workspace .indexes-sticky-panel .app-sticky-panel {
+  height: min(40vh, 360px);
+  min-height: 280px;
+}
+
+.source-chunks-workspace .indexes-sticky-panel .app-sticky-panel-body {
+  overflow: auto;
 }
 
 .source-chunks-workspace .panel-books .workspace-body {
@@ -165,51 +189,10 @@
   color: var(--paper-ink-soft);
 }
 
-.source-chunks-workspace .table-shell {
-  border: 1px solid var(--book-line);
-  border-radius: 12px;
-  overflow: auto;
-  background: var(--km-core-surface-2);
-}
-
-.source-chunks-workspace .navigator-table-shell {
-  min-height: 220px;
-  max-height: 44vh;
-}
-
 .source-chunks-workspace .toc-catalog {
   display: grid;
   gap: 0.46rem;
-  padding: 0.62rem;
-}
-
-.source-chunks-workspace .toc-catalog-secondary {
-  border-top: 1px solid var(--km-core-border);
-  margin-top: 0.35rem;
-  padding-top: 0.76rem;
-}
-
-.source-chunks-workspace .toc-catalog-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.15rem 0.2rem 0.45rem;
-  border-bottom: 1px dashed var(--km-core-border);
-}
-
-.source-chunks-workspace .toc-catalog-head strong {
-  font-size: 0.84rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-family: var(--ui-font);
-  color: var(--paper-ink);
-}
-
-.source-chunks-workspace .toc-catalog-head span {
-  color: var(--paper-ink-soft);
-  font-size: 0.76rem;
-  font-family: var(--ui-font);
+  padding: 0;
 }
 
 .source-chunks-workspace .toc-catalog-state {
@@ -253,6 +236,23 @@
   font-size: 0.86rem;
   color: var(--book-paper-ink);
   line-height: 1.35;
+}
+
+.source-chunks-workspace .toc-index-card.toc-index-card-page .toc-card-title {
+  color: #ffd84f;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.source-chunks-workspace .toc-index-card.toc-index-card-page .toc-card-meta {
+  color: #ffd84f;
+  opacity: 0.92;
+}
+
+.source-chunks-workspace .toc-index-card.is-active .toc-card-title {
+  font-weight: 800;
+  font-size: 1.02rem;
+  color: #ffd84f;
 }
 
 .source-chunks-workspace .toc-card-meta {
@@ -344,12 +344,14 @@
     display: flex;
   }
 
-  .source-chunks-workspace .panel-books .workspace-body {
-    overflow: visible;
+  .source-chunks-workspace .panel-books {
+    position: static;
+    top: auto;
+    max-height: none;
   }
 
-  .source-chunks-workspace .navigator-table-shell {
-    max-height: none;
+  .source-chunks-workspace .panel-books .workspace-body {
+    overflow: visible;
   }
 }
 

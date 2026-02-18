@@ -16,6 +16,7 @@ export {
   AppHeaderbarComponent,
   type AppHeaderbarPagination
 } from './common/core-ui/app-headerbar/app-headerbar.component';
+export { AppStickyPanelComponent } from './common/core-ui/app-sticky-panel/app-sticky-panel.component';
 export {
   AppMenuCardsComponent,
   type AppMenuCardItem,

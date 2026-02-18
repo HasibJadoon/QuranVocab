@@ -91,18 +91,19 @@
         <span class="panel-chip">{{ tableCountLabel }}</span>
       </header>
 
-      <div class="workspace-body">
+      <div class="workspace-body indexes-body">
         <p class="feedback muted" *ngIf="booksLoading">Loading books…</p>
         <p class="feedback error" *ngIf="booksError">{{ booksError }}</p>
         <p class="feedback error" *ngIf="readError">{{ readError }}</p>
 
-        <div class="table-shell navigator-table-shell">
+        <app-sticky-panel
+          class="indexes-sticky-panel"
+          [title]="'TOC Directory'"
+          [countLabel]="tocRows.length + ' items'"
+          [sticky]="!isCompact"
+          [stickyTop]="'0.75rem'"
+        >
           <section class="toc-catalog" #tocCatalog>
-            <header class="toc-catalog-head">
-              <strong>TOC Directory</strong>
-              <span>{{ tocRows.length }} items</span>
-            </header>
-
             <div class="toc-catalog-state" *ngIf="readLoading">Loading TOC…</div>
             <div class="toc-catalog-state" *ngIf="!readLoading && !tocRows.length">{{ listEmptyMessage }}</div>
 
@@ -118,13 +119,16 @@
               </span>
             </button>
           </section>
+        </app-sticky-panel>
 
-          <section class="toc-catalog toc-catalog-secondary">
-            <header class="toc-catalog-head">
-              <strong>Main Index in TOC Range</strong>
-              <span>{{ tocMainIndexHits.length }} items</span>
-            </header>
-
+        <app-sticky-panel
+          class="indexes-sticky-panel"
+          [title]="'Main Index in Selected TOC'"
+          [countLabel]="tocMainIndexHits.length + ' items'"
+          [sticky]="!isCompact"
+          [stickyTop]="'calc(0.75rem + min(40vh, 360px) + 0.72rem)'"
+        >
+          <section class="toc-catalog">
             <div class="toc-catalog-state" *ngIf="indexLoading">Loading main index…</div>
             <div class="toc-catalog-state" *ngIf="!indexLoading && indexError">{{ indexError }}</div>
             <div class="toc-catalog-state" *ngIf="!indexLoading && !indexError && !tocMainIndexHits.length">
@@ -135,13 +139,40 @@
               type="button"
               class="toc-card toc-index-card"
               *ngFor="let hit of tocMainIndexHits; trackBy: trackByTocMainIndexId"
+              [class.is-active]="hit.index_id === activeIndexId"
               (click)="openTocMainIndexHit(hit)"
             >
               <span class="toc-card-title">{{ hit.term }}</span>
               <span class="toc-card-meta">{{ hit.refs_label }}</span>
             </button>
           </section>
-        </div>
+        </app-sticky-panel>
+
+        <app-sticky-panel
+          class="indexes-sticky-panel"
+          [title]="'All Indexes for Current Page'"
+          [countLabel]="pageIndexHits.length + ' items'"
+          [sticky]="false"
+        >
+          <section class="toc-catalog">
+            <div class="toc-catalog-state" *ngIf="indexLoading">Loading page indexes…</div>
+            <div class="toc-catalog-state" *ngIf="!indexLoading && indexError">{{ indexError }}</div>
+            <div class="toc-catalog-state" *ngIf="!indexLoading && !indexError && !pageIndexHits.length">
+              No index entries found for {{ currentPageIndexLabel }}.
+            </div>
+
+            <button
+              type="button"
+              class="toc-card toc-index-card toc-index-card-page"
+              *ngFor="let hit of pageIndexHits; trackBy: trackByTocMainIndexId"
+              [class.is-active]="hit.index_id === activeIndexId"
+              (click)="openTocMainIndexHit(hit)"
+            >
+              <span class="toc-card-title">{{ hit.term }}</span>
+              <span class="toc-card-meta">{{ hit.refs_label }}</span>
+            </button>
+          </section>
+        </app-sticky-panel>
       </div>
     </aside>
   </div>
