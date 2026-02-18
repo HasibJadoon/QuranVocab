@@ -993,6 +993,27 @@ async function runReaderChunk(
   };
 
   if (tocId) {
+    const tocColumns = await getTableColumns(db, 'ar_source_toc');
+    const hasDepth = tocColumns.has('depth');
+    const hasIndexPath = tocColumns.has('index_path');
+    const hasTitleRaw = tocColumns.has('title_raw');
+    const hasTitleNorm = tocColumns.has('title_norm');
+    const hasPageNo = tocColumns.has('page_no');
+    const hasLocator = tocColumns.has('locator');
+
+    const tocDepthExpr = hasDepth ? 't.depth' : '1';
+    const tocIndexPathExpr = hasIndexPath ? 't.index_path' : 't.toc_id';
+    const tocTitleRawExpr = hasTitleRaw ? 't.title_raw' : hasTitleNorm ? 't.title_norm' : 't.toc_id';
+    const tocPageNoExpr = hasPageNo ? 't.page_no' : 'NULL';
+    const tocLocatorExpr = hasLocator ? 't.locator' : 'NULL';
+    const tocPdfPageExpr = hasLocator
+      ? `CASE
+          WHEN t.locator LIKE 'pdf_page:%' THEN CAST(substr(t.locator, 10) AS INTEGER)
+          ELSE NULL
+        END`
+      : 'NULL';
+    const navPageExpr = hasPageNo ? 't.page_no' : 'NULL AS page_no';
+
     const toc = await db
       .prepare(
         `
@@ -1001,15 +1022,12 @@ async function runReaderChunk(
             t.ar_u_source,
             s.source_code,
             s.title AS source_title,
-            t.depth,
-            t.index_path,
-            t.title_raw,
-            t.page_no,
-            t.locator,
-            CASE
-              WHEN t.locator LIKE 'pdf_page:%' THEN CAST(substr(t.locator, 10) AS INTEGER)
-              ELSE NULL
-            END AS pdf_page_index
+            ${tocDepthExpr} AS depth,
+            ${tocIndexPathExpr} AS index_path,
+            ${tocTitleRawExpr} AS title_raw,
+            ${tocPageNoExpr} AS page_no,
+            ${tocLocatorExpr} AS locator,
+            ${tocPdfPageExpr} AS pdf_page_index
           FROM ar_source_toc t
           JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
           WHERE t.toc_id = ?
@@ -1023,8 +1041,8 @@ async function runReaderChunk(
       return emptyPayload;
     }
 
-    let startPage = toc.page_no;
-    if (startPage === null && toc.locator) {
+    let startPage = hasPageNo ? toc.page_no : null;
+    if (startPage === null && hasLocator && toc.locator) {
       const byLocator = await db
         .prepare(
           `
@@ -1043,7 +1061,7 @@ async function runReaderChunk(
       startPage = byLocator?.page_no ?? null;
     }
 
-    if (startPage === null && toc.pdf_page_index !== null) {
+    if (startPage === null && hasLocator && toc.pdf_page_index !== null) {
       const byPdfPage = await db
         .prepare(
           `
@@ -1062,11 +1080,11 @@ async function runReaderChunk(
       startPage = byPdfPage?.page_no ?? null;
     }
 
-    const prevToc = startPage === null
+    const prevToc = !hasPageNo || startPage === null
       ? await db
           .prepare(
             `
-              SELECT t.toc_id, t.page_no
+              SELECT t.toc_id, ${navPageExpr}
               FROM ar_source_toc t
               WHERE t.ar_u_source = ?
                 AND t.toc_id < ?
@@ -1091,11 +1109,11 @@ async function runReaderChunk(
           .bind(toc.ar_u_source, startPage, startPage, toc.toc_id)
           .first<TocReaderNavRow>();
 
-    const nextToc = startPage === null
+    const nextToc = !hasPageNo || startPage === null
       ? await db
           .prepare(
             `
-              SELECT t.toc_id, t.page_no
+              SELECT t.toc_id, ${navPageExpr}
               FROM ar_source_toc t
               WHERE t.ar_u_source = ?
                 AND t.toc_id > ?
