@@ -15,7 +15,11 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 
-import type { BookScrollReaderChunk, BookScrollReaderPage } from '../../../../shared/models/arabic/book-search.model';
+import type {
+  BookScrollReaderChunk,
+  BookScrollReaderPage,
+  BookScrollReaderRangeResponse,
+} from '../../../../shared/models/arabic/book-search.model';
 import { BookSearchService } from '../../../../shared/services/book-search.service';
 import { BookScrollReaderService } from '../../../../shared/services/book-scroll-reader.service';
 
@@ -59,11 +63,15 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
 
   private readonly pageSet = new Set<number>();
   private readonly loadLimit = 10;
+  private readonly rangeCache = new Map<string, BookScrollReaderRangeResponse>();
+  private readonly rangeInFlight = new Map<string, Promise<BookScrollReaderRangeResponse>>();
   private sourceBootstrapped = '';
   private loadMoreObserver: IntersectionObserver | null = null;
   private lastRequestedStart: number | null = null;
   private pageInView: number | null = null;
   private pageInViewRaf: number | null = null;
+  private pendingUserLoadIntent = false;
+  private lastLoadMoreAt = 0;
 
   constructor(
     private readonly readerService: BookScrollReaderService,
@@ -107,16 +115,11 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     }
 
     this.loadingInitial = true;
+    this.pendingUserLoadIntent = false;
     this.error = '';
     try {
       const start = mode === 'from-page' ? targetPage : Math.max(1, targetPage - 2);
-      const res = await firstValueFrom(
-        this.readerService.listPagesByRange({
-          source_id: source,
-          start,
-          limit: this.loadLimit,
-        })
-      );
+      const res = await this.fetchRange(source, start, this.loadLimit);
       this.replacePages(res.pages ?? []);
       this.hasMore = !!res.has_more;
       this.nextStart = res.next_start ?? null;
@@ -134,8 +137,9 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
 
   onViewportScroll(): void {
     this.schedulePageInViewCheck();
-    if (!this.isNearBottom()) return;
-    void this.maybeLoadMore();
+    this.pendingUserLoadIntent = this.isNearBottom();
+    if (!this.pendingUserLoadIntent) return;
+    void this.maybeLoadMore('scroll');
   }
 
   chunkTextHtml(raw: string): SafeHtml {
@@ -238,6 +242,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
       }
       this.editMessage = 'Saved.';
       this.cancelEdit();
+      this.clearSourceRangeCache(this.sourceCode);
 
       if (savedChunk?.page_no !== null && savedChunk?.page_no !== undefined && savedChunk.page_no !== page.page_no) {
         await this.jumpToPage(savedChunk.page_no, this.sourceCode);
@@ -275,15 +280,10 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     }
 
     this.loadingInitial = true;
+    this.pendingUserLoadIntent = false;
     this.error = '';
     try {
-      const res = await firstValueFrom(
-        this.readerService.listPagesByRange({
-          source_id: source,
-          start: 1,
-          limit: this.loadLimit,
-        })
-      );
+      const res = await this.fetchRange(source, 1, this.loadLimit);
       this.replacePages(res.pages ?? []);
       this.hasMore = !!res.has_more;
       this.nextStart = res.next_start ?? null;
@@ -305,17 +305,12 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     const start = this.nextStart;
 
     this.loadingMore = true;
+    this.pendingUserLoadIntent = false;
     this.error = '';
     this.lastRequestedStart = start;
     try {
       const beforeCount = this.pages.length;
-      const res = await firstValueFrom(
-        this.readerService.listPagesByRange({
-          source_id: source,
-          start,
-          limit: this.loadLimit,
-        })
-      );
+      const res = await this.fetchRange(source, start, this.loadLimit);
       this.appendPages(res.pages ?? []);
       const afterCount = this.pages.length;
       const next = res.next_start ?? null;
@@ -330,6 +325,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
         this.nextStart = this.hasMore ? next : null;
       }
       this.refreshLoadMoreObserver();
+      this.lastLoadMoreAt = Date.now();
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'Unable to load more pages.';
       // Pause auto-load on failure to avoid hammering the same range request in a loop.
@@ -341,9 +337,13 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     }
   }
 
-  private async maybeLoadMore(): Promise<void> {
+  private async maybeLoadMore(trigger: 'scroll' | 'observer'): Promise<void> {
     if (this.loadingInitial || this.loadingMore || !this.hasMore || this.nextStart === null) return;
+    if (!this.pendingUserLoadIntent) return;
+    const now = Date.now();
+    if (now - this.lastLoadMoreAt < 220) return;
     if (this.lastRequestedStart !== null && this.lastRequestedStart === this.nextStart) return;
+    if (trigger === 'observer' && !this.isNearBottom()) return;
     await this.loadMoreRange();
   }
 
@@ -405,6 +405,8 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     this.hasMore = false;
     this.nextStart = null;
     this.lastRequestedStart = null;
+    this.pendingUserLoadIntent = false;
+    this.lastLoadMoreAt = 0;
     this.sourceBootstrapped = '';
     this.cancelEdit();
     this.clearCopyMessageTimer();
@@ -477,7 +479,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
       (entries) => {
         const visible = entries.some((entry) => entry.isIntersecting);
         if (!visible) return;
-        void this.maybeLoadMore();
+        void this.maybeLoadMore('observer');
       },
       {
         root: this.scrollViewport?.nativeElement ?? null,
@@ -626,6 +628,62 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     if (this.copyMessageTimer) {
       clearTimeout(this.copyMessageTimer);
       this.copyMessageTimer = null;
+    }
+  }
+
+  private async fetchRange(sourceId: string, start: number, limit: number): Promise<BookScrollReaderRangeResponse> {
+    const key = `${sourceId}::${start}::${limit}`;
+    const cached = this.rangeCache.get(key);
+    if (cached) {
+      return cached;
+    }
+
+    const pending = this.rangeInFlight.get(key);
+    if (pending) {
+      return pending;
+    }
+
+    const request = firstValueFrom(
+      this.readerService.listPagesByRange({
+        source_id: sourceId,
+        start,
+        limit,
+      })
+    )
+      .then((res) => {
+        this.rangeInFlight.delete(key);
+        this.setCachedRange(key, res);
+        return res;
+      })
+      .catch((err) => {
+        this.rangeInFlight.delete(key);
+        throw err;
+      });
+
+    this.rangeInFlight.set(key, request);
+    return request;
+  }
+
+  private setCachedRange(key: string, value: BookScrollReaderRangeResponse): void {
+    if (this.rangeCache.has(key)) {
+      this.rangeCache.delete(key);
+    }
+    this.rangeCache.set(key, value);
+    if (this.rangeCache.size <= 120) return;
+    const firstKey = this.rangeCache.keys().next().value as string;
+    this.rangeCache.delete(firstKey);
+  }
+
+  private clearSourceRangeCache(sourceId: string): void {
+    const source = String(sourceId ?? '').trim();
+    if (!source) return;
+    for (const key of Array.from(this.rangeCache.keys())) {
+      if (!key.startsWith(`${source}::`)) continue;
+      this.rangeCache.delete(key);
+    }
+    for (const key of Array.from(this.rangeInFlight.keys())) {
+      if (!key.startsWith(`${source}::`)) continue;
+      this.rangeInFlight.delete(key);
     }
   }
 }

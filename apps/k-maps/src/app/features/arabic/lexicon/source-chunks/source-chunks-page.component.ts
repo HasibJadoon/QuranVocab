@@ -145,6 +145,14 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   private autoAdvanceLastKey = '';
   private autoAdvanceLastAt = 0;
   private readonly refsByIndexId = new Map<string, IndexRef[]>();
+  private readonly pageIndexHitsCache = new Map<number, TocMainIndexHit[]>();
+  private readonly tocRangeMainIndexCache = new Map<string, TocMainIndexHit[]>();
+  private readonly filteredTocCache = new Map<string, { rows: BookSearchTocRow[]; total: number }>();
+  private readonly allTocCache = new Map<string, BookSearchTocRow[]>();
+  private readonly allIndexCache = new Map<string, BookSearchIndexRow[]>();
+  private readonly searchCache = new Map<string, { rows: SearchRow[]; total: number }>();
+  private readRequestSeq = 0;
+  private searchRequestSeq = 0;
 
   constructor(
     private readonly bookSearch: BookSearchService,
@@ -289,9 +297,8 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     this.clearReaderSelection();
     this.searchError = '';
     this.readError = '';
-    void this.loadAllTocRows();
-    void this.loadAllIndexRows();
-    void this.loadCurrentList(true);
+    this.jumpPageNo = null;
+    void this.reloadBookData(true);
     this.syncUrl();
   }
 
@@ -381,12 +388,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   onReaderPageInView(pageNo: number | null): void {
     if (pageNo === null || !Number.isFinite(Number(pageNo))) return;
     const currentPage = Math.max(1, Math.trunc(Number(pageNo)));
+    if (this.activeReaderPageNo === currentPage) return;
     this.activeReaderPageNo = currentPage;
     const nextTocId = this.activeTocIdForPage(currentPage);
-    if (!nextTocId || nextTocId === this.activeTocId) return;
-    this.activeTocId = nextTocId;
+    const tocChanged = !!nextTocId && nextTocId !== this.activeTocId;
+    if (tocChanged) {
+      this.activeTocId = nextTocId;
+    }
     this.refreshMainIndexesForActiveToc();
-    this.scrollActiveTocCardIntoView();
+    if (tocChanged) {
+      this.scrollActiveTocCardIntoView();
+    }
   }
 
   openSearchRow(row: SearchRow): void {
@@ -676,6 +688,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       this.populateEditorFromChunk(res.chunk);
       this.editorEditing = false;
       this.editorMessage = 'Saved.';
+      this.invalidateSourceCaches(this.selectedSourceCode);
       await this.loadCurrentList(false);
       this.syncUrl();
     } catch (err: unknown) {
@@ -774,9 +787,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
         this.selectedSourceCode = this.books[0].source_code;
       }
 
-      await this.loadAllTocRows();
-      await this.loadAllIndexRows();
-      await this.loadCurrentList(false);
+      await this.reloadBookData(false);
 
       let openedByQuery = false;
       if (this.query.trim()) {
@@ -834,6 +845,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 
+  private async reloadBookData(moveToResultsTab: boolean): Promise<void> {
+    if (this.hasReadFilters()) {
+      await Promise.all([this.loadAllIndexRows(), this.loadCurrentList(moveToResultsTab), this.loadAllTocRows()]);
+    } else {
+      await Promise.all([this.loadAllIndexRows(), this.loadCurrentList(moveToResultsTab)]);
+      this.allTocRows = [...this.tocRows];
+      this.setCachedMapEntry(this.allTocCache, this.cacheScopeKey(), [...this.allTocRows]);
+      this.refreshMainIndexesForActiveToc();
+    }
+  }
+
   private async openInitialSearchResult(moveToReaderTab: boolean): Promise<boolean> {
     const row = this.searchRows[0];
     if (!row) return false;
@@ -855,6 +877,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private async loadSearchRows(moveToResultsTab: boolean): Promise<void> {
+    const requestId = ++this.searchRequestSeq;
     this.searchLoading = true;
     this.searchError = '';
 
@@ -873,6 +896,14 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
         return;
       }
 
+      const cacheKey = this.searchCacheKey(query);
+      const cached = this.searchCache.get(cacheKey);
+      if (cached) {
+        this.searchRows = [...cached.rows];
+        this.searchTotal = cached.total;
+        return;
+      }
+
       const res = await firstValueFrom(
         this.bookSearch.searchChunks({
           source_code: this.selectedSourceCode,
@@ -884,6 +915,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
           offset: 0,
         })
       );
+      if (requestId !== this.searchRequestSeq) return;
 
       this.searchTotal = res.total ?? 0;
       this.searchRows = (res.results ?? []).map((row: BookSearchChunkHit) => ({
@@ -892,11 +924,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
         heading_raw: row.heading_raw,
         snippet_html: this.snippetHtml(row.hit),
       }));
+      this.setCachedMapEntry(this.searchCache, cacheKey, {
+        rows: [...this.searchRows],
+        total: this.searchTotal,
+      });
     } catch (err: unknown) {
+      if (requestId !== this.searchRequestSeq) return;
       this.searchRows = [];
       this.searchTotal = 0;
       this.searchError = err instanceof Error ? err.message : 'Search failed.';
     } finally {
+      if (requestId !== this.searchRequestSeq) return;
       this.searchLoading = false;
       if (moveToResultsTab && this.isCompact) {
         this.mobileTab = 'books';
@@ -905,6 +943,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private async loadReadRows(moveToResultsTab: boolean): Promise<void> {
+    const requestId = ++this.readRequestSeq;
     this.readLoading = true;
     this.readError = '';
 
@@ -918,6 +957,21 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
         return;
       }
 
+      const cacheKey = this.filteredTocCacheKey();
+      const cached = this.filteredTocCache.get(cacheKey);
+      if (cached) {
+        this.readRows = [];
+        this.indexRows = [];
+        this.tocRows = [...cached.rows];
+        this.readTotal = cached.total;
+        if (!this.hasReadFilters()) {
+          this.allTocRows = [...this.tocRows];
+          this.setCachedMapEntry(this.allTocCache, this.cacheScopeKey(), [...this.allTocRows]);
+        }
+        this.refreshMainIndexesForActiveToc();
+        return;
+      }
+
       const res = await firstValueFrom(
         this.bookSearch.listToc({
           source_code: this.selectedSourceCode,
@@ -928,13 +982,23 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
           offset: 0,
         })
       );
+      if (requestId !== this.readRequestSeq) return;
 
       this.readRows = [];
       this.indexRows = [];
       this.tocRows = this.sortTocRows(res.results ?? []);
       this.readTotal = res.total ?? this.tocRows.length;
+      this.setCachedMapEntry(this.filteredTocCache, cacheKey, {
+        rows: [...this.tocRows],
+        total: this.readTotal,
+      });
+      if (!this.hasReadFilters()) {
+        this.allTocRows = [...this.tocRows];
+        this.setCachedMapEntry(this.allTocCache, this.cacheScopeKey(), [...this.allTocRows]);
+      }
       this.refreshMainIndexesForActiveToc();
     } catch (err: unknown) {
+      if (requestId !== this.readRequestSeq) return;
       this.readRows = [];
       this.indexRows = [];
       this.tocRows = [];
@@ -942,6 +1006,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       this.readError = this.describeApiError(err, 'Failed to load entries.');
       this.refreshMainIndexesForActiveToc();
     } finally {
+      if (requestId !== this.readRequestSeq) return;
       this.readLoading = false;
       if (moveToResultsTab && this.isCompact) {
         this.mobileTab = 'books';
@@ -980,6 +1045,13 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     this.allTocRows = [];
     try {
       if (!this.selectedSourceCode) return;
+      const cacheKey = this.cacheScopeKey();
+      const cached = this.allTocCache.get(cacheKey);
+      if (cached) {
+        this.allTocRows = [...cached];
+        this.refreshMainIndexesForActiveToc();
+        return;
+      }
       const res = await firstValueFrom(
         this.bookSearch.listToc({
           source_code: this.selectedSourceCode,
@@ -988,6 +1060,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
         })
       );
       this.allTocRows = this.sortTocRows(res.results ?? []);
+      this.setCachedMapEntry(this.allTocCache, cacheKey, [...this.allTocRows]);
       this.refreshMainIndexesForActiveToc();
     } catch {
       this.allTocRows = [];
@@ -1000,11 +1073,20 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     this.tocMainIndexHits = [];
     this.pageIndexHits = [];
     this.refsByIndexId.clear();
+    this.pageIndexHitsCache.clear();
+    this.tocRangeMainIndexCache.clear();
     this.indexError = '';
     this.indexLoading = true;
 
     try {
       if (!this.selectedSourceCode) return;
+      const cacheKey = this.cacheScopeKey();
+      const cached = this.allIndexCache.get(cacheKey);
+      if (cached) {
+        this.applyAllIndexRows(cached);
+        this.refreshMainIndexesForActiveToc();
+        return;
+      }
       const res = await firstValueFrom(
         this.bookSearch.listIndex({
           source_code: this.selectedSourceCode,
@@ -1012,19 +1094,29 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
           offset: 0,
         })
       );
-      this.allIndexRows = res.results ?? [];
-      for (const row of this.allIndexRows) {
-        this.refsByIndexId.set(row.index_id, this.extractRefs(row.page_refs_json));
-      }
+      this.applyAllIndexRows(res.results ?? []);
+      this.setCachedMapEntry(this.allIndexCache, cacheKey, [...this.allIndexRows]);
       this.refreshMainIndexesForActiveToc();
     } catch (err: unknown) {
       this.allIndexRows = [];
       this.tocMainIndexHits = [];
       this.pageIndexHits = [];
       this.refsByIndexId.clear();
+      this.pageIndexHitsCache.clear();
+      this.tocRangeMainIndexCache.clear();
       this.indexError = this.describeApiError(err, 'Failed to load index entries.');
     } finally {
       this.indexLoading = false;
+    }
+  }
+
+  private applyAllIndexRows(rows: BookSearchIndexRow[]): void {
+    this.allIndexRows = [...rows];
+    this.refsByIndexId.clear();
+    this.pageIndexHitsCache.clear();
+    this.tocRangeMainIndexCache.clear();
+    for (const row of this.allIndexRows) {
+      this.refsByIndexId.set(row.index_id, this.extractRefs(row.page_refs_json));
     }
   }
 
@@ -1097,9 +1189,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
 
     if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
       this.selectedSourceCode = res.chunk.source_code;
-      await this.loadAllTocRows();
-      await this.loadAllIndexRows();
-      await this.loadCurrentList(false);
+      await this.reloadBookData(false);
     }
 
     this.selectedChunk = res.chunk;
@@ -1220,6 +1310,12 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     end: number | null,
     options: { mainOnly: boolean; showMainMarker: boolean }
   ): TocMainIndexHit[] {
+    const cacheKey = `${start}:${end ?? 'x'}:${options.mainOnly ? 1 : 0}:${options.showMainMarker ? 1 : 0}`;
+    const cached = this.tocRangeMainIndexCache.get(cacheKey);
+    if (cached) {
+      return [...cached];
+    }
+
     const hits: TocMainIndexHit[] = [];
     for (const row of this.allIndexRows) {
       const refs = this.filterRefsForRange(this.refsByIndexId.get(row.index_id) ?? [], start, end, options.mainOnly);
@@ -1234,10 +1330,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
         row,
       });
     }
-    return this.sortIndexHits(hits);
+    const sorted = this.sortIndexHits(hits);
+    this.setCachedMapEntry(this.tocRangeMainIndexCache, cacheKey, [...sorted], 240);
+    return sorted;
   }
 
   private collectIndexHitsForPage(pageNo: number): TocMainIndexHit[] {
+    const cached = this.pageIndexHitsCache.get(pageNo);
+    if (cached) {
+      return [...cached];
+    }
+
     const hits: TocMainIndexHit[] = [];
     for (const row of this.allIndexRows) {
       const refs = this.filterRefsForPage(this.refsByIndexId.get(row.index_id) ?? [], pageNo);
@@ -1250,7 +1353,9 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
         row,
       });
     }
-    return this.sortIndexHits(hits);
+    const sorted = this.sortIndexHits(hits);
+    this.setCachedMapEntry(this.pageIndexHitsCache, pageNo, [...sorted], 400);
+    return sorted;
   }
 
   private sortIndexHits(hits: TocMainIndexHit[]): TocMainIndexHit[] {
@@ -1369,6 +1474,58 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     if (a && !b) return -1;
     if (!a && b) return 1;
     return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  }
+
+  private hasReadFilters(): boolean {
+    return this.pageFrom !== null || this.pageTo !== null || !!this.headingFilter.trim();
+  }
+
+  private cacheScopeKey(): string {
+    return String(this.selectedSourceCode ?? '').trim().toLowerCase();
+  }
+
+  private filteredTocCacheKey(): string {
+    return JSON.stringify({
+      source: this.cacheScopeKey(),
+      heading: this.headingFilter.trim().toLowerCase(),
+      pageFrom: this.pageFrom,
+      pageTo: this.pageTo,
+    });
+  }
+
+  private searchCacheKey(query: string): string {
+    return JSON.stringify({
+      source: this.cacheScopeKey(),
+      query: query.trim().toLowerCase(),
+      heading: this.headingFilter.trim().toLowerCase(),
+      pageFrom: this.pageFrom,
+      pageTo: this.pageTo,
+    });
+  }
+
+  private setCachedMapEntry<K, V>(map: Map<K, V>, key: K, value: V, maxSize = 48): void {
+    if (map.has(key)) {
+      map.delete(key);
+    }
+    map.set(key, value);
+    if (map.size <= maxSize) return;
+    const firstKey = map.keys().next().value as K;
+    map.delete(firstKey);
+  }
+
+  private invalidateSourceCaches(sourceCode: string): void {
+    const scope = String(sourceCode ?? '').trim().toLowerCase();
+    if (!scope) return;
+    this.allTocCache.delete(scope);
+    this.allIndexCache.delete(scope);
+    for (const key of Array.from(this.filteredTocCache.keys())) {
+      if (!key.includes(`"source":"${scope}"`)) continue;
+      this.filteredTocCache.delete(key);
+    }
+    for (const key of Array.from(this.searchCache.keys())) {
+      if (!key.includes(`"source":"${scope}"`)) continue;
+      this.searchCache.delete(key);
+    }
   }
 
   private describeApiError(err: unknown, fallback: string): string {
