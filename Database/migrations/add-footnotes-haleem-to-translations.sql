@@ -1,1 +1,2 @@
-ALTER TABLE ar_quran_translations ADD COLUMN footnotes_haleem TEXT;
+-- `footnotes_haleem` already exists on ar_quran_translations in current schema.
+-- Keep this migration idempotent.

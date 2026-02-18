@@ -1,10 +1,6 @@
 PRAGMA foreign_keys = OFF;
 
-BEGIN TRANSACTION;
-
-ALTER TABLE quran_ayah_lemma_location ADD COLUMN word_simple TEXT;
-ALTER TABLE quran_ayah_lemma_location ADD COLUMN word_diacritic TEXT;
-
-COMMIT;
+-- word_simple/word_diacritic are now included in the canonical schema.
+-- Keep this legacy migration as a safe no-op.
 
 PRAGMA foreign_keys = ON;

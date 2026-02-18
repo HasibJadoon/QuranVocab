@@ -2,8 +2,7 @@ PRAGMA foreign_keys=OFF;
 PRAGMA defer_foreign_keys=TRUE;
 
 -- Add normalized search + optional structured payload columns.
-ALTER TABLE ar_source_chunks ADD COLUMN text_search TEXT NOT NULL DEFAULT '';
-ALTER TABLE ar_source_chunks ADD COLUMN content_json JSON CHECK (content_json IS NULL OR json_valid(content_json));
+-- text_search/content_json are now part of the base schema.
 
 -- Backfill normalized search text from existing raw text.
 UPDATE ar_source_chunks

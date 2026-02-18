@@ -103,7 +103,7 @@ WITH normalized AS (
     r.ar_u_lexicon,
     'legacy:' || COALESCE(NULLIF(trim(r.chunk_id), ''), r.ar_u_lexicon) AS evidence_id,
     'chunk' AS locator_type,
-    COALESCE(NULLIF(trim(r.ar_u_source), ''), c.ar_u_source) AS source_id,
+    COALESCE(NULLIF(trim(r.source_id), ''), c.ar_u_source) AS source_id,
     'book' AS source_type,
     NULLIF(trim(r.chunk_id), '') AS chunk_id,
     COALESCE(r.page_no, c.page_no) AS page_no,
@@ -123,7 +123,7 @@ WITH normalized AS (
     'lexical' AS evidence_kind,
     'supporting' AS evidence_strength,
     r.extract_text AS extract_text,
-    NULLIF(trim(r.notes), '') AS note_md,
+    NULLIF(trim(r.note_md), '') AS note_md,
     CASE
       WHEN r.meta_json IS NULL OR length(trim(r.meta_json)) = 0 THEN NULL
       WHEN json_valid(r.meta_json) THEN r.meta_json

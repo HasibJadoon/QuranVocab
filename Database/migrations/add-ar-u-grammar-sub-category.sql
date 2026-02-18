@@ -1,10 +1,8 @@
 -- SQL script to add a sub_category column, derive its values,
 -- and rectify categories for legacy placeholder rows prefixed with "gram|".
 
--- 1) Add a new column to hold sub-categories. This column
---    separates the fine-grained group within each top level category.
-ALTER TABLE ar_u_grammar
-  ADD COLUMN sub_category TEXT;
+-- 1) `sub_category` now exists in base schema; keep this migration
+--    focused on backfilling/normalizing values.
 
 -- 2) Populate the sub_category using the existing category. If the
 --    category has a dot (e.g. `nahw.irab`) the portion after the dot

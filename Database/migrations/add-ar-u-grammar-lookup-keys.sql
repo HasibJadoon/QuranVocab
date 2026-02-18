@@ -1,9 +1,5 @@
-ALTER TABLE ar_u_grammar
-  ADD COLUMN lookup_keys_json JSON
-  CHECK (lookup_keys_json IS NULL OR json_valid(lookup_keys_json));
-
-ALTER TABLE ar_u_grammar
-  ADD COLUMN canonical_norm TEXT;
+-- lookup_keys_json and canonical_norm are now in base schema.
+-- Keep this migration idempotent by only ensuring supporting indexes.
 
 CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_canonical_norm
   ON ar_u_grammar(canonical_norm);

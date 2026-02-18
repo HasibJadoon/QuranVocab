@@ -1,6 +1,27 @@
 PRAGMA foreign_keys=OFF;
 PRAGMA defer_foreign_keys=TRUE;
-BEGIN;
+
+-- Ensure the source table exists before legacy copy/rebuild logic runs.
+CREATE TABLE IF NOT EXISTS ar_u_grammar (
+  ar_u_grammar     TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
+
+  grammar_id       TEXT NOT NULL UNIQUE,
+  category         TEXT,
+  sub_category     TEXT,
+  title            TEXT,
+  title_ar         TEXT,
+  definition       TEXT,
+  definition_ar    TEXT,
+
+  lookup_keys_json JSON CHECK (lookup_keys_json IS NULL OR json_valid(lookup_keys_json)),
+  canonical_norm   TEXT,
+
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT
+);
 
 -- Stage a raw copy of the current data (legacy schema columns only).
 DROP TABLE IF EXISTS ar_u_grammar_raw;
@@ -1028,5 +1049,4 @@ SET lookup_keys_json = json_array(
 )
 WHERE lookup_keys_json IS NULL;
 
-COMMIT;
 PRAGMA foreign_keys=ON;

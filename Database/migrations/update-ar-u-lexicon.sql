@@ -1,6 +1,5 @@
 PRAGMA foreign_keys=OFF;
 PRAGMA defer_foreign_keys=TRUE;
-BEGIN;
 
 -- Bootstrap for clean installs: if the table does not exist yet, create a
 -- compatible shell so the copy/rebuild path below is always safe.
@@ -425,5 +424,4 @@ BEGIN
   WHERE ar_u_lexicon = NEW.ar_u_lexicon;
 END;
 
-COMMIT;
 PRAGMA foreign_keys=ON;
