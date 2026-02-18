@@ -77,6 +77,7 @@
           [arabicFriendlyLineHeight]="arabicFriendlyLineHeight"
           [monospace]="monospace"
           [wrapText]="wrapText"
+          (pageInViewChange)="onReaderPageInView($event)"
         />
       </div>
     </section>
@@ -96,7 +97,7 @@
         <p class="feedback error" *ngIf="readError">{{ readError }}</p>
 
         <div class="table-shell navigator-table-shell">
-          <section class="toc-catalog">
+          <section class="toc-catalog" #tocCatalog>
             <header class="toc-catalog-head">
               <strong>TOC Directory</strong>
               <span>{{ tocRows.length }} items</span>
@@ -115,6 +116,29 @@
               <span class="toc-card-title" [style.padding-left.rem]="row.depth > 1 ? (row.depth - 1) * 0.5 : 0">
                 {{ row.title_norm }}
               </span>
+            </button>
+          </section>
+
+          <section class="toc-catalog toc-catalog-secondary">
+            <header class="toc-catalog-head">
+              <strong>Main Index in TOC Range</strong>
+              <span>{{ tocMainIndexHits.length }} items</span>
+            </header>
+
+            <div class="toc-catalog-state" *ngIf="indexLoading">Loading main index…</div>
+            <div class="toc-catalog-state" *ngIf="!indexLoading && indexError">{{ indexError }}</div>
+            <div class="toc-catalog-state" *ngIf="!indexLoading && !indexError && !tocMainIndexHits.length">
+              No is_main index entries for {{ tocMainIndexRangeLabel }}.
+            </div>
+
+            <button
+              type="button"
+              class="toc-card toc-index-card"
+              *ngFor="let hit of tocMainIndexHits; trackBy: trackByTocMainIndexId"
+              (click)="openTocMainIndexHit(hit)"
+            >
+              <span class="toc-card-title">{{ hit.term }}</span>
+              <span class="toc-card-meta">{{ hit.refs_label }}</span>
             </button>
           </section>
         </div>

@@ -1,5 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
@@ -22,6 +33,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
   @Input() arabicFriendlyLineHeight = true;
   @Input() monospace = false;
   @Input() wrapText = true;
+  @Output() pageInViewChange = new EventEmitter<number | null>();
 
   @ViewChild('scrollViewport') scrollViewport?: ElementRef<HTMLDivElement>;
   @ViewChild('loadMoreSentinel') loadMoreSentinel?: ElementRef<HTMLDivElement>;
@@ -46,6 +58,8 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
   private sourceBootstrapped = '';
   private loadMoreObserver: IntersectionObserver | null = null;
   private lastRequestedStart: number | null = null;
+  private pageInView: number | null = null;
+  private pageInViewRaf: number | null = null;
 
   constructor(
     private readonly readerService: BookScrollReaderService,
@@ -70,6 +84,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
   ngOnDestroy(): void {
     this.clearCopyMessageTimer();
     this.teardownLoadMoreObserver();
+    this.clearPageInViewRaf();
   }
 
   ngAfterViewInit(): void {
@@ -83,6 +98,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
 
     if (this.pageSet.has(targetPage)) {
       this.scrollToPageAnchor(targetPage, true);
+      this.emitPageInView(targetPage);
       return;
     }
 
@@ -103,6 +119,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
       this.lastRequestedStart = null;
       this.scrollToTop();
       this.scrollToPageAnchor(targetPage, true);
+      this.emitPageInView(targetPage);
       this.refreshLoadMoreObserver();
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'Unable to jump to page.';
@@ -112,6 +129,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
   }
 
   onViewportScroll(): void {
+    this.schedulePageInViewCheck();
     if (!this.isNearBottom()) return;
     void this.maybeLoadMore();
   }
@@ -244,6 +262,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
       this.nextStart = res.next_start ?? null;
       this.lastRequestedStart = null;
       this.scrollToTop();
+      this.schedulePageInViewCheck();
       this.refreshLoadMoreObserver();
     } catch (err: unknown) {
       this.resetState();
@@ -329,6 +348,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
   private scrollToTop(): void {
     setTimeout(() => {
       this.scrollViewport?.nativeElement.scrollTo({ top: 0, behavior: 'auto' });
+      this.schedulePageInViewCheck();
     }, 0);
   }
 
@@ -336,6 +356,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     setTimeout(() => {
       const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto';
       document.getElementById(`page-${pageNo}`)?.scrollIntoView({ behavior, block: 'start' });
+      this.schedulePageInViewCheck();
     }, 0);
   }
 
@@ -357,6 +378,66 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     this.sourceBootstrapped = '';
     this.cancelEdit();
     this.clearCopyMessageTimer();
+    this.emitPageInView(null);
+    this.clearPageInViewRaf();
+  }
+
+  private schedulePageInViewCheck(): void {
+    if (typeof window === 'undefined') return;
+    if (this.pageInViewRaf !== null) return;
+    this.pageInViewRaf = window.requestAnimationFrame(() => {
+      this.pageInViewRaf = null;
+      this.updatePageInViewFromViewport();
+    });
+  }
+
+  private clearPageInViewRaf(): void {
+    if (this.pageInViewRaf === null || typeof window === 'undefined') return;
+    window.cancelAnimationFrame(this.pageInViewRaf);
+    this.pageInViewRaf = null;
+  }
+
+  private updatePageInViewFromViewport(): void {
+    const nextPage = this.probePageInView();
+    this.emitPageInView(nextPage);
+  }
+
+  private probePageInView(): number | null {
+    const viewport = this.scrollViewport?.nativeElement;
+    if (!viewport || !this.pages.length) return null;
+
+    if (typeof document !== 'undefined') {
+      const rect = viewport.getBoundingClientRect();
+      const probeX = rect.left + Math.min(Math.max(24, rect.width * 0.12), rect.width - 24);
+      const probeY = rect.top + Math.min(Math.max(28, rect.height * 0.24), rect.height - 24);
+      const node = document.elementFromPoint(probeX, probeY) as HTMLElement | null;
+      const pageSection = node?.closest('section.book-page[id^="page-"]') as HTMLElement | null;
+      if (pageSection?.id?.startsWith('page-')) {
+        const parsed = Number.parseInt(pageSection.id.slice(5), 10);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+    }
+
+    // Fallback when the probe point is over non-content UI; pick the last page that started above the anchor.
+    const anchor = viewport.scrollTop + Math.min(220, viewport.clientHeight * 0.3);
+    let candidate: number | null = null;
+    for (const page of this.pages) {
+      const el = viewport.querySelector<HTMLElement>(`#page-${page.page_no}`);
+      if (!el) continue;
+      if (el.offsetTop <= anchor) {
+        candidate = page.page_no;
+        continue;
+      }
+      break;
+    }
+    return candidate ?? this.pages[0]?.page_no ?? null;
+  }
+
+  private emitPageInView(pageNo: number | null): void {
+    const normalized = pageNo === null ? null : Math.max(1, Math.trunc(Number(pageNo)));
+    if (this.pageInView === normalized) return;
+    this.pageInView = normalized;
+    this.pageInViewChange.emit(normalized);
   }
 
   private setupLoadMoreObserver(): void {

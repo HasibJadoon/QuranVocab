@@ -28,6 +28,20 @@ type SearchRow = {
   snippet_html: SafeHtml;
 };
 
+type IndexMainRef = {
+  from: number;
+  to: number;
+  note: string | null;
+};
+
+type TocMainIndexHit = {
+  index_id: string;
+  term: string;
+  target_page: number | null;
+  refs_label: string;
+  row: BookSearchIndexRow;
+};
+
 @Component({
   selector: 'app-source-chunks-page',
   standalone: true,
@@ -38,6 +52,7 @@ type SearchRow = {
 export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('readerViewport') readerViewport?: ElementRef<HTMLDivElement>;
   @ViewChild('bookReader') bookReader?: BookScrollReaderComponent;
+  @ViewChild('tocCatalog') tocCatalog?: ElementRef<HTMLElement>;
 
   books: BookSearchSource[] = [];
   booksLoading = false;
@@ -70,6 +85,13 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   indexRows: BookSearchIndexRow[] = [];
   tocRows: BookSearchTocRow[] = [];
   allTocRows: BookSearchTocRow[] = [];
+  allIndexRows: BookSearchIndexRow[] = [];
+  tocMainIndexHits: TocMainIndexHit[] = [];
+  indexLoading = false;
+  indexError = '';
+  activeReaderPageNo: number | null = null;
+  activeTocRangeStart: number | null = null;
+  activeTocRangeEnd: number | null = null;
 
   selectedChunk: BookSearchReaderChunk | null = null;
   activeChunkId = '';
@@ -116,6 +138,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   private autoAdvanceInFlight = false;
   private autoAdvanceLastKey = '';
   private autoAdvanceLastAt = 0;
+  private readonly mainRefsByIndexId = new Map<string, IndexMainRef[]>();
 
   constructor(
     private readonly bookSearch: BookSearchService,
@@ -164,6 +187,14 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
 
   get readerEmptyMessage(): string {
     return 'Select a TOC row to read';
+  }
+
+  get tocMainIndexRangeLabel(): string {
+    if (this.activeTocRangeStart === null) return 'current section';
+    if (this.activeTocRangeEnd === null || this.activeTocRangeEnd === this.activeTocRangeStart) {
+      return `page ${this.activeTocRangeStart}`;
+    }
+    return `pages ${this.activeTocRangeStart}-${this.activeTocRangeEnd}`;
   }
 
   get isTocReader(): boolean {
@@ -219,6 +250,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     this.searchError = '';
     this.readError = '';
     void this.loadAllTocRows();
+    void this.loadAllIndexRows();
     void this.loadCurrentList(true);
     this.syncUrl();
   }
@@ -306,6 +338,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     });
   }
 
+  onReaderPageInView(pageNo: number | null): void {
+    if (pageNo === null || !Number.isFinite(Number(pageNo))) return;
+    const currentPage = Math.max(1, Math.trunc(Number(pageNo)));
+    this.activeReaderPageNo = currentPage;
+    const nextTocId = this.activeTocIdForPage(currentPage);
+    if (!nextTocId || nextTocId === this.activeTocId) return;
+    this.activeTocId = nextTocId;
+    this.refreshMainIndexesForActiveToc();
+    this.scrollActiveTocCardIntoView();
+  }
+
   openSearchRow(row: SearchRow): void {
     if (row.page_no !== null) {
       void this.jumpReaderToPage(row.page_no, true);
@@ -366,9 +409,19 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     this.readerError = 'No linked page found for this index term.';
   }
 
+  openTocMainIndexHit(hit: TocMainIndexHit): void {
+    if (hit.target_page !== null) {
+      void this.jumpReaderToPage(hit.target_page, true);
+      return;
+    }
+    this.openIndexRow(hit.row);
+  }
+
   async openTocRow(row: BookSearchTocRow, moveToReaderTab = true): Promise<void> {
     if (row.toc_id) {
       this.activeTocId = row.toc_id;
+      this.refreshMainIndexesForActiveToc();
+      this.scrollActiveTocCardIntoView();
     }
     if (row.page_no !== null) {
       await this.jumpReaderToPage(row.page_no, moveToReaderTab);
@@ -406,7 +459,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       this.pendingJumpSource = '';
       await this.bookReader.jumpToPage(target, sourceCode);
     }
+    this.activeReaderPageNo = target;
     this.activeTocId = this.activeTocIdForPage(target);
+    this.refreshMainIndexesForActiveToc();
+    this.scrollActiveTocCardIntoView();
     if (moveToReaderTab && this.isCompact) {
       this.mobileTab = 'reader';
     }
@@ -620,6 +676,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   trackByChunkId = (_: number, row: { chunk_id: string }) => row.chunk_id;
   trackByIndexId = (_: number, row: { index_id: string }) => row.index_id;
   trackByTocId = (_: number, row: { toc_id: string }) => row.toc_id;
+  trackByTocMainIndexId = (_: number, row: TocMainIndexHit) => row.index_id;
   trackBySourceCode = (_: number, row: { source_code: string }) => row.source_code;
 
   bookDisplayName(row: Pick<BookSearchSource, 'title' | 'source_code'>): string {
@@ -675,6 +732,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       }
 
       await this.loadAllTocRows();
+      await this.loadAllIndexRows();
       await this.loadCurrentList(false);
 
       const tocId = this.initialTocId;
@@ -805,12 +863,14 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       this.indexRows = [];
       this.tocRows = this.sortTocRows(res.results ?? []);
       this.readTotal = res.total ?? this.tocRows.length;
+      this.refreshMainIndexesForActiveToc();
     } catch (err: unknown) {
       this.readRows = [];
       this.indexRows = [];
       this.tocRows = [];
       this.readTotal = 0;
       this.readError = this.describeApiError(err, 'Failed to load entries.');
+      this.refreshMainIndexesForActiveToc();
     } finally {
       this.readLoading = false;
       if (moveToResultsTab && this.isCompact) {
@@ -858,8 +918,41 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
         })
       );
       this.allTocRows = this.sortTocRows(res.results ?? []);
+      this.refreshMainIndexesForActiveToc();
     } catch {
       this.allTocRows = [];
+      this.refreshMainIndexesForActiveToc();
+    }
+  }
+
+  private async loadAllIndexRows(): Promise<void> {
+    this.allIndexRows = [];
+    this.tocMainIndexHits = [];
+    this.mainRefsByIndexId.clear();
+    this.indexError = '';
+    this.indexLoading = true;
+
+    try {
+      if (!this.selectedSourceCode) return;
+      const res = await firstValueFrom(
+        this.bookSearch.listIndex({
+          source_code: this.selectedSourceCode,
+          limit: 5000,
+          offset: 0,
+        })
+      );
+      this.allIndexRows = res.results ?? [];
+      for (const row of this.allIndexRows) {
+        this.mainRefsByIndexId.set(row.index_id, this.extractMainRefs(row.page_refs_json));
+      }
+      this.refreshMainIndexesForActiveToc();
+    } catch (err: unknown) {
+      this.allIndexRows = [];
+      this.tocMainIndexHits = [];
+      this.mainRefsByIndexId.clear();
+      this.indexError = this.describeApiError(err, 'Failed to load index entries.');
+    } finally {
+      this.indexLoading = false;
     }
   }
 
@@ -933,6 +1026,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
       this.selectedSourceCode = res.chunk.source_code;
       await this.loadAllTocRows();
+      await this.loadAllIndexRows();
       await this.loadCurrentList(false);
     }
 
@@ -943,6 +1037,9 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       ? (res.chunk.toc_id ?? '')
       : this.activeTocIdForPage(res.chunk.page_no);
     this.jumpPageNo = res.chunk.page_no;
+    this.activeReaderPageNo = res.chunk.page_no;
+    this.refreshMainIndexesForActiveToc();
+    this.scrollActiveTocCardIntoView();
 
     if (this.isReaderChunkToc(res.chunk)) {
       this.editorEditing = false;
@@ -976,6 +1073,138 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
 
   private isReaderChunkToc(chunk: BookSearchReaderChunk | null | undefined): boolean {
     return chunk?.reader_scope === 'toc' || !!chunk?.toc_id;
+  }
+
+  private refreshMainIndexesForActiveToc(): void {
+    const { start, end } = this.activeTocRange();
+    this.activeTocRangeStart = start;
+    this.activeTocRangeEnd = end;
+
+    if (start === null || !this.allIndexRows.length) {
+      this.tocMainIndexHits = [];
+      return;
+    }
+
+    const hits: TocMainIndexHit[] = [];
+    for (const row of this.allIndexRows) {
+      const refs = this.filterMainRefsForRange(this.mainRefsByIndexId.get(row.index_id) ?? [], start, end);
+      if (!refs.length) continue;
+      const term = String(row.term_norm ?? row.term_raw ?? row.index_id).trim() || row.index_id;
+      const refsLabel = this.mainRefsLabel(refs);
+      hits.push({
+        index_id: row.index_id,
+        term,
+        target_page: refs[0]?.from ?? null,
+        refs_label: refsLabel,
+        row,
+      });
+    }
+
+    hits.sort((a, b) => {
+      const pageA = a.target_page ?? Number.MAX_SAFE_INTEGER;
+      const pageB = b.target_page ?? Number.MAX_SAFE_INTEGER;
+      if (pageA !== pageB) return pageA - pageB;
+      return a.term.localeCompare(b.term, undefined, { numeric: true, sensitivity: 'base' });
+    });
+    this.tocMainIndexHits = hits;
+  }
+
+  private activeTocRange(): { start: number | null; end: number | null } {
+    const activeId = String(this.activeTocId ?? '').trim();
+    if (!activeId || !this.allTocRows.length) {
+      return { start: null, end: null };
+    }
+    const idx = this.allTocRows.findIndex((row) => row.toc_id === activeId);
+    if (idx < 0) {
+      return { start: null, end: null };
+    }
+
+    const current = this.allTocRows[idx];
+    let start = this.pageValue(current.page_no);
+    if (start === null) {
+      for (let i = idx - 1; i >= 0; i -= 1) {
+        const candidate = this.pageValue(this.allTocRows[i].page_no);
+        if (candidate !== null) {
+          start = candidate;
+          break;
+        }
+      }
+    }
+
+    let nextStart: number | null = null;
+    for (let i = idx + 1; i < this.allTocRows.length; i += 1) {
+      const candidate = this.pageValue(this.allTocRows[i].page_no);
+      if (candidate !== null) {
+        nextStart = candidate;
+        break;
+      }
+    }
+
+    const end = start === null || nextStart === null ? null : Math.max(start, nextStart - 1);
+    return { start, end };
+  }
+
+  private pageValue(value: unknown): number | null {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    return Math.max(1, Math.trunc(parsed));
+  }
+
+  private extractMainRefs(pageRefsJson: string): IndexMainRef[] {
+    if (!pageRefsJson) return [];
+    try {
+      const parsed = JSON.parse(pageRefsJson) as Array<{
+        from?: number | null;
+        to?: number | null;
+        is_main?: boolean;
+        note?: string | null;
+      }>;
+      if (!Array.isArray(parsed)) return [];
+      const refs: IndexMainRef[] = [];
+      for (const item of parsed) {
+        if (!item?.is_main) continue;
+        const fromRaw = this.pageValue(item.from);
+        const toRaw = this.pageValue(item.to);
+        if (fromRaw === null && toRaw === null) continue;
+        const from = fromRaw ?? toRaw ?? 0;
+        const to = toRaw ?? fromRaw ?? from;
+        refs.push({
+          from: Math.min(from, to),
+          to: Math.max(from, to),
+          note: item.note ? String(item.note).trim() || null : null,
+        });
+      }
+      refs.sort((a, b) => (a.from !== b.from ? a.from - b.from : a.to - b.to));
+      return refs;
+    } catch {
+      return [];
+    }
+  }
+
+  private filterMainRefsForRange(refs: IndexMainRef[], start: number, end: number | null): IndexMainRef[] {
+    return refs.filter((ref) => {
+      if (ref.to < start) return false;
+      if (end !== null && ref.from > end) return false;
+      return true;
+    });
+  }
+
+  private mainRefsLabel(refs: IndexMainRef[]): string {
+    const labels = refs.slice(0, 4).map((ref) => {
+      const range = ref.from === ref.to ? `${ref.from}` : `${ref.from}-${ref.to}`;
+      return ref.note ? `${range} (${ref.note})` : range;
+    });
+    const suffix = refs.length > 4 ? ` +${refs.length - 4}` : '';
+    return labels.join(', ') + suffix;
+  }
+
+  private scrollActiveTocCardIntoView(): void {
+    setTimeout(() => {
+      const host = this.tocCatalog?.nativeElement;
+      if (!host) return;
+      const active = host.querySelector<HTMLElement>('.toc-card.is-active');
+      active?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }, 0);
   }
 
   private sortTocRows(rows: BookSearchTocRow[]): BookSearchTocRow[] {
@@ -1100,6 +1329,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     this.selectedChunk = null;
     this.activeChunkId = '';
     this.activeTocId = '';
+    this.activeReaderPageNo = null;
+    this.activeTocRangeStart = null;
+    this.activeTocRangeEnd = null;
+    this.tocMainIndexHits = [];
     this.readerNav = this.normalizeReaderNav(null);
     this.editorEditing = false;
     this.editorSaving = false;
