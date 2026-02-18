@@ -42,6 +42,7 @@
       </div>
     </section>
 
+    <div #loadMoreSentinel class="load-more-sentinel" aria-hidden="true"></div>
     <div class="reader-tail success" *ngIf="editMessage">{{ editMessage }}</div>
     <div class="reader-tail" *ngIf="loadingMore">Loading more pages…</div>
     <div class="reader-tail" *ngIf="!loadingMore && !hasMore">End of book</div>

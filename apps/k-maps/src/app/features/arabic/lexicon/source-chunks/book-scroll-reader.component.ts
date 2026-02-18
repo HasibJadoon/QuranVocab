@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
@@ -15,7 +15,7 @@ import { BookScrollReaderService } from '../../../../shared/services/book-scroll
   templateUrl: './book-scroll-reader.component.html',
   styleUrls: ['./book-scroll-reader.component.scss'],
 })
-export class BookScrollReaderComponent implements OnChanges, OnDestroy {
+export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterViewInit {
   @Input() sourceCode = '';
   @Input() query = '';
   @Input() fontSize = 17;
@@ -24,6 +24,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
   @Input() wrapText = true;
 
   @ViewChild('scrollViewport') scrollViewport?: ElementRef<HTMLDivElement>;
+  @ViewChild('loadMoreSentinel') loadMoreSentinel?: ElementRef<HTMLDivElement>;
 
   pages: BookScrollReaderPage[] = [];
   loadingInitial = false;
@@ -43,6 +44,8 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
   private readonly pageSet = new Set<number>();
   private readonly loadLimit = 10;
   private sourceBootstrapped = '';
+  private loadMoreObserver: IntersectionObserver | null = null;
+  private lastRequestedStart: number | null = null;
 
   constructor(
     private readonly readerService: BookScrollReaderService,
@@ -66,6 +69,11 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearCopyMessageTimer();
+    this.teardownLoadMoreObserver();
+  }
+
+  ngAfterViewInit(): void {
+    this.setupLoadMoreObserver();
   }
 
   async jumpToPage(pageNo: number, sourceOverride?: string): Promise<void> {
@@ -92,8 +100,10 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
       this.replacePages(res.pages ?? []);
       this.hasMore = !!res.has_more;
       this.nextStart = res.next_start ?? null;
+      this.lastRequestedStart = null;
       this.scrollToTop();
       this.scrollToPageAnchor(targetPage, true);
+      this.refreshLoadMoreObserver();
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'Unable to jump to page.';
     } finally {
@@ -102,8 +112,8 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
   }
 
   onViewportScroll(): void {
-    if (!this.isNearBottom() || this.loadingMore || this.loadingInitial || !this.hasMore || this.nextStart === null) return;
-    void this.loadMoreRange();
+    if (!this.isNearBottom()) return;
+    void this.maybeLoadMore();
   }
 
   chunkTextHtml(raw: string): SafeHtml {
@@ -232,7 +242,9 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
       this.replacePages(res.pages ?? []);
       this.hasMore = !!res.has_more;
       this.nextStart = res.next_start ?? null;
+      this.lastRequestedStart = null;
       this.scrollToTop();
+      this.refreshLoadMoreObserver();
     } catch (err: unknown) {
       this.resetState();
       this.error = err instanceof Error ? err.message : 'Unable to load book pages.';
@@ -244,25 +256,46 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
   private async loadMoreRange(): Promise<void> {
     const source = String(this.sourceCode ?? '').trim();
     if (!source || this.nextStart === null) return;
+    const start = this.nextStart;
 
     this.loadingMore = true;
     this.error = '';
+    this.lastRequestedStart = start;
     try {
+      const beforeCount = this.pages.length;
       const res = await firstValueFrom(
         this.readerService.listPagesByRange({
           source_id: source,
-          start: this.nextStart,
+          start,
           limit: this.loadLimit,
         })
       );
       this.appendPages(res.pages ?? []);
-      this.hasMore = !!res.has_more;
-      this.nextStart = res.next_start ?? null;
+      const afterCount = this.pages.length;
+      const next = res.next_start ?? null;
+      const progressed = next === null || next > start;
+      const appended = afterCount > beforeCount;
+
+      if (!appended && !progressed) {
+        this.hasMore = false;
+        this.nextStart = null;
+      } else {
+        this.hasMore = !!res.has_more && progressed;
+        this.nextStart = this.hasMore ? next : null;
+      }
+      this.refreshLoadMoreObserver();
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'Unable to load more pages.';
+      this.lastRequestedStart = null;
     } finally {
       this.loadingMore = false;
     }
+  }
+
+  private async maybeLoadMore(): Promise<void> {
+    if (this.loadingInitial || this.loadingMore || !this.hasMore || this.nextStart === null) return;
+    if (this.lastRequestedStart !== null && this.lastRequestedStart === this.nextStart) return;
+    await this.loadMoreRange();
   }
 
   private replacePages(nextPages: BookScrollReaderPage[]): void {
@@ -320,9 +353,40 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
     this.error = '';
     this.hasMore = false;
     this.nextStart = null;
+    this.lastRequestedStart = null;
     this.sourceBootstrapped = '';
     this.cancelEdit();
     this.clearCopyMessageTimer();
+  }
+
+  private setupLoadMoreObserver(): void {
+    if (typeof IntersectionObserver === 'undefined') return;
+    this.teardownLoadMoreObserver();
+    this.loadMoreObserver = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.some((entry) => entry.isIntersecting);
+        if (!visible) return;
+        void this.maybeLoadMore();
+      },
+      {
+        root: this.scrollViewport?.nativeElement ?? null,
+        rootMargin: '0px 0px 260px 0px',
+        threshold: 0,
+      }
+    );
+    this.refreshLoadMoreObserver();
+  }
+
+  private refreshLoadMoreObserver(): void {
+    if (!this.loadMoreObserver || !this.loadMoreSentinel?.nativeElement) return;
+    this.loadMoreObserver.disconnect();
+    this.loadMoreObserver.observe(this.loadMoreSentinel.nativeElement);
+  }
+
+  private teardownLoadMoreObserver(): void {
+    if (!this.loadMoreObserver) return;
+    this.loadMoreObserver.disconnect();
+    this.loadMoreObserver = null;
   }
 
   private searchTermsFromQuery(query: string): string[] {
