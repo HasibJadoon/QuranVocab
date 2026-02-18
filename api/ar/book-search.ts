@@ -163,6 +163,31 @@ type ReaderNavRow = {
   page_no: number | null;
 };
 
+type TocReaderRow = {
+  toc_id: string;
+  ar_u_source: string;
+  source_code: string;
+  source_title: string;
+  depth: number;
+  index_path: string;
+  title_raw: string;
+  page_no: number | null;
+  locator: string | null;
+  pdf_page_index: number | null;
+};
+
+type TocReaderNavRow = {
+  toc_id: string;
+  page_no: number | null;
+};
+
+type ReaderPageTextRow = {
+  chunk_id: string;
+  page_no: number | null;
+  heading_raw: string | null;
+  text: string;
+};
+
 async function runSourceSearch(db: D1Database, q: string, limit: number, offset: number) {
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
@@ -829,8 +854,236 @@ async function runReaderChunk(
   db: D1Database,
   chunkId: string,
   sourceCode: string,
-  pageNo: number | null
+  pageNo: number | null,
+  tocId: string
 ) {
+  const emptyPayload = {
+    ok: true,
+    mode: 'reader' as const,
+    chunk: null,
+    nav: {
+      prev_chunk_id: null,
+      prev_page_no: null,
+      next_chunk_id: null,
+      next_page_no: null,
+      prev_toc_id: null,
+      next_toc_id: null,
+    },
+  };
+
+  if (tocId) {
+    const toc = await db
+      .prepare(
+        `
+          SELECT
+            t.toc_id,
+            t.ar_u_source,
+            s.source_code,
+            s.title AS source_title,
+            t.depth,
+            t.index_path,
+            t.title_raw,
+            t.page_no,
+            t.locator,
+            t.pdf_page_index
+          FROM ar_source_toc t
+          JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
+          WHERE t.toc_id = ?
+          LIMIT 1
+        `
+      )
+      .bind(tocId)
+      .first<TocReaderRow>();
+
+    if (!toc) {
+      return emptyPayload;
+    }
+
+    let startPage = toc.page_no;
+    if (startPage === null && toc.locator) {
+      const byLocator = await db
+        .prepare(
+          `
+            SELECT c.page_no
+            FROM ar_source_chunks c
+            WHERE c.ar_u_source = ?
+              AND c.locator = ?
+              AND c.page_no IS NOT NULL
+              AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
+            ORDER BY c.page_no ASC, c.chunk_id ASC
+            LIMIT 1
+          `
+        )
+        .bind(toc.ar_u_source, toc.locator)
+        .first<{ page_no: number | null }>();
+      startPage = byLocator?.page_no ?? null;
+    }
+
+    if (startPage === null && toc.pdf_page_index !== null) {
+      const byPdfPage = await db
+        .prepare(
+          `
+            SELECT c.page_no
+            FROM ar_source_chunks c
+            WHERE c.ar_u_source = ?
+              AND c.locator LIKE 'pdf_page:%'
+              AND c.page_no IS NOT NULL
+              AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
+            ORDER BY ABS(CAST(substr(c.locator, 10) AS INTEGER) - ?), c.page_no ASC, c.chunk_id ASC
+            LIMIT 1
+          `
+        )
+        .bind(toc.ar_u_source, toc.pdf_page_index)
+        .first<{ page_no: number | null }>();
+      startPage = byPdfPage?.page_no ?? null;
+    }
+
+    const prevToc = startPage === null
+      ? await db
+          .prepare(
+            `
+              SELECT t.toc_id, t.page_no
+              FROM ar_source_toc t
+              WHERE t.ar_u_source = ?
+                AND t.toc_id < ?
+              ORDER BY t.toc_id DESC
+              LIMIT 1
+            `
+          )
+          .bind(toc.ar_u_source, toc.toc_id)
+          .first<TocReaderNavRow>()
+      : await db
+          .prepare(
+            `
+              SELECT t.toc_id, t.page_no
+              FROM ar_source_toc t
+              WHERE t.ar_u_source = ?
+                AND t.page_no IS NOT NULL
+                AND (t.page_no < ? OR (t.page_no = ? AND t.toc_id < ?))
+              ORDER BY t.page_no DESC, t.toc_id DESC
+              LIMIT 1
+            `
+          )
+          .bind(toc.ar_u_source, startPage, startPage, toc.toc_id)
+          .first<TocReaderNavRow>();
+
+    const nextToc = startPage === null
+      ? await db
+          .prepare(
+            `
+              SELECT t.toc_id, t.page_no
+              FROM ar_source_toc t
+              WHERE t.ar_u_source = ?
+                AND t.toc_id > ?
+              ORDER BY t.toc_id ASC
+              LIMIT 1
+            `
+          )
+          .bind(toc.ar_u_source, toc.toc_id)
+          .first<TocReaderNavRow>()
+      : await db
+          .prepare(
+            `
+              SELECT t.toc_id, t.page_no
+              FROM ar_source_toc t
+              WHERE t.ar_u_source = ?
+                AND t.page_no IS NOT NULL
+                AND (t.page_no > ? OR (t.page_no = ? AND t.toc_id > ?))
+              ORDER BY t.page_no ASC, t.toc_id ASC
+              LIMIT 1
+            `
+          )
+          .bind(toc.ar_u_source, startPage, startPage, toc.toc_id)
+          .first<TocReaderNavRow>();
+
+    if (startPage === null) {
+      return {
+        ok: true,
+        mode: 'reader' as const,
+        chunk: {
+          chunk_id: `toc:${toc.toc_id}`,
+          page_no: null,
+          page_to: null,
+          heading_raw: toc.title_raw,
+          locator: toc.locator,
+          chunk_type: 'toc',
+          text: `No linked page found for TOC entry "${toc.title_raw}".`,
+          source_code: toc.source_code,
+          source_title: toc.source_title,
+          reader_scope: 'toc' as const,
+          toc_id: toc.toc_id,
+        },
+        nav: {
+          prev_chunk_id: null,
+          prev_page_no: prevToc?.page_no ?? null,
+          next_chunk_id: null,
+          next_page_no: nextToc?.page_no ?? null,
+          prev_toc_id: prevToc?.toc_id ?? null,
+          next_toc_id: nextToc?.toc_id ?? null,
+        },
+      };
+    }
+
+    const nextPageStart = nextToc?.page_no ?? null;
+    const endPage = nextPageStart !== null ? Math.max(startPage, nextPageStart - 1) : null;
+    const { results: pages = [] } = await db
+      .prepare(
+        `
+          SELECT
+            c.chunk_id,
+            c.page_no,
+            c.heading_raw,
+            c.text
+          FROM ar_source_chunks c
+          WHERE c.ar_u_source = ?
+            AND c.page_no IS NOT NULL
+            AND c.page_no >= ?
+            AND (? IS NULL OR c.page_no <= ?)
+            AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
+          ORDER BY c.page_no ASC, c.chunk_id ASC
+        `
+      )
+      .bind(toc.ar_u_source, startPage, endPage, endPage)
+      .all<ReaderPageTextRow>();
+
+    const text =
+      pages.length > 0
+        ? pages
+            .map((row) => {
+              const pageLabel = row.page_no === null ? 'Page —' : `Page ${row.page_no}`;
+              const heading = row.heading_raw?.trim() ? ` | ${row.heading_raw.trim()}` : '';
+              return `===== ${pageLabel}${heading} =====\n${row.text}`;
+            })
+            .join('\n\n')
+        : `No page chunks found in TOC range${endPage === null ? '' : ` ${startPage}-${endPage}`}.`;
+
+    return {
+      ok: true,
+      mode: 'reader' as const,
+      chunk: {
+        chunk_id: `toc:${toc.toc_id}`,
+        page_no: startPage,
+        page_to: endPage,
+        heading_raw: toc.title_raw,
+        locator: toc.locator,
+        chunk_type: 'toc',
+        text,
+        source_code: toc.source_code,
+        source_title: toc.source_title,
+        reader_scope: 'toc' as const,
+        toc_id: toc.toc_id,
+      },
+      nav: {
+        prev_chunk_id: null,
+        prev_page_no: prevToc?.page_no ?? null,
+        next_chunk_id: null,
+        next_page_no: nextToc?.page_no ?? null,
+        prev_toc_id: prevToc?.toc_id ?? null,
+        next_toc_id: nextToc?.toc_id ?? null,
+      },
+    };
+  }
+
   const readerSelect = `
     SELECT
       c.chunk_id,
@@ -950,19 +1203,7 @@ async function runReaderChunk(
     if (targetChunk) chunk = targetChunk;
   }
 
-  if (!chunk) {
-    return {
-      ok: true,
-      mode: 'reader' as const,
-      chunk: null,
-      nav: {
-        prev_chunk_id: null,
-        prev_page_no: null,
-        next_chunk_id: null,
-        next_page_no: null,
-      },
-    };
-  }
+  if (!chunk) return emptyPayload;
 
   const safePage = Number.isFinite(Number(chunk.page_no)) ? Number(chunk.page_no) : -1;
 
@@ -1001,12 +1242,26 @@ async function runReaderChunk(
   return {
     ok: true,
     mode: 'reader' as const,
-    chunk,
+    chunk: {
+      chunk_id: chunk.chunk_id,
+      page_no: chunk.page_no,
+      page_to: chunk.page_no,
+      heading_raw: chunk.heading_raw,
+      locator: chunk.locator,
+      chunk_type: chunk.chunk_type,
+      text: chunk.text,
+      source_code: chunk.source_code,
+      source_title: chunk.source_title,
+      reader_scope: 'page' as const,
+      toc_id: null,
+    },
     nav: {
       prev_chunk_id: prev?.chunk_id ?? null,
       prev_page_no: prev?.page_no ?? null,
       next_chunk_id: next?.chunk_id ?? null,
       next_page_no: next?.page_no ?? null,
+      prev_toc_id: null,
+      next_toc_id: null,
     },
   };
 }
@@ -1065,6 +1320,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   const headingNormRaw = (url.searchParams.get('heading_norm') ?? '').trim();
   const arULexicon = (url.searchParams.get('ar_u_lexicon') ?? '').trim();
   const chunkId = (url.searchParams.get('chunk_id') ?? '').trim();
+  const tocId = (url.searchParams.get('toc_id') ?? '').trim();
   const pageNoRaw = (url.searchParams.get('page_no') ?? '').trim();
   const pageNo = pageNoRaw ? toInt(pageNoRaw, Number.NaN) : null;
 
@@ -1153,7 +1409,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     }
 
     if (mode === 'reader') {
-      const payload = await runReaderChunk(ctx.env.DB, chunkId, sourceCode, pageNo);
+      const payload = await runReaderChunk(ctx.env.DB, chunkId, sourceCode, pageNo, tocId);
       return new Response(JSON.stringify(payload), { headers: jsonHeaders });
     }
 
@@ -1386,7 +1642,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
     await syncChunkFts(ctx.env.DB, chunkId);
   }
 
-  const readerPayload = await runReaderChunk(ctx.env.DB, chunkId, '', null);
+  const readerPayload = await runReaderChunk(ctx.env.DB, chunkId, '', null, '');
   return new Response(
     JSON.stringify({
       ok: true,

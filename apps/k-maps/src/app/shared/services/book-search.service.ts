@@ -122,6 +122,7 @@ export class BookSearchService {
     chunk_id?: string;
     source_code?: string;
     page_no?: number;
+    toc_id?: string;
   }): Observable<BookSearchReaderResponse> {
     return this.httpGet<BookSearchReaderResponse>({ mode: 'reader', ...params });
   }

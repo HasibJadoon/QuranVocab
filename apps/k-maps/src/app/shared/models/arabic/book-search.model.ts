@@ -93,12 +93,15 @@ export type BookSearchResponse<T> = {
 export type BookSearchReaderChunk = {
   chunk_id: string;
   page_no: number | null;
+  page_to?: number | null;
   heading_raw: string | null;
   locator: string | null;
   chunk_type: string | null;
   text: string;
   source_code: string;
   source_title: string;
+  reader_scope?: 'page' | 'toc';
+  toc_id?: string | null;
 };
 
 export type BookSearchReaderNav = {
@@ -106,6 +109,8 @@ export type BookSearchReaderNav = {
   prev_page_no: number | null;
   next_chunk_id: string | null;
   next_page_no: number | null;
+  prev_toc_id?: string | null;
+  next_toc_id?: string | null;
 };
 
 export type BookSearchReaderResponse = {

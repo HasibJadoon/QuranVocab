@@ -41,7 +41,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   booksError = '';
 
   selectedSourceCode = '';
-  readTab: ReadTab = 'pages';
+  readTab: ReadTab = 'toc';
 
   pageFrom: number | null = null;
   pageTo: number | null = null;
@@ -65,9 +65,11 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   readRows: BookSearchPageRow[] = [];
   indexRows: BookSearchIndexRow[] = [];
   tocRows: BookSearchTocRow[] = [];
+  allTocRows: BookSearchTocRow[] = [];
 
   selectedChunk: BookSearchReaderChunk | null = null;
   activeChunkId = '';
+  activeTocId = '';
   readerLoading = false;
   readerError = '';
   readerNav: BookSearchReaderNav = {
@@ -75,6 +77,8 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     prev_page_no: null,
     next_chunk_id: null,
     next_page_no: null,
+    prev_toc_id: null,
+    next_toc_id: null,
   };
 
   readonly chunkTypeOptions = ['grammar', 'literature', 'lexicon', 'reference', 'other'] as const;
@@ -101,6 +105,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
   private readonly onResize = () => this.updateResponsiveState();
   private initialChunkId = '';
+  private initialTocId = '';
 
   constructor(
     private readonly bookSearch: BookSearchService,
@@ -146,6 +151,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     if (this.readTab === 'index') return 'Select an index term to read';
     if (this.readTab === 'toc') return 'Select a TOC row to read';
     return 'Select a page to read';
+  }
+
+  get isTocReader(): boolean {
+    return this.selectedChunk?.reader_scope === 'toc' || !!this.selectedChunk?.toc_id;
   }
 
   get navigatorTabs(): AppTabItem[] {
@@ -201,6 +210,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     this.readError = '';
     this.selectedTermChunkId = '';
     void this.loadTermRows();
+    void this.loadAllTocRows();
     void this.loadCurrentList(true);
     this.syncUrl();
   }
@@ -275,6 +285,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   openTocRow(row: BookSearchTocRow): void {
+    if (row.toc_id) {
+      void this.openChunkByToc(row.toc_id, true);
+      return;
+    }
     if (row.target_chunk_id) {
       void this.openChunkById(row.target_chunk_id, true);
       return;
@@ -287,16 +301,27 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   openPrev(): void {
+    if (this.isTocReader) {
+      if (!this.readerNav.prev_toc_id) return;
+      void this.openChunkByToc(this.readerNav.prev_toc_id, true);
+      return;
+    }
     if (!this.readerNav.prev_chunk_id) return;
     void this.openChunkById(this.readerNav.prev_chunk_id, true);
   }
 
   openNext(): void {
+    if (this.isTocReader) {
+      if (!this.readerNav.next_toc_id) return;
+      void this.openChunkByToc(this.readerNav.next_toc_id, true);
+      return;
+    }
     if (!this.readerNav.next_chunk_id) return;
     void this.openChunkById(this.readerNav.next_chunk_id, true);
   }
 
   openLinearPrevPage(): void {
+    if (this.isTocReader) return;
     const chunk = this.selectedChunk;
     if (!chunk || chunk.page_no === null) return;
     const target = Number(chunk.page_no) - 1;
@@ -305,6 +330,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   openLinearNextPage(): void {
+    if (this.isTocReader) return;
     const chunk = this.selectedChunk;
     if (!chunk || chunk.page_no === null) return;
     const target = Number(chunk.page_no) + 1;
@@ -313,7 +339,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   startEdit(): void {
-    if (!this.selectedChunk) return;
+    if (!this.selectedChunk || this.isTocReader) return;
     this.editorEditing = true;
     this.editorError = '';
     this.editorMessage = '';
@@ -329,7 +355,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   async saveEdit(): Promise<void> {
-    if (!this.selectedChunk) return;
+    if (!this.selectedChunk || this.isTocReader) return;
     this.editorSaving = true;
     this.editorError = '';
     this.editorMessage = '';
@@ -351,8 +377,9 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       }
 
       this.selectedChunk = res.chunk;
-      this.readerNav = res.nav;
+      this.readerNav = this.normalizeReaderNav(res.nav);
       this.activeChunkId = res.chunk.chunk_id;
+      this.activeTocId = this.activeTocIdForPage(res.chunk.page_no);
       this.jumpPageNo = res.chunk.page_no;
       this.populateEditorFromChunk(res.chunk);
       this.editorEditing = false;
@@ -443,13 +470,18 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       }
 
       await this.loadTermRows();
+      await this.loadAllTocRows();
       await this.loadCurrentList(false);
 
+      const tocId = this.initialTocId;
       const chunkId = this.initialChunkId;
-      if (chunkId) {
+      if (tocId) {
+        await this.openChunkByToc(tocId, false);
+      } else if (chunkId) {
         await this.openChunkById(chunkId, false);
       }
       this.initialChunkId = '';
+      this.initialTocId = '';
       this.syncUrl();
     } catch (err: unknown) {
       this.booksError = err instanceof Error ? err.message : 'Failed to load books.';
@@ -575,7 +607,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
         this.readRows = [];
         this.indexRows = [];
-        this.tocRows = res.results ?? [];
+        this.tocRows = this.sortTocRows(res.results ?? []);
         this.readTotal = res.total ?? this.tocRows.length;
       }
     } catch (err: unknown) {
@@ -619,6 +651,23 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  private async loadAllTocRows(): Promise<void> {
+    this.allTocRows = [];
+    try {
+      if (!this.selectedSourceCode) return;
+      const res = await firstValueFrom(
+        this.bookSearch.listToc({
+          source_code: this.selectedSourceCode,
+          limit: 5000,
+          offset: 0,
+        })
+      );
+      this.allTocRows = this.sortTocRows(res.results ?? []);
+    } catch {
+      this.allTocRows = [];
+    }
+  }
+
   private async openChunkById(chunkId: string, moveToReaderTab: boolean): Promise<void> {
     if (!chunkId) return;
     this.readerLoading = true;
@@ -626,32 +675,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
     try {
       const res = await firstValueFrom(this.bookSearch.getReaderChunk({ chunk_id: chunkId }));
-      if (!res.chunk) {
-        this.readerError = 'Chunk not found.';
-        this.clearReaderSelection();
-        return;
-      }
-
-      if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
-        this.selectedSourceCode = res.chunk.source_code;
-        await this.loadTermRows();
-        await this.loadCurrentList(false);
-      }
-
-      this.selectedChunk = res.chunk;
-      this.readerNav = res.nav;
-      this.activeChunkId = res.chunk.chunk_id;
-      this.jumpPageNo = res.chunk.page_no;
-      this.populateEditorFromChunk(res.chunk);
-      this.editorEditing = false;
-      this.editorError = '';
-      this.editorMessage = '';
-      this.scrollReaderTop();
-      this.syncUrl();
-
-      if (moveToReaderTab && this.isCompact) {
-        this.mobileTab = 'reader';
-      }
+      await this.applyReaderPayload(res, 'Chunk not found.', moveToReaderTab);
     } catch (err: unknown) {
       this.readerError = err instanceof Error ? err.message : 'Unable to load chunk.';
     } finally {
@@ -665,36 +689,108 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
     try {
       const res = await firstValueFrom(this.bookSearch.getReaderChunk({ source_code: sourceCode, page_no: pageNo }));
-      if (!res.chunk) {
-        this.readerError = `No chunk found at page ${pageNo}.`;
-        return;
-      }
-
-      if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
-        this.selectedSourceCode = res.chunk.source_code;
-        await this.loadTermRows();
-        await this.loadCurrentList(false);
-      }
-
-      this.selectedChunk = res.chunk;
-      this.readerNav = res.nav;
-      this.activeChunkId = res.chunk.chunk_id;
-      this.jumpPageNo = res.chunk.page_no;
-      this.populateEditorFromChunk(res.chunk);
-      this.editorEditing = false;
-      this.editorError = '';
-      this.editorMessage = '';
-      this.scrollReaderTop();
-      this.syncUrl();
-
-      if (moveToReaderTab && this.isCompact) {
-        this.mobileTab = 'reader';
-      }
+      await this.applyReaderPayload(res, `No chunk found at page ${pageNo}.`, moveToReaderTab);
     } catch (err: unknown) {
       this.readerError = err instanceof Error ? err.message : 'Unable to open page.';
     } finally {
       this.readerLoading = false;
     }
+  }
+
+  private async openChunkByToc(tocId: string, moveToReaderTab: boolean): Promise<void> {
+    if (!tocId) return;
+    this.readerLoading = true;
+    this.readerError = '';
+
+    try {
+      const res = await firstValueFrom(this.bookSearch.getReaderChunk({ toc_id: tocId }));
+      await this.applyReaderPayload(res, 'Unable to render this TOC entry.', moveToReaderTab);
+    } catch (err: unknown) {
+      this.readerError = err instanceof Error ? err.message : 'Unable to open TOC section.';
+    } finally {
+      this.readerLoading = false;
+    }
+  }
+
+  private async applyReaderPayload(
+    res: { chunk: BookSearchReaderChunk | null; nav: BookSearchReaderNav },
+    emptyMessage: string,
+    moveToReaderTab: boolean
+  ): Promise<void> {
+    if (!res.chunk) {
+      this.readerError = emptyMessage;
+      this.clearReaderSelection();
+      return;
+    }
+
+    if (res.chunk.source_code && res.chunk.source_code !== this.selectedSourceCode) {
+      this.selectedSourceCode = res.chunk.source_code;
+      await this.loadTermRows();
+      await this.loadAllTocRows();
+      await this.loadCurrentList(false);
+    }
+
+    this.selectedChunk = res.chunk;
+    this.readerNav = this.normalizeReaderNav(res.nav);
+    this.activeChunkId = this.isReaderChunkToc(res.chunk) ? '' : res.chunk.chunk_id;
+    this.activeTocId = this.isReaderChunkToc(res.chunk)
+      ? (res.chunk.toc_id ?? '')
+      : this.activeTocIdForPage(res.chunk.page_no);
+    this.jumpPageNo = res.chunk.page_no;
+
+    if (this.isReaderChunkToc(res.chunk)) {
+      this.editorEditing = false;
+      this.editorError = '';
+      this.editorMessage = '';
+    } else {
+      this.populateEditorFromChunk(res.chunk);
+      this.editorEditing = false;
+      this.editorError = '';
+      this.editorMessage = '';
+    }
+
+    this.scrollReaderTop();
+    this.syncUrl();
+
+    if (moveToReaderTab && this.isCompact) {
+      this.mobileTab = 'reader';
+    }
+  }
+
+  private normalizeReaderNav(nav: BookSearchReaderNav | null | undefined): BookSearchReaderNav {
+    return {
+      prev_chunk_id: nav?.prev_chunk_id ?? null,
+      prev_page_no: nav?.prev_page_no ?? null,
+      next_chunk_id: nav?.next_chunk_id ?? null,
+      next_page_no: nav?.next_page_no ?? null,
+      prev_toc_id: nav?.prev_toc_id ?? null,
+      next_toc_id: nav?.next_toc_id ?? null,
+    };
+  }
+
+  private isReaderChunkToc(chunk: BookSearchReaderChunk | null | undefined): boolean {
+    return chunk?.reader_scope === 'toc' || !!chunk?.toc_id;
+  }
+
+  private sortTocRows(rows: BookSearchTocRow[]): BookSearchTocRow[] {
+    return [...rows].sort((a, b) => {
+      const pageA = a.page_no ?? Number.MAX_SAFE_INTEGER;
+      const pageB = b.page_no ?? Number.MAX_SAFE_INTEGER;
+      if (pageA !== pageB) return pageA - pageB;
+      if (a.depth !== b.depth) return a.depth - b.depth;
+      const pathA = a.index_path ?? '';
+      const pathB = b.index_path ?? '';
+      const pathCmp = pathA.localeCompare(pathB);
+      if (pathCmp !== 0) return pathCmp;
+      return a.toc_id.localeCompare(b.toc_id);
+    });
+  }
+
+  private activeTocIdForPage(pageNo: number | null): string {
+    if (pageNo === null) return '';
+    const eligible = this.allTocRows.filter((row) => row.page_no !== null && row.page_no <= pageNo);
+    if (!eligible.length) return '';
+    return eligible[eligible.length - 1].toc_id;
   }
 
   private applyQueryParams(): void {
@@ -715,6 +811,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     this.pageFrom = this.toIntOrNull(qp.get('page_from'));
     this.pageTo = this.toIntOrNull(qp.get('page_to'));
     this.initialChunkId = (qp.get('chunk_id') ?? '').trim();
+    this.initialTocId = (qp.get('toc_id') ?? '').trim();
 
     const jump = this.toIntOrNull(qp.get('jump_page'));
     this.jumpPageNo = jump;
@@ -732,7 +829,8 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
         page_to: this.pageTo ?? null,
         heading: this.headingFilter.trim() || null,
         jump_page: this.jumpPageNo ?? null,
-        chunk_id: this.selectedChunk?.chunk_id ?? null,
+        chunk_id: this.selectedChunk && !this.isTocReader ? this.selectedChunk.chunk_id : null,
+        toc_id: this.isTocReader ? ((this.selectedChunk?.toc_id ?? this.activeTocId) || null) : null,
       },
       queryParamsHandling: 'merge',
       replaceUrl: true,
@@ -762,12 +860,8 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   private clearReaderSelection(): void {
     this.selectedChunk = null;
     this.activeChunkId = '';
-    this.readerNav = {
-      prev_chunk_id: null,
-      prev_page_no: null,
-      next_chunk_id: null,
-      next_page_no: null,
-    };
+    this.activeTocId = '';
+    this.readerNav = this.normalizeReaderNav(null);
     this.editorEditing = false;
     this.editorSaving = false;
     this.editorError = '';

@@ -39,7 +39,8 @@ Auth: `Authorization: Bearer <jwt>`
 
 `mode=reader`
 - Loads one full chunk for the reader panel (plus prev/next pointers in same source).
-- Params: `chunk_id` OR (`source_code` + `page_no`).
+- Params: `chunk_id` OR (`source_code` + `page_no`) OR `toc_id`.
+  - `toc_id` returns a TOC-scoped render (aggregated pages from that TOC start up to the next TOC start).
 
 ## Update Chunk
 
