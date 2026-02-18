@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -805,11 +806,29 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       this.tocRows = this.sortTocRows(res.results ?? []);
       this.readTotal = res.total ?? this.tocRows.length;
     } catch (err: unknown) {
-      this.readRows = [];
-      this.indexRows = [];
-      this.tocRows = [];
-      this.readTotal = 0;
-      this.readError = err instanceof Error ? err.message : 'Failed to load entries.';
+      try {
+        const fallback = await firstValueFrom(
+          this.bookSearch.listPages({
+            source_code: this.selectedSourceCode,
+            heading_norm: this.headingFilter.trim() || undefined,
+            page_from: this.pageFrom ?? undefined,
+            page_to: this.pageTo ?? undefined,
+            limit: 5000,
+            offset: 0,
+          })
+        );
+        this.readRows = fallback.results ?? [];
+        this.indexRows = [];
+        this.tocRows = this.sortTocRows(this.mapPagesToFallbackTocRows(this.readRows));
+        this.readTotal = fallback.total ?? this.tocRows.length;
+        this.readError = '';
+      } catch {
+        this.readRows = [];
+        this.indexRows = [];
+        this.tocRows = [];
+        this.readTotal = 0;
+        this.readError = this.describeApiError(err, 'Failed to load entries.');
+      }
     } finally {
       this.readLoading = false;
       if (moveToResultsTab && this.isCompact) {
@@ -858,7 +877,18 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       );
       this.allTocRows = this.sortTocRows(res.results ?? []);
     } catch {
-      this.allTocRows = [];
+      try {
+        const fallback = await firstValueFrom(
+          this.bookSearch.listPages({
+            source_code: this.selectedSourceCode,
+            limit: 5000,
+            offset: 0,
+          })
+        );
+        this.allTocRows = this.sortTocRows(this.mapPagesToFallbackTocRows(fallback.results ?? []));
+      } catch {
+        this.allTocRows = [];
+      }
     }
   }
 
@@ -1017,6 +1047,52 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     if (a && !b) return -1;
     if (!a && b) return 1;
     return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  }
+
+  private mapPagesToFallbackTocRows(rows: BookSearchPageRow[]): BookSearchTocRow[] {
+    return rows.map((row) => {
+      const pageLabel = row.page_no !== null && row.page_no !== undefined ? String(row.page_no) : '—';
+      const rawTitle = row.heading_raw?.trim() || `Page ${pageLabel}`;
+      const normTitle = row.heading_norm?.trim() || rawTitle.toLowerCase();
+      const indexPath =
+        row.page_no !== null && row.page_no !== undefined
+          ? String(row.page_no).padStart(6, '0')
+          : `z-${row.chunk_id}`;
+      return {
+        toc_id: `fallback:${row.chunk_id}`,
+        source_code: row.source_code,
+        depth: 1,
+        index_path: indexPath,
+        title_raw: rawTitle,
+        title_norm: normTitle,
+        page_no: row.page_no,
+        locator: row.locator,
+        pdf_page_index: this.pdfPageIndexFromLocator(row.locator),
+        target_chunk_id: row.chunk_id,
+      };
+    });
+  }
+
+  private pdfPageIndexFromLocator(locator: string | null | undefined): number | null {
+    const text = String(locator ?? '').trim();
+    if (!text.startsWith('pdf_page:')) return null;
+    const value = Number.parseInt(text.slice('pdf_page:'.length), 10);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  private describeApiError(err: unknown, fallback: string): string {
+    if (err instanceof HttpErrorResponse) {
+      const raw = err.error as unknown;
+      if (typeof raw === 'string' && raw.trim()) return raw;
+      if (raw && typeof raw === 'object') {
+        const payload = raw as { error?: string; message?: string; detail?: string };
+        const message = payload.error || payload.message || payload.detail;
+        if (message) return String(message);
+      }
+      return String(err.message || fallback);
+    }
+    if (err instanceof Error && err.message) return err.message;
+    return fallback;
   }
 
   private applyQueryParams(): void {
