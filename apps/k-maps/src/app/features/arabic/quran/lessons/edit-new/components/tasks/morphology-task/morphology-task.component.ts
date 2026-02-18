@@ -33,6 +33,7 @@ export class MorphologyTaskComponent {
   editModalError = '';
   editModalTitle = 'Morphology JSON';
   editModalPlaceholder = '';
+  rowEvidenceMorphologyModal = false;
 
   constructor() {
     this.editModalPlaceholder = this.placeholderFor('items');
@@ -196,33 +197,37 @@ export class MorphologyTaskComponent {
     this.writeLexiconMorphology(items);
   }
 
-  addEvidenceAndMorphologyFromItem(index: number) {
+  addEvidenceAndMorphologyFromItem(event: Event, index: number) {
+    event.preventDefault();
+    event.stopPropagation();
+
     const items = this.items;
     if (index < 0 || index >= items.length) return;
     const item = items[index];
     if (!item) return;
 
-    const evidenceCandidates = this.buildEvidenceEntriesFromItem(item);
-    if (evidenceCandidates.length) {
-      const currentEvidence = [...this.evidenceItems];
-      const seenEvidence = new Set(currentEvidence.map((entry) => this.evidenceKey(entry)));
-      for (const candidate of evidenceCandidates) {
-        const key = this.evidenceKey(candidate);
-        if (seenEvidence.has(key)) continue;
-        seenEvidence.add(key);
-        currentEvidence.push(candidate);
-      }
-      this.writeEvidence(currentEvidence);
-    }
+    const payload: Record<string, unknown> = {
+      evidences: this.buildEvidenceEntriesFromItem(item),
+      morphology: this.buildMorphologyLinkFromItem(item),
+    };
 
-    const link = this.buildMorphologyLinkFromItem(item);
-    const currentLinks = [...this.lexiconMorphologyItems];
-    const seenLinks = new Set(currentLinks.map((entry) => this.lexiconMorphologyKey(entry)));
-    const linkKey = this.lexiconMorphologyKey(link);
-    if (!seenLinks.has(linkKey)) {
-      currentLinks.push(link);
-      this.writeLexiconMorphology(currentLinks);
-    }
+    this.rowEvidenceMorphologyModal = true;
+    this.editModalKind = 'items';
+    this.editModalIndex = null;
+    this.editModalError = '';
+    this.editModalTitle = 'Attach Evidences JSON';
+    this.editModalPlaceholder = JSON.stringify(
+      {
+        evidences: [this.ensureEvidenceDefaults(this.buildTemplate('evidence'))],
+        morphology: this.ensureLexiconMorphologyDefaults(this.buildTemplate('links')),
+      },
+      null,
+      2
+    );
+    this.editModalJson = JSON.stringify(payload, null, 2);
+    queueMicrotask(() => {
+      this.editModalOpen = true;
+    });
   }
 
   openEditModal(event: Event, item: Record<string, unknown>, index: number, kind: ModalKind = 'items') {
@@ -260,6 +265,16 @@ export class MorphologyTaskComponent {
     this.editModalIndex = null;
     this.editModalJson = '';
     this.editModalError = '';
+    this.rowEvidenceMorphologyModal = false;
+  }
+
+  onModalSave(draft: string) {
+    this.editModalJson = draft;
+    if (this.rowEvidenceMorphologyModal) {
+      this.submitRowEvidenceMorphologyModal({ close: true });
+      return;
+    }
+    this.submitEditModal();
   }
 
   submitEditModal(options: { close?: boolean } = {}) {
@@ -477,6 +492,56 @@ export class MorphologyTaskComponent {
       return this.ensureLexiconMorphologyDefaults(parsed as Record<string, unknown>);
     }
     return this.ensureMorphologyDefaults(parsed as Record<string, unknown>);
+  }
+
+  private submitRowEvidenceMorphologyModal(options: { close?: boolean } = {}) {
+    let parsed: unknown;
+    const trimmed = this.editModalJson.trim();
+    try {
+      parsed = trimmed ? JSON.parse(trimmed) : {};
+    } catch (err: any) {
+      this.editModalError = err?.message ?? 'Invalid JSON.';
+      return;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      this.editModalError = 'JSON must be an object with evidences[] and morphology.';
+      return;
+    }
+
+    const payload = parsed as Record<string, unknown>;
+    const rawEvidences = payload['evidences'];
+    const evidenceCandidates = Array.isArray(rawEvidences)
+      ? rawEvidences
+          .filter((entry): entry is Record<string, unknown> => !!entry && typeof entry === 'object' && !Array.isArray(entry))
+          .map((entry) => this.ensureEvidenceDefaults(entry))
+      : [];
+    if (evidenceCandidates.length) {
+      const currentEvidence = [...this.evidenceItems];
+      const seenEvidence = new Set(currentEvidence.map((entry) => this.evidenceKey(entry)));
+      for (const candidate of evidenceCandidates) {
+        const key = this.evidenceKey(candidate);
+        if (seenEvidence.has(key)) continue;
+        seenEvidence.add(key);
+        currentEvidence.push(candidate);
+      }
+      this.writeEvidence(currentEvidence);
+    }
+
+    const rawMorphology = payload['morphology'];
+    if (rawMorphology && typeof rawMorphology === 'object' && !Array.isArray(rawMorphology)) {
+      const link = this.ensureLexiconMorphologyDefaults(rawMorphology as Record<string, unknown>);
+      const currentLinks = [...this.lexiconMorphologyItems];
+      const seenLinks = new Set(currentLinks.map((entry) => this.lexiconMorphologyKey(entry)));
+      const linkKey = this.lexiconMorphologyKey(link);
+      if (!seenLinks.has(linkKey)) {
+        currentLinks.push(link);
+        this.writeLexiconMorphology(currentLinks);
+      }
+    }
+
+    if (options.close) {
+      this.closeEditModal();
+    }
   }
 
   private navigateModal(delta: number, draft: string) {

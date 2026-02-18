@@ -94,10 +94,10 @@
                   <button
                     type="button"
                     class="btn btn-ghost btn-sm"
-                    title="Add row evidences + one morphology link"
-                    (click)="addEvidenceAndMorphologyFromItem(i)"
+                    title="Attach evidences (opens JSON modal)"
+                    (click)="addEvidenceAndMorphologyFromItem($event, i)"
                   >
-                    Add Ev+Morph
+                    Attach Evidence
                   </button>
                   <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'items')">
                     JSON
@@ -246,7 +246,7 @@
   [disablePrevious]="!canNavigatePrev"
   [disableNext]="!canNavigateNext"
   (close)="closeEditModal()"
-  (save)="editModalJson = $event; submitEditModal()"
+  (save)="onModalSave($event)"
   (previous)="onModalPrevious($event)"
   (next)="onModalNext($event)"
 ></app-json-editor-modal>
