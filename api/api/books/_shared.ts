@@ -53,18 +53,49 @@ export const toIntOrNull = (raw: string | null): number | null => {
 };
 
 export async function resolveSource(db: D1Database, sourceId: string): Promise<SourceRow | null> {
-  const trimmed = sourceId.trim();
-  if (!trimmed) return null;
-  return db
+  const raw = String(sourceId ?? '').trim();
+  if (!raw) return null;
+  let decoded = raw;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    decoded = raw;
+  }
+
+  const direct = await db
     .prepare(
       `
         SELECT s.ar_u_source, s.source_code
         FROM ar_u_sources s
-        WHERE s.source_code = ? OR s.ar_u_source = ?
+        WHERE s.source_code = ? COLLATE NOCASE
+           OR s.source_code = ? COLLATE NOCASE
+           OR s.ar_u_source = ?
+           OR s.ar_u_source = ?
         LIMIT 1
       `
     )
-    .bind(trimmed, trimmed)
+    .bind(raw, decoded, raw, decoded)
+    .first<SourceRow>();
+  if (direct) return direct;
+
+  // Fallback when source registry row is missing but chunks exist.
+  return db
+    .prepare(
+      `
+        SELECT
+          c.ar_u_source AS ar_u_source,
+          COALESCE(s.source_code, ?) AS source_code
+        FROM ar_source_chunks c
+        LEFT JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+        WHERE c.ar_u_source = ?
+           OR c.ar_u_source = ?
+           OR s.source_code = ? COLLATE NOCASE
+           OR s.source_code = ? COLLATE NOCASE
+        GROUP BY c.ar_u_source
+        LIMIT 1
+      `
+    )
+    .bind(decoded, raw, decoded, raw, decoded)
     .first<SourceRow>();
 }
 

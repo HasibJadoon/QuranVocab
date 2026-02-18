@@ -429,6 +429,10 @@ async function runTocList(
   limit: number,
   offset: number
 ) {
+  const tocPdfPageExpr = `CASE
+    WHEN t.locator LIKE 'pdf_page:%' THEN CAST(substr(t.locator, 10) AS INTEGER)
+    ELSE NULL
+  END`;
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
 
@@ -477,7 +481,7 @@ async function runTocList(
       t.title_norm,
       t.page_no,
       t.locator,
-      t.pdf_page_index,
+      ${tocPdfPageExpr} AS pdf_page_index,
       COALESCE(
         (
           SELECT p.chunk_id
@@ -504,9 +508,9 @@ async function runTocList(
           FROM ar_source_chunks p
           WHERE p.ar_u_source = t.ar_u_source
             AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
-            AND t.pdf_page_index IS NOT NULL
+            AND ${tocPdfPageExpr} IS NOT NULL
             AND p.locator LIKE 'pdf_page:%'
-            AND CAST(substr(p.locator, 10) AS INTEGER) = t.pdf_page_index
+            AND CAST(substr(p.locator, 10) AS INTEGER) = ${tocPdfPageExpr}
           ORDER BY p.page_no ASC, p.chunk_id ASC
           LIMIT 1
         ),
@@ -515,9 +519,9 @@ async function runTocList(
           FROM ar_source_chunks p
           WHERE p.ar_u_source = t.ar_u_source
             AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
-            AND t.pdf_page_index IS NOT NULL
+            AND ${tocPdfPageExpr} IS NOT NULL
             AND p.locator LIKE 'pdf_page:%'
-          ORDER BY ABS(CAST(substr(p.locator, 10) AS INTEGER) - t.pdf_page_index), p.page_no ASC, p.chunk_id ASC
+          ORDER BY ABS(CAST(substr(p.locator, 10) AS INTEGER) - ${tocPdfPageExpr}), p.page_no ASC, p.chunk_id ASC
           LIMIT 1
         )
       ) AS target_chunk_id
@@ -885,7 +889,10 @@ async function runReaderChunk(
             t.title_raw,
             t.page_no,
             t.locator,
-            t.pdf_page_index
+            CASE
+              WHEN t.locator LIKE 'pdf_page:%' THEN CAST(substr(t.locator, 10) AS INTEGER)
+              ELSE NULL
+            END AS pdf_page_index
           FROM ar_source_toc t
           JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
           WHERE t.toc_id = ?
