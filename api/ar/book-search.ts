@@ -51,14 +51,18 @@ function escapeLike(value: string): string {
 }
 
 function toSafeFtsQuery(value: string): string {
-  const raw = String(value ?? '').trim();
+  const raw = String(value ?? '')
+    .normalize('NFKC')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!raw) return '';
 
-  // Preserve explicit FTS boolean syntax when it looks valid.
+  // Preserve explicit FTS syntax only when it looks valid and safe.
+  const hasExplicitFtsSyntax = /(^|\s)(AND|OR|NOT|NEAR)\b/i.test(raw) || /["()*]/.test(raw);
   const quoteCount = (raw.match(/"/g) ?? []).length;
   const hasUnbalancedQuotes = quoteCount % 2 !== 0;
-  const hasUnsafeDelimiters = /[,\u060C;\\/]/.test(raw);
-  if (!hasUnbalancedQuotes && !hasUnsafeDelimiters) {
+  const hasUnsafeDelimiters = /[%\u060C,;\\/[\]{}<>`~!@#$^&=+|?]/.test(raw);
+  if (hasExplicitFtsSyntax && !hasUnbalancedQuotes && !hasUnsafeDelimiters) {
     return raw;
   }
 
@@ -79,7 +83,7 @@ function toSafeFtsQuery(value: string): string {
   const stripped = raw
     .replace(/"[^"]*"/g, ' ')
     .replace(/'[^']*'/g, ' ')
-    .replace(/[()]/g, ' ');
+    .replace(/[()*]/g, ' ');
   const tokenTerms = stripped
     .split(/\s+/)
     .map((part) =>
@@ -362,6 +366,24 @@ async function runChunkSearch(
   offset: number
 ) {
   const ftsQuery = q ? toSafeFtsQuery(q) : '';
+  if (q && !ftsQuery) {
+    return {
+      ok: true,
+      mode: 'chunks' as const,
+      total: 0,
+      limit,
+      offset,
+      filters: {
+        source_code: sourceCode || null,
+        chunk_type: chunkType || null,
+        page_from: pageFrom,
+        page_to: pageTo,
+        heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
+        q: q || null,
+      },
+      results: [] as ChunkRow[],
+    };
+  }
   const primaryTerm = extractPrimarySearchTerm(q);
   const primaryLike = primaryTerm ? `%${escapeLike(primaryTerm)}%` : '';
   const whereParts: string[] = [];
@@ -990,6 +1012,24 @@ async function runEvidenceSearch(
   offset: number
 ) {
   const ftsQuery = q ? toSafeFtsQuery(q) : '';
+  if (q && !ftsQuery) {
+    return {
+      ok: true,
+      mode: 'evidence' as const,
+      total: 0,
+      limit,
+      offset,
+      filters: {
+        source_code: sourceCode || null,
+        ar_u_lexicon: arULexicon || null,
+        heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
+        page_from: pageFrom,
+        page_to: pageTo,
+        q: q || null,
+      },
+      results: [] as EvidenceRow[],
+    };
+  }
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
 

@@ -390,14 +390,9 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   openSearchRow(row: SearchRow): void {
-    if (row.page_no !== null) {
-      void this.jumpReaderToPage(row.page_no, true);
-      return;
-    }
     void (async () => {
-      const resolved = await this.resolvePageFromChunkId(row.chunk_id);
-      if (resolved !== null) {
-        await this.jumpReaderToPage(resolved, true);
+      const opened = await this.openSearchResultRow(row, true);
+      if (opened) {
         return;
       }
       this.readerError = 'No linked page found for this search result.';
@@ -783,36 +778,43 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       await this.loadAllIndexRows();
       await this.loadCurrentList(false);
 
-      const tocId = this.initialTocId;
-      const chunkId = this.initialChunkId;
-      if (tocId) {
-        const fromToc = this.tocRows.find((row) => row.toc_id === tocId);
-        if (fromToc) {
-          await this.openTocRow(fromToc, false);
+      let openedByQuery = false;
+      if (this.query.trim()) {
+        openedByQuery = await this.openInitialSearchResult(false);
+      }
+
+      if (!openedByQuery) {
+        const tocId = this.initialTocId;
+        const chunkId = this.initialChunkId;
+        if (tocId) {
+          const fromToc = this.tocRows.find((row) => row.toc_id === tocId);
+          if (fromToc) {
+            await this.openTocRow(fromToc, false);
+          } else if (chunkId) {
+            const page = await this.resolvePageFromChunkId(chunkId);
+            if (page !== null) {
+              await this.jumpReaderToPage(page, false);
+            }
+          } else {
+            const page = await this.resolvePageFromTocId(tocId);
+            if (page !== null) {
+              await this.jumpReaderToPage(page, false);
+            } else {
+              this.readerError = 'Unable to render this TOC entry.';
+            }
+          }
         } else if (chunkId) {
           const page = await this.resolvePageFromChunkId(chunkId);
           if (page !== null) {
             await this.jumpReaderToPage(page, false);
           }
+        } else if (this.jumpPageNo !== null) {
+          await this.jumpReaderToPage(this.jumpPageNo, false);
         } else {
-          const page = await this.resolvePageFromTocId(tocId);
-          if (page !== null) {
-            await this.jumpReaderToPage(page, false);
-          } else {
-            this.readerError = 'Unable to render this TOC entry.';
+          const firstToc = this.tocRows.find((row) => row.page_no !== null);
+          if (firstToc?.page_no !== null && firstToc?.page_no !== undefined) {
+            await this.jumpReaderToPage(firstToc.page_no, false);
           }
-        }
-      } else if (chunkId) {
-        const page = await this.resolvePageFromChunkId(chunkId);
-        if (page !== null) {
-          await this.jumpReaderToPage(page, false);
-        }
-      } else if (this.jumpPageNo !== null) {
-        await this.jumpReaderToPage(this.jumpPageNo, false);
-      } else {
-        const firstToc = this.tocRows.find((row) => row.page_no !== null);
-        if (firstToc?.page_no !== null && firstToc?.page_no !== undefined) {
-          await this.jumpReaderToPage(firstToc.page_no, false);
         }
       }
       this.initialChunkId = '';
@@ -830,6 +832,26 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     if (this.query.trim()) {
       await this.loadSearchRows(false);
     }
+  }
+
+  private async openInitialSearchResult(moveToReaderTab: boolean): Promise<boolean> {
+    const row = this.searchRows[0];
+    if (!row) return false;
+    return this.openSearchResultRow(row, moveToReaderTab);
+  }
+
+  private async openSearchResultRow(row: SearchRow, moveToReaderTab: boolean): Promise<boolean> {
+    if (row.page_no !== null) {
+      await this.jumpReaderToPage(row.page_no, moveToReaderTab);
+      return true;
+    }
+
+    const resolved = await this.resolvePageFromChunkId(row.chunk_id);
+    if (resolved === null) {
+      return false;
+    }
+    await this.jumpReaderToPage(resolved, moveToReaderTab);
+    return true;
   }
 
   private async loadSearchRows(moveToResultsTab: boolean): Promise<void> {
