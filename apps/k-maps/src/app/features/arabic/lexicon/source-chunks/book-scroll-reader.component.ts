@@ -94,9 +94,6 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
       this.nextStart = res.next_start ?? null;
       this.scrollToTop();
       this.scrollToPageAnchor(targetPage, true);
-      setTimeout(() => {
-        void this.loadMoreIfNeeded();
-      }, 0);
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'Unable to jump to page.';
     } finally {
@@ -236,9 +233,6 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
       this.hasMore = !!res.has_more;
       this.nextStart = res.next_start ?? null;
       this.scrollToTop();
-      setTimeout(() => {
-        void this.loadMoreIfNeeded();
-      }, 0);
     } catch (err: unknown) {
       this.resetState();
       this.error = err instanceof Error ? err.message : 'Unable to load book pages.';
@@ -268,17 +262,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy {
       this.error = err instanceof Error ? err.message : 'Unable to load more pages.';
     } finally {
       this.loadingMore = false;
-      setTimeout(() => {
-        void this.loadMoreIfNeeded();
-      }, 0);
     }
-  }
-
-  private async loadMoreIfNeeded(): Promise<void> {
-    if (!this.isNearBottom()) return;
-    if (this.loadingInitial || this.loadingMore) return;
-    if (!this.hasMore || this.nextStart === null) return;
-    await this.loadMoreRange();
   }
 
   private replacePages(nextPages: BookScrollReaderPage[]): void {

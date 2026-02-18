@@ -46,6 +46,63 @@ function normalizeChunkType(value: string | null): string {
     .toLowerCase();
 }
 
+function toSafeFtsQuery(value: string): string {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  // Preserve explicit FTS boolean syntax when it looks valid.
+  const quoteCount = (raw.match(/"/g) ?? []).length;
+  const hasUnbalancedQuotes = quoteCount % 2 !== 0;
+  const hasUnsafeDelimiters = /[,\u060C;\\/]/.test(raw);
+  if (!hasUnbalancedQuotes && !hasUnsafeDelimiters) {
+    return raw;
+  }
+
+  // Fallback: convert user text into a conservative AND query.
+  const phraseRegex = /"([^"]+)"|'([^']+)'/g;
+  const phraseTerms: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = phraseRegex.exec(raw)) !== null) {
+    const phrase = (match[1] ?? match[2] ?? '')
+      .normalize('NFKC')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (phrase) {
+      phraseTerms.push(phrase);
+    }
+  }
+
+  const stripped = raw
+    .replace(/"[^"]*"/g, ' ')
+    .replace(/'[^']*'/g, ' ')
+    .replace(/[()]/g, ' ');
+  const tokenTerms = stripped
+    .split(/\s+/)
+    .map((part) =>
+      part
+        .normalize('NFKC')
+        .replace(/^[^:\s]+:/, '')
+        .replace(/[^\p{L}\p{N}_-]+/gu, '')
+        .trim()
+    )
+    .filter((term) => !!term)
+    .filter((term) => !/^(AND|OR|NOT)$/i.test(term));
+
+  const merged = [...phraseTerms, ...tokenTerms];
+  if (!merged.length) return '';
+
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+  for (const term of merged) {
+    const key = term.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(term);
+  }
+
+  return deduped.map((term) => `"${term.replace(/"/g, '""')}"`).join(' AND ');
+}
+
 function normalizeMode(value: string | null): SearchMode {
   const mode = (value ?? 'chunks').trim().toLowerCase();
   if (
@@ -188,6 +245,25 @@ type ReaderPageTextRow = {
   text: string;
 };
 
+type TableInfoRow = {
+  name: string | null;
+};
+
+async function getTableColumns(db: D1Database, tableName: string): Promise<Set<string>> {
+  const safeTable = String(tableName ?? '').replace(/[^A-Za-z0-9_]/g, '');
+  if (!safeTable) return new Set<string>();
+  try {
+    const { results = [] } = await db.prepare(`PRAGMA table_info(${safeTable})`).all<TableInfoRow>();
+    return new Set(
+      results
+        .map((row) => String(row.name ?? '').trim())
+        .filter((name) => !!name)
+    );
+  } catch {
+    return new Set<string>();
+  }
+}
+
 async function runSourceSearch(db: D1Database, q: string, limit: number, offset: number) {
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
@@ -250,6 +326,7 @@ async function runChunkSearch(
   limit: number,
   offset: number
 ) {
+  const ftsQuery = q ? toSafeFtsQuery(q) : '';
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
   whereParts.push("COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'");
@@ -274,9 +351,9 @@ async function runChunkSearch(
     whereParts.push('c.heading_norm LIKE ?');
     binds.push(`%${normalizeHeading(headingNormRaw)}%`);
   }
-  if (q) {
+  if (ftsQuery) {
     whereParts.push('ar_source_chunks_fts MATCH ?');
-    binds.push(q);
+    binds.push(ftsQuery);
   }
   const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
 
@@ -293,10 +370,10 @@ async function runChunkSearch(
     .first<{ total: number }>();
   const total = Number(countRow?.total ?? 0);
 
-  const hitExpr = q
+  const hitExpr = ftsQuery
     ? `snippet(ar_source_chunks_fts, 3, '[', ']', '…', 12) AS hit, bm25(ar_source_chunks_fts) AS rank`
     : `substr(c.text, 1, 260) AS hit, NULL AS rank`;
-  const orderBy = q ? 'ORDER BY rank ASC, c.page_no ASC, c.chunk_id ASC' : 'ORDER BY c.page_no ASC, c.chunk_id ASC';
+  const orderBy = ftsQuery ? 'ORDER BY rank ASC, c.page_no ASC, c.chunk_id ASC' : 'ORDER BY c.page_no ASC, c.chunk_id ASC';
 
   const dataSql = `
     SELECT
@@ -429,10 +506,89 @@ async function runTocList(
   limit: number,
   offset: number
 ) {
-  const tocPdfPageExpr = `CASE
-    WHEN t.locator LIKE 'pdf_page:%' THEN CAST(substr(t.locator, 10) AS INTEGER)
-    ELSE NULL
-  END`;
+  const tocColumns = await getTableColumns(db, 'ar_source_toc');
+  const hasPageNo = tocColumns.has('page_no');
+  const hasDepth = tocColumns.has('depth');
+  const hasIndexPath = tocColumns.has('index_path');
+  const hasTitleRaw = tocColumns.has('title_raw');
+  const hasTitleNorm = tocColumns.has('title_norm');
+  const hasLocator = tocColumns.has('locator');
+  const hasPdfPageIndex = tocColumns.has('pdf_page_index');
+
+  const tocDepthExpr = hasDepth ? 't.depth' : '1';
+  const tocIndexPathExpr = hasIndexPath
+    ? 't.index_path'
+    : hasPageNo
+      ? "printf('%06d', COALESCE(t.page_no, 0))"
+      : 't.toc_id';
+  const tocTitleRawExpr = hasTitleRaw ? 't.title_raw' : "'TOC'";
+  const tocTitleNormExpr = hasTitleNorm ? 't.title_norm' : `LOWER(${tocTitleRawExpr})`;
+  const tocPageNoExpr = hasPageNo ? 't.page_no' : 'NULL';
+  const tocLocatorExpr = hasLocator ? 't.locator' : 'NULL';
+  const tocPdfPageExpr = hasPdfPageIndex
+    ? 't.pdf_page_index'
+    : hasLocator
+      ? `CASE
+          WHEN t.locator LIKE 'pdf_page:%' THEN CAST(substr(t.locator, 10) AS INTEGER)
+          ELSE NULL
+        END`
+      : 'NULL';
+
+  const tocTargetCandidates: string[] = [];
+  if (hasPageNo) {
+    tocTargetCandidates.push(`
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = t.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND t.page_no IS NOT NULL
+            AND p.page_no = t.page_no
+          ORDER BY p.chunk_id ASC
+          LIMIT 1
+        )`);
+  }
+  if (hasLocator) {
+    tocTargetCandidates.push(`
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = t.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND t.locator IS NOT NULL
+            AND p.locator = t.locator
+          ORDER BY p.page_no ASC, p.chunk_id ASC
+          LIMIT 1
+        )`);
+  }
+  if (hasLocator || hasPdfPageIndex) {
+    tocTargetCandidates.push(`
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = t.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND ${tocPdfPageExpr} IS NOT NULL
+            AND p.locator LIKE 'pdf_page:%'
+            AND CAST(substr(p.locator, 10) AS INTEGER) = ${tocPdfPageExpr}
+          ORDER BY p.page_no ASC, p.chunk_id ASC
+          LIMIT 1
+        )`);
+    tocTargetCandidates.push(`
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = t.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND ${tocPdfPageExpr} IS NOT NULL
+            AND p.locator LIKE 'pdf_page:%'
+          ORDER BY ABS(CAST(substr(p.locator, 10) AS INTEGER) - ${tocPdfPageExpr}), p.page_no ASC, p.chunk_id ASC
+          LIMIT 1
+        )`);
+  }
+  const targetChunkExpr = tocTargetCandidates.length
+    ? `COALESCE(${tocTargetCandidates.join(',')})`
+    : 'NULL';
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
 
@@ -440,22 +596,27 @@ async function runTocList(
     whereParts.push('s.source_code = ?');
     binds.push(sourceCode);
   }
-  if (pageFrom !== null) {
+  if (hasPageNo && pageFrom !== null) {
     whereParts.push('t.page_no >= ?');
     binds.push(pageFrom);
   }
-  if (pageTo !== null) {
+  if (hasPageNo && pageTo !== null) {
     whereParts.push('t.page_no <= ?');
     binds.push(pageTo);
   }
   if (headingNormRaw) {
-    whereParts.push('t.title_norm LIKE ?');
+    whereParts.push(`${hasTitleNorm ? 't.title_norm' : tocTitleRawExpr} LIKE ?`);
     binds.push(`%${normalizeHeading(headingNormRaw)}%`);
   }
   if (q) {
     const like = `%${q}%`;
-    whereParts.push('(t.title_raw LIKE ? OR t.title_norm LIKE ? OR t.index_path LIKE ?)');
-    binds.push(like, like, like);
+    const qParts: string[] = [];
+    if (hasTitleRaw) qParts.push('t.title_raw LIKE ?');
+    if (hasTitleNorm) qParts.push('t.title_norm LIKE ?');
+    if (hasIndexPath) qParts.push('t.index_path LIKE ?');
+    if (!qParts.length) qParts.push('t.toc_id LIKE ?');
+    whereParts.push(`(${qParts.join(' OR ')})`);
+    binds.push(...qParts.map(() => like));
   }
   const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
 
@@ -475,60 +636,18 @@ async function runTocList(
     SELECT
       t.toc_id,
       s.source_code,
-      t.depth,
-      t.index_path,
-      t.title_raw,
-      t.title_norm,
-      t.page_no,
-      t.locator,
+      ${tocDepthExpr} AS depth,
+      ${tocIndexPathExpr} AS index_path,
+      ${tocTitleRawExpr} AS title_raw,
+      ${tocTitleNormExpr} AS title_norm,
+      ${tocPageNoExpr} AS page_no,
+      ${tocLocatorExpr} AS locator,
       ${tocPdfPageExpr} AS pdf_page_index,
-      COALESCE(
-        (
-          SELECT p.chunk_id
-          FROM ar_source_chunks p
-          WHERE p.ar_u_source = t.ar_u_source
-            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
-            AND t.page_no IS NOT NULL
-            AND p.page_no = t.page_no
-          ORDER BY p.chunk_id ASC
-          LIMIT 1
-        ),
-        (
-          SELECT p.chunk_id
-          FROM ar_source_chunks p
-          WHERE p.ar_u_source = t.ar_u_source
-            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
-            AND t.locator IS NOT NULL
-            AND p.locator = t.locator
-          ORDER BY p.page_no ASC, p.chunk_id ASC
-          LIMIT 1
-        ),
-        (
-          SELECT p.chunk_id
-          FROM ar_source_chunks p
-          WHERE p.ar_u_source = t.ar_u_source
-            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
-            AND ${tocPdfPageExpr} IS NOT NULL
-            AND p.locator LIKE 'pdf_page:%'
-            AND CAST(substr(p.locator, 10) AS INTEGER) = ${tocPdfPageExpr}
-          ORDER BY p.page_no ASC, p.chunk_id ASC
-          LIMIT 1
-        ),
-        (
-          SELECT p.chunk_id
-          FROM ar_source_chunks p
-          WHERE p.ar_u_source = t.ar_u_source
-            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
-            AND ${tocPdfPageExpr} IS NOT NULL
-            AND p.locator LIKE 'pdf_page:%'
-          ORDER BY ABS(CAST(substr(p.locator, 10) AS INTEGER) - ${tocPdfPageExpr}), p.page_no ASC, p.chunk_id ASC
-          LIMIT 1
-        )
-      ) AS target_chunk_id
+      ${targetChunkExpr} AS target_chunk_id
     FROM ar_source_toc t
     JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
     ${whereClause}
-    ORDER BY t.index_path ASC, t.toc_id ASC
+    ORDER BY ${hasIndexPath ? 't.index_path ASC,' : hasPageNo ? 't.page_no ASC,' : ''} t.toc_id ASC
     LIMIT ?
     OFFSET ?
   `;
@@ -682,6 +801,7 @@ async function runEvidenceSearch(
   limit: number,
   offset: number
 ) {
+  const ftsQuery = q ? toSafeFtsQuery(q) : '';
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
 
@@ -705,9 +825,9 @@ async function runEvidenceSearch(
     whereParts.push('e.page_no <= ?');
     binds.push(pageTo);
   }
-  if (q) {
+  if (ftsQuery) {
     whereParts.push('ar_u_lexicon_evidence_fts MATCH ?');
-    binds.push(q);
+    binds.push(ftsQuery);
   }
   const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
 
@@ -728,14 +848,14 @@ async function runEvidenceSearch(
     .first<{ total: number }>();
   const total = Number(countRow?.total ?? 0);
 
-  const hitExpr = q
+  const hitExpr = ftsQuery
     ? `snippet(ar_u_lexicon_evidence_fts, 4, '[', ']', '…', 12) AS extract_hit,
        snippet(ar_u_lexicon_evidence_fts, 5, '[', ']', '…', 12) AS notes_hit,
        bm25(ar_u_lexicon_evidence_fts) AS rank`
     : `substr(COALESCE(e.extract_text, ''), 1, 260) AS extract_hit,
        substr(COALESCE(e.note_md, ''), 1, 260) AS notes_hit,
        NULL AS rank`;
-  const orderBy = q
+  const orderBy = ftsQuery
     ? 'ORDER BY rank ASC, e.page_no ASC, COALESCE(e.chunk_id, e.evidence_id) ASC'
     : 'ORDER BY e.page_no ASC, COALESCE(e.chunk_id, e.evidence_id) ASC';
 
@@ -1450,9 +1570,9 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     const isFtsQueryError =
-      message.includes('fts5: syntax error') ||
-      message.includes('no such column') ||
-      message.includes('malformed MATCH expression');
+      (mode === 'chunks' || mode === 'evidence') &&
+      !!q &&
+      (message.includes('fts5: syntax error') || message.includes('malformed MATCH expression'));
 
     if (isFtsQueryError) {
       return new Response(
