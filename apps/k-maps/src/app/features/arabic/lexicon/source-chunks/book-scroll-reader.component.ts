@@ -1,15 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 
 import type { BookScrollReaderChunk, BookScrollReaderPage } from '../../../../shared/models/arabic/book-search.model';
+import { BookSearchService } from '../../../../shared/services/book-search.service';
 import { BookScrollReaderService } from '../../../../shared/services/book-scroll-reader.service';
 
 @Component({
   selector: 'app-book-scroll-reader',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './book-scroll-reader.component.html',
   styleUrls: ['./book-scroll-reader.component.scss'],
 })
@@ -29,6 +31,13 @@ export class BookScrollReaderComponent implements OnChanges {
   error = '';
   hasMore = false;
   nextStart: number | null = null;
+  editingChunkId = '';
+  editPageNo: number | null = null;
+  editHeadingRaw = '';
+  editText = '';
+  editSaving = false;
+  editError = '';
+  editMessage = '';
 
   private readonly pageSet = new Set<number>();
   private readonly loadLimit = 10;
@@ -36,6 +45,7 @@ export class BookScrollReaderComponent implements OnChanges {
 
   constructor(
     private readonly readerService: BookScrollReaderService,
+    private readonly bookSearch: BookSearchService,
     private readonly sanitizer: DomSanitizer
   ) {}
 
@@ -79,6 +89,9 @@ export class BookScrollReaderComponent implements OnChanges {
       this.nextStart = res.next_start ?? null;
       this.scrollToTop();
       this.scrollToPageAnchor(targetPage, true);
+      setTimeout(() => {
+        void this.loadMoreIfNeeded();
+      }, 0);
     } catch (err: unknown) {
       this.error = err instanceof Error ? err.message : 'Unable to jump to page.';
     } finally {
@@ -87,10 +100,7 @@ export class BookScrollReaderComponent implements OnChanges {
   }
 
   onViewportScroll(): void {
-    const viewport = this.scrollViewport?.nativeElement;
-    if (!viewport || this.loadingMore || this.loadingInitial || !this.hasMore || this.nextStart === null) return;
-    const nearBottom = viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 300;
-    if (!nearBottom) return;
+    if (!this.isNearBottom() || this.loadingMore || this.loadingInitial || !this.hasMore || this.nextStart === null) return;
     void this.loadMoreRange();
   }
 
@@ -118,6 +128,63 @@ export class BookScrollReaderComponent implements OnChanges {
   trackByPageNo = (_: number, page: BookScrollReaderPage) => page.page_no;
   trackByChunkId = (_: number, chunk: BookScrollReaderChunk) => chunk.chunk_id;
 
+  isEditing(chunk: BookScrollReaderChunk): boolean {
+    return this.editingChunkId === chunk.chunk_id;
+  }
+
+  startEdit(chunk: BookScrollReaderChunk, page: BookScrollReaderPage): void {
+    this.editingChunkId = chunk.chunk_id;
+    this.editPageNo = page.page_no;
+    this.editHeadingRaw = chunk.heading_raw ?? '';
+    this.editText = chunk.text_raw ?? '';
+    this.editSaving = false;
+    this.editError = '';
+    this.editMessage = '';
+  }
+
+  cancelEdit(): void {
+    this.editingChunkId = '';
+    this.editPageNo = null;
+    this.editHeadingRaw = '';
+    this.editText = '';
+    this.editSaving = false;
+    this.editError = '';
+  }
+
+  async saveEdit(chunk: BookScrollReaderChunk, page: BookScrollReaderPage): Promise<void> {
+    if (!this.isEditing(chunk) || this.editSaving) return;
+    this.editSaving = true;
+    this.editError = '';
+    this.editMessage = '';
+    try {
+      const payload = {
+        chunk_id: chunk.chunk_id,
+        page_no: this.editPageNo,
+        heading_raw: this.editHeadingRaw.trim() || null,
+        text: this.editText,
+      };
+      const res = await firstValueFrom(this.bookSearch.updateChunk(payload));
+      const savedChunk = res.chunk;
+      if (savedChunk?.chunk_id === chunk.chunk_id) {
+        chunk.heading_raw = savedChunk.heading_raw ?? null;
+        chunk.text_raw = savedChunk.text ?? this.editText;
+      } else {
+        chunk.heading_raw = this.editHeadingRaw.trim() || null;
+        chunk.text_raw = this.editText;
+      }
+      this.editMessage = 'Saved.';
+      this.cancelEdit();
+
+      if (savedChunk?.page_no !== null && savedChunk?.page_no !== undefined && savedChunk.page_no !== page.page_no) {
+        await this.jumpToPage(savedChunk.page_no, this.sourceCode);
+      }
+    } catch (err: unknown) {
+      this.editError = err instanceof Error ? err.message : 'Save failed.';
+    } finally {
+      this.editSaving = false;
+    }
+  }
+
   private async loadInitialRange(): Promise<void> {
     const source = String(this.sourceCode ?? '').trim();
     if (!source) {
@@ -139,6 +206,9 @@ export class BookScrollReaderComponent implements OnChanges {
       this.hasMore = !!res.has_more;
       this.nextStart = res.next_start ?? null;
       this.scrollToTop();
+      setTimeout(() => {
+        void this.loadMoreIfNeeded();
+      }, 0);
     } catch (err: unknown) {
       this.resetState();
       this.error = err instanceof Error ? err.message : 'Unable to load book pages.';
@@ -168,7 +238,17 @@ export class BookScrollReaderComponent implements OnChanges {
       this.error = err instanceof Error ? err.message : 'Unable to load more pages.';
     } finally {
       this.loadingMore = false;
+      setTimeout(() => {
+        void this.loadMoreIfNeeded();
+      }, 0);
     }
+  }
+
+  private async loadMoreIfNeeded(): Promise<void> {
+    if (!this.isNearBottom()) return;
+    if (this.loadingInitial || this.loadingMore) return;
+    if (!this.hasMore || this.nextStart === null) return;
+    await this.loadMoreRange();
   }
 
   private replacePages(nextPages: BookScrollReaderPage[]): void {
@@ -212,6 +292,12 @@ export class BookScrollReaderComponent implements OnChanges {
     }, 0);
   }
 
+  private isNearBottom(): boolean {
+    const viewport = this.scrollViewport?.nativeElement;
+    if (!viewport) return false;
+    return viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 300;
+  }
+
   private resetState(): void {
     this.pages = [];
     this.pageSet.clear();
@@ -221,6 +307,7 @@ export class BookScrollReaderComponent implements OnChanges {
     this.hasMore = false;
     this.nextStart = null;
     this.sourceBootstrapped = '';
+    this.cancelEdit();
   }
 
   private searchTermsFromQuery(query: string): string[] {

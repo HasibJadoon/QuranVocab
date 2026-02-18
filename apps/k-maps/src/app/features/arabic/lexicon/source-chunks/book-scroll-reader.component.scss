@@ -36,6 +36,80 @@
   color: var(--book-paper-ink, rgba(232, 240, 255, 0.95));
 }
 
+.chunk-block {
+  margin-bottom: 1.1rem;
+}
+
+.chunk-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.chunk-edit-btn,
+.chunk-save-btn,
+.chunk-cancel-btn {
+  border: 1px solid var(--km-core-border, #2f3d53);
+  border-radius: 8px;
+  background: rgba(18, 26, 40, 0.94);
+  color: var(--paper-ink, #d9e3f7);
+  padding: 0.28rem 0.62rem;
+  font-size: 0.74rem;
+}
+
+.chunk-save-btn {
+  background: rgba(94, 105, 214, 0.82);
+  border-color: rgba(130, 142, 240, 0.9);
+}
+
+.chunk-editor {
+  display: grid;
+  gap: 0.52rem;
+  border: 1px solid var(--km-core-border, #2f3d53);
+  border-radius: 10px;
+  padding: 0.62rem;
+  background: rgba(9, 15, 25, 0.9);
+  margin-bottom: 0.72rem;
+}
+
+.chunk-editor label {
+  display: grid;
+  gap: 0.26rem;
+  font-size: 0.72rem;
+  color: var(--paper-ink-soft, #93a6c7);
+}
+
+.chunk-editor input,
+.chunk-editor textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--km-core-border, #2f3d53);
+  border-radius: 8px;
+  background: rgba(12, 19, 32, 0.95);
+  color: var(--km-core-text, #e5edfb);
+  padding: 0.48rem 0.58rem;
+  font-size: 0.86rem;
+}
+
+.chunk-editor textarea {
+  resize: vertical;
+}
+
+.chunk-editor-actions {
+  display: flex;
+  gap: 0.42rem;
+}
+
+.chunk-editor-feedback {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.chunk-editor-feedback.error {
+  color: #f0b6b0;
+}
+
 .chunk-text {
   color: var(--book-paper-ink, rgba(232, 240, 255, 0.95));
   margin-bottom: 1rem;
@@ -70,4 +144,8 @@
   padding: 1rem 0 0.2rem;
   color: var(--paper-ink-soft);
   font-size: 0.82rem;
+}
+
+.reader-tail.success {
+  color: #b7e7bf;
 }

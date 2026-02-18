@@ -470,6 +470,9 @@ async function runTocList(
     .bind(...binds)
     .first<{ total: number }>();
   const total = Number(countRow?.total ?? 0);
+  if (total === 0) {
+    return runTocListFromPages(db, q, sourceCode, headingNormRaw, pageFrom, pageTo, limit, offset);
+  }
 
   const dataSql = `
     SELECT
@@ -550,6 +553,125 @@ async function runTocList(
       page_from: pageFrom,
       page_to: pageTo,
       q: q || null,
+    },
+    results,
+  };
+}
+
+async function runTocListFromPages(
+  db: D1Database,
+  q: string,
+  sourceCode: string,
+  headingNormRaw: string,
+  pageFrom: number | null,
+  pageTo: number | null,
+  limit: number,
+  offset: number
+) {
+  const whereParts: string[] = [];
+  const binds: SqlBind[] = [];
+
+  if (sourceCode) {
+    whereParts.push('s.source_code = ?');
+    binds.push(sourceCode);
+  }
+  whereParts.push("COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'");
+  whereParts.push('c.page_no IS NOT NULL');
+  if (pageFrom !== null) {
+    whereParts.push('c.page_no >= ?');
+    binds.push(pageFrom);
+  }
+  if (pageTo !== null) {
+    whereParts.push('c.page_no <= ?');
+    binds.push(pageTo);
+  }
+  if (headingNormRaw) {
+    whereParts.push("COALESCE(c.heading_norm, '') LIKE ?");
+    binds.push(`%${normalizeHeading(headingNormRaw)}%`);
+  }
+  if (q) {
+    const like = `%${q}%`;
+    whereParts.push(
+      "(COALESCE(c.heading_raw, '') LIKE ? OR COALESCE(c.heading_norm, '') LIKE ? OR COALESCE(c.locator, '') LIKE ? OR CAST(c.page_no AS TEXT) LIKE ?)"
+    );
+    binds.push(like, like, like, like);
+  }
+  const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+
+  const countSql = `
+    WITH page_heads AS (
+      SELECT
+        c.ar_u_source,
+        c.page_no,
+        MIN(c.chunk_id) AS head_chunk_id
+      FROM ar_source_chunks c
+      JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+      ${whereClause}
+      GROUP BY c.ar_u_source, c.page_no
+    )
+    SELECT COUNT(*) AS total
+    FROM page_heads
+  `;
+  const countRow = await db
+    .prepare(countSql)
+    .bind(...binds)
+    .first<{ total: number }>();
+  const total = Number(countRow?.total ?? 0);
+
+  const dataSql = `
+    WITH page_heads AS (
+      SELECT
+        c.ar_u_source,
+        c.page_no,
+        MIN(c.chunk_id) AS head_chunk_id
+      FROM ar_source_chunks c
+      JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+      ${whereClause}
+      GROUP BY c.ar_u_source, c.page_no
+    )
+    SELECT
+      'fallback:' || h.chunk_id AS toc_id,
+      s.source_code,
+      1 AS depth,
+      printf('%06d', COALESCE(h.page_no, 0)) AS index_path,
+      COALESCE(NULLIF(h.heading_raw, ''), 'Page ' || CAST(h.page_no AS TEXT)) AS title_raw,
+      COALESCE(
+        NULLIF(h.heading_norm, ''),
+        LOWER(COALESCE(NULLIF(h.heading_raw, ''), 'Page ' || CAST(h.page_no AS TEXT)))
+      ) AS title_norm,
+      h.page_no,
+      h.locator,
+      CASE
+        WHEN h.locator LIKE 'pdf_page:%' THEN CAST(substr(h.locator, 10) AS INTEGER)
+        ELSE NULL
+      END AS pdf_page_index,
+      h.chunk_id AS target_chunk_id
+    FROM page_heads ph
+    JOIN ar_source_chunks h ON h.chunk_id = ph.head_chunk_id
+    JOIN ar_u_sources s ON s.ar_u_source = h.ar_u_source
+    ORDER BY h.page_no ASC, h.chunk_id ASC
+    LIMIT ?
+    OFFSET ?
+  `;
+
+  const { results = [] } = await db
+    .prepare(dataSql)
+    .bind(...binds, limit, offset)
+    .all<TocRow>();
+
+  return {
+    ok: true,
+    mode: 'toc' as const,
+    total,
+    limit,
+    offset,
+    filters: {
+      source_code: sourceCode || null,
+      heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
+      page_from: pageFrom,
+      page_to: pageTo,
+      q: q || null,
+      fallback: 'pages',
     },
     results,
   };
