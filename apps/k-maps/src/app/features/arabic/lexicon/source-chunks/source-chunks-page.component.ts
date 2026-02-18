@@ -6,6 +6,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
 
 import { BookSearchService } from '../../../../shared/services/book-search.service';
+import { AppHeaderbarComponent, AppTabsComponent, type AppTabItem } from '../../../../shared/components';
 import type {
   BookSearchChunkHit,
   BookSearchIndexRow,
@@ -15,8 +16,6 @@ import type {
   BookSearchSource,
   BookSearchTocRow,
 } from '../../../../shared/models/arabic/book-search.model';
-
-type ViewMode = 'search' | 'read';
 type ReadTab = 'pages' | 'index' | 'toc';
 type MobileTab = 'books' | 'reader';
 
@@ -30,7 +29,7 @@ type SearchRow = {
 @Component({
   selector: 'app-source-chunks-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppHeaderbarComponent, AppTabsComponent],
   templateUrl: './source-chunks-page.component.html',
   styleUrls: ['./source-chunks-page.component.scss'],
 })
@@ -42,7 +41,6 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   booksError = '';
 
   selectedSourceCode = '';
-  viewMode: ViewMode = 'read';
   readTab: ReadTab = 'pages';
 
   pageFrom: number | null = null;
@@ -97,6 +95,9 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
   isCompact = false;
   mobileTab: MobileTab = 'books';
+  navigatorWidth = 380;
+  readonly minNavigatorWidth = 300;
+  readonly maxNavigatorWidth = 560;
 
   private readonly onResize = () => this.updateResponsiveState();
   private initialChunkId = '';
@@ -126,25 +127,39 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   get currentTotal(): number {
-    return this.viewMode === 'search' ? this.searchTotal : this.readTotal;
+    return this.readTotal;
   }
 
   get tableCountLabel(): string {
-    return `${this.currentTotal} table`;
+    if (this.readTab === 'index') return `${this.currentTotal} index entries`;
+    if (this.readTab === 'toc') return `${this.currentTotal} TOC entries`;
+    return `${this.currentTotal} pages`;
   }
 
   get listEmptyMessage(): string {
-    if (this.viewMode === 'search') return 'No results';
     if (this.readTab === 'index') return 'No index entries imported for this book';
     if (this.readTab === 'toc') return 'No TOC entries imported for this book';
     return 'No pages imported for this book';
   }
 
   get readerEmptyMessage(): string {
-    if (this.viewMode === 'search') return 'Select a result to read';
     if (this.readTab === 'index') return 'Select an index term to read';
     if (this.readTab === 'toc') return 'Select a TOC row to read';
     return 'Select a page to read';
+  }
+
+  get navigatorTabs(): AppTabItem[] {
+    return [
+      { id: 'pages', label: 'Pages' },
+      { id: 'index', label: 'Index' },
+      { id: 'toc', label: 'TOC' },
+    ];
+  }
+
+  get workspaceCssVars(): Record<string, string> {
+    return {
+      '--navigator-width': `${this.navigatorWidth}px`,
+    };
   }
 
   panelActive(tab: MobileTab): boolean {
@@ -155,20 +170,37 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     this.mobileTab = tab;
   }
 
+  onHeaderSearchInput(value: string): void {
+    this.query = value ?? '';
+    if (!this.query.trim()) {
+      this.searchRows = [];
+      this.searchTotal = 0;
+      this.searchError = '';
+    }
+    this.syncUrl();
+  }
+
+  clearSearch(): void {
+    this.query = '';
+    this.searchRows = [];
+    this.searchTotal = 0;
+    this.searchError = '';
+    this.syncUrl();
+  }
+
+  onReadTabSelect(tab: AppTabItem): void {
+    const tabId = String(tab.id ?? '').toLowerCase();
+    if (tabId === 'pages' || tabId === 'index' || tabId === 'toc') {
+      this.setReadTab(tabId);
+    }
+  }
+
   onBookChange(): void {
     this.clearReaderSelection();
     this.searchError = '';
     this.readError = '';
     this.selectedTermChunkId = '';
     void this.loadTermRows();
-    void this.loadCurrentList(true);
-    this.syncUrl();
-  }
-
-  setViewMode(mode: ViewMode): void {
-    if (this.viewMode === mode) return;
-    this.viewMode = mode;
-    this.clearReaderSelection();
     void this.loadCurrentList(true);
     this.syncUrl();
   }
@@ -182,23 +214,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   runSearch(): void {
-    if (this.viewMode !== 'search') return;
     void this.loadSearchRows(true);
     this.syncUrl();
   }
 
   refreshReadRows(): void {
-    if (this.viewMode !== 'read') return;
-    void this.loadReadRows(true);
+    void this.loadCurrentList(true);
     this.syncUrl();
   }
 
   applyFilters(): void {
-    if (this.viewMode === 'search') {
-      void this.loadSearchRows(true);
-    } else {
-      void this.loadReadRows(true);
-    }
+    void this.loadCurrentList(true);
     this.syncUrl();
   }
 
@@ -433,11 +459,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   private async loadCurrentList(moveToResultsTab: boolean): Promise<void> {
-    if (this.viewMode === 'search') {
-      await this.loadSearchRows(moveToResultsTab);
-      return;
-    }
     await this.loadReadRows(moveToResultsTab);
+    if (this.query.trim()) {
+      await this.loadSearchRows(false);
+    }
   }
 
   private async loadSearchRows(moveToResultsTab: boolean): Promise<void> {
@@ -680,10 +705,6 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       this.selectedSourceCode = sourceCode;
     }
 
-    const mode = (qp.get('view_mode') ?? '').trim().toLowerCase();
-    if (mode === 'search' || mode === 'read') {
-      this.viewMode = mode;
-    }
     const readTab = (qp.get('read_tab') ?? '').trim().toLowerCase();
     if (readTab === 'pages' || readTab === 'index' || readTab === 'toc') {
       this.readTab = readTab;
@@ -704,7 +725,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       relativeTo: this.route,
       queryParams: {
         source_code: this.selectedSourceCode || null,
-        view_mode: this.viewMode,
+        view_mode: 'read',
         read_tab: this.readTab,
         q: this.query.trim() || null,
         page_from: this.pageFrom ?? null,

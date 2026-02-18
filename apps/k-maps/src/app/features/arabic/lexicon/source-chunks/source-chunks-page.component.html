@@ -1,87 +1,110 @@
-<section class="quran-edit-new source-chunks-workspace">
-  <header class="edit-hero">
-    <div>
-      <p class="hero-kicker">K-Maps Workspace</p>
-      <h1>Lexicon Book Reader</h1>
-      <p class="hero-intent">
-        Read as a book with Pages, Index, and TOC navigation.
-      </p>
-    </div>
-    <div class="hero-actions">
-      <span class="panel-chip">{{ scopeLabel }}</span>
-      <span class="panel-chip">{{ tableCountLabel }}</span>
-    </div>
-  </header>
+<section class="source-chunks-workspace" [ngStyle]="workspaceCssVars">
+  <app-headerbar
+    class="books-headerbar"
+    [showTitle]="true"
+    [title]="'Lexicon Reader'"
+    [showSearch]="true"
+    [placeholder]="'Search this book (term, phrase, boolean)'"
+    [value]="query"
+    [primaryLabel]="'Find'"
+    [secondaryLabel]="'Clear'"
+    [leadingLabel]="'Refresh'"
+    (search)="onHeaderSearchInput($event)"
+    (primary)="runSearch()"
+    (secondary)="clearSearch()"
+    (leading)="refreshReadRows()"
+  />
 
-  <nav class="mobile-tabs" *ngIf="isCompact">
+  <nav class="mobile-switch" *ngIf="isCompact">
     <button type="button" [class.active]="mobileTab === 'books'" (click)="setMobileTab('books')">Navigator</button>
     <button type="button" [class.active]="mobileTab === 'reader'" (click)="setMobileTab('reader')">Reader</button>
   </nav>
 
   <div class="workspace-grid">
-    <aside class="edit-panel workspace-panel panel-books" [class.mobile-active]="panelActive('books')">
-      <header class="panel-head panel-head-tight">
-        <div>
-          <h2>{{ viewMode === 'search' ? 'Search + Navigator' : 'Book Navigator' }}</h2>
-          <p *ngIf="viewMode === 'search'">Search pages, then open the matched page in the reader.</p>
-          <p *ngIf="viewMode === 'read'">Switch between Pages, Index, and TOC, then jump into the page reader.</p>
+    <aside class="workspace-panel panel-books" [class.mobile-active]="panelActive('books')">
+      <header class="workspace-head">
+        <div class="workspace-head-copy">
+          <h2>Book Navigator</h2>
+          <p>Switch between Pages, Index, and TOC, then open directly in the reader.</p>
         </div>
         <span class="panel-chip">{{ tableCountLabel }}</span>
       </header>
 
-      <div class="panel-body panel-body-tight">
-        <label>
+      <div class="workspace-body">
+        <label class="field">
           <span>Select Book</span>
           <select [(ngModel)]="selectedSourceCode" (change)="onBookChange()">
             <option *ngFor="let source of books" [value]="source.source_code">
               {{ source.source_code }} — {{ source.title }}
             </option>
           </select>
+          <small class="field-helper">{{ scopeLabel }}</small>
         </label>
 
-        <div class="toggle-group">
-          <span>Mode</span>
-          <div class="toggle-buttons toggle-two">
-            <button type="button" [class.active]="viewMode === 'search'" (click)="setViewMode('search')">Search</button>
-            <button type="button" [class.active]="viewMode === 'read'" (click)="setViewMode('read')">Read</button>
-          </div>
-        </div>
+        <app-tabs
+          [tabs]="navigatorTabs"
+          [activeId]="readTab"
+          [variant]="'pills'"
+          [ariaLabel]="'Book navigation tabs'"
+          (tabChange)="onReadTabSelect($event)"
+        />
 
-        <div class="toggle-group" *ngIf="viewMode === 'read'">
-          <span>Navigation</span>
-          <div class="toggle-buttons toggle-three">
-            <button type="button" [class.active]="readTab === 'pages'" (click)="setReadTab('pages')">Pages</button>
-            <button type="button" [class.active]="readTab === 'index'" (click)="setReadTab('index')">Index</button>
-            <button type="button" [class.active]="readTab === 'toc'" (click)="setReadTab('toc')">TOC</button>
+        <label class="field field-range" *ngIf="!isCompact">
+          <span>Navigator Width</span>
+          <div class="range-line">
+            <input type="range" [min]="minNavigatorWidth" [max]="maxNavigatorWidth" step="10" [(ngModel)]="navigatorWidth" />
+            <strong>{{ navigatorWidth }}px</strong>
           </div>
-        </div>
+        </label>
+
+        <label class="field">
+          <span>Search in Book</span>
+          <div class="jump-controls">
+            <input
+              type="search"
+              [ngModel]="query"
+              (ngModelChange)="onHeaderSearchInput($event)"
+              placeholder="term / phrase / boolean"
+              (keyup.enter)="runSearch()"
+            />
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              (click)="runSearch()"
+              [disabled]="!selectedSourceCode || !query.trim()"
+            >
+              Find
+            </button>
+          </div>
+          <small class="field-helper" *ngIf="query.trim() && !searchLoading">{{ searchTotal }} matches</small>
+        </label>
 
         <div class="filter-grid">
-          <label>
+          <label class="field">
             <span>Page From</span>
             <input type="number" [(ngModel)]="pageFrom" />
           </label>
-          <label>
+          <label class="field">
             <span>Page To</span>
             <input type="number" [(ngModel)]="pageTo" />
           </label>
         </div>
 
-        <label>
-          <span>Heading contains</span>
+        <label class="field">
+          <span>Heading Contains</span>
           <input type="text" [(ngModel)]="headingFilter" placeholder="e.g. revelation clarity" (keyup.enter)="applyFilters()" />
         </label>
 
-        <label>
-          <span>Jump to page</span>
+        <label class="field">
+          <span>Jump to Page</span>
           <div class="jump-controls">
             <input type="number" [(ngModel)]="jumpPageNo" placeholder="Page #" (keyup.enter)="openJumpPage()" />
             <button type="button" class="btn btn-primary btn-sm" (click)="openJumpPage()" [disabled]="!selectedSourceCode">Open</button>
           </div>
         </label>
 
-        <label>
-          <span>Jump to term</span>
+        <label class="field">
+          <span>Jump to Term</span>
           <div class="jump-controls">
             <select [(ngModel)]="selectedTermChunkId" [disabled]="termsLoading || !termRows.length">
               <option value="">{{ termsLoading ? 'Loading terms…' : 'Select term' }}</option>
@@ -93,162 +116,163 @@
               Open
             </button>
           </div>
-          <span class="feedback muted" *ngIf="!termsLoading && termRows.length">Loaded {{ termRows.length }} terms</span>
-          <span class="feedback error" *ngIf="termsError">{{ termsError }}</span>
+          <small class="field-helper" *ngIf="!termsLoading && termRows.length">Loaded {{ termRows.length }} terms</small>
+          <small class="feedback error" *ngIf="termsError">{{ termsError }}</small>
         </label>
 
         <div class="panel-actions">
           <button type="button" class="btn btn-primary" (click)="applyFilters()" [disabled]="!selectedSourceCode">
-            Apply
+            Apply Filters
           </button>
-          <button type="button" class="btn btn-ghost" (click)="clearFilters()">
-            Clear filters
-          </button>
-          <button type="button" class="btn btn-ghost" *ngIf="viewMode === 'read'" (click)="refreshReadRows()" [disabled]="readLoading || !selectedSourceCode">
-            {{ readLoading ? 'Loading…' : 'Refresh ' + (readTab === 'pages' ? 'pages' : readTab === 'index' ? 'index' : 'TOC') }}
-          </button>
+          <button type="button" class="btn btn-ghost" (click)="clearFilters()">Clear Filters</button>
         </div>
 
-        <p class="feedback error" *ngIf="booksError">{{ booksError }}</p>
         <p class="feedback muted" *ngIf="booksLoading">Loading books…</p>
-        <p class="feedback error" *ngIf="viewMode === 'search' && searchError">{{ searchError }}</p>
-        <p class="feedback error" *ngIf="viewMode === 'read' && readError">{{ readError }}</p>
+        <p class="feedback error" *ngIf="booksError">{{ booksError }}</p>
+        <p class="feedback error" *ngIf="readError">{{ readError }}</p>
 
-        <div class="table-shell">
-          <table class="workspace-table" *ngIf="viewMode === 'search'; else readModeTable">
+        <div class="table-shell navigator-table-shell">
+          <table class="workspace-table" *ngIf="readTab === 'pages'">
             <thead>
               <tr>
                 <th>Page</th>
                 <th>Heading</th>
-                <th>Snippet</th>
                 <th>Open</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngIf="searchLoading">
-                <td colspan="4" class="state-cell">Loading results…</td>
+              <tr *ngIf="readLoading">
+                <td colspan="3" class="state-cell">Loading pages…</td>
               </tr>
-              <tr *ngIf="!searchLoading && !searchRows.length">
-                <td colspan="4" class="state-cell">No results</td>
+              <tr *ngIf="!readLoading && !readRows.length">
+                <td colspan="3" class="state-cell">{{ listEmptyMessage }}</td>
               </tr>
               <tr
-                *ngFor="let row of searchRows; trackBy: trackByChunkId"
+                *ngFor="let row of readRows; trackBy: trackByChunkId"
                 [class.is-active]="row.chunk_id === activeChunkId"
-                (click)="openSearchRow(row)"
+                (click)="openReadRow(row)"
               >
                 <td>{{ row.page_no ?? '—' }}</td>
-                <td>{{ row.heading_raw || 'No heading' }}</td>
-                <td><span class="snippet" [innerHTML]="row.snippet_html"></span></td>
+                <td>{{ row.heading_raw || row.locator || 'Page entry' }}</td>
                 <td>
-                  <button type="button" class="btn btn-ghost btn-sm" (click)="openSearchRow(row); $event.stopPropagation()">Open</button>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="openReadRow(row); $event.stopPropagation()">Open</button>
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <ng-template #readModeTable>
-            <table class="workspace-table" *ngIf="readTab === 'pages'">
+          <table class="workspace-table" *ngIf="readTab === 'index'">
+            <thead>
+              <tr>
+                <th>Term</th>
+                <th>Refs</th>
+                <th>Open</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="readLoading">
+                <td colspan="3" class="state-cell">Loading index…</td>
+              </tr>
+              <tr *ngIf="!readLoading && !indexRows.length">
+                <td colspan="3" class="state-cell">{{ listEmptyMessage }}</td>
+              </tr>
+              <tr
+                *ngFor="let row of indexRows; trackBy: trackByIndexId"
+                [class.is-active]="row.target_chunk_id === activeChunkId || row.head_chunk_id === activeChunkId"
+                (click)="openIndexRow(row)"
+              >
+                <td>{{ row.term_raw || row.term_norm }}</td>
+                <td>{{ indexRefsLabel(row) }}</td>
+                <td>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="openIndexRow(row); $event.stopPropagation()">Open</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table class="workspace-table" *ngIf="readTab === 'toc'">
+            <thead>
+              <tr>
+                <th>TOC</th>
+                <th>Page</th>
+                <th>Open</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="readLoading">
+                <td colspan="3" class="state-cell">Loading TOC…</td>
+              </tr>
+              <tr *ngIf="!readLoading && !tocRows.length">
+                <td colspan="3" class="state-cell">{{ listEmptyMessage }}</td>
+              </tr>
+              <tr
+                *ngFor="let row of tocRows; trackBy: trackByTocId"
+                [class.is-active]="row.target_chunk_id === activeChunkId"
+                (click)="openTocRow(row)"
+              >
+                <td class="toc-title-cell">
+                  <span [style.padding-left.rem]="row.depth > 1 ? (row.depth - 1) * 0.55 : 0">{{ row.index_path }} {{ row.title_raw }}</span>
+                </td>
+                <td>{{ row.page_no ?? '—' }}</td>
+                <td>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="openTocRow(row); $event.stopPropagation()">Open</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section class="search-results" *ngIf="query.trim() || searchLoading || searchRows.length || searchError">
+          <div class="section-head">
+            <strong>Search Results</strong>
+            <span class="feedback muted" *ngIf="!searchLoading">{{ searchTotal }} matches</span>
+          </div>
+          <p class="feedback error" *ngIf="searchError">{{ searchError }}</p>
+          <div class="table-shell search-shell">
+            <table class="workspace-table">
               <thead>
                 <tr>
                   <th>Page</th>
                   <th>Heading</th>
+                  <th>Snippet</th>
                   <th>Open</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngIf="readLoading">
-                  <td colspan="3" class="state-cell">Loading pages…</td>
+                <tr *ngIf="searchLoading">
+                  <td colspan="4" class="state-cell">Searching…</td>
                 </tr>
-                <tr *ngIf="!readLoading && !readRows.length">
-                  <td colspan="3" class="state-cell">{{ listEmptyMessage }}</td>
+                <tr *ngIf="!searchLoading && !searchRows.length">
+                  <td colspan="4" class="state-cell">No matches</td>
                 </tr>
                 <tr
-                  *ngFor="let row of readRows; trackBy: trackByChunkId"
+                  *ngFor="let row of searchRows; trackBy: trackByChunkId"
                   [class.is-active]="row.chunk_id === activeChunkId"
-                  (click)="openReadRow(row)"
+                  (click)="openSearchRow(row)"
                 >
                   <td>{{ row.page_no ?? '—' }}</td>
-                  <td>{{ row.heading_raw || row.locator || 'Page entry' }}</td>
+                  <td>{{ row.heading_raw || 'No heading' }}</td>
+                  <td><span class="snippet" [innerHTML]="row.snippet_html"></span></td>
                   <td>
-                    <button type="button" class="btn btn-ghost btn-sm" (click)="openReadRow(row); $event.stopPropagation()">Open</button>
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="openSearchRow(row); $event.stopPropagation()">Open</button>
                   </td>
                 </tr>
               </tbody>
             </table>
-
-            <table class="workspace-table" *ngIf="readTab === 'index'">
-              <thead>
-                <tr>
-                  <th>Term</th>
-                  <th>Refs</th>
-                  <th>Open</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngIf="readLoading">
-                  <td colspan="3" class="state-cell">Loading index…</td>
-                </tr>
-                <tr *ngIf="!readLoading && !indexRows.length">
-                  <td colspan="3" class="state-cell">{{ listEmptyMessage }}</td>
-                </tr>
-                <tr
-                  *ngFor="let row of indexRows; trackBy: trackByIndexId"
-                  [class.is-active]="row.target_chunk_id === activeChunkId || row.head_chunk_id === activeChunkId"
-                  (click)="openIndexRow(row)"
-                >
-                  <td>{{ row.term_raw || row.term_norm }}</td>
-                  <td>{{ indexRefsLabel(row) }}</td>
-                  <td>
-                    <button type="button" class="btn btn-ghost btn-sm" (click)="openIndexRow(row); $event.stopPropagation()">Open</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-
-            <table class="workspace-table" *ngIf="readTab === 'toc'">
-              <thead>
-                <tr>
-                  <th>TOC</th>
-                  <th>Page</th>
-                  <th>Open</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngIf="readLoading">
-                  <td colspan="3" class="state-cell">Loading TOC…</td>
-                </tr>
-                <tr *ngIf="!readLoading && !tocRows.length">
-                  <td colspan="3" class="state-cell">{{ listEmptyMessage }}</td>
-                </tr>
-                <tr
-                  *ngFor="let row of tocRows; trackBy: trackByTocId"
-                  [class.is-active]="row.target_chunk_id === activeChunkId"
-                  (click)="openTocRow(row)"
-                >
-                  <td class="toc-title-cell">
-                    <span class="toc-title" [style.padding-left.rem]="row.depth > 1 ? (row.depth - 1) * 0.55 : 0">{{ row.index_path }} {{ row.title_raw }}</span>
-                  </td>
-                  <td>{{ row.page_no ?? '—' }}</td>
-                  <td>
-                    <button type="button" class="btn btn-ghost btn-sm" (click)="openTocRow(row); $event.stopPropagation()">Open</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </ng-template>
-        </div>
+          </div>
+        </section>
       </div>
     </aside>
 
-    <section class="edit-panel workspace-panel panel-reader" [class.mobile-active]="panelActive('reader')">
-      <header class="panel-head panel-head-tight">
-        <div>
+    <section class="workspace-panel panel-reader" [class.mobile-active]="panelActive('reader')">
+      <header class="workspace-head">
+        <div class="workspace-head-copy">
           <h2>Page Reader</h2>
-          <p>Read the selected page and move linearly through the book.</p>
+          <p>Read page content, move linearly, and jump from TOC or index hits.</p>
         </div>
       </header>
 
-      <div class="panel-body panel-body-tight">
+      <div class="workspace-body reader-body">
         <div *ngIf="readerLoading" class="reader-state">Loading chunk…</div>
         <div *ngIf="readerError" class="reader-state error">{{ readerError }}</div>
 
@@ -307,26 +331,26 @@
 
           <div class="editor-panel" *ngIf="editorEditing">
             <div class="editor-grid">
-              <label>
+              <label class="field">
                 <span>Page</span>
                 <input type="number" [(ngModel)]="editPageNo" />
               </label>
-              <label>
+              <label class="field">
                 <span>Heading</span>
                 <input type="text" [(ngModel)]="editHeadingRaw" />
               </label>
-              <label>
+              <label class="field">
                 <span>Locator</span>
                 <input type="text" [(ngModel)]="editLocator" />
               </label>
-              <label>
+              <label class="field">
                 <span>Type</span>
                 <select [(ngModel)]="editChunkType">
                   <option *ngFor="let option of chunkTypeOptions" [value]="option">{{ option }}</option>
                 </select>
               </label>
             </div>
-            <label>
+            <label class="field">
               <span>Text</span>
               <textarea [(ngModel)]="editText" rows="16"></textarea>
             </label>
