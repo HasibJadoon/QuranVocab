@@ -513,7 +513,6 @@ async function runTocList(
   const hasTitleRaw = tocColumns.has('title_raw');
   const hasTitleNorm = tocColumns.has('title_norm');
   const hasLocator = tocColumns.has('locator');
-  const hasPdfPageIndex = tocColumns.has('pdf_page_index');
 
   const tocDepthExpr = hasDepth ? 't.depth' : '1';
   const tocIndexPathExpr = hasIndexPath
@@ -525,14 +524,12 @@ async function runTocList(
   const tocTitleNormExpr = hasTitleNorm ? 't.title_norm' : `LOWER(${tocTitleRawExpr})`;
   const tocPageNoExpr = hasPageNo ? 't.page_no' : 'NULL';
   const tocLocatorExpr = hasLocator ? 't.locator' : 'NULL';
-  const tocPdfPageExpr = hasPdfPageIndex
-    ? 't.pdf_page_index'
-    : hasLocator
-      ? `CASE
-          WHEN t.locator LIKE 'pdf_page:%' THEN CAST(substr(t.locator, 10) AS INTEGER)
-          ELSE NULL
-        END`
-      : 'NULL';
+  const tocPdfPageExpr = hasLocator
+    ? `CASE
+        WHEN t.locator LIKE 'pdf_page:%' THEN CAST(substr(t.locator, 10) AS INTEGER)
+        ELSE NULL
+      END`
+    : 'NULL';
 
   const tocTargetCandidates: string[] = [];
   if (hasPageNo) {
@@ -561,7 +558,7 @@ async function runTocList(
           LIMIT 1
         )`);
   }
-  if (hasLocator || hasPdfPageIndex) {
+  if (hasLocator) {
     tocTargetCandidates.push(`
         (
           SELECT p.chunk_id
