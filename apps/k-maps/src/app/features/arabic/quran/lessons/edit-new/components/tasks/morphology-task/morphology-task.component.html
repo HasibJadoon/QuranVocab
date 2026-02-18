@@ -91,6 +91,14 @@
                   />
                 </td>
                 <td>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    title="Add row evidences + one morphology link"
+                    (click)="addEvidenceAndMorphologyFromItem(i)"
+                  >
+                    Add Ev+Morph
+                  </button>
                   <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'items')">
                     JSON
                   </button>

@@ -196,6 +196,35 @@ export class MorphologyTaskComponent {
     this.writeLexiconMorphology(items);
   }
 
+  addEvidenceAndMorphologyFromItem(index: number) {
+    const items = this.items;
+    if (index < 0 || index >= items.length) return;
+    const item = items[index];
+    if (!item) return;
+
+    const evidenceCandidates = this.buildEvidenceEntriesFromItem(item);
+    if (evidenceCandidates.length) {
+      const currentEvidence = [...this.evidenceItems];
+      const seenEvidence = new Set(currentEvidence.map((entry) => this.evidenceKey(entry)));
+      for (const candidate of evidenceCandidates) {
+        const key = this.evidenceKey(candidate);
+        if (seenEvidence.has(key)) continue;
+        seenEvidence.add(key);
+        currentEvidence.push(candidate);
+      }
+      this.writeEvidence(currentEvidence);
+    }
+
+    const link = this.buildMorphologyLinkFromItem(item);
+    const currentLinks = [...this.lexiconMorphologyItems];
+    const seenLinks = new Set(currentLinks.map((entry) => this.lexiconMorphologyKey(entry)));
+    const linkKey = this.lexiconMorphologyKey(link);
+    if (!seenLinks.has(linkKey)) {
+      currentLinks.push(link);
+      this.writeLexiconMorphology(currentLinks);
+    }
+  }
+
   openEditModal(event: Event, item: Record<string, unknown>, index: number, kind: ModalKind = 'items') {
     event.preventDefault();
     event.stopPropagation();
@@ -551,6 +580,125 @@ export class MorphologyTaskComponent {
     delete next['morph_pattern'];
     delete next['morph_features'];
     return next;
+  }
+
+  private buildEvidenceEntriesFromItem(item: Record<string, unknown>): Array<Record<string, unknown>> {
+    const lexiconId = this.getLexiconId(item);
+    const wordLocation = this.textValue(item['word_location']);
+    const surah = this.numberValue(item['surah']);
+    const ayah = this.numberValue(item['ayah']);
+    const tokenIndex = this.numberValue(item['token_index']);
+    const surfaceAr = this.textValue(item['surface_ar']);
+    const lemmaAr = this.textValue(item['lemma_ar']);
+    const headingRaw = surah !== null && ayah !== null ? `Surah ${surah}:${ayah}` : '';
+    const rowMeta = {
+      source: 'morphology-row-action',
+      word_location: wordLocation || null,
+      surah,
+      ayah,
+      token_index: tokenIndex,
+    };
+
+    const rawEvidences = item['evidences'];
+    if (Array.isArray(rawEvidences)) {
+      return rawEvidences
+        .filter((entry): entry is Record<string, unknown> => !!entry && typeof entry === 'object' && !Array.isArray(entry))
+        .map((entry) =>
+          this.ensureEvidenceDefaults({
+            ...entry,
+            ar_u_lexicon: this.textValue(entry['ar_u_lexicon']) || this.textValue(entry['lexicon_id']) || lexiconId || null,
+            word_location: this.textValue(entry['word_location']) || wordLocation || null,
+            heading_raw: this.textValue(entry['heading_raw']) || headingRaw,
+            extract_text: this.textValue(entry['extract_text']) || surfaceAr || lemmaAr,
+            note_md: this.textValue(entry['note_md']) || '',
+            meta: this.mergeMeta(entry['meta'], rowMeta),
+          })
+        );
+    }
+
+    return [
+      this.ensureEvidenceDefaults({
+        ar_u_lexicon: lexiconId || null,
+        word_location: wordLocation || null,
+        locator_type: 'chunk',
+        source_type: 'book',
+        source_id: '',
+        chunk_id: '',
+        page_no: null,
+        heading_raw: headingRaw,
+        heading_norm: '',
+        link_role: 'supports',
+        evidence_kind: 'lexical',
+        evidence_strength: 'supporting',
+        extract_text: surfaceAr || lemmaAr,
+        note_md: '',
+        meta: rowMeta,
+      }),
+    ];
+  }
+
+  private buildMorphologyLinkFromItem(item: Record<string, unknown>): Record<string, unknown> {
+    const lexiconId = this.getLexiconId(item);
+    const wordLocation = this.textValue(item['word_location']);
+    const surfaceAr = this.textValue(item['surface_ar']) || this.textValue(item['lemma_ar']);
+    const surfaceNorm = this.textValue(item['surface_norm']) || this.normalizeArabic(surfaceAr);
+    const posRaw = this.textValue(item['pos']).toLowerCase();
+    const pos2 =
+      posRaw === 'verb' || posRaw === 'noun' || posRaw === 'adj' || posRaw === 'particle' || posRaw === 'phrase'
+        ? posRaw
+        : 'noun';
+
+    const link = this.ensureLexiconMorphologyDefaults({
+      ar_u_lexicon: lexiconId || null,
+      ar_u_morphology: this.textValue(item['ar_u_morphology']) || null,
+      word_location: wordLocation || null,
+      link_role: 'primary',
+      surface_ar: surfaceAr,
+      surface_norm: surfaceNorm,
+      pos2,
+      meta: {
+        source: 'morphology-row-action',
+      },
+    });
+    return link;
+  }
+
+  private evidenceKey(entry: Record<string, unknown>): string {
+    const evidenceId = this.textValue(entry['evidence_id']);
+    if (evidenceId) return `id:${evidenceId}`;
+    const lexiconId = this.textValue(entry['ar_u_lexicon']) || this.textValue(entry['lexicon_id']);
+    const wordLocation = this.textValue(entry['word_location']);
+    const sourceId = this.textValue(entry['source_id']);
+    const chunkId = this.textValue(entry['chunk_id']);
+    const url = this.textValue(entry['url']);
+    const extract = this.textValue(entry['extract_text']);
+    return `sig:${lexiconId}|${wordLocation}|${sourceId}|${chunkId}|${url}|${extract}`;
+  }
+
+  private lexiconMorphologyKey(entry: Record<string, unknown>): string {
+    const lexiconId = this.textValue(entry['ar_u_lexicon']) || this.textValue(entry['lexicon_id']);
+    const morphId = this.textValue(entry['ar_u_morphology']);
+    const wordLocation = this.textValue(entry['word_location']);
+    const surfaceNorm = this.textValue(entry['surface_norm']);
+    return `sig:${lexiconId}|${morphId}|${wordLocation}|${surfaceNorm}`;
+  }
+
+  private getLexiconId(item: Record<string, unknown>): string {
+    return this.textValue(item['ar_u_lexicon']) || this.textValue(item['lexicon_id']) || '';
+  }
+
+  private textValue(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  private numberValue(value: unknown): number | null {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private mergeMeta(current: unknown, extra: Record<string, unknown>): Record<string, unknown> {
+    const base = current && typeof current === 'object' && !Array.isArray(current) ? (current as Record<string, unknown>) : {};
+    return { ...base, ...extra };
   }
 
   private ensureEvidenceDefaults(record: Record<string, unknown>) {
