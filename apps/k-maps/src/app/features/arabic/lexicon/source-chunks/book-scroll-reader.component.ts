@@ -53,8 +53,8 @@ export class BookScrollReaderComponent implements OnChanges {
     }
   }
 
-  async jumpToPage(pageNo: number): Promise<void> {
-    const source = String(this.sourceCode ?? '').trim();
+  async jumpToPage(pageNo: number, sourceOverride?: string): Promise<void> {
+    const source = String(sourceOverride ?? this.sourceCode ?? '').trim();
     const targetPage = Math.max(1, Math.trunc(Number(pageNo)));
     if (!source || !Number.isFinite(targetPage)) return;
 

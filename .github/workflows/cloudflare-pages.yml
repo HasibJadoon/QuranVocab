@@ -29,7 +29,14 @@ jobs:
         run: npm run sync:functions
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy ${{ github.workspace }}/apps/k-maps/dist/k-maps/browser --project-name k-maps --branch main
+        run: |
+          for i in 1 2 3; do
+            npx wrangler@4.66.0 pages deploy ${{ github.workspace }}/apps/k-maps/dist/k-maps/browser --project-name k-maps --branch main && exit 0
+            echo "Deploy attempt $i failed. Retrying in 15s..."
+            sleep 15
+          done
+          echo "Deploy failed after 3 attempts."
+          exit 1
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

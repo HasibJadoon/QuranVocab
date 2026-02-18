@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -34,7 +34,7 @@ type SearchRow = {
   templateUrl: './source-chunks-page.component.html',
   styleUrls: ['./source-chunks-page.component.scss'],
 })
-export class SourceChunksPageComponent implements OnInit, OnDestroy {
+export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('readerViewport') readerViewport?: ElementRef<HTMLDivElement>;
   @ViewChild('bookReader') bookReader?: BookScrollReaderComponent;
 
@@ -110,6 +110,8 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   private readonly onResize = () => this.updateResponsiveState();
   private initialChunkId = '';
   private initialTocId = '';
+  private pendingJumpPage: number | null = null;
+  private pendingJumpSource = '';
   private autoAdvanceInFlight = false;
   private autoAdvanceLastKey = '';
   private autoAdvanceLastAt = 0;
@@ -130,6 +132,15 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     window.removeEventListener('resize', this.onResize);
+  }
+
+  ngAfterViewInit(): void {
+    if (this.pendingJumpPage === null || !this.pendingJumpSource) return;
+    const pageNo = this.pendingJumpPage;
+    const source = this.pendingJumpSource;
+    this.pendingJumpPage = null;
+    this.pendingJumpSource = '';
+    void this.bookReader?.jumpToPage(pageNo, source);
   }
 
   get scopeLabel(): string {
@@ -386,7 +397,14 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     this.jumpPageNo = target;
     this.readerError = '';
     this.syncUrl();
-    await this.bookReader?.jumpToPage(target);
+    if (!this.bookReader) {
+      this.pendingJumpPage = target;
+      this.pendingJumpSource = sourceCode;
+    } else {
+      this.pendingJumpPage = null;
+      this.pendingJumpSource = '';
+      await this.bookReader.jumpToPage(target, sourceCode);
+    }
     this.activeTocId = this.activeTocIdForPage(target);
     if (moveToReaderTab && this.isCompact) {
       this.mobileTab = 'reader';

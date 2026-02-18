@@ -74,6 +74,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api": {
+    "target": "https://api.k-maps.com",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/sp_weekly_plans": {
     "target": "https://api.k-maps.com",
     "secure": false,
