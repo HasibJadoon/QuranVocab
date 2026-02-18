@@ -1,4 +1,4 @@
-export type BookSearchMode = 'sources' | 'pages' | 'chunks' | 'evidence' | 'lexicon' | 'reader';
+export type BookSearchMode = 'sources' | 'pages' | 'toc' | 'index' | 'chunks' | 'evidence' | 'lexicon' | 'reader';
 
 export type BookSearchSource = {
   source_code: string;
@@ -29,7 +29,34 @@ export type BookSearchPageRow = {
   heading_raw: string | null;
   heading_norm: string | null;
   locator: string | null;
-  chunk_scope: string | null;
+};
+
+export type BookSearchTocRow = {
+  toc_id: string;
+  source_code: string;
+  depth: number;
+  index_path: string;
+  title_raw: string;
+  title_norm: string;
+  page_no: number | null;
+  locator: string | null;
+  pdf_page_index: number | null;
+  target_chunk_id: string | null;
+};
+
+export type BookSearchIndexRow = {
+  index_id: string;
+  source_code: string;
+  term_raw: string;
+  term_norm: string;
+  term_ar: string | null;
+  term_ar_guess: string | null;
+  head_chunk_id: string | null;
+  index_page_no: number | null;
+  index_locator: string | null;
+  page_refs_json: string;
+  variants_json: string | null;
+  target_chunk_id: string | null;
 };
 
 export type BookSearchEvidenceHit = {

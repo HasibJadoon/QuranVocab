@@ -8,14 +8,17 @@ import { firstValueFrom } from 'rxjs';
 import { BookSearchService } from '../../../../shared/services/book-search.service';
 import type {
   BookSearchChunkHit,
+  BookSearchIndexRow,
   BookSearchPageRow,
   BookSearchReaderChunk,
   BookSearchReaderNav,
   BookSearchSource,
+  BookSearchTocRow,
 } from '../../../../shared/models/arabic/book-search.model';
 
 type ViewMode = 'search' | 'read';
-type MobileTab = 'books' | 'results' | 'reader';
+type ReadTab = 'pages' | 'index' | 'toc';
+type MobileTab = 'books' | 'reader';
 
 type SearchRow = {
   chunk_id: string;
@@ -40,13 +43,14 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
   selectedSourceCode = '';
   viewMode: ViewMode = 'read';
+  readTab: ReadTab = 'pages';
 
   pageFrom: number | null = null;
   pageTo: number | null = null;
   headingFilter = '';
   jumpPageNo: number | null = null;
   selectedTermChunkId = '';
-  termRows: BookSearchPageRow[] = [];
+  termRows: BookSearchIndexRow[] = [];
   termsLoading = false;
   termsError = '';
 
@@ -61,6 +65,8 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   readError = '';
   readTotal = 0;
   readRows: BookSearchPageRow[] = [];
+  indexRows: BookSearchIndexRow[] = [];
+  tocRows: BookSearchTocRow[] = [];
 
   selectedChunk: BookSearchReaderChunk | null = null;
   activeChunkId = '';
@@ -128,11 +134,17 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   get listEmptyMessage(): string {
-    return this.viewMode === 'search' ? 'No results' : 'No pages imported for this book';
+    if (this.viewMode === 'search') return 'No results';
+    if (this.readTab === 'index') return 'No index entries imported for this book';
+    if (this.readTab === 'toc') return 'No TOC entries imported for this book';
+    return 'No pages imported for this book';
   }
 
   get readerEmptyMessage(): string {
-    return this.viewMode === 'search' ? 'Select a result to read' : 'Select a page to read';
+    if (this.viewMode === 'search') return 'Select a result to read';
+    if (this.readTab === 'index') return 'Select an index term to read';
+    if (this.readTab === 'toc') return 'Select a TOC row to read';
+    return 'Select a page to read';
   }
 
   panelActive(tab: MobileTab): boolean {
@@ -156,6 +168,14 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   setViewMode(mode: ViewMode): void {
     if (this.viewMode === mode) return;
     this.viewMode = mode;
+    this.clearReaderSelection();
+    void this.loadCurrentList(true);
+    this.syncUrl();
+  }
+
+  setReadTab(tab: ReadTab): void {
+    if (this.readTab === tab) return;
+    this.readTab = tab;
     this.clearReaderSelection();
     void this.loadCurrentList(true);
     this.syncUrl();
@@ -199,7 +219,9 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
   openSelectedTerm(): void {
     if (!this.selectedTermChunkId) return;
-    void this.openChunkById(this.selectedTermChunkId, true);
+    const row = this.termRows.find((item) => item.index_id === this.selectedTermChunkId);
+    if (!row) return;
+    this.openIndexRow(row);
   }
 
   openSearchRow(row: SearchRow): void {
@@ -208,6 +230,34 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
 
   openReadRow(row: BookSearchPageRow): void {
     void this.openChunkById(row.chunk_id, true);
+  }
+
+  openIndexRow(row: BookSearchIndexRow): void {
+    if (row.target_chunk_id) {
+      void this.openChunkById(row.target_chunk_id, true);
+      return;
+    }
+    if (row.head_chunk_id) {
+      void this.openChunkById(row.head_chunk_id, true);
+      return;
+    }
+    if (row.index_page_no !== null && this.selectedSourceCode) {
+      void this.openChunkByPage(this.selectedSourceCode, row.index_page_no, true);
+      return;
+    }
+    this.readerError = 'No linked page found for this index term.';
+  }
+
+  openTocRow(row: BookSearchTocRow): void {
+    if (row.target_chunk_id) {
+      void this.openChunkById(row.target_chunk_id, true);
+      return;
+    }
+    if (row.page_no !== null && this.selectedSourceCode) {
+      void this.openChunkByPage(this.selectedSourceCode, row.page_no, true);
+      return;
+    }
+    this.readerError = 'No linked page found for this TOC item.';
   }
 
   openPrev(): void {
@@ -318,11 +368,38 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   }
 
   trackByChunkId = (_: number, row: { chunk_id: string }) => row.chunk_id;
+  trackByIndexId = (_: number, row: { index_id: string }) => row.index_id;
+  trackByTocId = (_: number, row: { toc_id: string }) => row.toc_id;
 
-  termLabel(row: BookSearchPageRow): string {
-    const heading = row.heading_raw?.trim() || row.heading_norm?.trim() || row.chunk_id;
-    const page = row.page_no ?? '—';
+  termLabel(row: BookSearchIndexRow): string {
+    const heading = row.term_raw?.trim() || row.term_norm?.trim() || row.index_id;
+    const page = row.index_page_no ?? '—';
     return `${heading} (p.${page})`;
+  }
+
+  indexRefsLabel(row: BookSearchIndexRow): string {
+    if (!row.page_refs_json) return '—';
+    try {
+      const refs = JSON.parse(row.page_refs_json) as Array<{
+        from?: number | null;
+        to?: number | null;
+        is_main?: boolean;
+        note?: string | null;
+      }>;
+      if (!Array.isArray(refs) || !refs.length) return '—';
+      const parts = refs.slice(0, 4).map((ref) => {
+        const from = Number.isFinite(Number(ref.from)) ? Number(ref.from) : null;
+        const to = Number.isFinite(Number(ref.to)) ? Number(ref.to) : from;
+        const range = from === null ? '—' : from === to ? `${from}` : `${from}-${to}`;
+        const main = ref.is_main ? '*' : '';
+        const note = ref.note ? ` (${ref.note})` : '';
+        return `${range}${main}${note}`;
+      });
+      const suffix = refs.length > 4 ? ` +${refs.length - 4}` : '';
+      return parts.join(', ') + suffix;
+    } catch {
+      return '—';
+    }
   }
 
   private async loadBooksAndBootstrap(): Promise<void> {
@@ -408,7 +485,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     } finally {
       this.searchLoading = false;
       if (moveToResultsTab && this.isCompact) {
-        this.mobileTab = 'results';
+        this.mobileTab = 'books';
       }
     }
   }
@@ -420,32 +497,72 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     try {
       if (!this.selectedSourceCode) {
         this.readRows = [];
+        this.indexRows = [];
+        this.tocRows = [];
         this.readTotal = 0;
         this.readError = 'Select a book first.';
         return;
       }
 
-      const res = await firstValueFrom(
-        this.bookSearch.listPages({
-          source_code: this.selectedSourceCode,
-          page_from: this.pageFrom ?? undefined,
-          page_to: this.pageTo ?? undefined,
-          heading_norm: this.headingFilter.trim() || undefined,
-          limit: 250,
-          offset: 0,
-        })
-      );
+      if (this.readTab === 'pages') {
+        const res = await firstValueFrom(
+          this.bookSearch.listPages({
+            source_code: this.selectedSourceCode,
+            page_from: this.pageFrom ?? undefined,
+            page_to: this.pageTo ?? undefined,
+            heading_norm: this.headingFilter.trim() || undefined,
+            limit: 5000,
+            offset: 0,
+          })
+        );
 
-      this.readRows = res.results ?? [];
-      this.readTotal = res.total ?? this.readRows.length;
+        this.readRows = res.results ?? [];
+        this.indexRows = [];
+        this.tocRows = [];
+        this.readTotal = res.total ?? this.readRows.length;
+      } else if (this.readTab === 'index') {
+        const res = await firstValueFrom(
+          this.bookSearch.listIndex({
+            source_code: this.selectedSourceCode,
+            heading_norm: this.headingFilter.trim() || undefined,
+            page_from: this.pageFrom ?? undefined,
+            page_to: this.pageTo ?? undefined,
+            limit: 5000,
+            offset: 0,
+          })
+        );
+
+        this.readRows = [];
+        this.indexRows = res.results ?? [];
+        this.tocRows = [];
+        this.readTotal = res.total ?? this.indexRows.length;
+      } else {
+        const res = await firstValueFrom(
+          this.bookSearch.listToc({
+            source_code: this.selectedSourceCode,
+            heading_norm: this.headingFilter.trim() || undefined,
+            page_from: this.pageFrom ?? undefined,
+            page_to: this.pageTo ?? undefined,
+            limit: 5000,
+            offset: 0,
+          })
+        );
+
+        this.readRows = [];
+        this.indexRows = [];
+        this.tocRows = res.results ?? [];
+        this.readTotal = res.total ?? this.tocRows.length;
+      }
     } catch (err: unknown) {
       this.readRows = [];
+      this.indexRows = [];
+      this.tocRows = [];
       this.readTotal = 0;
-      this.readError = err instanceof Error ? err.message : 'Failed to load pages.';
+      this.readError = err instanceof Error ? err.message : 'Failed to load entries.';
     } finally {
       this.readLoading = false;
       if (moveToResultsTab && this.isCompact) {
-        this.mobileTab = 'results';
+        this.mobileTab = 'books';
       }
     }
   }
@@ -459,15 +576,15 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       if (!this.selectedSourceCode) return;
 
       const res = await firstValueFrom(
-        this.bookSearch.listPages({
+        this.bookSearch.listIndex({
           source_code: this.selectedSourceCode,
           limit: 5000,
           offset: 0,
         })
       );
 
-      this.termRows = (res.results ?? []).filter((row) => row.chunk_scope === 'term');
-      if (this.selectedTermChunkId && !this.termRows.some((row) => row.chunk_id === this.selectedTermChunkId)) {
+      this.termRows = res.results ?? [];
+      if (this.selectedTermChunkId && !this.termRows.some((row) => row.index_id === this.selectedTermChunkId)) {
         this.selectedTermChunkId = '';
       }
     } catch (err: unknown) {
@@ -567,6 +684,10 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
     if (mode === 'search' || mode === 'read') {
       this.viewMode = mode;
     }
+    const readTab = (qp.get('read_tab') ?? '').trim().toLowerCase();
+    if (readTab === 'pages' || readTab === 'index' || readTab === 'toc') {
+      this.readTab = readTab;
+    }
 
     this.query = qp.get('q') ?? '';
     this.headingFilter = qp.get('heading') ?? '';
@@ -584,6 +705,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       queryParams: {
         source_code: this.selectedSourceCode || null,
         view_mode: this.viewMode,
+        read_tab: this.readTab,
         q: this.query.trim() || null,
         page_from: this.pageFrom ?? null,
         page_to: this.pageTo ?? null,
@@ -604,7 +726,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
   private updateResponsiveState(): void {
     this.isCompact = window.innerWidth <= 1140;
     if (!this.isCompact) {
-      this.mobileTab = 'results';
+      this.mobileTab = 'books';
       return;
     }
 
@@ -613,8 +735,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const hasRows = this.viewMode === 'search' ? this.searchRows.length > 0 : this.readRows.length > 0;
-    this.mobileTab = hasRows ? 'results' : 'books';
+    this.mobileTab = 'books';
   }
 
   private clearReaderSelection(): void {

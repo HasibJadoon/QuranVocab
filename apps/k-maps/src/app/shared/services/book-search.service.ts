@@ -9,22 +9,26 @@ import type {
   BookSearchChunkUpdatePayload,
   BookSearchChunkUpdateResponse,
   BookSearchEvidenceHit,
+  BookSearchIndexRow,
   BookSearchLexiconEvidence,
   BookSearchPageRow,
   BookSearchReaderResponse,
   BookSearchResponse,
   BookSearchSource,
+  BookSearchTocRow,
 } from '../models/arabic/book-search.model';
 export type {
   BookSearchChunkHit,
   BookSearchChunkUpdatePayload,
   BookSearchChunkUpdateResponse,
   BookSearchEvidenceHit,
+  BookSearchIndexRow,
   BookSearchLexiconEvidence,
   BookSearchPageRow,
   BookSearchReaderResponse,
   BookSearchResponse,
   BookSearchSource,
+  BookSearchTocRow,
 } from '../models/arabic/book-search.model';
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -66,6 +70,30 @@ export class BookSearchService {
     offset?: number;
   }): Observable<BookSearchResponse<BookSearchPageRow>> {
     return this.get<BookSearchPageRow>({ mode: 'pages', ...params });
+  }
+
+  listToc(params: {
+    source_code?: string;
+    q?: string;
+    heading_norm?: string;
+    page_from?: number;
+    page_to?: number;
+    limit?: number;
+    offset?: number;
+  }): Observable<BookSearchResponse<BookSearchTocRow>> {
+    return this.get<BookSearchTocRow>({ mode: 'toc', ...params });
+  }
+
+  listIndex(params: {
+    source_code?: string;
+    q?: string;
+    heading_norm?: string;
+    page_from?: number;
+    page_to?: number;
+    limit?: number;
+    offset?: number;
+  }): Observable<BookSearchResponse<BookSearchIndexRow>> {
+    return this.get<BookSearchIndexRow>({ mode: 'index', ...params });
   }
 
   searchEvidence(params: {

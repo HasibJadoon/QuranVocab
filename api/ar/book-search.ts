@@ -12,7 +12,7 @@ const jsonHeaders = {
   'cache-control': 'no-store',
 };
 
-type SearchMode = 'sources' | 'pages' | 'chunks' | 'evidence' | 'lexicon' | 'reader';
+type SearchMode = 'sources' | 'pages' | 'toc' | 'index' | 'chunks' | 'evidence' | 'lexicon' | 'reader';
 type ChunkType = 'grammar' | 'literature' | 'lexicon' | 'reference' | 'other';
 
 type SqlBind = string | number | null;
@@ -51,6 +51,8 @@ function normalizeMode(value: string | null): SearchMode {
   if (
     mode === 'sources' ||
     mode === 'pages' ||
+    mode === 'toc' ||
+    mode === 'index' ||
     mode === 'chunks' ||
     mode === 'evidence' ||
     mode === 'lexicon' ||
@@ -90,7 +92,34 @@ type PageRow = {
   heading_raw: string | null;
   heading_norm: string | null;
   locator: string | null;
-  chunk_scope: string | null;
+};
+
+type TocRow = {
+  toc_id: string;
+  source_code: string;
+  depth: number;
+  index_path: string;
+  title_raw: string;
+  title_norm: string;
+  page_no: number | null;
+  locator: string | null;
+  pdf_page_index: number | null;
+  target_chunk_id: string | null;
+};
+
+type IndexRow = {
+  index_id: string;
+  source_code: string;
+  term_raw: string;
+  term_norm: string;
+  term_ar: string | null;
+  term_ar_guess: string | null;
+  head_chunk_id: string | null;
+  index_page_no: number | null;
+  index_locator: string | null;
+  page_refs_json: string;
+  variants_json: string | null;
+  target_chunk_id: string | null;
 };
 
 type EvidenceRow = {
@@ -160,7 +189,9 @@ async function runSourceSearch(db: D1Database, q: string, limit: number, offset:
       s.type,
       COUNT(c.chunk_id) AS chunk_count
     FROM ar_u_sources s
-    LEFT JOIN ar_source_chunks c ON c.ar_u_source = s.ar_u_source
+    LEFT JOIN ar_source_chunks c
+      ON c.ar_u_source = s.ar_u_source
+     AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
     ${whereClause}
     GROUP BY s.ar_u_source
     ORDER BY s.title ASC
@@ -196,6 +227,7 @@ async function runChunkSearch(
 ) {
   const whereParts: string[] = [];
   const binds: SqlBind[] = [];
+  whereParts.push("COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'");
 
   if (sourceCode) {
     whereParts.push('f.source_code = ?');
@@ -298,6 +330,7 @@ async function runPageList(
     whereParts.push('s.source_code = ?');
     binds.push(sourceCode);
   }
+  whereParts.push("COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'");
   if (pageFrom !== null) {
     whereParts.push('c.page_no >= ?');
     binds.push(pageFrom);
@@ -331,8 +364,7 @@ async function runPageList(
       c.page_no,
       c.heading_raw,
       c.heading_norm,
-      c.locator,
-      COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') AS chunk_scope
+      c.locator
     FROM ar_source_chunks c
     JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
     ${whereClause}
@@ -357,6 +389,233 @@ async function runPageList(
       heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
       page_from: pageFrom,
       page_to: pageTo,
+    },
+    results,
+  };
+}
+
+async function runTocList(
+  db: D1Database,
+  q: string,
+  sourceCode: string,
+  headingNormRaw: string,
+  pageFrom: number | null,
+  pageTo: number | null,
+  limit: number,
+  offset: number
+) {
+  const whereParts: string[] = [];
+  const binds: SqlBind[] = [];
+
+  if (sourceCode) {
+    whereParts.push('s.source_code = ?');
+    binds.push(sourceCode);
+  }
+  if (pageFrom !== null) {
+    whereParts.push('t.page_no >= ?');
+    binds.push(pageFrom);
+  }
+  if (pageTo !== null) {
+    whereParts.push('t.page_no <= ?');
+    binds.push(pageTo);
+  }
+  if (headingNormRaw) {
+    whereParts.push('t.title_norm LIKE ?');
+    binds.push(`%${normalizeHeading(headingNormRaw)}%`);
+  }
+  if (q) {
+    const like = `%${q}%`;
+    whereParts.push('(t.title_raw LIKE ? OR t.title_norm LIKE ? OR t.index_path LIKE ?)');
+    binds.push(like, like, like);
+  }
+  const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+
+  const countSql = `
+    SELECT COUNT(*) AS total
+    FROM ar_source_toc t
+    JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
+    ${whereClause}
+  `;
+  const countRow = await db
+    .prepare(countSql)
+    .bind(...binds)
+    .first<{ total: number }>();
+  const total = Number(countRow?.total ?? 0);
+
+  const dataSql = `
+    SELECT
+      t.toc_id,
+      s.source_code,
+      t.depth,
+      t.index_path,
+      t.title_raw,
+      t.title_norm,
+      t.page_no,
+      t.locator,
+      t.pdf_page_index,
+      COALESCE(
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = t.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND t.page_no IS NOT NULL
+            AND p.page_no = t.page_no
+          ORDER BY p.chunk_id ASC
+          LIMIT 1
+        ),
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = t.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND t.locator IS NOT NULL
+            AND p.locator = t.locator
+          ORDER BY p.page_no ASC, p.chunk_id ASC
+          LIMIT 1
+        )
+      ) AS target_chunk_id
+    FROM ar_source_toc t
+    JOIN ar_u_sources s ON s.ar_u_source = t.ar_u_source
+    ${whereClause}
+    ORDER BY t.depth ASC, t.index_path ASC, t.toc_id ASC
+    LIMIT ?
+    OFFSET ?
+  `;
+
+  const { results = [] } = await db
+    .prepare(dataSql)
+    .bind(...binds, limit, offset)
+    .all<TocRow>();
+
+  return {
+    ok: true,
+    mode: 'toc' as const,
+    total,
+    limit,
+    offset,
+    filters: {
+      source_code: sourceCode || null,
+      heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
+      page_from: pageFrom,
+      page_to: pageTo,
+      q: q || null,
+    },
+    results,
+  };
+}
+
+async function runIndexList(
+  db: D1Database,
+  q: string,
+  sourceCode: string,
+  headingNormRaw: string,
+  pageFrom: number | null,
+  pageTo: number | null,
+  limit: number,
+  offset: number
+) {
+  const whereParts: string[] = [];
+  const binds: SqlBind[] = [];
+
+  if (sourceCode) {
+    whereParts.push('s.source_code = ?');
+    binds.push(sourceCode);
+  }
+  if (pageFrom !== null) {
+    whereParts.push('i.index_page_no >= ?');
+    binds.push(pageFrom);
+  }
+  if (pageTo !== null) {
+    whereParts.push('i.index_page_no <= ?');
+    binds.push(pageTo);
+  }
+  if (headingNormRaw) {
+    whereParts.push('i.term_norm LIKE ?');
+    binds.push(`%${normalizeHeading(headingNormRaw)}%`);
+  }
+  if (q) {
+    const like = `%${q}%`;
+    whereParts.push(
+      '(i.term_raw LIKE ? OR i.term_norm LIKE ? OR COALESCE(i.term_ar, \'\') LIKE ? OR COALESCE(i.term_ar_guess, \'\') LIKE ?)'
+    );
+    binds.push(like, like, like, like);
+  }
+  const whereClause = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+
+  const countSql = `
+    SELECT COUNT(*) AS total
+    FROM ar_source_index i
+    JOIN ar_u_sources s ON s.ar_u_source = i.ar_u_source
+    ${whereClause}
+  `;
+  const countRow = await db
+    .prepare(countSql)
+    .bind(...binds)
+    .first<{ total: number }>();
+  const total = Number(countRow?.total ?? 0);
+
+  const dataSql = `
+    SELECT
+      i.index_id,
+      s.source_code,
+      i.term_raw,
+      i.term_norm,
+      i.term_ar,
+      i.term_ar_guess,
+      i.head_chunk_id,
+      i.index_page_no,
+      i.index_locator,
+      i.page_refs_json,
+      i.variants_json,
+      COALESCE(
+        i.head_chunk_id,
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = i.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND i.index_page_no IS NOT NULL
+            AND p.page_no = i.index_page_no
+          ORDER BY p.chunk_id ASC
+          LIMIT 1
+        ),
+        (
+          SELECT p.chunk_id
+          FROM ar_source_chunks p
+          WHERE p.ar_u_source = i.ar_u_source
+            AND COALESCE(json_extract(p.content_json, '$.chunk_scope'), 'page') = 'page'
+            AND i.index_locator IS NOT NULL
+            AND p.locator = i.index_locator
+          ORDER BY p.page_no ASC, p.chunk_id ASC
+          LIMIT 1
+        )
+      ) AS target_chunk_id
+    FROM ar_source_index i
+    JOIN ar_u_sources s ON s.ar_u_source = i.ar_u_source
+    ${whereClause}
+    ORDER BY i.term_norm ASC, i.index_id ASC
+    LIMIT ?
+    OFFSET ?
+  `;
+
+  const { results = [] } = await db
+    .prepare(dataSql)
+    .bind(...binds, limit, offset)
+    .all<IndexRow>();
+
+  return {
+    ok: true,
+    mode: 'index' as const,
+    total,
+    limit,
+    offset,
+    filters: {
+      source_code: sourceCode || null,
+      heading_norm: headingNormRaw ? normalizeHeading(headingNormRaw) : null,
+      page_from: pageFrom,
+      page_to: pageTo,
+      q: q || null,
     },
     results,
   };
@@ -693,6 +952,7 @@ async function runReaderChunk(
         FROM ar_source_chunks c
         JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
         WHERE s.source_code = ?
+          AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
           AND (c.page_no < ? OR (c.page_no = ? AND c.chunk_id < ?))
         ORDER BY c.page_no DESC, c.chunk_id DESC
         LIMIT 1
@@ -708,6 +968,7 @@ async function runReaderChunk(
         FROM ar_source_chunks c
         JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
         WHERE s.source_code = ?
+          AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
           AND (c.page_no > ? OR (c.page_no = ? AND c.chunk_id > ?))
         ORDER BY c.page_no ASC, c.chunk_id ASC
         LIMIT 1
@@ -786,7 +1047,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   const pageNoRaw = (url.searchParams.get('page_no') ?? '').trim();
   const pageNo = pageNoRaw ? toInt(pageNoRaw, Number.NaN) : null;
 
-  const maxLimit = mode === 'pages' ? 5000 : 200;
+  const maxLimit = mode === 'pages' || mode === 'toc' || mode === 'index' ? 5000 : 200;
   const limit = Math.min(maxLimit, Math.max(1, toInt(url.searchParams.get('limit'), 50)));
   const offset = Math.max(0, toInt(url.searchParams.get('offset'), 0));
   const pageFromRaw = (url.searchParams.get('page_from') ?? '').trim();
@@ -828,6 +1089,34 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     if (mode === 'pages') {
       const payload = await runPageList(
         ctx.env.DB,
+        sourceCode,
+        headingNormRaw,
+        pageFrom,
+        pageTo,
+        limit,
+        offset
+      );
+      return new Response(JSON.stringify(payload), { headers: jsonHeaders });
+    }
+
+    if (mode === 'toc') {
+      const payload = await runTocList(
+        ctx.env.DB,
+        q,
+        sourceCode,
+        headingNormRaw,
+        pageFrom,
+        pageTo,
+        limit,
+        offset
+      );
+      return new Response(JSON.stringify(payload), { headers: jsonHeaders });
+    }
+
+    if (mode === 'index') {
+      const payload = await runIndexList(
+        ctx.env.DB,
+        q,
         sourceCode,
         headingNormRaw,
         pageFrom,

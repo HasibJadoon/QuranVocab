@@ -52,6 +52,8 @@ export type {
 export type {
   BookSearchMode,
   BookSearchPageRow,
+  BookSearchTocRow,
+  BookSearchIndexRow,
   BookSearchSource,
   BookSearchChunkHit,
   BookSearchChunkUpdatePayload,

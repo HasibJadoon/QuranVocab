@@ -12,8 +12,20 @@ Auth: `Authorization: Bearer <jwt>`
 - Lists books in `ar_u_sources`.
 - Params: `q`, `limit`, `offset`.
 
+`mode=pages`
+- Lists page chunks from `ar_source_chunks` (pages only).
+- Params: `source_code`, `heading_norm`, `page_from`, `page_to`, `limit`, `offset`.
+
+`mode=toc`
+- Lists table-of-contents rows from `ar_source_toc`.
+- Params: `source_code`, `q`, `heading_norm`, `page_from`, `page_to`, `limit`, `offset`.
+
+`mode=index`
+- Lists term index rows from `ar_source_index`.
+- Params: `source_code`, `q`, `heading_norm`, `page_from`, `page_to`, `limit`, `offset`.
+
 `mode=chunks` (default)
-- Searches raw OCR/page chunks via `ar_source_chunks_fts`.
+- Searches page chunks via `ar_source_chunks_fts`.
 - Params: `q`, `source_code`, `chunk_type`, `page_from`, `page_to`, `heading_norm`, `limit`, `offset`.
   - Allowed `chunk_type`: `grammar`, `literature`, `lexicon`, `reference`, `other`.
 
@@ -64,16 +76,16 @@ Search within one book + page range:
 GET /ar/book-search?mode=chunks&source_code=SRC:HDO_2008&page_from=150&page_to=220&q=purif*%20OR%20تزكي*
 ```
 
-Search within one book + chunk type:
+List TOC for one book:
 
 ```http
-GET /ar/book-search?mode=chunks&source_code=SRC:SINAI_KEY_TERMS&chunk_type=lexicon&q=clear%20OR%20mubin
+GET /ar/book-search?mode=toc&source_code=SRC:SINAI_KEY_TERMS
 ```
 
-Search within one book + heading:
+List index terms for one book:
 
 ```http
-GET /ar/book-search?mode=chunks&source_code=SRC:HDO_2008&heading_norm=page%20188&q=quran
+GET /ar/book-search?mode=index&source_code=SRC:SINAI_KEY_TERMS&heading_norm=ibrah
 ```
 
 Search curated evidence:

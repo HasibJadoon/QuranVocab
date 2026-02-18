@@ -1,17 +1,25 @@
 :host {
   display: block;
+  --book-font: 'Literata', 'Iowan Old Style', 'Palatino Linotype', Palatino, serif;
+  --book-line: rgba(173, 140, 95, 0.28);
+  --book-paper: #f3ead8;
+  --book-paper-ink: #312417;
 }
 
 .source-chunks-workspace .workspace-grid {
   margin-top: 1rem;
   display: grid;
-  grid-template-columns: minmax(250px, 290px) minmax(420px, 1fr) minmax(360px, 1fr);
+  grid-template-columns: minmax(330px, 420px) minmax(580px, 1fr);
   gap: 0.85rem;
   min-height: calc(100vh - 200px);
 }
 
 .source-chunks-workspace .workspace-panel {
   padding: 1rem 1.05rem;
+  border: 1px solid var(--book-line);
+  border-radius: 14px;
+  background: radial-gradient(120% 120% at 10% 0%, rgba(145, 118, 77, 0.16), rgba(10, 16, 25, 0.96));
+  box-shadow: 0 20px 48px rgba(6, 9, 14, 0.35);
 }
 
 .source-chunks-workspace .panel-head-tight {
@@ -20,6 +28,7 @@
 
 .source-chunks-workspace .panel-head-tight h2 {
   font-size: 1.1rem;
+  letter-spacing: 0.01em;
 }
 
 .source-chunks-workspace .panel-head-tight p {
@@ -59,14 +68,21 @@
 
 .source-chunks-workspace .toggle-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 0.4rem;
+}
+
+.source-chunks-workspace .toggle-buttons.toggle-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.source-chunks-workspace .toggle-buttons.toggle-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .source-chunks-workspace .toggle-buttons button {
   border-radius: 10px;
-  border: 1px solid var(--paper-line);
-  background: rgba(20, 26, 34, 0.8);
+  border: 1px solid rgba(168, 137, 92, 0.38);
+  background: rgba(18, 25, 36, 0.85);
   color: var(--paper-ink);
   font-family: var(--ui-font);
   font-size: 0.8rem;
@@ -74,8 +90,8 @@
 }
 
 .source-chunks-workspace .toggle-buttons button.active {
-  border-color: rgba(124, 196, 193, 0.7);
-  background: rgba(107, 179, 176, 0.25);
+  border-color: rgba(211, 171, 111, 0.86);
+  background: rgba(172, 126, 68, 0.26);
 }
 
 .source-chunks-workspace .filter-grid {
@@ -105,10 +121,11 @@
 }
 
 .source-chunks-workspace .table-shell {
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--book-line);
   border-radius: 12px;
   overflow: auto;
-  max-height: calc(100vh - 330px);
+  max-height: calc(100vh - 430px);
+  background: rgba(9, 14, 20, 0.52);
 }
 
 .source-chunks-workspace .workspace-table {
@@ -121,7 +138,7 @@
 .source-chunks-workspace .workspace-table td {
   text-align: left;
   padding: 0.55rem 0.62rem;
-  border-bottom: 1px solid var(--paper-line);
+  border-bottom: 1px solid rgba(168, 137, 92, 0.22);
   vertical-align: top;
 }
 
@@ -129,12 +146,12 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgba(20, 26, 34, 0.96);
+  background: rgba(30, 22, 12, 0.92);
   font-family: var(--ui-font);
   font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--paper-ink-soft);
+  color: #e4d2b4;
 }
 
 .source-chunks-workspace .workspace-table tbody tr {
@@ -142,11 +159,11 @@
 }
 
 .source-chunks-workspace .workspace-table tbody tr:hover {
-  background: rgba(107, 179, 176, 0.12);
+  background: rgba(177, 131, 72, 0.14);
 }
 
 .source-chunks-workspace .workspace-table tbody tr.is-active {
-  background: rgba(107, 179, 176, 0.22);
+  background: rgba(177, 131, 72, 0.24);
 }
 
 .source-chunks-workspace .workspace-table .state-cell {
@@ -157,18 +174,19 @@
   color: var(--paper-ink);
 }
 
-.source-chunks-workspace .snippet mark {
-  background: rgba(247, 204, 90, 0.28);
-  color: #ffeab9;
-  border-radius: 4px;
-  padding: 0 0.08rem;
+.source-chunks-workspace .toc-title-cell {
+  min-width: 220px;
+}
+
+.source-chunks-workspace .toc-title {
+  display: block;
 }
 
 .source-chunks-workspace .reader-header {
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--book-line);
   border-radius: 12px;
-  padding: 0.6rem 0.7rem;
-  background: rgba(20, 26, 34, 0.75);
+  padding: 0.62rem 0.72rem;
+  background: rgba(28, 20, 12, 0.72);
   display: grid;
   gap: 0.22rem;
 }
@@ -178,12 +196,12 @@
   flex-wrap: wrap;
   gap: 0.55rem;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-family: var(--ui-font);
 }
 
 .source-chunks-workspace .reader-id {
-  color: var(--paper-ink-soft);
+  color: rgba(241, 223, 194, 0.78);
   font-size: 0.72rem;
   letter-spacing: 0.04em;
 }
@@ -207,63 +225,34 @@
   font-size: 0.8rem;
 }
 
-.source-chunks-workspace .inline-control input[type='checkbox'] {
-  width: 16px;
-  height: 16px;
-}
-
-.source-chunks-workspace .range-control input[type='range'] {
-  width: 160px;
-  padding: 0;
-}
-
 .source-chunks-workspace .reader-viewport {
-  border: 1px solid var(--paper-line);
+  border: 1px solid rgba(147, 119, 80, 0.52);
   border-radius: 12px;
-  background: rgba(13, 18, 24, 0.95);
+  background: linear-gradient(180deg, #f7eedf 0%, #f0e3cd 100%);
   min-height: 320px;
-  max-height: calc(100vh - 400px);
+  max-height: calc(100vh - 380px);
   overflow: auto;
-  padding: 0.85rem;
-}
-
-.source-chunks-workspace .editor-panel {
-  border: 1px solid var(--paper-line);
-  border-radius: 12px;
-  padding: 0.65rem;
-  background: rgba(17, 23, 32, 0.78);
-  display: grid;
-  gap: 0.55rem;
-}
-
-.source-chunks-workspace .editor-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.source-chunks-workspace .editor-panel textarea {
-  min-height: 190px;
-  resize: vertical;
-  font-family: var(--arabic-font);
+  padding: 0.95rem;
 }
 
 .source-chunks-workspace .reader-text {
   margin: 0;
-  color: var(--paper-ink);
+  color: var(--book-paper-ink);
   word-break: break-word;
+  font-family: var(--book-font);
+  letter-spacing: 0.005em;
 }
 
 .source-chunks-workspace .reader-text mark {
-  background: rgba(247, 204, 90, 0.28);
-  color: #ffeab9;
+  background: rgba(210, 158, 83, 0.26);
+  color: #4a3318;
   border-radius: 4px;
   padding: 0 0.08rem;
 }
 
 .source-chunks-workspace .reader-state,
 .source-chunks-workspace .reader-placeholder {
-  border: 1px dashed var(--paper-line);
+  border: 1px dashed var(--book-line);
   border-radius: 12px;
   padding: 0.85rem;
   min-height: 130px;
@@ -283,7 +272,7 @@
 }
 
 .source-chunks-workspace .mobile-tabs button {
-  border: 1px solid var(--paper-line);
+  border: 1px solid var(--book-line);
   background: rgba(20, 26, 34, 0.9);
   color: var(--paper-ink);
   border-radius: 10px;
@@ -293,8 +282,8 @@
 }
 
 .source-chunks-workspace .mobile-tabs button.active {
-  border-color: rgba(124, 196, 193, 0.7);
-  background: rgba(107, 179, 176, 0.25);
+  border-color: rgba(211, 171, 111, 0.86);
+  background: rgba(172, 126, 68, 0.25);
 }
 
 .source-chunks-workspace .btn-sm {
@@ -342,7 +331,7 @@
     align-items: flex-start;
   }
 
-  .source-chunks-workspace .editor-grid {
+  .source-chunks-workspace .toggle-buttons.toggle-three {
     grid-template-columns: 1fr;
   }
 }

@@ -1085,6 +1085,51 @@ CREATE TABLE IF NOT EXISTS ar_source_chunks (
   FOREIGN KEY (ar_u_source) REFERENCES ar_u_sources(ar_u_source)
 );
 
+CREATE TABLE IF NOT EXISTS ar_source_toc (
+  toc_id         TEXT PRIMARY KEY,
+  ar_u_source    TEXT NOT NULL,
+
+  depth          INTEGER NOT NULL,
+  index_path     TEXT NOT NULL,
+  title_raw      TEXT NOT NULL,
+  title_norm     TEXT NOT NULL,
+
+  page_no        INTEGER,
+  locator        TEXT,
+  pdf_page_index INTEGER,
+
+  meta_json      JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT,
+
+  FOREIGN KEY (ar_u_source) REFERENCES ar_u_sources(ar_u_source)
+);
+
+CREATE TABLE IF NOT EXISTS ar_source_index (
+  index_id         TEXT PRIMARY KEY,
+  ar_u_source      TEXT NOT NULL,
+
+  term_raw         TEXT NOT NULL,
+  term_norm        TEXT NOT NULL,
+  term_ar          TEXT,
+  term_ar_guess    TEXT,
+
+  head_chunk_id    TEXT,
+
+  index_page_no    INTEGER,
+  index_locator    TEXT,
+
+  page_refs_json   JSON NOT NULL CHECK (json_valid(page_refs_json)),
+  variants_json    JSON CHECK (variants_json IS NULL OR json_valid(variants_json)),
+
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT,
+
+  FOREIGN KEY (ar_u_source) REFERENCES ar_u_sources(ar_u_source),
+  FOREIGN KEY (head_chunk_id) REFERENCES ar_source_chunks(chunk_id)
+);
+
 CREATE TABLE IF NOT EXISTS ar_u_lexicon_evidence (
   ar_u_lexicon        TEXT NOT NULL,
   evidence_id         TEXT NOT NULL,
@@ -1172,6 +1217,16 @@ CREATE INDEX IF NOT EXISTS idx_chunks_source_heading
 
 CREATE INDEX IF NOT EXISTS idx_chunks_source_type
   ON ar_source_chunks(ar_u_source, chunk_type);
+
+CREATE INDEX IF NOT EXISTS idx_ar_source_toc_source_depth
+  ON ar_source_toc(ar_u_source, depth);
+CREATE INDEX IF NOT EXISTS idx_ar_source_toc_source_page
+  ON ar_source_toc(ar_u_source, page_no);
+
+CREATE INDEX IF NOT EXISTS idx_ar_source_index_source_norm
+  ON ar_source_index(ar_u_source, term_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_source_index_source_page
+  ON ar_source_index(ar_u_source, index_page_no);
 
 CREATE INDEX IF NOT EXISTS idx_lex_ev_source_page
   ON ar_u_lexicon_evidence(source_id, page_no);
