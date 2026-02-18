@@ -150,4 +150,13 @@ export class AppHeaderbarComponent {
     if (page === this.currentPage) return;
     this.pageChange.emit(page);
   }
+
+  onSearchInput(payload: string | Event) {
+    if (typeof payload === 'string') {
+      this.search.emit(payload);
+      return;
+    }
+    const target = payload?.target as HTMLInputElement | null;
+    this.search.emit(String(target?.value ?? ''));
+  }
 }

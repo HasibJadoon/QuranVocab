@@ -12,7 +12,7 @@
           [primaryLabel]="primaryLabel"
           [secondaryLabel]="secondaryLabel"
           [tertiaryLabel]="tertiaryLabel"
-          (search)="search.emit($event)"
+          (search)="onSearchInput($event)"
           (primary)="primary.emit()"
           (secondary)="secondary.emit()"
           (tertiary)="tertiary.emit()"

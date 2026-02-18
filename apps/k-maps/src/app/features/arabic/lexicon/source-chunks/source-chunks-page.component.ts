@@ -274,8 +274,8 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     this.showIndexesPanel = !this.showIndexesPanel;
   }
 
-  onHeaderSearchInput(value: string): void {
-    this.query = value ?? '';
+  onHeaderSearchInput(value: string | Event): void {
+    this.query = this.normalizeHeaderSearchValue(value);
     if (!this.query.trim()) {
       this.searchRows = [];
       this.searchTotal = 0;
@@ -789,12 +789,16 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
 
       await this.reloadBookData(false);
 
+      const jumpPage = this.jumpPageNo;
+      const hasExplicitJump = jumpPage !== null;
       let openedByQuery = false;
-      if (this.query.trim()) {
+      if (!hasExplicitJump && this.query.trim()) {
         openedByQuery = await this.openInitialSearchResult(false);
       }
 
-      if (!openedByQuery) {
+      if (hasExplicitJump) {
+        await this.jumpReaderToPage(jumpPage, false, 'from-page');
+      } else if (!openedByQuery) {
         const tocId = this.initialTocId;
         const chunkId = this.initialChunkId;
         if (tocId) {
@@ -819,8 +823,6 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
           if (page !== null) {
             await this.jumpReaderToPage(page, false);
           }
-        } else if (this.jumpPageNo !== null) {
-          await this.jumpReaderToPage(this.jumpPageNo, false);
         } else {
           const firstToc = this.tocRows.find((row) => row.page_no !== null);
           if (firstToc?.page_no !== null && firstToc?.page_no !== undefined) {
@@ -1727,6 +1729,12 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
 
     unique.sort((a, b) => b.length - a.length);
     return unique;
+  }
+
+  private normalizeHeaderSearchValue(value: string | Event): string {
+    if (typeof value === 'string') return value;
+    const target = value?.target as HTMLInputElement | null;
+    return String(target?.value ?? '');
   }
 
   private highlightText(raw: string, terms: string[]): string {

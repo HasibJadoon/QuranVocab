@@ -31,7 +31,22 @@
   min-width: min(100%, 340px);
 }
 
+.source-chunks-workspace .jump-page-select {
+  display: grid;
+  gap: 0.26rem;
+  min-width: min(100%, 210px);
+}
+
 .source-chunks-workspace .book-corner-select > span {
+  color: var(--paper-ink-soft);
+  font-size: 0.68rem;
+  font-family: var(--ui-font);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.source-chunks-workspace .jump-page-select > span {
   color: var(--paper-ink-soft);
   font-size: 0.68rem;
   font-family: var(--ui-font);
@@ -45,6 +60,25 @@
   border-radius: 12px;
   background: rgba(8, 14, 24, 0.92);
   font-weight: 700;
+}
+
+.source-chunks-workspace .jump-page-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: stretch;
+}
+
+.source-chunks-workspace .jump-page-row input {
+  border: 2px solid #9cc5ff;
+  border-radius: 12px;
+  background: rgba(8, 14, 24, 0.92);
+  font-weight: 700;
+}
+
+.source-chunks-workspace .jump-page-btn {
+  padding-inline: 0.85rem;
+  white-space: nowrap;
 }
 
 .source-chunks-workspace .workspace-grid {
