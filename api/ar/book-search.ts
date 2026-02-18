@@ -30,6 +30,16 @@ function normalizeHeading(value: string) {
     .replace(/\s+/g, ' ');
 }
 
+function normalizeSearchText(value: string) {
+  return value
+    .normalize('NFKC')
+    .replace(/[\u00AD\u2010\u2011\u2012\u2013\u2014\u2212]/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 function normalizeChunkType(value: string | null): string {
   return (value ?? '')
     .trim()
@@ -111,6 +121,7 @@ type ReaderChunkRow = {
   heading_raw: string | null;
   locator: string | null;
   chunk_type: string | null;
+  chunk_scope: string | null;
   text: string;
   source_code: string;
   source_title: string;
@@ -537,23 +548,28 @@ async function runReaderChunk(
   sourceCode: string,
   pageNo: number | null
 ) {
+  const readerSelect = `
+    SELECT
+      c.chunk_id,
+      c.page_no,
+      c.heading_raw,
+      c.locator,
+      c.chunk_type,
+      COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') AS chunk_scope,
+      c.text,
+      s.source_code,
+      s.title AS source_title
+    FROM ar_source_chunks c
+    JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+  `;
+
   let chunk: ReaderChunkRow | null = null;
 
   if (chunkId) {
     chunk = await db
       .prepare(
         `
-          SELECT
-            c.chunk_id,
-            c.page_no,
-            c.heading_raw,
-            c.locator,
-            c.chunk_type,
-            c.text,
-            s.source_code,
-            s.title AS source_title
-          FROM ar_source_chunks c
-          JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+          ${readerSelect}
           WHERE c.chunk_id = ?
           LIMIT 1
         `
@@ -566,17 +582,7 @@ async function runReaderChunk(
     chunk = await db
       .prepare(
         `
-          SELECT
-            c.chunk_id,
-            c.page_no,
-            c.heading_raw,
-            c.locator,
-            c.chunk_type,
-            c.text,
-            s.source_code,
-            s.title AS source_title
-          FROM ar_source_chunks c
-          JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
+          ${readerSelect}
           WHERE s.source_code = ?
             AND c.page_no = ?
           ORDER BY c.chunk_id ASC
@@ -585,6 +591,27 @@ async function runReaderChunk(
       )
       .bind(sourceCode, pageNo)
       .first<ReaderChunkRow>();
+  }
+
+  // TOC entries point to a source locator; jump directly to the corresponding page chunk.
+  if (chunk && chunk.chunk_scope === 'toc' && chunk.locator) {
+    const targetChunk = await db
+      .prepare(
+        `
+          ${readerSelect}
+          WHERE s.source_code = ?
+            AND c.locator = ?
+            AND COALESCE(json_extract(c.content_json, '$.chunk_scope'), 'page') = 'page'
+          ORDER BY c.page_no ASC, c.chunk_id ASC
+          LIMIT 1
+        `
+      )
+      .bind(chunk.source_code, chunk.locator)
+      .first<ReaderChunkRow>();
+
+    if (targetChunk) {
+      chunk = targetChunk;
+    }
   }
 
   if (!chunk) {
@@ -653,7 +680,7 @@ async function syncChunkFts(db: D1Database, chunkId: string) {
         SELECT
           c.chunk_id,
           c.heading_norm,
-          c.text,
+          c.text_search,
           s.source_code
         FROM ar_source_chunks c
         JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source
@@ -665,7 +692,7 @@ async function syncChunkFts(db: D1Database, chunkId: string) {
     .first<{
       chunk_id: string;
       heading_norm: string | null;
-      text: string;
+      text_search: string;
       source_code: string;
     }>();
 
@@ -675,11 +702,11 @@ async function syncChunkFts(db: D1Database, chunkId: string) {
   await db
     .prepare(
       `
-        INSERT INTO ar_source_chunks_fts (chunk_id, source_code, heading_norm, text)
+        INSERT INTO ar_source_chunks_fts (chunk_id, source_code, heading_norm, text_search)
         VALUES (?, ?, ?, ?)
       `
     )
-    .bind(chunk.chunk_id, chunk.source_code, chunk.heading_norm ?? '', chunk.text ?? '')
+    .bind(chunk.chunk_id, chunk.source_code, chunk.heading_norm ?? '', chunk.text_search ?? '')
     .run();
 }
 
@@ -862,6 +889,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
 
   let headingWasUpdated = false;
   let textWasUpdated = false;
+  let textSearchWasUpdated = false;
 
   if (Object.prototype.hasOwnProperty.call(body, 'page_no')) {
     const raw = body.page_no;
@@ -928,7 +956,43 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
     const text = String(body.text ?? '');
     updates.push(`text = ?`);
     binds.push(text);
+    updates.push(`text_search = ?`);
+    binds.push(normalizeSearchText(text));
     textWasUpdated = true;
+    textSearchWasUpdated = true;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'text_search')) {
+    const textSearch = normalizeSearchText(String(body.text_search ?? ''));
+    updates.push(`text_search = ?`);
+    binds.push(textSearch);
+    textSearchWasUpdated = true;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'content_json')) {
+    const raw = body.content_json;
+    if (raw === null) {
+      updates.push(`content_json = NULL`);
+    } else if (typeof raw === 'string') {
+      const trimmed = raw.trim();
+      if (!trimmed) {
+        updates.push(`content_json = NULL`);
+      } else {
+        try {
+          JSON.parse(trimmed);
+        } catch {
+          return new Response(JSON.stringify({ ok: false, error: 'content_json string must be valid JSON' }), {
+            status: 400,
+            headers: jsonHeaders,
+          });
+        }
+        updates.push(`content_json = json(?)`);
+        binds.push(trimmed);
+      }
+    } else {
+      updates.push(`content_json = json(?)`);
+      binds.push(JSON.stringify(raw));
+    }
   }
 
   if (!updates.length) {
@@ -951,7 +1015,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
     .bind(...binds, chunkId)
     .run();
 
-  if (textWasUpdated || headingWasUpdated) {
+  if (textWasUpdated || headingWasUpdated || textSearchWasUpdated) {
     await syncChunkFts(ctx.env.DB, chunkId);
   }
 

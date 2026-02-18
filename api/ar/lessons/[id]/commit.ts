@@ -6,7 +6,6 @@ import {
   upsertArUGrammar,
   upsertArURoot,
   upsertArUSentence,
-  upsertArUSpan,
   upsertArUToken,
 } from '../../../_utils/universal';
 
@@ -200,75 +199,13 @@ function extractTokenMorph(pos: string, features: JsonRecord | null) {
 }
 
 async function upsertTokenMorph(
-  db: D1Database,
-  tokenOccId: string,
-  pos: string,
-  features: JsonRecord | null
+  _db: D1Database,
+  _tokenOccId: string,
+  _pos: string,
+  _features: JsonRecord | null
 ) {
-  const morph = extractTokenMorph(pos, features);
-  if (!morph) {
-    await db.prepare(`DELETE FROM ar_occ_token_morph WHERE ar_token_occ_id = ?1`).bind(tokenOccId).run();
-    return;
-  }
-
-  await db
-    .prepare(
-      `
-      INSERT INTO ar_occ_token_morph (
-        ar_token_occ_id,
-        pos,
-        noun_case,
-        noun_number,
-        noun_gender,
-        noun_definiteness,
-        verb_tense,
-        verb_mood,
-        verb_voice,
-        verb_person,
-        verb_number,
-        verb_gender,
-        particle_type,
-        extra_json,
-        created_at,
-        updated_at
-      ) VALUES (
-        ?1, ?2, ?3, ?4, ?5, ?6,
-        ?7, ?8, ?9, ?10, ?11, ?12,
-        ?13, NULL, datetime('now'), datetime('now')
-      )
-      ON CONFLICT(ar_token_occ_id) DO UPDATE SET
-        pos = excluded.pos,
-        noun_case = excluded.noun_case,
-        noun_number = excluded.noun_number,
-        noun_gender = excluded.noun_gender,
-        noun_definiteness = excluded.noun_definiteness,
-        verb_tense = excluded.verb_tense,
-        verb_mood = excluded.verb_mood,
-        verb_voice = excluded.verb_voice,
-        verb_person = excluded.verb_person,
-        verb_number = excluded.verb_number,
-        verb_gender = excluded.verb_gender,
-        particle_type = excluded.particle_type,
-        extra_json = excluded.extra_json,
-        updated_at = datetime('now')
-    `
-    )
-    .bind(
-      tokenOccId,
-      morph.pos,
-      morph.nounCase,
-      morph.nounNumber,
-      morph.nounGender,
-      morph.nounDefiniteness,
-      morph.verbTense,
-      morph.verbMood,
-      morph.verbVoice,
-      morph.verbPerson,
-      morph.verbNumber,
-      morph.verbGender,
-      morph.particleType
-    )
-    .run();
+  // Occurrence-level morphology table was removed.
+  return;
 }
 
 function parseStep(stepValue: string | undefined): CommitStep | null {
@@ -940,106 +877,17 @@ async function commitTokensStep(
 }
 
 async function commitSpansStep(
-  db: D1Database,
-  userId: number,
-  containerId: string,
-  unitId: string | null,
+  _db: D1Database,
+  _userId: number,
+  _containerId: string,
+  _unitId: string | null,
   payload: JsonRecord,
   counts: Counts
 ) {
-  const spanMap = new Map<string, string>();
-
   const uSpans = asArray(payload['u_spans']);
-  for (const item of uSpans) {
-    const row = asRecord(item);
-    if (!row) continue;
-    const spanType = asString(row['span_type']) ?? 'phrase';
-    const tokenIds = asArray(row['token_u_ids'] ?? row['token_ids'])
-      .map((entry) => asString(entry))
-      .filter((entry): entry is string => !!entry);
-    if (!tokenIds.length) continue;
-
-    const result = await upsertArUSpan(
-      { DB: db },
-      {
-        spanType,
-        tokenIds,
-        meta: asRecord(row['meta_json']) ?? row['meta_json'],
-      }
-    );
-
-    const providedSpanId = asString(row['ar_u_span']) ?? asString(row['u_span_id']);
-    if (providedSpanId) spanMap.set(providedSpanId, result.ar_u_span);
-    spanMap.set(`${spanType}|${tokenIds.join(',')}`, result.ar_u_span);
-    bump(counts, 'ar_u_spans');
-  }
-
   const occSpans = asArray(payload['occ_spans']);
-  for (const item of occSpans) {
-    const row = asRecord(item);
-    if (!row) continue;
-    const startIndex = asInteger(row['start_index']);
-    const endIndex = asInteger(row['end_index']);
-    if (startIndex == null || endIndex == null) continue;
-
-    const spanType = asString(row['span_type']) ?? 'phrase';
-    const tokenIds = asArray(row['token_u_ids'] ?? row['token_ids'])
-      .map((entry) => asString(entry))
-      .filter((entry): entry is string => !!entry);
-
-    const providedUSpan = asString(row['ar_u_span']) ?? asString(row['u_span_id']);
-    let arUSpan =
-      (providedUSpan ? spanMap.get(providedUSpan) ?? providedUSpan : null) ??
-      spanMap.get(`${spanType}|${tokenIds.join(',')}`) ??
-      null;
-
-    if (!arUSpan) {
-      const created = await upsertArUSpan(
-        { DB: db },
-        {
-          spanType,
-          tokenIds,
-          meta: asRecord(row['meta_json']) ?? row['meta_json'],
-        }
-      );
-      arUSpan = created.ar_u_span;
-      spanMap.set(`${spanType}|${tokenIds.join(',')}`, arUSpan);
-      bump(counts, 'ar_u_spans');
-    }
-
-    const spanContainerId = asString(row['container_id']) ?? containerId;
-    const spanUnitId = asString(row['unit_id']) ?? unitId;
-    const spanText = asString(row['text_cache']) ?? asString(row['text']) ?? null;
-    const providedOccId = asString(row['ar_span_occ_id']) ?? asString(row['span_occ_id']);
-    const occSpanId =
-      providedOccId ??
-      (await sha256Hex(
-        buildCommitId(['occ_span', spanContainerId, spanUnitId, startIndex, endIndex, spanText ?? ''])
-      ));
-
-    await db
-      .prepare(
-        `
-        INSERT OR REPLACE INTO ar_occ_span (
-          ar_span_occ_id, user_id, container_id, unit_id, start_index, end_index,
-          text_cache, ar_u_span, created_at
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, datetime('now'))
-      `
-      )
-      .bind(
-        occSpanId,
-        userId,
-        spanContainerId,
-        spanUnitId,
-        startIndex,
-        endIndex,
-        spanText,
-        arUSpan
-      )
-      .run();
-
-    bump(counts, 'ar_occ_span');
-  }
+  if (uSpans.length) bump(counts, 'skipped_ar_u_spans', uSpans.length);
+  if (occSpans.length) bump(counts, 'skipped_ar_occ_span', occSpans.length);
 }
 
 async function commitGrammarStep(
@@ -1377,24 +1225,7 @@ async function commitLinksStep(
   }
 
   const valencyLinks = asArray(payload['valency_links']);
-  for (const item of valencyLinks) {
-    const row = asRecord(item);
-    if (!row) continue;
-    const tokenOccId = asString(row['ar_token_occ_id']) ?? asString(row['token_occ_id']);
-    const valencyId = asString(row['ar_u_valency']) ?? asString(row['u_valency_id']);
-    if (!tokenOccId || !valencyId) continue;
-    await db
-      .prepare(
-        `
-        INSERT OR REPLACE INTO ar_token_valency_link (
-          ar_token_occ_id, ar_u_valency, role, note, created_at
-        ) VALUES (?1, ?2, ?3, ?4, datetime('now'))
-      `
-      )
-      .bind(tokenOccId, valencyId, asString(row['role']), asString(row['note']))
-      .run();
-    bump(counts, 'ar_token_valency_link');
-  }
+  if (valencyLinks.length) bump(counts, 'skipped_ar_token_valency_link', valencyLinks.length);
 
   const pairLinks = asArray(payload['pair_links']);
   for (const item of pairLinks) {

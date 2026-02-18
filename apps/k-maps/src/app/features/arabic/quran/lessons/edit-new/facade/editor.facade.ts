@@ -1077,14 +1077,20 @@ export class QuranLessonEditorFacade {
     }
     items = this.dedupeMorphologyItems(items);
 
+    const existingPayload = this.parseTaskJsonObject(tab.json);
     const payload: Record<string, unknown> = {
-      schema_version: 1,
+      ...existingPayload,
+      schema_version: existingPayload['schema_version'] ?? 1,
       task_type: 'morphology',
       surah: this.state.selectedSurah,
       ayah_from: this.state.rangeStart,
       ayah_to: this.state.rangeEnd ?? this.state.rangeStart,
-      source: 'quran-ayah-words',
+      source: existingPayload['source'] ?? 'quran-ayah-words',
       items,
+      lexicon_evidence: Array.isArray(existingPayload['lexicon_evidence']) ? existingPayload['lexicon_evidence'] : [],
+      lexicon_morphology: Array.isArray(existingPayload['lexicon_morphology'])
+        ? existingPayload['lexicon_morphology']
+        : [],
     };
 
     tab.json = JSON.stringify(payload, null, 2);
@@ -1385,7 +1391,15 @@ export class QuranLessonEditorFacade {
       if (summary && typeof summary === 'object') {
         const upserted = summary.upserted ?? 0;
         const skipped = summary.skipped ?? 0;
-        setStatus(this.state, 'success', `Morphology committed. Lexicon upserted ${upserted}, skipped ${skipped}.`);
+        const morphUpserted = summary.morphology_upserted ?? 0;
+        const morphLinksUpserted = summary.lexicon_morphology_upserted ?? 0;
+        const evidenceUpserted = summary.lexicon_evidence_upserted ?? 0;
+        const message =
+          `Morphology committed. Lexicon upserted ${upserted}, skipped ${skipped}. ` +
+          `ar_u_morphology upserted ${morphUpserted}. ` +
+          `Links upserted ${morphLinksUpserted}. ` +
+          `Evidence upserted ${evidenceUpserted}.`;
+        setStatus(this.state, 'success', message);
       } else {
         setStatus(this.state, 'success', 'Morphology committed.');
       }

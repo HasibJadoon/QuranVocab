@@ -14,7 +14,7 @@
         <div class="sentence-card-head">
           <h4>Morphology Items</h4>
           <div class="action-row">
-            <button type="button" class="btn btn-ghost btn-sm" (click)="openCreateModal($event)">Add JSON</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openCreateModal($event, 'items')">Add JSON</button>
             <button type="button" class="btn btn-ghost btn-sm" (click)="loadFromVerses()">Load from verses</button>
             <button
               type="button"
@@ -34,7 +34,7 @@
             </button>
           </div>
         </div>
-        <p class="note-muted">Loads every word from the selected verses. Remove items you do not want to keep.</p>
+        <p class="note-muted">Current morphology rows for this task JSON.</p>
 
         <div class="table-wrap" *ngIf="items.length; else noItems">
           <table class="editor-table editor-table--morph">
@@ -91,7 +91,7 @@
                   />
                 </td>
                 <td>
-                  <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i)">
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'items')">
                     JSON
                   </button>
                   <button type="button" class="btn btn-ghost btn-sm" (click)="removeItem(i)">Remove</button>
@@ -106,8 +106,124 @@
       </div>
     </ng-container>
 
-    <ng-container *ngIf="activeTabId === 'json'">
-      <app-quran-lesson-task-json taskType="morphology"></app-quran-lesson-task-json>
+    <ng-container *ngIf="activeTabId === 'evidence'">
+      <div class="sentence-card">
+        <div class="sentence-card-head">
+          <h4>Lexicon Evidence</h4>
+          <div class="action-row">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openCreateModal($event, 'evidence')">Add JSON</button>
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              [disabled]="state.taskSavingType === 'morphology'"
+              (click)="saveTask()"
+            >
+              {{ state.taskSavingType === 'morphology' ? 'Saving...' : 'Save Task' }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              [disabled]="state.taskSavingType === 'morphology' || !state.lessonId || !state.passageUnitId"
+              (click)="commitLexicon()"
+            >
+              {{ state.taskSavingType === 'morphology' ? 'Committing...' : 'Push to Lexicon' }}
+            </button>
+          </div>
+        </div>
+        <p class="note-muted">Rows from <code>task_json.lexicon_evidence</code> (upserted into <code>ar_u_lexicon_evidence</code> on commit).</p>
+
+        <div class="table-wrap" *ngIf="evidenceItems.length; else noEvidence">
+          <table class="editor-table editor-table--morph">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Lexicon</th>
+                <th>Locator</th>
+                <th>Source/Ref</th>
+                <th>Role</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of evidenceItems; let i = index; trackBy: trackByEvidence">
+                <td>{{ i + 1 }}</td>
+                <td class="mono">{{ item['ar_u_lexicon'] || item['lexicon_id'] || '—' }}</td>
+                <td>{{ item['locator_type'] || 'chunk' }}</td>
+                <td class="mono">{{ item['chunk_id'] || item['url'] || item['source_id'] || '—' }}</td>
+                <td>{{ item['link_role'] || 'supports' }}</td>
+                <td>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'evidence')">
+                    JSON
+                  </button>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="removeEvidence(i)">Remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noEvidence>
+          <p class="text-muted">No evidence rows yet. Add JSON entries to link lexicon to source evidence.</p>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="activeTabId === 'links'">
+      <div class="sentence-card">
+        <div class="sentence-card-head">
+          <h4>Lexicon Morphology Links</h4>
+          <div class="action-row">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="openCreateModal($event, 'links')">Add JSON</button>
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              [disabled]="state.taskSavingType === 'morphology'"
+              (click)="saveTask()"
+            >
+              {{ state.taskSavingType === 'morphology' ? 'Saving...' : 'Save Task' }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              [disabled]="state.taskSavingType === 'morphology' || !state.lessonId || !state.passageUnitId"
+              (click)="commitLexicon()"
+            >
+              {{ state.taskSavingType === 'morphology' ? 'Committing...' : 'Push to Lexicon' }}
+            </button>
+          </div>
+        </div>
+        <p class="note-muted">Rows from <code>task_json.lexicon_morphology</code> (upserted into <code>ar_u_lexicon_morphology</code> on commit).</p>
+
+        <div class="table-wrap" *ngIf="lexiconMorphologyItems.length; else noLinks">
+          <table class="editor-table editor-table--morph">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Lexicon</th>
+                <th>Morphology</th>
+                <th>Role</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of lexiconMorphologyItems; let i = index; trackBy: trackByLink">
+                <td>{{ i + 1 }}</td>
+                <td class="mono">{{ item['ar_u_lexicon'] || item['lexicon_id'] || '—' }}</td>
+                <td class="mono">{{ item['ar_u_morphology'] || 'new-from-payload' }}</td>
+                <td>{{ item['link_role'] || 'primary' }}</td>
+                <td>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'links')">
+                    JSON
+                  </button>
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="removeLexiconMorphology(i)">Remove</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noLinks>
+          <p class="text-muted">No morphology links yet. Add JSON entries to link lexicon to morphology cards.</p>
+        </ng-template>
+      </div>
     </ng-container>
   </div>
 </div>

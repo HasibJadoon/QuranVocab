@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS ar_source_chunks (
   chunk_type     TEXT NOT NULL DEFAULT 'lexicon'
                  CHECK (chunk_type IN ('grammar', 'literature', 'lexicon', 'reference', 'other')),
   text           TEXT NOT NULL,
+  text_search    TEXT NOT NULL,
+  content_json   JSON CHECK (content_json IS NULL OR json_valid(content_json)),
   meta_json      JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
   created_at     TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at     TEXT,
@@ -159,7 +161,7 @@ CREATE VIRTUAL TABLE ar_source_chunks_fts USING fts5(
   chunk_id UNINDEXED,
   source_code,
   heading_norm,
-  text
+  text_search
 );
 
 CREATE VIRTUAL TABLE ar_u_lexicon_evidence_fts USING fts5(
@@ -171,12 +173,12 @@ CREATE VIRTUAL TABLE ar_u_lexicon_evidence_fts USING fts5(
   note_md
 );
 
-INSERT INTO ar_source_chunks_fts(chunk_id, source_code, heading_norm, text)
+INSERT INTO ar_source_chunks_fts(chunk_id, source_code, heading_norm, text_search)
 SELECT
   c.chunk_id,
   s.source_code,
   COALESCE(c.heading_norm, ''),
-  c.text
+  COALESCE(c.text_search, c.text)
 FROM ar_source_chunks c
 JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source;
 

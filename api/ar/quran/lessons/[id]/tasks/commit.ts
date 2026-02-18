@@ -6,7 +6,6 @@ import {
   upsertArULexicon,
   upsertArURoot,
   upsertArUSentence,
-  upsertArUSpan,
   upsertArUToken,
 } from '../../../../../_utils/universal';
 
@@ -26,7 +25,7 @@ const TASK_LABELS: Record<string, string> = {
   morphology: 'Morphology',
 };
 
-const MORPH_POS_MAP: Record<string, string> = {
+const MORPH_POS_MAP: Record<string, 'noun' | 'verb' | 'particle' | 'adj'> = {
   اسم: 'noun',
   فعل: 'verb',
   حرف: 'particle',
@@ -36,6 +35,62 @@ const MORPH_POS_MAP: Record<string, string> = {
 const ARABIC_DIACRITICS_RE = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
 const ARABIC_TATWEEL_RE = /\u0640/g;
 const ARABIC_NON_LETTERS_RE = /[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g;
+
+const MORPH_POS2_VALUES = new Set(['verb', 'noun', 'prep', 'particle']);
+const MORPH_DERIVATION_VALUES = new Set(['jamid', 'mushtaq']);
+const MORPH_NOUN_NUMBER_VALUES = new Set(['singular', 'plural', 'dual']);
+const MORPH_VERB_FORM_VALUES = new Set(['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']);
+const MORPH_DERIVED_PATTERN_VALUES = new Set([
+  'ism_fael',
+  'ism_mafool',
+  'masdar',
+  'sifah_mushabbahah',
+  'ism_mubalaghah',
+  'ism_zaman',
+  'ism_makan',
+  'ism_ala',
+  'tafdeel',
+  'nisbah',
+  'other',
+]);
+const MORPH_TRANSITIVITY_VALUES = new Set(['lazim', 'mutaaddi', 'both']);
+const LEXICON_MORPH_ROLE_VALUES = new Set(['primary', 'inflection', 'derived', 'variant']);
+
+const EVIDENCE_LOCATOR_VALUES = new Set(['chunk', 'app', 'url']);
+const EVIDENCE_SOURCE_TYPE_VALUES = new Set([
+  'book',
+  'tafsir',
+  'quran',
+  'hadith',
+  'paper',
+  'website',
+  'notes',
+  'app',
+]);
+const EVIDENCE_LINK_ROLE_VALUES = new Set([
+  'headword',
+  'definition',
+  'usage',
+  'example',
+  'mentions',
+  'grouped_with',
+  'crossref_target',
+  'index_redirect',
+  'supports',
+  'disputes',
+  'variant',
+]);
+const EVIDENCE_KIND_VALUES = new Set([
+  'lexical',
+  'morphological',
+  'semantic',
+  'thematic',
+  'valency',
+  'historical',
+  'comparative',
+  'editorial',
+]);
+const EVIDENCE_STRENGTH_VALUES = new Set(['primary', 'supporting', 'contextual', 'weak']);
 
 type CommitBody = {
   container_id?: string | null;
@@ -87,12 +142,14 @@ function normalizeArabic(input: string): string {
   return input.normalize('NFKC').replace(ARABIC_DIACRITICS_RE, '').trim();
 }
 
-function normalizeMorphPos(value: string | null): string | null {
+function normalizeMorphPos(value: string | null): 'verb' | 'noun' | 'adj' | 'particle' | 'phrase' | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
   const lower = trimmed.toLowerCase();
-  if (['verb', 'noun', 'adj', 'particle', 'phrase'].includes(lower)) return lower;
+  if (['verb', 'noun', 'adj', 'particle', 'phrase'].includes(lower)) {
+    return lower as 'verb' | 'noun' | 'adj' | 'particle' | 'phrase';
+  }
   return MORPH_POS_MAP[trimmed] ?? null;
 }
 
@@ -118,11 +175,93 @@ function toJsonOrNull(value: unknown): string | null {
   return JSON.stringify(value);
 }
 
+function toJsonTextOrNull(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      JSON.parse(trimmed);
+      return trimmed;
+    } catch {
+      return JSON.stringify(trimmed);
+    }
+  }
+  return JSON.stringify(value);
+}
+
 function parseWordLocationIndex(value: string | null): number | null {
   if (!value) return null;
   const parts = value.split(':').map((entry) => entry.trim());
   const last = Number(parts[parts.length - 1]);
   return Number.isFinite(last) ? last : null;
+}
+
+function asInteger(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? Math.trunc(value) : null;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? Math.trunc(parsed) : null;
+  }
+  return null;
+}
+
+function pickEnum(value: string | null, allowed: Set<string>, fallback: string): string {
+  if (!value) return fallback;
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return fallback;
+  return allowed.has(normalized) ? normalized : fallback;
+}
+
+function normalizeMorphPos2(value: string | null): 'verb' | 'noun' | 'prep' | 'particle' | null {
+  if (!value) return null;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'adj') return 'noun';
+  return MORPH_POS2_VALUES.has(normalized)
+    ? (normalized as 'verb' | 'noun' | 'prep' | 'particle')
+    : null;
+}
+
+function normalizeVerbFormCode(value: string | null): string | null {
+  if (!value) return null;
+  const cleaned = value
+    .trim()
+    .toUpperCase()
+    .replace(/^FORM[\s:=]*/i, '');
+  return MORPH_VERB_FORM_VALUES.has(cleaned) ? cleaned : null;
+}
+
+function buildMorphologyCanonicalInput(args: {
+  pos2: string;
+  surfaceNorm: string;
+  nounNumber: string | null;
+  derivationType: string | null;
+  verbForm: string | null;
+  derivedFromVerbForm: string | null;
+  derivedPattern: string | null;
+  transitivity: string | null;
+  objCount: number | null;
+}) {
+  return canonicalize(
+    [
+      'morph',
+      'global',
+      args.pos2,
+      args.surfaceNorm,
+      args.nounNumber ?? '',
+      args.derivationType ?? '',
+      `form=${args.verbForm ?? ''}`,
+      `from=${args.derivedFromVerbForm ?? ''}`,
+      `pattern=${args.derivedPattern ?? ''}`,
+      `trans=${args.transitivity ?? ''}`,
+      `obj=${args.objCount ?? ''}`,
+    ].join('|')
+  );
 }
 
 function buildCommitId(parts: Array<string | number | null | undefined>) {
@@ -204,75 +343,13 @@ function isLikelyHexId(value: string | null): boolean {
 }
 
 async function upsertTokenMorph(
-  db: D1Database,
-  tokenOccId: string,
-  pos: string,
-  features: Record<string, unknown> | null
+  _db: D1Database,
+  _tokenOccId: string,
+  _pos: string,
+  _features: Record<string, unknown> | null
 ) {
-  const morph = extractTokenMorph(pos, features);
-  if (!morph) {
-    await db.prepare(`DELETE FROM ar_occ_token_morph WHERE ar_token_occ_id = ?1`).bind(tokenOccId).run();
-    return;
-  }
-
-  await db
-    .prepare(
-      `
-      INSERT INTO ar_occ_token_morph (
-        ar_token_occ_id,
-        pos,
-        noun_case,
-        noun_number,
-        noun_gender,
-        noun_definiteness,
-        verb_tense,
-        verb_mood,
-        verb_voice,
-        verb_person,
-        verb_number,
-        verb_gender,
-        particle_type,
-        extra_json,
-        created_at,
-        updated_at
-      ) VALUES (
-        ?1, ?2, ?3, ?4, ?5, ?6,
-        ?7, ?8, ?9, ?10, ?11, ?12,
-        ?13, NULL, datetime('now'), datetime('now')
-      )
-      ON CONFLICT(ar_token_occ_id) DO UPDATE SET
-        pos = excluded.pos,
-        noun_case = excluded.noun_case,
-        noun_number = excluded.noun_number,
-        noun_gender = excluded.noun_gender,
-        noun_definiteness = excluded.noun_definiteness,
-        verb_tense = excluded.verb_tense,
-        verb_mood = excluded.verb_mood,
-        verb_voice = excluded.verb_voice,
-        verb_person = excluded.verb_person,
-        verb_number = excluded.verb_number,
-        verb_gender = excluded.verb_gender,
-        particle_type = excluded.particle_type,
-        extra_json = excluded.extra_json,
-        updated_at = datetime('now')
-    `
-    )
-    .bind(
-      tokenOccId,
-      morph.pos,
-      morph.nounCase,
-      morph.nounNumber,
-      morph.nounGender,
-      morph.nounDefiniteness,
-      morph.verbTense,
-      morph.verbMood,
-      morph.verbVoice,
-      morph.verbPerson,
-      morph.verbNumber,
-      morph.verbGender,
-      morph.particleType
-    )
-    .run();
+  // Occurrence-level morphology table was removed.
+  return;
 }
 
 async function insertTokenLexiconLink(db: D1Database, tokenOccId: string, lexiconId: string) {
@@ -444,6 +521,104 @@ function normalizeSentencePos(
   return 'noun';
 }
 
+type ArUMorphologyUpsertPayload = {
+  id?: string | null;
+  canonicalInput?: string | null;
+  surfaceAr: string;
+  surfaceNorm: string;
+  pos2: 'verb' | 'noun' | 'prep' | 'particle';
+  derivationType?: string | null;
+  nounNumber?: string | null;
+  verbForm?: string | null;
+  derivedFromVerbForm?: string | null;
+  derivedPattern?: string | null;
+  transitivity?: string | null;
+  objCount?: number | null;
+  tagsAr?: unknown;
+  tagsEn?: unknown;
+  notes?: string | null;
+  meta?: unknown;
+};
+
+async function upsertArUMorphology(db: D1Database, payload: ArUMorphologyUpsertPayload) {
+  const nounNumber = payload.nounNumber ?? null;
+  const derivationType = payload.derivationType ?? null;
+  const verbForm = payload.verbForm ?? null;
+  const derivedFromVerbForm = payload.derivedFromVerbForm ?? null;
+  const derivedPattern = payload.derivedPattern ?? null;
+  const transitivity = payload.transitivity ?? null;
+  const objCount = payload.objCount ?? null;
+
+  const canonicalInput =
+    payload.canonicalInput ??
+    buildMorphologyCanonicalInput({
+      pos2: payload.pos2,
+      surfaceNorm: payload.surfaceNorm,
+      nounNumber,
+      derivationType,
+      verbForm,
+      derivedFromVerbForm,
+      derivedPattern,
+      transitivity,
+      objCount,
+    });
+  const id = payload.id ?? (await sha256Hex(canonicalInput));
+
+  await db
+    .prepare(
+      `
+      INSERT INTO ar_u_morphology (
+        ar_u_morphology,
+        canonical_input,
+        surface_ar,
+        surface_norm,
+        pos2,
+        derivation_type,
+        noun_number,
+        verb_form,
+        derived_from_verb_form,
+        derived_pattern,
+        transitivity,
+        obj_count,
+        tags_ar_json,
+        tags_en_json,
+        notes,
+        meta_json
+      ) VALUES (
+        ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16
+      )
+      ON CONFLICT(ar_u_morphology) DO UPDATE SET
+        surface_ar = excluded.surface_ar,
+        tags_ar_json = excluded.tags_ar_json,
+        tags_en_json = excluded.tags_en_json,
+        notes = excluded.notes,
+        meta_json = excluded.meta_json,
+        updated_at = datetime('now')
+    `
+    )
+    .bind(
+      id,
+      canonicalInput,
+      payload.surfaceAr,
+      payload.surfaceNorm,
+      payload.pos2,
+      derivationType,
+      nounNumber,
+      verbForm,
+      derivedFromVerbForm,
+      derivedPattern,
+      transitivity,
+      objCount,
+      toJsonOrNull(payload.tagsAr),
+      toJsonOrNull(payload.tagsEn),
+      payload.notes ?? null,
+      toJsonOrNull(payload.meta)
+    )
+    .run();
+
+  return { ar_u_morphology: id, canonical_input: canonicalInput };
+}
+
 function taskJsonObject(taskJson: unknown): Record<string, unknown> | null {
   const record = asRecord(taskJson);
   if (record) return record;
@@ -539,6 +714,10 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
 
     if (taskType === 'morphology') {
       const rawItems = Array.isArray(taskJson.items) ? taskJson.items : [];
+      const rawLexiconEvidence = Array.isArray(taskJson['lexicon_evidence']) ? taskJson['lexicon_evidence'] : [];
+      const rawLexiconMorphology = Array.isArray(taskJson['lexicon_morphology'])
+        ? taskJson['lexicon_morphology']
+        : [];
       if (!rawItems.length) {
         return new Response(JSON.stringify({ ok: false, error: 'task_json.items[] is required.' }), {
           status: 400,
@@ -548,8 +727,19 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
 
       let lexiconUpserted = 0;
       let lexiconSkipped = 0;
+      let morphologyUpserted = 0;
+      let morphologySkipped = 0;
+      let lexiconMorphologyUpserted = 0;
+      let lexiconMorphologySkipped = 0;
+      let lexiconEvidenceUpserted = 0;
+      let lexiconEvidenceSkipped = 0;
       const items: Array<Record<string, unknown>> = [];
+      const evidenceItems: Array<Record<string, unknown>> = [];
+      const lexiconMorphologyItems: Array<Record<string, unknown>> = [];
       const synonymCache = new Map<string, SynonymLookup>();
+      const lexiconByWordLocation = new Map<string, string>();
+      const lexiconByLemmaPos = new Map<string, string>();
+      const morphologyItemByWordLocation = new Map<string, Record<string, unknown>>();
 
       for (const rawItem of rawItems) {
         const item = asRecord(rawItem) ?? {};
@@ -803,7 +993,365 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
           item['ar_u_lexicon'] = lexiconId;
         }
 
+        const rowWordLocation = asString(item['word_location']);
+        if (rowWordLocation) {
+          morphologyItemByWordLocation.set(rowWordLocation, item);
+          if (lexiconId) {
+            lexiconByWordLocation.set(rowWordLocation, lexiconId);
+          }
+        }
+        if (lexiconId && lemmaNorm && pos) {
+          lexiconByLemmaPos.set(`${lemmaNorm}|${pos}`, lexiconId);
+        }
+
         items.push(item);
+      }
+
+      const resolveLexiconId = (row: Record<string, unknown>): string | null => {
+        const direct = asString(row['ar_u_lexicon']) ?? asString(row['lexicon_id']);
+        if (direct && isLikelyHexId(direct)) return direct;
+
+        const wordLocation = asString(row['word_location']);
+        if (wordLocation) {
+          const byWordLocation = lexiconByWordLocation.get(wordLocation);
+          if (byWordLocation) return byWordLocation;
+        }
+
+        const lemmaNorm =
+          asString(row['lemma_norm']) ??
+          asString(row['surface_norm']) ??
+          null;
+        const pos = normalizeMorphPos(asString(row['pos']));
+        if (lemmaNorm && pos) {
+          const byLemmaPos = lexiconByLemmaPos.get(`${lemmaNorm}|${pos}`);
+          if (byLemmaPos) return byLemmaPos;
+        }
+        if (lemmaNorm) {
+          for (const [key, value] of lexiconByLemmaPos.entries()) {
+            if (key.startsWith(`${lemmaNorm}|`)) return value;
+          }
+        }
+        return null;
+      };
+
+      const markSkipped = (row: Record<string, unknown>, reason: string) => {
+        row['_commit_status'] = 'skipped';
+        row['_commit_reason'] = reason;
+      };
+
+      for (const rawLink of rawLexiconMorphology) {
+        const row = asRecord(rawLink);
+        if (!row) continue;
+
+        const lexiconId = resolveLexiconId(row);
+        if (!lexiconId) {
+          lexiconMorphologySkipped += 1;
+          markSkipped(row, 'Missing ar_u_lexicon (direct or resolvable from morphology items).');
+          lexiconMorphologyItems.push(row);
+          continue;
+        }
+
+        let arUMorphology = asString(row['ar_u_morphology']);
+        if (arUMorphology && !isLikelyHexId(arUMorphology)) {
+          arUMorphology = null;
+        }
+
+        if (!arUMorphology) {
+          const wordLocation = asString(row['word_location']);
+          const sourceItem = wordLocation ? morphologyItemByWordLocation.get(wordLocation) ?? null : null;
+          const sourceMorphology = asRecord(sourceItem?.['morphology']);
+          const sourceMorphFeatures = asRecord(sourceMorphology?.['morph_features']);
+
+          const surfaceAr =
+            asString(row['surface_ar']) ??
+            asString(sourceItem?.['surface_ar']) ??
+            asString(sourceItem?.['lemma_ar']) ??
+            '';
+          const surfaceNorm =
+            asString(row['surface_norm']) ??
+            asString(sourceItem?.['surface_norm']) ??
+            normalizeArabic(surfaceAr);
+          const pos2 =
+            normalizeMorphPos2(asString(row['pos2'])) ??
+            normalizeMorphPos2(normalizeMorphPos(asString(row['pos']))) ??
+            normalizeMorphPos2(normalizeMorphPos(asString(sourceItem?.['pos']))) ??
+            'noun';
+          const derivationTypeRaw = asString(row['derivation_type']);
+          const derivationType =
+            derivationTypeRaw && MORPH_DERIVATION_VALUES.has(derivationTypeRaw.toLowerCase())
+              ? derivationTypeRaw.toLowerCase()
+              : null;
+          const nounNumberRaw = asString(row['noun_number']);
+          const nounNumber =
+            nounNumberRaw && MORPH_NOUN_NUMBER_VALUES.has(nounNumberRaw.toLowerCase())
+              ? nounNumberRaw.toLowerCase()
+              : null;
+          const verbForm =
+            normalizeVerbFormCode(asString(row['verb_form'])) ??
+            normalizeVerbFormCode(asString(sourceMorphFeatures?.['form'])) ??
+            null;
+          const derivedFromVerbForm = normalizeVerbFormCode(asString(row['derived_from_verb_form']));
+          const derivedPatternRaw = asString(row['derived_pattern']);
+          const derivedPattern =
+            derivedPatternRaw && MORPH_DERIVED_PATTERN_VALUES.has(derivedPatternRaw.toLowerCase())
+              ? derivedPatternRaw.toLowerCase()
+              : null;
+          const transitivityRaw = asString(row['transitivity']);
+          const transitivity =
+            transitivityRaw && MORPH_TRANSITIVITY_VALUES.has(transitivityRaw.toLowerCase())
+              ? transitivityRaw.toLowerCase()
+              : null;
+          const objCount = asInteger(row['obj_count']);
+          const canonicalInput =
+            asString(row['canonical_input']) ??
+            buildMorphologyCanonicalInput({
+              pos2,
+              surfaceNorm,
+              nounNumber,
+              derivationType,
+              verbForm,
+              derivedFromVerbForm,
+              derivedPattern,
+              transitivity,
+              objCount,
+            });
+
+          if (!surfaceAr || !surfaceNorm) {
+            morphologySkipped += 1;
+            lexiconMorphologySkipped += 1;
+            markSkipped(row, 'surface_ar/surface_norm required to create ar_u_morphology.');
+            lexiconMorphologyItems.push(row);
+            continue;
+          }
+
+          const morphologyRow = await upsertArUMorphology(ctx.env.DB, {
+            id: asString(row['ar_u_morphology']),
+            canonicalInput,
+            surfaceAr,
+            surfaceNorm,
+            pos2,
+            derivationType,
+            nounNumber,
+            verbForm,
+            derivedFromVerbForm,
+            derivedPattern,
+            transitivity,
+            objCount,
+            tagsAr: row['tags_ar'],
+            tagsEn: row['tags_en'],
+            notes: asString(row['notes']),
+            meta: asRecord(row['meta']) ?? row['meta'],
+          });
+          arUMorphology = morphologyRow.ar_u_morphology;
+          morphologyUpserted += 1;
+
+          row['surface_ar'] = surfaceAr;
+          row['surface_norm'] = surfaceNorm;
+          row['pos2'] = pos2;
+          if (canonicalInput) row['canonical_input'] = canonicalInput;
+          if (derivationType) row['derivation_type'] = derivationType;
+          if (nounNumber) row['noun_number'] = nounNumber;
+          if (verbForm) row['verb_form'] = verbForm;
+          if (derivedFromVerbForm) row['derived_from_verb_form'] = derivedFromVerbForm;
+          if (derivedPattern) row['derived_pattern'] = derivedPattern;
+          if (transitivity) row['transitivity'] = transitivity;
+          if (objCount != null) row['obj_count'] = objCount;
+        }
+
+        if (!arUMorphology) {
+          lexiconMorphologySkipped += 1;
+          markSkipped(row, 'Missing ar_u_morphology.');
+          lexiconMorphologyItems.push(row);
+          continue;
+        }
+
+        const morphologyExists = await ctx.env.DB
+          .prepare(`SELECT ar_u_morphology FROM ar_u_morphology WHERE ar_u_morphology = ?1 LIMIT 1`)
+          .bind(arUMorphology)
+          .first<any>();
+        if (!morphologyExists) {
+          lexiconMorphologySkipped += 1;
+          markSkipped(row, 'Referenced ar_u_morphology does not exist.');
+          lexiconMorphologyItems.push(row);
+          continue;
+        }
+
+        const linkRole = pickEnum(asString(row['link_role']), LEXICON_MORPH_ROLE_VALUES, 'primary');
+        await ctx.env.DB
+          .prepare(
+            `
+            INSERT INTO ar_u_lexicon_morphology (
+              ar_u_lexicon,
+              ar_u_morphology,
+              link_role
+            ) VALUES (?1, ?2, ?3)
+            ON CONFLICT(ar_u_lexicon, ar_u_morphology) DO UPDATE SET
+              link_role = excluded.link_role
+          `
+          )
+          .bind(lexiconId, arUMorphology, linkRole)
+          .run();
+
+        lexiconMorphologyUpserted += 1;
+        delete row['_commit_status'];
+        delete row['_commit_reason'];
+        row['ar_u_lexicon'] = lexiconId;
+        row['ar_u_morphology'] = arUMorphology;
+        row['link_role'] = linkRole;
+        lexiconMorphologyItems.push(row);
+      }
+
+      for (const rawEvidence of rawLexiconEvidence) {
+        const row = asRecord(rawEvidence);
+        if (!row) continue;
+
+        const lexiconId = resolveLexiconId(row);
+        if (!lexiconId) {
+          lexiconEvidenceSkipped += 1;
+          markSkipped(row, 'Missing ar_u_lexicon (direct or resolvable from morphology items).');
+          evidenceItems.push(row);
+          continue;
+        }
+
+        const locatorType = pickEnum(asString(row['locator_type']), EVIDENCE_LOCATOR_VALUES, 'chunk');
+        const sourceId = asString(row['source_id']) ?? asString(row['ar_u_source']);
+        const chunkId = asString(row['chunk_id']);
+        const pageNo = asInteger(row['page_no']);
+        const headingRaw = asString(row['heading_raw']);
+        const headingNorm = asString(row['heading_norm']) ?? (headingRaw ? canonicalize(headingRaw) : null);
+        const url = asString(row['url']);
+        const appPayload = row['app_payload_json'] ?? row['app_payload'] ?? null;
+        const sourceType = pickEnum(asString(row['source_type']), EVIDENCE_SOURCE_TYPE_VALUES, 'book');
+        const rawLinkRole = asString(row['link_role']);
+        const normalizedLinkRole =
+          rawLinkRole && rawLinkRole.trim().toLowerCase() === 'verbal_idiom_note'
+            ? 'usage'
+            : rawLinkRole;
+        const linkRole = pickEnum(normalizedLinkRole, EVIDENCE_LINK_ROLE_VALUES, 'supports');
+        const evidenceKind = pickEnum(asString(row['evidence_kind']), EVIDENCE_KIND_VALUES, 'lexical');
+        const evidenceStrength = pickEnum(
+          asString(row['evidence_strength']),
+          EVIDENCE_STRENGTH_VALUES,
+          'supporting'
+        );
+        const extractText = asString(row['extract_text']);
+        const noteMd = asString(row['note_md']) ?? asString(row['notes']);
+        const meta = asRecord(row['meta']) ?? row['meta_json'] ?? null;
+
+        if (locatorType === 'chunk' && (!sourceId || !chunkId)) {
+          lexiconEvidenceSkipped += 1;
+          markSkipped(row, 'chunk locator requires source_id and chunk_id.');
+          evidenceItems.push(row);
+          continue;
+        }
+        if (locatorType === 'url' && !url) {
+          lexiconEvidenceSkipped += 1;
+          markSkipped(row, 'url locator requires url.');
+          evidenceItems.push(row);
+          continue;
+        }
+        if (locatorType === 'app' && appPayload == null) {
+          lexiconEvidenceSkipped += 1;
+          markSkipped(row, 'app locator requires app_payload_json.');
+          evidenceItems.push(row);
+          continue;
+        }
+
+        let evidenceId = asString(row['evidence_id']);
+        if (!evidenceId) {
+          const canonicalEvidence = canonicalize(
+            [
+              'lexev',
+              lexiconId,
+              locatorType,
+              sourceId ?? '',
+              chunkId ?? '',
+              pageNo ?? '',
+              url ?? '',
+              linkRole,
+              evidenceKind,
+              evidenceStrength,
+              extractText ?? '',
+            ].join('|')
+          );
+          evidenceId = await sha256Hex(canonicalEvidence);
+        }
+
+        await ctx.env.DB
+          .prepare(
+            `
+            INSERT INTO ar_u_lexicon_evidence (
+              ar_u_lexicon,
+              evidence_id,
+              locator_type,
+              source_id,
+              source_type,
+              chunk_id,
+              page_no,
+              heading_raw,
+              heading_norm,
+              url,
+              app_payload_json,
+              link_role,
+              evidence_kind,
+              evidence_strength,
+              extract_text,
+              note_md,
+              meta_json
+            ) VALUES (
+              ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17
+            )
+            ON CONFLICT(ar_u_lexicon, evidence_id) DO UPDATE SET
+              locator_type = excluded.locator_type,
+              source_id = excluded.source_id,
+              source_type = excluded.source_type,
+              chunk_id = excluded.chunk_id,
+              page_no = excluded.page_no,
+              heading_raw = excluded.heading_raw,
+              heading_norm = excluded.heading_norm,
+              url = excluded.url,
+              app_payload_json = excluded.app_payload_json,
+              link_role = excluded.link_role,
+              evidence_kind = excluded.evidence_kind,
+              evidence_strength = excluded.evidence_strength,
+              extract_text = excluded.extract_text,
+              note_md = excluded.note_md,
+              meta_json = excluded.meta_json,
+              updated_at = datetime('now')
+          `
+          )
+          .bind(
+            lexiconId,
+            evidenceId,
+            locatorType,
+            sourceId,
+            sourceType,
+            chunkId,
+            pageNo,
+            headingRaw,
+            headingNorm,
+            url,
+            toJsonTextOrNull(appPayload),
+            linkRole,
+            evidenceKind,
+            evidenceStrength,
+            extractText,
+            noteMd,
+            toJsonTextOrNull(meta)
+          )
+          .run();
+
+        lexiconEvidenceUpserted += 1;
+        delete row['_commit_status'];
+        delete row['_commit_reason'];
+        row['ar_u_lexicon'] = lexiconId;
+        row['evidence_id'] = evidenceId;
+        row['locator_type'] = locatorType;
+        row['source_type'] = sourceType;
+        row['link_role'] = linkRole;
+        row['evidence_kind'] = evidenceKind;
+        row['evidence_strength'] = evidenceStrength;
+        evidenceItems.push(row);
       }
 
       const enriched = {
@@ -811,6 +1359,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         schema_version: taskJson.schema_version ?? 1,
         task_type: 'morphology',
         items,
+        lexicon_evidence: evidenceItems,
+        lexicon_morphology: lexiconMorphologyItems,
       };
 
       const taskId = `UT:${unitId}:${taskType}`;
@@ -841,6 +1391,12 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
             lexicon_summary: {
               upserted: lexiconUpserted,
               skipped: lexiconSkipped,
+              morphology_upserted: morphologyUpserted,
+              morphology_skipped: morphologySkipped,
+              lexicon_morphology_upserted: lexiconMorphologyUpserted,
+              lexicon_morphology_skipped: lexiconMorphologySkipped,
+              lexicon_evidence_upserted: lexiconEvidenceUpserted,
+              lexicon_evidence_skipped: lexiconEvidenceSkipped,
             },
           },
         }),
@@ -921,10 +1477,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
 
       const tokensRaw = Array.isArray(item.tokens) ? item.tokens : [];
       const tokens: Array<Record<string, unknown>> = [];
-      const tokenIdMap = new Map<number, string>();
       for (let i = 0; i < tokensRaw.length; i += 1) {
         const token = asRecord(tokensRaw[i]) ?? {};
-        const tokenIndex = asNumber(token.token_index) ?? i;
         const lemmaAr = asString(token.lemma) ?? asString(token.surface) ?? '';
         const lemmaNorm = canonicalize(lemmaAr || '');
         const pos = normalizeSentencePos(asString(token.pos), asString(token.pos_detail));
@@ -964,9 +1518,6 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
           arUToken = resolvedToken.ar_u_token;
           token.ar_u_token = arUToken;
         }
-        if (typeof tokenIndex === 'number' && arUToken) {
-          tokenIdMap.set(tokenIndex, arUToken);
-        }
         tokens.push(token);
       }
 
@@ -974,29 +1525,6 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       const spans: Array<Record<string, unknown>> = [];
       for (let i = 0; i < spansRaw.length; i += 1) {
         const span = asRecord(spansRaw[i]) ?? {};
-        const spanType = asString(span.span_type) ?? asString(span.type) ?? 'span';
-        const from = asNumber(span.token_from);
-        const to = asNumber(span.token_to);
-        let arUSpan = asString(span.ar_u_span);
-        if (!arUSpan && from != null && to != null) {
-          const tokenIds: string[] = [];
-          for (let idx = from; idx <= to; idx += 1) {
-            const tokenId = tokenIdMap.get(idx);
-            if (tokenId) tokenIds.push(tokenId);
-          }
-          if (tokenIds.length) {
-            const resolvedSpan = await upsertArUSpan(
-              { DB: ctx.env.DB },
-              {
-                spanType,
-                tokenIds,
-                meta: { source: 'lesson-authoring' },
-              }
-            );
-            arUSpan = resolvedSpan.ar_u_span;
-            span.ar_u_span = arUSpan;
-          }
-        }
         spans.push(span);
       }
 

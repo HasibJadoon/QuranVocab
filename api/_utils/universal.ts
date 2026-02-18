@@ -99,20 +99,8 @@ export const Canon = {
     return `TOK|${args.lemmaNorm}|${args.pos}|${args.rootNorm ?? ''}`;
   },
 
-  span(spanType: string, tokenIds: string[]) {
-    return `SPAN|${spanType}|${tokenIds.join(',')}`;
-  },
-
   sentence(args: { kind: string; sequence: string[] }) {
     return `SENT|${args.kind}|${args.sequence.join(';')}`;
-  },
-
-  valency(args: {
-    verbLemmaNorm: string;
-    prepTokenId: string;
-    frameType: 'REQ_PREP' | 'ALT_PREP' | 'OPTIONAL_PREP';
-  }) {
-    return `VAL|${args.verbLemmaNorm}|${args.prepTokenId}|${args.frameType}`;
   },
 
   lexicon(args: {
@@ -281,36 +269,6 @@ export async function upsertArUToken(env: EnvCommon, payload: ArUTokenPayload) {
     .run();
 
   return { ar_u_token: id, canonical_input };
-}
-
-export interface ArUSpanPayload {
-  spanType: string;
-  tokenIds: string[];
-  meta?: unknown;
-}
-
-export async function upsertArUSpan(env: EnvCommon, payload: ArUSpanPayload) {
-  const canonical = Canon.span(payload.spanType, payload.tokenIds);
-  const { id, canonical_input } = await universalId(canonical);
-  const metaJson = toJsonOrNull(payload.meta);
-  const tokenCsv = payload.tokenIds.join(',');
-
-  await env.DB.prepare(`
-    INSERT INTO ar_u_spans (
-      ar_u_span, canonical_input,
-      span_type, token_ids_csv,
-      meta_json
-    ) VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(ar_u_span) DO UPDATE SET
-      span_type = excluded.span_type,
-      token_ids_csv = excluded.token_ids_csv,
-      meta_json = excluded.meta_json,
-      updated_at = datetime('now')
-  `)
-    .bind(id, canonical_input, payload.spanType, tokenCsv, metaJson)
-    .run();
-
-  return { ar_u_span: id, canonical_input };
 }
 
 export interface ArUSentencePayload {
@@ -501,48 +459,6 @@ export async function upsertArULexicon(env: EnvCommon, payload: ArULexiconPayloa
     .run();
 
   return { ar_u_lexicon: id, canonical_input };
-}
-
-export interface ArUValencyPayload {
-  verbLemmaAr: string;
-  verbLemmaNorm: string;
-  prepTokenId: string;
-  frameType: 'REQ_PREP' | 'ALT_PREP' | 'OPTIONAL_PREP';
-  meta?: unknown;
-}
-
-export async function upsertArUValency(env: EnvCommon, payload: ArUValencyPayload) {
-  const canonical = Canon.valency(payload);
-  const { id, canonical_input } = await universalId(canonical);
-  const metaJson = toJsonOrNull(payload.meta);
-
-  await env.DB.prepare(`
-    INSERT INTO ar_u_valency (
-      ar_u_valency, canonical_input,
-      verb_lemma_ar, verb_lemma_norm,
-      prep_ar_u_token, frame_type,
-      meta_json
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(ar_u_valency) DO UPDATE SET
-      verb_lemma_ar = excluded.verb_lemma_ar,
-      verb_lemma_norm = excluded.verb_lemma_norm,
-      prep_ar_u_token = excluded.prep_ar_u_token,
-      frame_type = excluded.frame_type,
-      meta_json = excluded.meta_json,
-      updated_at = datetime('now')
-  `)
-    .bind(
-      id,
-      canonical_input,
-      payload.verbLemmaAr,
-      payload.verbLemmaNorm,
-      payload.prepTokenId,
-      payload.frameType,
-      metaJson
-    )
-    .run();
-
-  return { ar_u_valency: id, canonical_input };
 }
 
 export interface ArUGrammarPayload {

@@ -42,6 +42,23 @@ def norm_text(value: str | None) -> str:
     return " ".join(value.strip().lower().split())
 
 
+def norm_search_text(value: str | None) -> str:
+    if not value:
+        return ""
+    text = str(value)
+    # Normalize hyphen variants + whitespace for consistent FTS matching.
+    text = (
+        text.replace("\u00ad", "-")
+        .replace("\u2010", "-")
+        .replace("\u2011", "-")
+        .replace("\u2012", "-")
+        .replace("\u2013", "-")
+        .replace("\u2014", "-")
+        .replace("\u2212", "-")
+    )
+    return " ".join(text.strip().lower().split())
+
+
 def as_int(value: Any) -> int | None:
     if value is None:
         return None
@@ -172,10 +189,12 @@ def build_sql(
     for page in pages:
         rows = page_items[page]
         block_text = "\n\n".join(format_chunk_block(item, i + 1) for i, item in enumerate(rows))
+        block_search = norm_search_text(block_text)
         heading_raw = f"Page {page}"
         heading_norm = norm_text(heading_raw)
         chunk_id = f"{source_code}:p:{page:04d}"
         locator = f"pdf_page:{page}"
+        content_json = {"entries": rows}
         chunk_meta = {
             "collection": data.get("collection"),
             "source_file": data.get("source_file"),
@@ -188,10 +207,10 @@ def build_sql(
 
         lines.append(
             "INSERT INTO ar_source_chunks "
-            "(chunk_id, ar_u_source, page_no, locator, heading_raw, heading_norm, chunk_type, text, meta_json) "
+            "(chunk_id, ar_u_source, page_no, locator, heading_raw, heading_norm, chunk_type, text, text_search, content_json, meta_json) "
             f"VALUES ({sql_quote(chunk_id)}, {sql_quote(ar_u_source)}, {page}, {sql_quote(locator)}, "
             f"{sql_quote(heading_raw)}, {sql_quote(heading_norm)}, {sql_quote(chunk_type)}, "
-            f"{sql_quote(block_text)}, {sql_quote(chunk_meta)}) "
+            f"{sql_quote(block_text)}, {sql_quote(block_search)}, {sql_quote(content_json)}, {sql_quote(chunk_meta)}) "
             "ON CONFLICT(chunk_id) DO UPDATE SET "
             "ar_u_source=excluded.ar_u_source, "
             "page_no=excluded.page_no, "
@@ -200,6 +219,8 @@ def build_sql(
             "heading_norm=excluded.heading_norm, "
             "chunk_type=excluded.chunk_type, "
             "text=excluded.text, "
+            "text_search=excluded.text_search, "
+            "content_json=excluded.content_json, "
             "meta_json=excluded.meta_json, "
             "updated_at=datetime('now');"
         )
@@ -340,8 +361,8 @@ def build_sql(
     lines.append("")
     lines.append(f"DELETE FROM ar_source_chunks_fts WHERE source_code = {sql_quote(source_code)};")
     lines.append(
-        "INSERT INTO ar_source_chunks_fts(chunk_id, source_code, heading_norm, text) "
-        "SELECT c.chunk_id, s.source_code, COALESCE(c.heading_norm, ''), c.text "
+        "INSERT INTO ar_source_chunks_fts(chunk_id, source_code, heading_norm, text_search) "
+        "SELECT c.chunk_id, s.source_code, COALESCE(c.heading_norm, ''), COALESCE(c.text_search, c.text) "
         "FROM ar_source_chunks c "
         "JOIN ar_u_sources s ON s.ar_u_source = c.ar_u_source "
         f"WHERE s.source_code = {sql_quote(source_code)};"

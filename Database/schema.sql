@@ -590,21 +590,6 @@ CREATE INDEX IF NOT EXISTS idx_ar_u_tokens_pos ON ar_u_tokens(pos);
 CREATE INDEX IF NOT EXISTS idx_ar_u_tokens_root_norm ON ar_u_tokens(root_norm);
 CREATE INDEX IF NOT EXISTS idx_ar_u_tokens_ar_u_root ON ar_u_tokens(ar_u_root);
 
-CREATE TABLE IF NOT EXISTS ar_u_spans (
-  ar_u_span        TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  span_type        TEXT NOT NULL,
-  token_ids_csv    TEXT NOT NULL,
-
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT
-);
-
-CREATE INDEX IF NOT EXISTS idx_ar_u_spans_type ON ar_u_spans(span_type);
-
 CREATE TABLE IF NOT EXISTS ar_u_sentences (
   ar_u_sentence    TEXT PRIMARY KEY,
   canonical_input  TEXT NOT NULL UNIQUE,
@@ -683,26 +668,6 @@ CREATE TABLE IF NOT EXISTS ar_u_grammar_relations (
 CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_rel_parent ON ar_u_grammar_relations(parent_ar_u_grammar);
 CREATE INDEX IF NOT EXISTS idx_ar_u_grammar_rel_child ON ar_u_grammar_relations(child_ar_u_grammar);
 
-CREATE TABLE IF NOT EXISTS ar_u_valency (
-  ar_u_valency     TEXT PRIMARY KEY,
-  canonical_input  TEXT NOT NULL UNIQUE,
-
-  verb_lemma_ar    TEXT NOT NULL,
-  verb_lemma_norm  TEXT NOT NULL,
-  prep_ar_u_token  TEXT,
-  frame_type       TEXT NOT NULL,
-
-  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT,
-
-  FOREIGN KEY (prep_ar_u_token) REFERENCES ar_u_tokens(ar_u_token) ON DELETE SET NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_ar_u_valency_verb_norm ON ar_u_valency(verb_lemma_norm);
-CREATE INDEX IF NOT EXISTS idx_ar_u_valency_prep ON ar_u_valency(prep_ar_u_token);
-
 CREATE TABLE IF NOT EXISTS ar_occ_token (
   ar_token_occ_id  TEXT PRIMARY KEY,
   user_id          INTEGER,
@@ -733,58 +698,54 @@ CREATE TABLE IF NOT EXISTS ar_occ_token (
 CREATE INDEX IF NOT EXISTS idx_ar_occ_token_unit ON ar_occ_token(container_id, unit_id);
 CREATE INDEX IF NOT EXISTS idx_ar_occ_token_u_token ON ar_occ_token(ar_u_token);
 
-CREATE TABLE IF NOT EXISTS ar_occ_token_morph (
-  ar_token_occ_id    TEXT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS ar_u_morphology (
+  ar_u_morphology  TEXT PRIMARY KEY,
+  canonical_input  TEXT NOT NULL UNIQUE,
 
-  pos                TEXT,
+  -- the form being described
+  surface_ar       TEXT NOT NULL,
+  surface_norm     TEXT NOT NULL,
 
-  noun_case          TEXT,
-  noun_number        TEXT,
-  noun_gender        TEXT,
-  noun_definiteness  TEXT,
+  -- top POS bucket
+  pos2             TEXT NOT NULL CHECK (pos2 IN ('verb','noun','prep','particle')),
 
-  verb_tense         TEXT,
-  verb_mood          TEXT,
-  verb_voice         TEXT,
-  verb_person        TEXT,
-  verb_number        TEXT,
-  verb_gender        TEXT,
+  -- JAMID / MUSHTAQ
+  derivation_type  TEXT CHECK (derivation_type IN ('jamid','mushtaq')),
 
-  particle_type      TEXT,
+  -- noun summary
+  noun_number      TEXT CHECK (noun_number IN ('singular','plural','dual')),
 
-  extra_json         JSON CHECK (extra_json IS NULL OR json_valid(extra_json)),
+  -- verb summary
+  verb_form        TEXT CHECK (verb_form IN ('I','II','III','IV','V','VI','VII','VIII','IX','X')),
 
-  created_at         TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at         TEXT,
+  -- derived noun intelligence
+  derived_from_verb_form TEXT CHECK (
+    derived_from_verb_form IN ('I','II','III','IV','V','VI','VII','VIII','IX','X')
+  ),
+  derived_pattern  TEXT CHECK (derived_pattern IN (
+    'ism_fael','ism_mafool','masdar','sifah_mushabbahah','ism_mubalaghah',
+    'ism_zaman','ism_makan','ism_ala','tafdeel','nisbah','other'
+  )),
 
-  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE
+  -- optional global summary
+  transitivity     TEXT CHECK (transitivity IN ('lazim','mutaaddi','both')),
+  obj_count        INTEGER CHECK (obj_count IS NULL OR obj_count BETWEEN 0 AND 3),
+
+  -- UI tags (not hashed)
+  tags_ar_json     JSON CHECK (tags_ar_json IS NULL OR json_valid(tags_ar_json)),
+  tags_en_json     JSON CHECK (tags_en_json IS NULL OR json_valid(tags_en_json)),
+
+  notes            TEXT,
+  meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+
+  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at       TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_ar_occ_token_morph_pos ON ar_occ_token_morph(pos);
-
-CREATE TABLE IF NOT EXISTS ar_occ_span (
-  ar_span_occ_id  TEXT PRIMARY KEY,
-  user_id         INTEGER,
-  container_id    TEXT,
-  unit_id         TEXT,
-
-  start_index     INTEGER,
-  end_index       INTEGER,
-  text_cache      TEXT,
-
-  ar_u_span       TEXT,
-
-  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at      TEXT,
-
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
-  FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
-  FOREIGN KEY (ar_u_span) REFERENCES ar_u_spans(ar_u_span) ON DELETE SET NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_ar_occ_span_unit ON ar_occ_span(container_id, unit_id);
-CREATE INDEX IF NOT EXISTS idx_ar_occ_span_u_span ON ar_occ_span(ar_u_span);
+CREATE INDEX IF NOT EXISTS idx_ar_u_morph_surface_norm ON ar_u_morphology(surface_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_u_morph_pos2         ON ar_u_morphology(pos2);
+CREATE INDEX IF NOT EXISTS idx_ar_u_morph_pattern      ON ar_u_morphology(derived_pattern);
+CREATE INDEX IF NOT EXISTS idx_ar_u_morph_verb_form    ON ar_u_morphology(verb_form);
 
 CREATE TABLE IF NOT EXISTS ar_occ_sentence (
   ar_sentence_occ_id  TEXT PRIMARY KEY,
@@ -880,22 +841,6 @@ CREATE TABLE IF NOT EXISTS ar_token_lexicon_link (
 
 CREATE INDEX IF NOT EXISTS idx_ar_token_lexicon_link_lexicon ON ar_token_lexicon_link(ar_u_lexicon);
 
-CREATE TABLE IF NOT EXISTS ar_token_valency_link (
-  ar_token_occ_id  TEXT NOT NULL,
-  ar_u_valency     TEXT NOT NULL,
-
-  role             TEXT,
-  note             TEXT,
-
-  created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-
-  PRIMARY KEY (ar_token_occ_id, ar_u_valency),
-  FOREIGN KEY (ar_token_occ_id) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
-  FOREIGN KEY (ar_u_valency) REFERENCES ar_u_valency(ar_u_valency) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_ar_token_valency_link_valency ON ar_token_valency_link(ar_u_valency);
-
 CREATE TABLE IF NOT EXISTS ar_token_pair_links (
   id              TEXT PRIMARY KEY,
   user_id         INTEGER,
@@ -917,8 +862,7 @@ CREATE TABLE IF NOT EXISTS ar_token_pair_links (
   FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
   FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
   FOREIGN KEY (from_token_occ) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
-  FOREIGN KEY (to_token_occ) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE,
-  FOREIGN KEY (ar_u_valency) REFERENCES ar_u_valency(ar_u_valency) ON DELETE SET NULL
+  FOREIGN KEY (to_token_occ) REFERENCES ar_occ_token(ar_token_occ_id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_ar_token_pair_links_unit ON ar_token_pair_links(container_id, unit_id);
@@ -967,77 +911,136 @@ CREATE INDEX IF NOT EXISTS idx_quran_ayah_lemma_location_ref
 --------------------------------------------------------------------------------
 
 
-CREATE TABLE ar_u_lexicon (
-  ar_u_lexicon        TEXT PRIMARY KEY,
-  canonical_input     TEXT NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS ar_u_lexicon (
+  ar_u_lexicon         TEXT PRIMARY KEY,
+  canonical_input      TEXT NOT NULL UNIQUE,
 
   -- Type
-  unit_type           TEXT NOT NULL CHECK (unit_type IN ('word','key_term','verbal_idiom','expression')),
+  unit_type            TEXT NOT NULL
+                       CHECK (unit_type IN ('word','key_term','verbal_idiom','expression')),
 
-  -- Token surface + normalization (for single words AND also expression head/representative form)
-  surface_ar          TEXT NOT NULL,
-  surface_norm        TEXT NOT NULL,
+  -- Representative surface (single word OR representative form for expression)
+  surface_ar           TEXT NOT NULL,
+  surface_norm         TEXT NOT NULL,
 
   -- Core lexeme identity
-  lemma_ar            TEXT,
-  lemma_norm          TEXT,
-  pos                 TEXT,
+  lemma_ar             TEXT,
+  lemma_norm           TEXT,
+  pos                  TEXT,
 
   -- Root linkage
-  root_norm           TEXT,
-  ar_u_root           TEXT,
+  root_norm            TEXT,
+  ar_u_root            TEXT,
 
-  -- Valency / sense partitioning (kept)
-  valency_id          TEXT,
-  sense_key           TEXT NOT NULL,
+  -- Sense partitioning
+  valency_id           TEXT,
+  sense_key            TEXT NOT NULL,
 
   -- Meanings / synonyms / antonyms
-  meanings_json       JSON CHECK (meanings_json IS NULL OR json_valid(meanings_json)),
-  synonyms_json       JSON CHECK (synonyms_json IS NULL OR json_valid(synonyms_json)),
-  antonyms_json       JSON CHECK (antonyms_json IS NULL OR json_valid(antonyms_json)),
+  meanings_json        TEXT CHECK (meanings_json IS NULL OR json_valid(meanings_json)),
+  synonyms_json        TEXT CHECK (synonyms_json IS NULL OR json_valid(synonyms_json)),
+  antonyms_json        TEXT CHECK (antonyms_json IS NULL OR json_valid(antonyms_json)),
 
-  -- Keep your “gloss” fields as optional convenience
-  gloss_primary       TEXT,
-  gloss_secondary_json JSON CHECK (gloss_secondary_json IS NULL OR json_valid(gloss_secondary_json)),
-  usage_notes         TEXT,
+  -- Convenience gloss fields
+  gloss_primary        TEXT,
+  gloss_secondary_json TEXT CHECK (gloss_secondary_json IS NULL OR json_valid(gloss_secondary_json)),
+  usage_notes          TEXT,
 
   -- Morphology
-  morph_pattern       TEXT,
-  morph_features_json JSON CHECK (morph_features_json IS NULL OR json_valid(morph_features_json)),
-  morph_derivations_json JSON CHECK (morph_derivations_json IS NULL OR json_valid(morph_derivations_json)),
+  morph_pattern        TEXT,
+  morph_features_json  TEXT CHECK (morph_features_json IS NULL OR json_valid(morph_features_json)),
+  morph_derivations_json TEXT CHECK (morph_derivations_json IS NULL OR json_valid(morph_derivations_json)),
 
-  -- Expression block (only meaningful when unit_type='expression' or 'verbal_idiom')
-  expression_type     TEXT,
-  expression_text     TEXT,
-  expression_token_range_json JSON CHECK (expression_token_range_json IS NULL OR json_valid(expression_token_range_json)),
-  expression_meaning  TEXT,
+  -- Expression block (only for unit_type IN ('expression','verbal_idiom'))
+  expression_type      TEXT,
+  expression_text      TEXT,
+  expression_token_range_json TEXT CHECK (expression_token_range_json IS NULL OR json_valid(expression_token_range_json)),
+  expression_meaning   TEXT,
 
   -- References + flags
-  references_json     JSON CHECK (references_json IS NULL OR json_valid(references_json)),
-  flags_json          JSON CHECK (flags_json IS NULL OR json_valid(flags_json)),
+  references_json      TEXT CHECK (references_json IS NULL OR json_valid(references_json)),
+  flags_json           TEXT CHECK (flags_json IS NULL OR json_valid(flags_json)),
 
-  -- Existing payload buckets (kept)
-  cards_json          JSON CHECK (cards_json IS NULL OR json_valid(cards_json)),
-  meta_json           JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  -- Payload buckets
+  cards_json           TEXT CHECK (cards_json IS NULL OR json_valid(cards_json)),
+  meta_json            TEXT CHECK (meta_json IS NULL OR json_valid(meta_json)),
 
-  status              TEXT NOT NULL DEFAULT 'active',
-  created_at          TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at          TEXT,
+  status               TEXT NOT NULL DEFAULT 'active'
+                       CHECK (status IN ('draft','active','deprecated')),
 
-  FOREIGN KEY (ar_u_root) REFERENCES ar_u_roots(ar_u_root) ON DELETE SET NULL
+  created_at           TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at           TEXT,
+
+  FOREIGN KEY (ar_u_root) REFERENCES ar_u_roots(ar_u_root) ON DELETE SET NULL,
+
+  -- If expression/idiom: must have expression_text
+  CHECK (
+    unit_type NOT IN ('expression','verbal_idiom')
+    OR (expression_text IS NOT NULL AND length(trim(expression_text)) > 0)
+  ),
+
+  -- If NOT expression/idiom: expression fields must be NULL
+  CHECK (
+    unit_type IN ('expression','verbal_idiom')
+    OR (
+      expression_type IS NULL
+      AND expression_text IS NULL
+      AND expression_token_range_json IS NULL
+      AND expression_meaning IS NULL
+    )
+  ),
+
+  -- For word/key_term: require lemma_norm or root_norm
+  CHECK (
+    unit_type IN ('expression','verbal_idiom')
+    OR (
+      (lemma_norm IS NOT NULL AND length(trim(lemma_norm)) > 0)
+      OR (root_norm IS NOT NULL AND length(trim(root_norm)) > 0)
+    )
+  )
 );
 
---------------------------------------------------------------------------------
--- Suggested indexes (optional, but very helpful)
---------------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_lex_unit_type        ON ar_u_lexicon(unit_type);
-CREATE INDEX IF NOT EXISTS idx_lex_lemma_norm       ON ar_u_lexicon(lemma_norm);
-CREATE INDEX IF NOT EXISTS idx_lex_surface_norm     ON ar_u_lexicon(surface_norm);
-CREATE INDEX IF NOT EXISTS idx_lex_root_norm        ON ar_u_lexicon(root_norm);
-CREATE INDEX IF NOT EXISTS idx_lex_ar_u_root        ON ar_u_lexicon(ar_u_root);
-CREATE INDEX IF NOT EXISTS idx_lex_pos              ON ar_u_lexicon(pos);
-CREATE INDEX IF NOT EXISTS idx_lex_sense_key        ON ar_u_lexicon(sense_key);
-CREATE INDEX IF NOT EXISTS idx_lex_valency_id       ON ar_u_lexicon(valency_id);
+CREATE INDEX IF NOT EXISTS idx_ar_u_lexicon_surface_norm
+  ON ar_u_lexicon(surface_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_u_lexicon_lemma_norm
+  ON ar_u_lexicon(lemma_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_u_lexicon_root_norm
+  ON ar_u_lexicon(root_norm);
+CREATE INDEX IF NOT EXISTS idx_ar_u_lexicon_unit_type
+  ON ar_u_lexicon(unit_type);
+CREATE INDEX IF NOT EXISTS idx_ar_u_lexicon_ar_u_root
+  ON ar_u_lexicon(ar_u_root);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_ar_u_lexicon_sense_valency
+  ON ar_u_lexicon(sense_key, ifnull(valency_id, ''));
+
+CREATE TRIGGER IF NOT EXISTS trg_ar_u_lexicon_updated_at
+AFTER UPDATE ON ar_u_lexicon
+FOR EACH ROW
+WHEN NEW.updated_at IS OLD.updated_at
+BEGIN
+  UPDATE ar_u_lexicon
+  SET updated_at = datetime('now')
+  WHERE ar_u_lexicon = NEW.ar_u_lexicon;
+END;
+
+CREATE TABLE IF NOT EXISTS ar_u_lexicon_morphology (
+  ar_u_lexicon    TEXT NOT NULL,
+  ar_u_morphology TEXT NOT NULL,
+
+  link_role       TEXT NOT NULL DEFAULT 'primary'
+    CHECK (link_role IN ('primary','inflection','derived','variant')),
+
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+
+  PRIMARY KEY (ar_u_lexicon, ar_u_morphology),
+  FOREIGN KEY (ar_u_lexicon) REFERENCES ar_u_lexicon(ar_u_lexicon) ON DELETE CASCADE,
+  FOREIGN KEY (ar_u_morphology) REFERENCES ar_u_morphology(ar_u_morphology) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_ar_u_lexicon_morph_morph
+  ON ar_u_lexicon_morphology(ar_u_morphology);
+CREATE INDEX IF NOT EXISTS idx_ar_u_lexicon_morph_role
+  ON ar_u_lexicon_morphology(link_role);
 
 --------------------------------------------------------------------------------
 -- ar_u_sources + chunk/evidence search (book-level search backbone)
@@ -1071,7 +1074,9 @@ CREATE TABLE IF NOT EXISTS ar_source_chunks (
   chunk_type     TEXT NOT NULL DEFAULT 'lexicon'
                  CHECK (chunk_type IN ('grammar', 'literature', 'lexicon', 'reference', 'other')),
 
-  text           TEXT NOT NULL,       -- OCR / plain text
+  text           TEXT NOT NULL,       -- display/raw text
+  text_search    TEXT NOT NULL,       -- normalized text for search/FTS
+  content_json   JSON CHECK (content_json IS NULL OR json_valid(content_json)),
   meta_json      JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
 
   created_at     TEXT NOT NULL DEFAULT (datetime('now')),
@@ -1081,27 +1086,82 @@ CREATE TABLE IF NOT EXISTS ar_source_chunks (
 );
 
 CREATE TABLE IF NOT EXISTS ar_u_lexicon_evidence (
-  ar_u_lexicon   TEXT NOT NULL,
-  chunk_id       TEXT NOT NULL,
-  ar_u_source    TEXT NOT NULL,
+  ar_u_lexicon        TEXT NOT NULL,
+  evidence_id         TEXT NOT NULL,
 
-  page_no        INTEGER,
-  link_role      TEXT NOT NULL DEFAULT 'mentions',
+  -- Locator mode
+  locator_type        TEXT NOT NULL DEFAULT 'chunk'
+                      CHECK (locator_type IN ('chunk','app','url')),
 
-  span_start     INTEGER,
-  span_end       INTEGER,
+  -- Source identity (optional for app mode)
+  source_id           TEXT,
+  source_type         TEXT NOT NULL DEFAULT 'book'
+                      CHECK (source_type IN (
+                        'book','tafsir','quran','hadith',
+                        'paper','website','notes','app'
+                      )),
 
-  extract_text   TEXT,
-  notes          TEXT,
+  -- Chunk-based locator (optional)
+  chunk_id            TEXT,
+  page_no             INTEGER,
+  heading_raw         TEXT,
+  heading_norm        TEXT,
 
-  meta_json      JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at     TEXT,
+  -- URL-based locator (optional)
+  url                 TEXT,
 
-  PRIMARY KEY (ar_u_lexicon, chunk_id),
+  -- App-native structured payload
+  app_payload_json    TEXT CHECK (app_payload_json IS NULL OR json_valid(app_payload_json)),
+
+  -- Evidence classification
+  link_role           TEXT NOT NULL DEFAULT 'supports'
+                      CHECK (link_role IN (
+                        'headword','definition','usage','example',
+                        'mentions','grouped_with','crossref_target',
+                        'index_redirect','supports','disputes','variant'
+                      )),
+
+  evidence_kind       TEXT NOT NULL DEFAULT 'lexical'
+                      CHECK (evidence_kind IN (
+                        'lexical','morphological','semantic',
+                        'thematic','valency','historical',
+                        'comparative','editorial'
+                      )),
+
+  evidence_strength   TEXT NOT NULL DEFAULT 'supporting'
+                      CHECK (evidence_strength IN (
+                        'primary','supporting','contextual','weak'
+                      )),
+
+  -- Optional content
+  extract_text        TEXT,
+  note_md             TEXT,
+
+  meta_json           TEXT CHECK (meta_json IS NULL OR json_valid(meta_json)),
+  created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at          TEXT,
+
+  PRIMARY KEY (ar_u_lexicon, evidence_id),
+
   FOREIGN KEY (ar_u_lexicon) REFERENCES ar_u_lexicon(ar_u_lexicon) ON DELETE CASCADE,
-  FOREIGN KEY (chunk_id) REFERENCES ar_source_chunks(chunk_id) ON DELETE CASCADE,
-  FOREIGN KEY (ar_u_source) REFERENCES ar_u_sources(ar_u_source)
+
+  -- CHUNK mode: must have source_id + chunk_id
+  CHECK (
+    locator_type != 'chunk'
+    OR (source_id IS NOT NULL AND chunk_id IS NOT NULL)
+  ),
+
+  -- URL mode: must have url
+  CHECK (
+    locator_type != 'url'
+    OR url IS NOT NULL
+  ),
+
+  -- APP mode: must have structured payload
+  CHECK (
+    locator_type != 'app'
+    OR app_payload_json IS NOT NULL
+  )
 );
 
 CREATE INDEX IF NOT EXISTS idx_chunks_source_page
@@ -1114,10 +1174,27 @@ CREATE INDEX IF NOT EXISTS idx_chunks_source_type
   ON ar_source_chunks(ar_u_source, chunk_type);
 
 CREATE INDEX IF NOT EXISTS idx_lex_ev_source_page
-  ON ar_u_lexicon_evidence(ar_u_source, page_no);
+  ON ar_u_lexicon_evidence(source_id, page_no);
 
 CREATE INDEX IF NOT EXISTS idx_lex_ev_chunk
   ON ar_u_lexicon_evidence(chunk_id);
+
+CREATE INDEX IF NOT EXISTS idx_lex_ev_locator_type
+  ON ar_u_lexicon_evidence(locator_type);
+
+CREATE INDEX IF NOT EXISTS idx_lex_ev_link_role
+  ON ar_u_lexicon_evidence(link_role);
+
+CREATE TRIGGER IF NOT EXISTS trg_ar_u_lexicon_evidence_updated_at
+AFTER UPDATE ON ar_u_lexicon_evidence
+FOR EACH ROW
+WHEN NEW.updated_at IS OLD.updated_at
+BEGIN
+  UPDATE ar_u_lexicon_evidence
+  SET updated_at = datetime('now')
+  WHERE ar_u_lexicon = NEW.ar_u_lexicon
+    AND evidence_id = NEW.evidence_id;
+END;
 
 -- FTS5 (contentful): stores searchable and filter columns directly
 --------------------------------------------------------------------------------
@@ -1126,15 +1203,16 @@ CREATE VIRTUAL TABLE IF NOT EXISTS ar_source_chunks_fts USING fts5(
   chunk_id UNINDEXED,
   source_code,
   heading_norm,
-  text
+  text_search
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS ar_u_lexicon_evidence_fts USING fts5(
   ar_u_lexicon UNINDEXED,
+  evidence_id UNINDEXED,
   chunk_id UNINDEXED,
   source_code,
   extract_text,
-  notes
+  note_md
 );
 
 CREATE TABLE ar_grammar_units (

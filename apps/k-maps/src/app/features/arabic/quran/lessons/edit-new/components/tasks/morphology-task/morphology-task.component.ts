@@ -8,56 +8,35 @@ import {
 } from '../../../../../../../../shared/components';
 import { QuranLessonEditorFacade } from '../../../facade/editor.facade';
 import { EditorState, TaskTab } from '../../../models/editor.types';
-import { QuranLessonTaskJsonComponent } from '../task-json/task-json.component';
+
+type ModalKind = 'items' | 'evidence' | 'links';
 
 @Component({
   selector: 'app-morphology-task',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppTabsComponent, QuranLessonTaskJsonComponent, AppJsonEditorModalComponent],
+  imports: [CommonModule, FormsModule, AppTabsComponent, AppJsonEditorModalComponent],
   templateUrl: './morphology-task.component.html',
 })
 export class MorphologyTaskComponent {
   private readonly facade = inject(QuranLessonEditorFacade);
   readonly tabs: AppTabItem[] = [
-    { id: 'items', label: 'Word Items' },
-    { id: 'json', label: 'Task JSON' },
+    { id: 'items', label: 'Current' },
+    { id: 'evidence', label: 'Lexicon Evidence' },
+    { id: 'links', label: 'Lexicon Morphology' },
   ];
-  activeTabId: 'items' | 'json' = 'items';
+  activeTabId: ModalKind = 'items';
+
   editModalOpen = false;
   editModalIndex: number | null = null;
+  editModalKind: ModalKind = 'items';
   editModalJson = '';
   editModalError = '';
   editModalTitle = 'Morphology JSON';
-  editModalPlaceholder = JSON.stringify(
-    {
-      word_location: '',
-      surah: null,
-      ayah: null,
-      token_index: null,
-      surface_ar: '',
-      surface_norm: '',
-      lemma_ar: '',
-      lemma_norm: '',
-      root_norm: '',
-      pos: null,
-      morphology: {
-        singular: {
-          form_ar: '',
-          pattern: '',
-        },
-        plural: null,
-        morph_features: {},
-      },
-      translation: {
-        primary: '',
-        alternatives: [],
-        context: '',
-      },
-      lexicon_id: null,
-    },
-    null,
-    2
-  );
+  editModalPlaceholder = '';
+
+  constructor() {
+    this.editModalPlaceholder = this.placeholderFor('items');
+  }
 
   get state(): EditorState {
     return this.facade.state;
@@ -68,15 +47,15 @@ export class MorphologyTaskComponent {
   }
 
   get items(): Array<Record<string, unknown>> {
-    const tab = this.tab;
-    if (!tab) return [];
-    try {
-      const parsed = JSON.parse(tab.json || '{}');
-      const list = Array.isArray(parsed?.items) ? parsed.items : [];
-      return list.filter((item: unknown) => item && typeof item === 'object') as Array<Record<string, unknown>>;
-    } catch {
-      return [];
-    }
+    return this.readRecordArray('items');
+  }
+
+  get evidenceItems(): Array<Record<string, unknown>> {
+    return this.readRecordArray('lexicon_evidence');
+  }
+
+  get lexiconMorphologyItems(): Array<Record<string, unknown>> {
+    return this.readRecordArray('lexicon_morphology');
   }
 
   get canNavigatePrev(): boolean {
@@ -84,15 +63,24 @@ export class MorphologyTaskComponent {
   }
 
   get canNavigateNext(): boolean {
+    const current = this.activeModalItems();
     return (
       this.editModalIndex != null &&
       this.editModalIndex >= 0 &&
-      this.editModalIndex < this.items.length - 1
+      this.editModalIndex < current.length - 1
     );
   }
 
   onTabChange(tab: AppTabItem) {
-    this.activeTabId = tab.id === 'json' ? 'json' : 'items';
+    if (tab.id === 'evidence') {
+      this.activeTabId = 'evidence';
+      return;
+    }
+    if (tab.id === 'links') {
+      this.activeTabId = 'links';
+      return;
+    }
+    this.activeTabId = 'items';
   }
 
   loadFromVerses() {
@@ -114,6 +102,21 @@ export class MorphologyTaskComponent {
     return key || index;
   }
 
+  trackByEvidence(index: number, item: Record<string, unknown>) {
+    const key = typeof item['evidence_id'] === 'string' ? item['evidence_id'] : '';
+    if (key) return key;
+    const lexicon = typeof item['ar_u_lexicon'] === 'string' ? item['ar_u_lexicon'] : '';
+    const chunk = typeof item['chunk_id'] === 'string' ? item['chunk_id'] : '';
+    return `${lexicon}|${chunk}|${index}`;
+  }
+
+  trackByLink(index: number, item: Record<string, unknown>) {
+    const lexicon = typeof item['ar_u_lexicon'] === 'string' ? item['ar_u_lexicon'] : '';
+    const morph = typeof item['ar_u_morphology'] === 'string' ? item['ar_u_morphology'] : '';
+    if (lexicon || morph) return `${lexicon}|${morph}`;
+    return index;
+  }
+
   itemValue(item: Record<string, unknown>, key: string) {
     if (key === 'morph_pattern') {
       const direct = item[key];
@@ -131,8 +134,6 @@ export class MorphologyTaskComponent {
   }
 
   updateItem(index: number, key: string, value: string) {
-    const tab = this.tab;
-    if (!tab) return;
     const items = this.items;
     if (index < 0 || index >= items.length) return;
     const item = items[index];
@@ -175,33 +176,47 @@ export class MorphologyTaskComponent {
   }
 
   removeItem(index: number) {
-    const tab = this.tab;
-    if (!tab) return;
     const items = this.items;
     if (index < 0 || index >= items.length) return;
     items.splice(index, 1);
     this.writeItems(items);
   }
 
-  openEditModal(event: Event, item: Record<string, unknown>, index: number) {
+  removeEvidence(index: number) {
+    const items = this.evidenceItems;
+    if (index < 0 || index >= items.length) return;
+    items.splice(index, 1);
+    this.writeEvidence(items);
+  }
+
+  removeLexiconMorphology(index: number) {
+    const items = this.lexiconMorphologyItems;
+    if (index < 0 || index >= items.length) return;
+    items.splice(index, 1);
+    this.writeLexiconMorphology(items);
+  }
+
+  openEditModal(event: Event, item: Record<string, unknown>, index: number, kind: ModalKind = 'items') {
     event.preventDefault();
     event.stopPropagation();
-    const items = this.items;
+    const items = this.itemsByKind(kind);
     const current = items[index] ?? item;
-    this.setEditModalFromItem(current, index, items.length);
+    this.setEditModalFromItem(current, index, items.length, kind);
     queueMicrotask(() => {
       this.editModalOpen = true;
     });
   }
 
-  openCreateModal(event: Event) {
+  openCreateModal(event: Event, kind: ModalKind = 'items') {
     event.preventDefault();
     event.stopPropagation();
+    this.editModalKind = kind;
     this.editModalIndex = -1;
     this.editModalError = '';
-    this.editModalTitle = 'Add Morphology JSON';
+    this.editModalTitle = this.modalTitle(kind, true);
+    this.editModalPlaceholder = this.placeholderFor(kind);
     try {
-      this.editModalJson = JSON.stringify(this.buildNewItemTemplate(), null, 2);
+      this.editModalJson = JSON.stringify(this.buildTemplate(kind), null, 2);
     } catch (err: any) {
       this.editModalError = err?.message ?? 'Failed to format JSON.';
       this.editModalJson = '';
@@ -222,17 +237,19 @@ export class MorphologyTaskComponent {
     if (this.editModalIndex == null) return;
     const record = this.parseModalDraft(this.editModalJson);
     if (!record) return;
-    const items = this.items;
+
+    const items = this.activeModalItems();
     if (this.editModalIndex < 0) {
       items.push(record);
       const nextIndex = items.length - 1;
-      this.writeItems(items);
-      this.setEditModalFromItem(record, nextIndex, items.length);
+      this.writeActiveModalItems(items);
+      this.setEditModalFromItem(record, nextIndex, items.length, this.editModalKind);
     } else if (this.editModalIndex < items.length) {
       items[this.editModalIndex] = record;
-      this.writeItems(items);
-      this.setEditModalFromItem(record, this.editModalIndex, items.length);
+      this.writeActiveModalItems(items);
+      this.setEditModalFromItem(record, this.editModalIndex, items.length, this.editModalKind);
     }
+
     if (options.close) {
       this.closeEditModal();
     }
@@ -246,22 +263,164 @@ export class MorphologyTaskComponent {
     this.navigateModal(1, draft);
   }
 
-  private writeItems(items: Array<Record<string, unknown>>) {
+  private modalTitle(kind: ModalKind, create = false): string {
+    if (kind === 'evidence') return create ? 'Add Lexicon Evidence JSON' : 'Edit Lexicon Evidence JSON';
+    if (kind === 'links') return create ? 'Add Lexicon Morphology Link JSON' : 'Edit Lexicon Morphology Link JSON';
+    return create ? 'Add Morphology JSON' : 'Edit Morphology JSON';
+  }
+
+  private placeholderFor(kind: ModalKind): string {
+    if (kind === 'evidence') {
+      return JSON.stringify(
+        {
+          ar_u_lexicon: null,
+          locator_type: 'chunk',
+          source_type: 'book',
+          source_id: '',
+          chunk_id: '',
+          page_no: null,
+          heading_raw: '',
+          heading_norm: '',
+          url: null,
+          app_payload_json: null,
+          link_role: 'supports',
+          evidence_kind: 'lexical',
+          evidence_strength: 'supporting',
+          extract_text: '',
+          note_md: '',
+          meta: {},
+        },
+        null,
+        2
+      );
+    }
+    if (kind === 'links') {
+      return JSON.stringify(
+        {
+          ar_u_lexicon: null,
+          ar_u_morphology: null,
+          link_role: 'primary',
+          // optional morphology payload to create ar_u_morphology when missing
+          surface_ar: '',
+          surface_norm: '',
+          pos2: 'noun',
+          derivation_type: null,
+          noun_number: null,
+          verb_form: null,
+          derived_from_verb_form: null,
+          derived_pattern: null,
+          transitivity: null,
+          obj_count: null,
+          tags_ar: null,
+          tags_en: null,
+          notes: null,
+          meta: null,
+        },
+        null,
+        2
+      );
+    }
+    return JSON.stringify(
+      {
+        word_location: '',
+        surah: null,
+        ayah: null,
+        token_index: null,
+        surface_ar: '',
+        surface_norm: '',
+        lemma_ar: '',
+        lemma_norm: '',
+        root_norm: '',
+        pos: null,
+        morphology: {
+          singular: {
+            form_ar: '',
+            pattern: '',
+          },
+          plural: null,
+          morph_features: {},
+        },
+        translation: {
+          primary: '',
+          alternatives: [],
+          context: '',
+        },
+        lexicon_id: null,
+      },
+      null,
+      2
+    );
+  }
+
+  private readRecordArray(key: 'items' | 'lexicon_evidence' | 'lexicon_morphology'): Array<Record<string, unknown>> {
+    const payload = this.parseTaskPayload();
+    const list = Array.isArray(payload[key]) ? payload[key] : [];
+    return list.filter((item: unknown) => item && typeof item === 'object') as Array<Record<string, unknown>>;
+  }
+
+  private parseTaskPayload(): Record<string, unknown> {
+    const tab = this.tab;
+    if (!tab) return {};
+    try {
+      const parsed = JSON.parse(tab.json || '{}');
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+      return {};
+    } catch {
+      return {};
+    }
+  }
+
+  private writeTaskPayload(payload: Record<string, unknown>) {
     const tab = this.tab;
     if (!tab) return;
-    let payload: Record<string, unknown> = {};
-    try {
-      payload = JSON.parse(tab.json || '{}') as Record<string, unknown>;
-    } catch {
-      payload = {};
-    }
     payload['schema_version'] = payload['schema_version'] ?? 1;
     payload['task_type'] = 'morphology';
     payload['surah'] = this.state.selectedSurah ?? payload['surah'];
     payload['ayah_from'] = this.state.rangeStart ?? payload['ayah_from'];
     payload['ayah_to'] = this.state.rangeEnd ?? this.state.rangeStart ?? payload['ayah_to'];
-    payload['items'] = items;
     tab.json = JSON.stringify(payload, null, 2);
+  }
+
+  private writeItems(items: Array<Record<string, unknown>>) {
+    const payload = this.parseTaskPayload();
+    payload['items'] = items;
+    this.writeTaskPayload(payload);
+  }
+
+  private writeEvidence(items: Array<Record<string, unknown>>) {
+    const payload = this.parseTaskPayload();
+    payload['lexicon_evidence'] = items;
+    this.writeTaskPayload(payload);
+  }
+
+  private writeLexiconMorphology(items: Array<Record<string, unknown>>) {
+    const payload = this.parseTaskPayload();
+    payload['lexicon_morphology'] = items;
+    this.writeTaskPayload(payload);
+  }
+
+  private itemsByKind(kind: ModalKind): Array<Record<string, unknown>> {
+    if (kind === 'evidence') return this.evidenceItems;
+    if (kind === 'links') return this.lexiconMorphologyItems;
+    return this.items;
+  }
+
+  private activeModalItems(): Array<Record<string, unknown>> {
+    return this.itemsByKind(this.editModalKind);
+  }
+
+  private writeActiveModalItems(items: Array<Record<string, unknown>>) {
+    if (this.editModalKind === 'evidence') {
+      this.writeEvidence(items);
+      return;
+    }
+    if (this.editModalKind === 'links') {
+      this.writeLexiconMorphology(items);
+      return;
+    }
+    this.writeItems(items);
   }
 
   private normalizeArabic(text: string) {
@@ -278,15 +437,22 @@ export class MorphologyTaskComponent {
       return null;
     }
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      this.editModalError = 'Morphology JSON must be an object.';
+      this.editModalError = 'JSON must be an object.';
       return null;
+    }
+
+    if (this.editModalKind === 'evidence') {
+      return this.ensureEvidenceDefaults(parsed as Record<string, unknown>);
+    }
+    if (this.editModalKind === 'links') {
+      return this.ensureLexiconMorphologyDefaults(parsed as Record<string, unknown>);
     }
     return this.ensureMorphologyDefaults(parsed as Record<string, unknown>);
   }
 
   private navigateModal(delta: number, draft: string) {
     if (this.editModalIndex == null || this.editModalIndex < 0) return;
-    const items = this.items;
+    const items = this.activeModalItems();
     const currentIndex = this.editModalIndex;
     const nextIndex = currentIndex + delta;
     if (nextIndex < 0 || nextIndex >= items.length) return;
@@ -294,21 +460,31 @@ export class MorphologyTaskComponent {
     const record = this.parseModalDraft(draft);
     if (!record) return;
     items[currentIndex] = record;
-    this.writeItems(items);
+    this.writeActiveModalItems(items);
 
-    this.setEditModalFromItem(items[nextIndex], nextIndex, items.length);
+    this.setEditModalFromItem(items[nextIndex], nextIndex, items.length, this.editModalKind);
   }
 
   private setEditModalFromItem(
     item: Record<string, unknown>,
     index: number,
-    total: number
+    total: number,
+    kind: ModalKind
   ) {
+    this.editModalKind = kind;
     this.editModalIndex = index;
     this.editModalError = '';
-    this.editModalTitle = total > 0 ? `Edit Morphology JSON (${index + 1}/${total})` : 'Edit Morphology JSON';
+    this.editModalTitle = total > 0 ? `${this.modalTitle(kind)} (${index + 1}/${total})` : this.modalTitle(kind);
+    this.editModalPlaceholder = this.placeholderFor(kind);
     try {
-      const normalized = this.ensureMorphologyDefaults({ ...item });
+      let normalized: Record<string, unknown>;
+      if (kind === 'evidence') {
+        normalized = this.ensureEvidenceDefaults({ ...item });
+      } else if (kind === 'links') {
+        normalized = this.ensureLexiconMorphologyDefaults({ ...item });
+      } else {
+        normalized = this.ensureMorphologyDefaults({ ...item });
+      }
       this.editModalJson = JSON.stringify(normalized, null, 2);
     } catch (err: any) {
       this.editModalError = err?.message ?? 'Failed to format JSON.';
@@ -377,6 +553,34 @@ export class MorphologyTaskComponent {
     return next;
   }
 
+  private ensureEvidenceDefaults(record: Record<string, unknown>) {
+    const next = { ...record };
+    if (!next['locator_type']) next['locator_type'] = 'chunk';
+    if (!next['source_type']) next['source_type'] = 'book';
+    if (!next['link_role']) next['link_role'] = 'supports';
+    if (!next['evidence_kind']) next['evidence_kind'] = 'lexical';
+    if (!next['evidence_strength']) next['evidence_strength'] = 'supporting';
+    if (!Object.prototype.hasOwnProperty.call(next, 'page_no')) next['page_no'] = null;
+    if (!Object.prototype.hasOwnProperty.call(next, 'source_id')) next['source_id'] = '';
+    if (!Object.prototype.hasOwnProperty.call(next, 'chunk_id')) next['chunk_id'] = '';
+    if (!Object.prototype.hasOwnProperty.call(next, 'url')) next['url'] = null;
+    if (!Object.prototype.hasOwnProperty.call(next, 'extract_text')) next['extract_text'] = '';
+    if (!Object.prototype.hasOwnProperty.call(next, 'note_md')) next['note_md'] = '';
+    if (!Object.prototype.hasOwnProperty.call(next, 'meta')) next['meta'] = {};
+    return next;
+  }
+
+  private ensureLexiconMorphologyDefaults(record: Record<string, unknown>) {
+    const next = { ...record };
+    if (!next['link_role']) next['link_role'] = 'primary';
+    if (!Object.prototype.hasOwnProperty.call(next, 'ar_u_lexicon')) next['ar_u_lexicon'] = null;
+    if (!Object.prototype.hasOwnProperty.call(next, 'ar_u_morphology')) next['ar_u_morphology'] = null;
+    if (!Object.prototype.hasOwnProperty.call(next, 'surface_ar')) next['surface_ar'] = '';
+    if (!Object.prototype.hasOwnProperty.call(next, 'surface_norm')) next['surface_norm'] = '';
+    if (!Object.prototype.hasOwnProperty.call(next, 'pos2')) next['pos2'] = 'noun';
+    return next;
+  }
+
   private ensureMorphologyObject(record: Record<string, unknown>) {
     const existing = record['morphology'];
     if (existing && typeof existing === 'object' && !Array.isArray(existing)) {
@@ -385,7 +589,50 @@ export class MorphologyTaskComponent {
     return {} as Record<string, unknown>;
   }
 
-  private buildNewItemTemplate(): Record<string, unknown> {
+  private buildTemplate(kind: ModalKind): Record<string, unknown> {
+    if (kind === 'evidence') {
+      return this.ensureEvidenceDefaults({
+        ar_u_lexicon: null,
+        locator_type: 'chunk',
+        source_type: 'book',
+        source_id: '',
+        chunk_id: '',
+        page_no: null,
+        heading_raw: '',
+        heading_norm: '',
+        url: null,
+        app_payload_json: null,
+        link_role: 'supports',
+        evidence_kind: 'lexical',
+        evidence_strength: 'supporting',
+        extract_text: '',
+        note_md: '',
+        meta: {},
+      });
+    }
+
+    if (kind === 'links') {
+      return this.ensureLexiconMorphologyDefaults({
+        ar_u_lexicon: null,
+        ar_u_morphology: null,
+        link_role: 'primary',
+        surface_ar: '',
+        surface_norm: '',
+        pos2: 'noun',
+        derivation_type: null,
+        noun_number: null,
+        verb_form: null,
+        derived_from_verb_form: null,
+        derived_pattern: null,
+        transitivity: null,
+        obj_count: null,
+        tags_ar: null,
+        tags_en: null,
+        notes: null,
+        meta: null,
+      });
+    }
+
     const template: Record<string, unknown> = {
       word_location: '',
       surah: this.state.selectedSurah ?? null,

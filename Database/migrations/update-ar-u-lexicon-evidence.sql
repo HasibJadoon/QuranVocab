@@ -1,6 +1,5 @@
 PRAGMA foreign_keys=OFF;
 PRAGMA defer_foreign_keys=TRUE;
-BEGIN;
 
 -- This migration upgrades the legacy evidence table shape:
 --   PK (ar_u_lexicon, chunk_id) + ar_u_source/notes/span_*
@@ -226,5 +225,4 @@ FROM ar_u_lexicon_evidence e
 LEFT JOIN ar_u_sources s
   ON s.ar_u_source = e.source_id;
 
-COMMIT;
 PRAGMA foreign_keys=ON;
