@@ -19,6 +19,8 @@ import type { BookScrollReaderChunk, BookScrollReaderPage } from '../../../../sh
 import { BookSearchService } from '../../../../shared/services/book-search.service';
 import { BookScrollReaderService } from '../../../../shared/services/book-scroll-reader.service';
 
+type ReaderJumpMode = 'around' | 'from-page';
+
 @Component({
   selector: 'app-book-scroll-reader',
   standalone: true,
@@ -29,6 +31,8 @@ import { BookScrollReaderService } from '../../../../shared/services/book-scroll
 export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterViewInit {
   @Input() sourceCode = '';
   @Input() query = '';
+  @Input() indexTerm = '';
+  @Input() indexTerms: string[] = [];
   @Input() fontSize = 17;
   @Input() arabicFriendlyLineHeight = true;
   @Input() monospace = false;
@@ -91,12 +95,12 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     this.setupLoadMoreObserver();
   }
 
-  async jumpToPage(pageNo: number, sourceOverride?: string): Promise<void> {
+  async jumpToPage(pageNo: number, sourceOverride?: string, mode: ReaderJumpMode = 'around'): Promise<void> {
     const source = String(sourceOverride ?? this.sourceCode ?? '').trim();
     const targetPage = Math.max(1, Math.trunc(Number(pageNo)));
     if (!source || !Number.isFinite(targetPage)) return;
 
-    if (this.pageSet.has(targetPage)) {
+    if (mode === 'around' && this.pageSet.has(targetPage)) {
       this.scrollToPageAnchor(targetPage, true);
       this.emitPageInView(targetPage);
       return;
@@ -105,7 +109,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
     this.loadingInitial = true;
     this.error = '';
     try {
-      const start = Math.max(1, targetPage - 2);
+      const start = mode === 'from-page' ? targetPage : Math.max(1, targetPage - 2);
       const res = await firstValueFrom(
         this.readerService.listPagesByRange({
           source_id: source,
@@ -136,7 +140,7 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
 
   chunkTextHtml(raw: string): SafeHtml {
     const text = this.normalizeChunkText(String(raw ?? ''));
-    const terms = this.searchTermsFromQuery(this.query);
+    const terms = this.collectHighlightTerms();
     const highlighted = this.highlightText(text, terms);
     const paragraphs = highlighted
       .split(/\n{2,}/)
@@ -146,6 +150,29 @@ export class BookScrollReaderComponent implements OnChanges, OnDestroy, AfterVie
       .join('');
     const html = paragraphs || '<p></p>';
     return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  private collectHighlightTerms(): string[] {
+    const terms = [...this.searchTermsFromQuery(this.query)];
+    for (const term of this.indexTerms ?? []) {
+      terms.push(String(term ?? '').trim());
+    }
+    const indexTerm = String(this.indexTerm ?? '').trim();
+    if (indexTerm) {
+      terms.push(indexTerm);
+    }
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const term of terms) {
+      const normalized = String(term ?? '').trim();
+      if (!normalized) continue;
+      const key = normalized.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(normalized);
+    }
+    unique.sort((a, b) => b.length - a.length);
+    return unique;
   }
 
   chunkTextStyle(): Record<string, string> {
