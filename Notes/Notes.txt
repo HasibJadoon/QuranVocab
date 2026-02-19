@@ -14,3 +14,6 @@ npm run build
 Document Seed
 node scripts/seed-docs.mjs
 npx wrangler d1 execute DB --remote --file database/migrations/seed-docs.sql
+
+npm run start -w apps/k-map
+npm run build -w apps/k-map
