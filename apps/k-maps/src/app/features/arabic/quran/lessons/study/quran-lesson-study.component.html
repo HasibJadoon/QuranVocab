@@ -299,27 +299,7 @@
                   </ng-container>
 
                   <ng-container *ngIf="state.sentenceSubTab === 'items'">
-                    <div class="table-wrap" *ngIf="sentenceItems.length; else noSentenceItems">
-                      <table class="table align-middle app-crud-table editor-table">
-                        <thead>
-                          <tr>
-                            <th>#</th>
-                            <th>Canonical Sentence</th>
-                            <th>Structure Summary</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr *ngFor="let item of sentenceItems; let i = index">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ valueOf(item, ['canonical_sentence', 'text']) }}</td>
-                            <td>{{ valueOf(item, ['structure_summary', 'summary', 'notes']) }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <ng-template #noSentenceItems>
-                      <p class="text-muted">No sentence items available.</p>
-                    </ng-template>
+                    <app-quran-sentence-structure [sentences]="sentenceStructureSentences"></app-quran-sentence-structure>
                   </ng-container>
 
                   <ng-container *ngIf="state.sentenceSubTab === 'json'">

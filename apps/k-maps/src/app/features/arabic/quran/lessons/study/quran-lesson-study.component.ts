@@ -13,7 +13,14 @@ import {
 import { QuranAyah } from '../../../../../shared/models/arabic/quran-data.model';
 import { PageHeaderTabsConfig } from '../../../../../shared/models/core/page-header.model';
 import { PageHeaderService } from '../../../../../shared/services/page-header.service';
-import { QuranWordInspectorComponent, type QuranWordInspectorSelection } from '../../shared';
+import {
+  QuranSentenceStructureComponent,
+  type QuranSentenceStructureSegment,
+  type QuranSentenceStructureSentence,
+  type QuranSentenceStructureSummary,
+  QuranWordInspectorComponent,
+  type QuranWordInspectorSelection,
+} from '../../shared';
 import { QuranLessonEditorFacade } from '../edit-new/facade/editor.facade';
 import { EditorState, SentenceSubTab, TaskTab, TaskType } from '../edit-new/models/editor.types';
 import { selectSelectedAyahs, selectSelectedRangeLabelShort } from '../edit-new/state/editor.selectors';
@@ -72,7 +79,14 @@ type MorphologyDialogContextAyah = {
 @Component({
   selector: 'app-quran-lesson-study',
   standalone: true,
-  imports: [CommonModule, AppTabsComponent, AppPillsComponent, AppFontSizeControlsComponent, QuranWordInspectorComponent],
+  imports: [
+    CommonModule,
+    AppTabsComponent,
+    AppPillsComponent,
+    AppFontSizeControlsComponent,
+    QuranWordInspectorComponent,
+    QuranSentenceStructureComponent,
+  ],
   templateUrl: './quran-lesson-study.component.html',
   styleUrls: ['./quran-lesson-study.component.scss'],
   providers: [QuranLessonEditorFacade],
@@ -307,13 +321,16 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     return this.pickFirst(payload, ['scene_aesthetic', 'aesthetic', 'style', 'tone']) || 'Not provided';
   }
 
-  get sentenceItems(): Array<Record<string, unknown>> {
+  get sentenceStructureSentences(): QuranSentenceStructureSentence[] {
     const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
     if (!tab?.json?.trim()) return [];
     try {
       const parsed = JSON.parse(tab.json) as Record<string, unknown>;
       const items = Array.isArray(parsed['items']) ? parsed['items'] : [];
-      return items.filter((item) => item && typeof item === 'object') as Array<Record<string, unknown>>;
+      return items
+        .map((item, index) => this.toSentenceStructureSentence(item, index))
+        .filter((item): item is QuranSentenceStructureSentence => item != null)
+        .sort((a, b) => a.sentence_order - b.sentence_order);
     } catch {
       return [];
     }
@@ -428,23 +445,6 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
   resetFont() {
     this.fontRem = 1.35;
     this.persistFontSize();
-  }
-
-  valueOf(item: Record<string, unknown>, keys: string[]): string {
-    for (const key of keys) {
-      const value = item[key];
-      if (value == null) continue;
-      if (typeof value === 'string' && value.trim()) return value.trim();
-      if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-      if (typeof value === 'object') {
-        try {
-          return JSON.stringify(value);
-        } catch {
-          return '[object]';
-        }
-      }
-    }
-    return '—';
   }
 
   formatJson(raw: string): string {
@@ -651,6 +651,66 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     } catch {
       return {};
     }
+  }
+
+  private toSentenceStructureSentence(value: unknown, index: number): QuranSentenceStructureSentence | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    const record = value as Record<string, unknown>;
+    const canonicalSentence = this.textFromUnknown(record['canonical_sentence']) || this.textFromUnknown(record['text']);
+    const summary = this.toSentenceStructureSummary(record['structure_summary'], canonicalSentence);
+    const sentenceOrder = this.numberFromUnknown(record['sentence_order']) ?? index + 1;
+
+    return {
+      sentence_order: sentenceOrder,
+      structure_summary: summary,
+    };
+  }
+
+  private toSentenceStructureSummary(raw: unknown, fallbackText: string): QuranSentenceStructureSummary {
+    let summaryRecord: Record<string, unknown> | null = null;
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      summaryRecord = raw as Record<string, unknown>;
+    }
+
+    const fullText = this.textFromUnknown(summaryRecord?.['full_text']) || fallbackText;
+    const rawComponents = Array.isArray(summaryRecord?.['main_components']) ? summaryRecord['main_components'] : [];
+    const mainComponents = rawComponents
+      .map((item, index) => this.toSentenceStructureSegment(item, index))
+      .filter((item): item is QuranSentenceStructureSegment => item != null);
+
+    if (!mainComponents.length && fullText) {
+      mainComponents.push({
+        component: 'Sentence',
+        text: fullText,
+        pattern: '',
+        role: '',
+        grammar: [],
+      });
+    }
+
+    return {
+      full_text: fullText,
+      main_components: mainComponents,
+    };
+  }
+
+  private toSentenceStructureSegment(raw: unknown, index: number): QuranSentenceStructureSegment | null {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const record = raw as Record<string, unknown>;
+    const component = this.textFromUnknown(record['component']) || `Component ${index + 1}`;
+    const text = this.textFromUnknown(record['text']);
+    const pattern = this.textFromUnknown(record['pattern']);
+    const role = this.textFromUnknown(record['role']);
+    const grammarRaw = Array.isArray(record['grammar']) ? record['grammar'] : [];
+    const grammar = grammarRaw.map((item) => this.textFromUnknown(item)).filter((item) => Boolean(item));
+
+    return {
+      component,
+      text: text || component,
+      pattern,
+      role,
+      grammar,
+    };
   }
 
   private stripArabicDiacritics(value: string): string {
