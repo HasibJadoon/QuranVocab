@@ -1085,18 +1085,24 @@ async function upsertExpression(
   db: D1Database,
   row: JsonRecord
 ) {
-  const sequence = asArray(row['sequence'])
-    .map((entry) => asString(entry))
+  const sequenceInput = asArray(row['sequence_json']).length ? row['sequence_json'] : row['sequence'];
+  const sequence = asArray(sequenceInput);
+  const sequenceTokens = sequence
+    .map((entry) => asString(entry) ?? asString(asRecord(entry)?.['token']) ?? asString(asRecord(entry)?.['text']))
     .filter((entry): entry is string => !!entry);
-  const textAr = asString(row['text_ar']) ?? asString(row['text']) ?? '';
-  const label = asString(row['label']) ?? textAr;
+  const textAr =
+    asString(row['text_ar']) ??
+    asString(row['expression_ar']) ??
+    asString(row['text']) ??
+    '';
+  const label = asString(row['label']) ?? asString(row['expression_norm']) ?? textAr;
   const arULexicon = asString(row['ar_u_lexicon']) ?? asString(row['u_lexicon_id']);
 
   const canonicalInput = canonicalize(
     asString(row['canonical_input']) ??
-      `EXP|${normalizeTextNorm(label ?? textAr)}|${sequence.join(';')}`
+      `EXP|${normalizeTextNorm(label ?? textAr)}|${sequenceTokens.join(';')}`
   );
-  const id = asString(row['ar_u_expression']) ?? (await sha256Hex(canonicalInput));
+  const id = asString(row['ar_u_expression']) ?? asString(row['id']) ?? (await sha256Hex(canonicalInput));
 
   await db
     .prepare(
@@ -1120,8 +1126,8 @@ async function upsertExpression(
       arULexicon,
       label,
       textAr,
-      JSON.stringify(sequence),
-      toJsonOrNull(row['meta_json'])
+      toJsonOrNull(sequence),
+      toJsonOrNull(row['meta_json'] ?? row['meta'])
     )
     .run();
 
@@ -1133,7 +1139,18 @@ async function commitExpressionsStep(
   payload: JsonRecord,
   counts: Counts
 ) {
-  const uExpressions = asArray(payload['u_expressions']);
+  let uExpressions = asArray(payload['u_expressions']);
+  if (!uExpressions.length) {
+    uExpressions = asArray(payload['items']);
+  }
+  if (!uExpressions.length) {
+    const looksLikeSingleExpression =
+      asString(payload['canonical_input']) ??
+      asString(payload['text_ar']) ??
+      asString(payload['expression_ar']) ??
+      null;
+    if (looksLikeSingleExpression) uExpressions = [payload];
+  }
   for (const item of uExpressions) {
     const row = asRecord(item);
     if (!row) continue;

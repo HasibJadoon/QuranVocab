@@ -23,6 +23,7 @@ const jsonHeaders: Record<string, string> = {
 const TASK_LABELS: Record<string, string> = {
   sentence_structure: 'Sentence Structure',
   morphology: 'Morphology',
+  expressions: 'Expressions',
 };
 
 const MORPH_POS_MAP: Record<string, 'noun' | 'verb' | 'particle' | 'adj'> = {
@@ -633,6 +634,137 @@ function taskJsonObject(taskJson: unknown): Record<string, unknown> | null {
   return null;
 }
 
+function taskJsonValue(taskJson: unknown): unknown | null {
+  if (taskJson === undefined || taskJson === null) return null;
+  if (typeof taskJson === 'string') {
+    const trimmed = taskJson.trim();
+    if (!trimmed) return {};
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return null;
+    }
+  }
+  return taskJson;
+}
+
+function asJsonRecord(value: unknown): Record<string, unknown> | null {
+  if (!value) return null;
+  const direct = asRecord(value);
+  if (direct) return direct;
+  if (typeof value !== 'string') return null;
+  try {
+    const parsed = JSON.parse(value);
+    return asRecord(parsed);
+  } catch {
+    return null;
+  }
+}
+
+function looksLikeExpressionEntry(row: Record<string, unknown>): boolean {
+  return !!(
+    asString(row['ar_u_expression']) ??
+    asString(row['id']) ??
+    asString(row['canonical_input']) ??
+    asString(row['text_ar']) ??
+    asString(row['expression_ar']) ??
+    asString(row['label'])
+  );
+}
+
+function expressionSequenceFromRow(row: Record<string, unknown>, textAr: string): unknown[] {
+  const fromSequenceJson = row['sequence_json'];
+  if (Array.isArray(fromSequenceJson)) return fromSequenceJson;
+  const fromSequence = row['sequence'];
+  if (Array.isArray(fromSequence)) return fromSequence;
+  const tokens = textAr
+    .split(/\s+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return tokens;
+}
+
+function expressionTokenList(sequence: unknown[]): string[] {
+  return sequence
+    .map((entry) => {
+      if (typeof entry === 'string') return entry.trim();
+      const record = asRecord(entry);
+      if (!record) return '';
+      return asString(record['token']) ?? asString(record['text']) ?? '';
+    })
+    .filter(Boolean);
+}
+
+async function upsertExpressionRow(
+  db: D1Database,
+  row: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  const textAr = asString(row['text_ar']) ?? asString(row['expression_ar']) ?? asString(row['text']) ?? '';
+  const label = asString(row['label']) ?? asString(row['expression_norm']) ?? textAr;
+  const arULexicon = asString(row['ar_u_lexicon']) ?? asString(row['u_lexicon_id']);
+  const sequence = expressionSequenceFromRow(row, textAr);
+  const tokens = expressionTokenList(sequence);
+
+  const canonicalInput = canonicalize(
+    asString(row['canonical_input']) ??
+      `EXP|${normalizeArabic(label || textAr)}|${tokens.join(';')}`
+  );
+  const arUExpression = asString(row['ar_u_expression']) ?? asString(row['id']) ?? (await sha256Hex(canonicalInput));
+
+  const baseMeta = asJsonRecord(row['meta_json']) ?? asJsonRecord(row['meta']) ?? {};
+  const topLevelMeta: Record<string, unknown> = {};
+  if (asInteger(row['surah']) != null) topLevelMeta['surah'] = asInteger(row['surah']);
+  if (asInteger(row['ayah']) != null) topLevelMeta['ayah'] = asInteger(row['ayah']);
+  if (asString(row['category'])) topLevelMeta['category'] = asString(row['category']);
+  if (asString(row['scholarly_status'])) topLevelMeta['scholarly_status'] = asString(row['scholarly_status']);
+  if (asString(row['significance_summary'])) topLevelMeta['significance_summary'] = asString(row['significance_summary']);
+  if (Array.isArray(row['primary_sources'])) topLevelMeta['primary_sources'] = row['primary_sources'];
+  if (Array.isArray(row['secondary_sources'])) topLevelMeta['secondary_sources'] = row['secondary_sources'];
+  if (asString(row['notes'])) topLevelMeta['notes'] = asString(row['notes']);
+  const mergedMeta = {
+    ...topLevelMeta,
+    ...baseMeta,
+  };
+
+  await db
+    .prepare(
+      `
+      INSERT INTO ar_u_expressions (
+        ar_u_expression, canonical_input, ar_u_lexicon, label, text_ar, sequence_json, meta_json, created_at
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'))
+      ON CONFLICT(ar_u_expression) DO UPDATE SET
+        canonical_input = excluded.canonical_input,
+        ar_u_lexicon = excluded.ar_u_lexicon,
+        label = excluded.label,
+        text_ar = excluded.text_ar,
+        sequence_json = excluded.sequence_json,
+        meta_json = excluded.meta_json,
+        updated_at = datetime('now')
+      `
+    )
+    .bind(
+      arUExpression,
+      canonicalInput,
+      arULexicon,
+      label,
+      textAr,
+      toJsonOrNull(sequence),
+      toJsonOrNull(mergedMeta)
+    )
+    .run();
+
+  return {
+    ...row,
+    ar_u_expression: arUExpression,
+    ar_u_lexicon: arULexicon,
+    canonical_input: canonicalInput,
+    label,
+    text_ar: textAr,
+    sequence_json: sequence,
+    meta_json: mergedMeta,
+  };
+}
+
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   try {
     const user = await requireAuth(ctx);
@@ -669,7 +801,7 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     }
 
     const taskType = asString(body.task_type);
-    if (!taskType || (taskType !== 'sentence_structure' && taskType !== 'morphology')) {
+    if (!taskType || (taskType !== 'sentence_structure' && taskType !== 'morphology' && taskType !== 'expressions')) {
       return new Response(JSON.stringify({ ok: false, error: 'Unsupported task_type.' }), {
         status: 400,
         headers: jsonHeaders,
@@ -704,7 +836,84 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       });
     }
 
-    const taskJson = taskJsonObject(body.task_json);
+    const parsedTaskJson = taskJsonValue(body.task_json);
+    if (parsedTaskJson === null) {
+      return new Response(JSON.stringify({ ok: false, error: 'task_json must be valid JSON.' }), {
+        status: 400,
+        headers: jsonHeaders,
+      });
+    }
+
+    if (taskType === 'expressions') {
+      const taskRecord = asRecord(parsedTaskJson);
+      const rawItems = Array.isArray(parsedTaskJson)
+        ? parsedTaskJson
+        : Array.isArray(taskRecord?.['u_expressions'])
+          ? (taskRecord?.['u_expressions'] as unknown[])
+          : Array.isArray(taskRecord?.['items'])
+            ? (taskRecord?.['items'] as unknown[])
+            : looksLikeExpressionEntry(taskRecord ?? {})
+              ? [taskRecord]
+              : [];
+
+      const expressionRows = rawItems
+        .map((item) => asRecord(item))
+        .filter((item): item is Record<string, unknown> => !!item);
+      if (!expressionRows.length) {
+        return new Response(JSON.stringify({ ok: false, error: 'task_json.u_expressions[] is required.' }), {
+          status: 400,
+          headers: jsonHeaders,
+        });
+      }
+
+      const normalizedRows: Array<Record<string, unknown>> = [];
+      for (const row of expressionRows) {
+        const normalized = await upsertExpressionRow(ctx.env.DB, row);
+        normalizedRows.push(normalized);
+      }
+
+      const enriched = {
+        ...(taskRecord ?? {}),
+        schema_version: asInteger(taskRecord?.['schema_version']) ?? 1,
+        task_type: 'expressions',
+        u_expressions: normalizedRows,
+      };
+
+      const taskId = `UT:${unitId}:${taskType}`;
+      const taskJsonText = JSON.stringify(enriched);
+      const taskName = TASK_LABELS[taskType] ?? taskType;
+
+      await ctx.env.DB
+        .prepare(
+          `
+          INSERT INTO ar_container_unit_task (
+            task_id, unit_id, task_type, task_name, task_json, status
+          ) VALUES (?1, ?2, ?3, ?4, json(?5), 'draft')
+          ON CONFLICT(unit_id, task_type)
+          DO UPDATE SET
+            task_name = excluded.task_name,
+            task_json = excluded.task_json,
+            status = excluded.status
+        `
+        )
+        .bind(taskId, unitId, taskType, taskName, taskJsonText)
+        .run();
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          result: {
+            task_json: enriched,
+            expression_summary: {
+              upserted: normalizedRows.length,
+            },
+          },
+        }),
+        { headers: jsonHeaders }
+      );
+    }
+
+    const taskJson = taskJsonObject(parsedTaskJson);
     if (!taskJson) {
       return new Response(JSON.stringify({ ok: false, error: 'task_json must be an object.' }), {
         status: 400,

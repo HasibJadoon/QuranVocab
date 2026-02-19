@@ -733,6 +733,10 @@ export class QuranLessonEditorFacade {
       await this.commitSentenceTask(tab);
       return;
     }
+    if (type === 'expressions') {
+      await this.commitExpressionsTask(tab);
+      return;
+    }
     const parsed = type === 'reading' ? this.buildReadingTaskJson() : this.parseTaskJson(tab.json);
     if (parsed === null) {
       return;
@@ -790,6 +794,46 @@ export class QuranLessonEditorFacade {
       setStatus(this.state, 'success', 'Sentence Structure committed.');
     } catch (err: any) {
       setStatus(this.state, 'error', err?.message ?? 'Failed to commit sentence task.');
+    } finally {
+      this.state.taskSavingType = null;
+    }
+  }
+
+  private async commitExpressionsTask(tab: TaskTab) {
+    if (!this.state.lessonId || !this.state.containerId || !this.state.passageUnitId) {
+      setStatus(this.state, 'error', 'Save lesson metadata before adding tasks.');
+      return;
+    }
+
+    const parsed = this.parseTaskJson(tab.json);
+    if (parsed === null) return;
+
+    this.state.taskSavingType = tab.type;
+    setStatus(this.state, 'info', 'Committing Expressions task...');
+    try {
+      const payload = {
+        container_id: this.state.containerId,
+        unit_id: this.state.passageUnitId,
+        task_type: tab.type,
+        task_json: parsed,
+      };
+      const data = await this.request(`${API_BASE}/ar/quran/lessons/${this.state.lessonId}/tasks/commit`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      const taskJson = data?.result?.task_json;
+      if (taskJson) {
+        tab.json = JSON.stringify(taskJson, null, 2);
+      }
+      const summary = data?.result?.expression_summary;
+      if (summary && typeof summary === 'object') {
+        const upserted = summary.upserted ?? 0;
+        setStatus(this.state, 'success', `Expressions committed. Upserted ${upserted}.`);
+      } else {
+        setStatus(this.state, 'success', 'Expressions committed.');
+      }
+    } catch (err: any) {
+      setStatus(this.state, 'error', err?.message ?? 'Failed to commit expressions task.');
     } finally {
       this.state.taskSavingType = null;
     }
