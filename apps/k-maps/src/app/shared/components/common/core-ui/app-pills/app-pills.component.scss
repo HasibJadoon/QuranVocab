@@ -44,6 +44,15 @@
     0 0 0 1px rgba(var(--pill-glow-rgb), 0.12);
 }
 
+.app-pill--clickable {
+  cursor: pointer;
+}
+
+.app-pill--clickable:focus-visible {
+  outline: 2px solid var(--pill-accent);
+  outline-offset: 2px;
+}
+
 .app-pill::before {
   content: '';
   position: absolute;

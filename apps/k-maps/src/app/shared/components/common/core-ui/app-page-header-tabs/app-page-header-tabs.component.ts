@@ -26,24 +26,22 @@ export class AppPageHeaderTabsComponent {
 
   navigateTab(tab: PageHeaderTabItem) {
     if (tab.disabled) return;
-    if (tab.queryParams) {
-      this.router.navigate(tab.commands, {
-        queryParams: tab.queryParams,
-        queryParamsHandling: 'merge',
-      });
-      return;
-    }
-    this.router.navigate(tab.commands);
+    this.navigateCommands(tab.commands, tab.queryParams);
   }
 
   navigate(commands: any[], queryParams?: Record<string, unknown>) {
-    if (queryParams) {
-      this.router.navigate(commands, {
-        queryParams,
-        queryParamsHandling: 'merge',
-      });
+    this.navigateCommands(commands, queryParams);
+  }
+
+  private navigateCommands(commands: any[], queryParams?: Record<string, unknown>) {
+    const urlTree = this.router.createUrlTree(commands, {
+      queryParams,
+      queryParamsHandling: queryParams ? 'merge' : null,
+    });
+    const targetUrl = this.router.serializeUrl(urlTree);
+    if (targetUrl === this.router.url) {
       return;
     }
-    this.router.navigate(commands);
+    void this.router.navigateByUrl(urlTree);
   }
 }

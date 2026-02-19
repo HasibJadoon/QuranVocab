@@ -132,7 +132,9 @@
                     <app-pills
                       *ngIf="nounMorphologyPills.length; else noMorphNouns"
                       [items]="nounMorphologyPills"
+                      [clickable]="true"
                       ariaLabel="Noun word and root pills"
+                      (itemSelect)="onMorphologyPillSelect($event)"
                     ></app-pills>
                     <ng-template #noMorphNouns>
                       <p class="text-muted">No noun entries available.</p>
@@ -148,12 +150,41 @@
                     <app-pills
                       *ngIf="verbMorphologyPills.length; else noMorphVerbs"
                       [items]="verbMorphologyPills"
+                      [clickable]="true"
                       ariaLabel="Verb word and root pills"
+                      (itemSelect)="onMorphologyPillSelect($event)"
                     ></app-pills>
                     <ng-template #noMorphVerbs>
                       <p class="text-muted">No verb entries available.</p>
                     </ng-template>
                   </article>
+                </div>
+
+                <div
+                  class="study-word-dialog-backdrop"
+                  *ngIf="morphologyDialogWord as dialogWord"
+                  (click)="closeMorphologyWordDialog()"
+                >
+                  <div
+                    class="study-word-dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Word details"
+                    (click)="$event.stopPropagation()"
+                  >
+                    <app-quran-word-inspector
+                      [selection]="dialogWord"
+                      [contextLabel]="lessonSubtitle"
+                      [morphologyItems]="morphologyItems"
+                      [lexiconMorphologyItems]="lexiconMorphologyItems"
+                      [evidenceItems]="morphologyEvidenceItems"
+                      (close)="closeMorphologyWordDialog()"
+                    ></app-quran-word-inspector>
+
+                    <div class="study-word-dialog-actions">
+                      <button type="button" class="btn btn-ghost btn-sm" (click)="closeMorphologyWordDialog()">Close</button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

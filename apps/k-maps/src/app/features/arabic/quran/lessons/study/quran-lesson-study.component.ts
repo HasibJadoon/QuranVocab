@@ -78,6 +78,7 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
   ready = false;
   studyActiveTaskTab: 'lesson' | TaskType = 'lesson';
   selectedReadingWord: QuranWordInspectorSelection | null = null;
+  morphologyDialogWord: QuranWordInspectorSelection | null = null;
 
   get state(): EditorState {
     return this.facade.state;
@@ -312,6 +313,18 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     this.selectedReadingWord = null;
   }
 
+  onMorphologyPillSelect(pill: AppPillItem) {
+    const item = this.findMorphologyItemByPill(pill);
+    if (!item) return;
+    const selection = this.buildMorphologySelection(item);
+    if (!selection) return;
+    this.morphologyDialogWord = selection;
+  }
+
+  closeMorphologyWordDialog() {
+    this.morphologyDialogWord = null;
+  }
+
   increaseFont() {
     this.fontRem = Math.min(this.fontRem + 0.1, this.maxFontRem);
     this.persistFontSize();
@@ -411,6 +424,9 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
 
     if (this.studyActiveTaskTab !== 'reading') {
       this.clearReadingWordSelection();
+    }
+    if (this.studyActiveTaskTab !== 'morphology') {
+      this.closeMorphologyWordDialog();
     }
 
     const sub = params.get('sub');
@@ -615,11 +631,73 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
       const ref = this.morphologyRef(item);
       const root = this.morphologyRoot(item);
       return {
-        id: ref === '—' ? `${prefix}-${index}` : `${prefix}-${ref}-${index}`,
+        id: this.morphologyPillId(item, index, prefix),
         primary: this.morphologyWord(item),
         secondary: root || undefined,
       };
     });
+  }
+
+  private morphologyPillId(item: Record<string, unknown>, index: number, prefix: 'noun' | 'verb'): string {
+    const ref = this.morphologyRef(item);
+    return ref === '—' ? `${prefix}-${index}` : `${prefix}-${ref}-${index}`;
+  }
+
+  private findMorphologyItemByPill(pill: AppPillItem): Record<string, unknown> | null {
+    const pillId = pill.id == null ? '' : String(pill.id);
+    if (pillId) {
+      for (let index = 0; index < this.nounMorphologyItems.length; index += 1) {
+        const item = this.nounMorphologyItems[index];
+        if (this.morphologyPillId(item, index, 'noun') === pillId) return item;
+      }
+      for (let index = 0; index < this.verbMorphologyItems.length; index += 1) {
+        const item = this.verbMorphologyItems[index];
+        if (this.morphologyPillId(item, index, 'verb') === pillId) return item;
+      }
+    }
+
+    const primary = pill.primary.trim();
+    const secondary = (pill.secondary ?? '').trim();
+    const fallbackMatch = this.morphologyItems.find((entry) => {
+      const word = this.morphologyWord(entry);
+      const root = this.morphologyRoot(entry);
+      return word === primary && root === secondary;
+    });
+    return fallbackMatch ?? null;
+  }
+
+  private buildMorphologySelection(item: Record<string, unknown>): QuranWordInspectorSelection | null {
+    const text =
+      this.morphologyWord(item) !== '—'
+        ? this.morphologyWord(item)
+        : this.firstText(item, ['surface_ar', 'lemma_ar', 'surface_norm', 'word', 'text']);
+    if (!text) return null;
+
+    const surah = this.numberFromUnknown(item['surah']);
+    const ayah = this.numberFromUnknown(item['ayah']);
+    const tokenIndex = this.numberFromUnknown(item['token_index']);
+    const location = this.resolveMorphologyLocation(item, surah, ayah, tokenIndex);
+
+    return {
+      text,
+      location: location || text,
+      surah,
+      ayah,
+      tokenIndex,
+    };
+  }
+
+  private resolveMorphologyLocation(
+    item: Record<string, unknown>,
+    surah: number | null,
+    ayah: number | null,
+    tokenIndex: number | null
+  ): string {
+    const direct = this.textFromUnknown(item['word_location']);
+    if (direct) return direct;
+    if (surah != null && ayah != null && tokenIndex != null) return `${surah}:${ayah}:${tokenIndex}`;
+    if (surah != null && ayah != null) return `${surah}:${ayah}`;
+    return '';
   }
 
   private normalizeMorphologyDisplayText(value: string): string {
