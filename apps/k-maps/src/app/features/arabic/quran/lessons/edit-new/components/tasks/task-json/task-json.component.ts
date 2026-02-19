@@ -15,6 +15,7 @@ export class QuranLessonTaskJsonComponent {
   private readonly facade = inject(QuranLessonEditorFacade);
 
   @Input({ required: true }) taskType!: TaskType;
+  @Input() readOnly = false;
 
   get state(): EditorState {
     return this.facade.state;
@@ -29,19 +30,23 @@ export class QuranLessonTaskJsonComponent {
   }
 
   set jsonValue(value: string) {
+    if (this.readOnly) return;
     if (!this.tab) return;
     this.tab.json = value;
   }
 
   validate() {
+    if (this.readOnly) return;
     this.facade.validateTaskJson(this.taskType);
   }
 
   format() {
+    if (this.readOnly) return;
     this.facade.formatTaskJson(this.taskType);
   }
 
   save() {
+    if (this.readOnly) return;
     this.facade.saveTask(this.taskType);
   }
 }

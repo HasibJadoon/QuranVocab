@@ -1,289 +1,229 @@
-<section *ngIf="lesson; else loadingTpl" class="lesson-study">
-  <header class="study-header single-title">
-    <div class="study-title">
-      <h2>{{ lesson.title }}</h2>
+<section
+  class="quran-edit-new quran-study-shell"
+  *ngIf="ready; else loadingTpl"
+  [style.--app-ar-font-size]="arabicFontSize"
+>
+  <header class="edit-hero">
+    <div>
+      <p class="hero-kicker">Qur'anic Lesson Study</p>
+      <h1>{{ lessonTitle }}</h1>
+      <p class="hero-intent">Read-only walkthrough of all lesson tasks and concepts.</p>
+    </div>
+    <div class="hero-actions">
+      <app-font-size-controls
+        ariaLabel="Arabic font controls"
+        decreaseLabel="Decrease Arabic font"
+        resetLabel="Reset Arabic font"
+        increaseLabel="Increase Arabic font"
+        (decrease)="decreaseFont()"
+        (reset)="resetFont()"
+        (increase)="increaseFont()"
+      ></app-font-size-controls>
+      <span class="lock-pill lock-pill--on">Study Mode</span>
     </div>
   </header>
 
-  <hr class="study-divider" />
-
-  <ng-container [ngSwitch]="activeTab">
-    <!-- =========================
-         TAB: Study
-         ========================= -->
-    <ng-container *ngSwitchCase="'study'">
-      <div class="study-grid">
-        <article class="study-card">
-          <div class="study-card-heading">
-            <h4>Text</h4>
-               <div class="view-toggle">
-            <button
-              type="button"
-              class="view-toggle-btn"
-              [class.active]="readingMode === 'verse'"
-              (click)="readingMode = 'verse'"
-            >
-              <span class="toggle-icon">≡</span>
-              Verse by Verse
-            </button>
-            <button
-              type="button"
-              class="view-toggle-btn"
-              [class.active]="readingMode === 'reading'"
-              (click)="readingMode = 'reading'"
-            >
-              <span class="toggle-icon">▤</span>
-              Reading
-            </button>
-          </div>
-            <h4>
-              {{ lesson.reference?.surah ? lesson.reference?.surah : 'Passage' }}
-            </h4>
-            
-          </div>
-          <hr class="study-card-divider" />
-
-       
-
-          <div *ngIf="verseList.length > 0; else noArabic" class="arabic-passage" [class.arabic-passage--reading]="readingMode === 'reading'">
-            <ng-container *ngIf="readingMode === 'reading'; else verseByVerse">
-              <div class="reading-text text-arabic">
-                {{ readingText }}
-              </div>
-            </ng-container>
-
-            <ng-template #verseByVerse>
-              <span
-                *ngFor="let verse of verseList; trackBy: trackByVerseId"
-                class="arabic-verse"
-                [class.arabic-verse--selected]="selectedVerseId === verse.id"
-                (click)="selectVerse(verse.id)"
-              >
-                <span class="verse-text text-arabic">
-                  <ng-container *ngIf="verse.words.length > 0; else versePlainText">
-                    <ng-container *ngFor="let word of verse.words; let isLast = last; trackBy: trackByWordKey">
-                      <span
-                        class="quran-word"
-                        [class.quran-word--interactive]="!!word.lemmaId"
-                        [class.quran-word--active]="activeWordKey === word.key"
-                        [class.quran-word--verb]="word.pos === 'verb'"
-                        [attr.data-word-location]="word.wordLocation || null"
-                        [attr.title]="word.wordLocation || null"
-                        (dblclick)="onWordDoubleClick($event, word)"
-                      >
-                        {{ word.surface }}
-                      </span>
-                      <span *ngIf="!isLast"> </span>
-                    </ng-container>
-                  </ng-container>
-
-                  <ng-template #versePlainText>{{ verse.text }}</ng-template>
-                </span>
-              </span>
-            </ng-template>
-          </div>
-
-          <p *ngIf="lexiconError" class="lexicon-feedback">{{ lexiconError }}</p>
-
-          <ng-template #noArabic>
-            <p class="text-muted">Arabic text is not available for this lesson yet.</p>
-          </ng-template>
-        </article>
+  <div class="edit-grid">
+    <main class="edit-panel">
+      <div class="panel-head">
+        <div>
+          <h2>{{ studyActiveTaskTab === 'lesson' ? 'Lesson Overview' : (activeTaskTab?.label || 'Task') }}</h2>
+          <p>{{ lessonSubtitle }}</p>
+        </div>
+        <div class="panel-actions">
+          <span class="panel-chip panel-chip--locked">Read Only</span>
+          <span class="panel-chip">{{ state.taskTabs.length }} Tasks</span>
+        </div>
       </div>
-    </ng-container>
 
-    <!-- =========================
-         TAB: Sentences
-         ========================= -->
-    <ng-container *ngSwitchCase="'sentences'">
-      <div class="study-grid">
-        <article class="study-card">
-          <div class="study-card-heading">
-            <h4>Sentence Structure</h4>
-            <h4 class="study-card-mode">{{ sentenceGroups.length }} verse groups</h4>
-          </div>
+      <div class="panel-body">
+        <ng-container *ngIf="studyActiveTaskTab === 'lesson'; else taskPane">
+          <div class="task-editor">
+            <div class="task-meta">
+              <span>Lesson overview</span>
+              <span>Surah {{ state.selectedSurah || '--' }} Ayah {{ rangeLabelShort }}</span>
+            </div>
 
-          <hr class="study-card-divider" />
-
-          <div
-            class="arabic-text-container glow-card"
-            *ngIf="sentenceGroups.length > 0; else noSentences"
-          >
-            <div
-              class="arabic-text-group glow-card"
-              *ngFor="let group of sentenceGroups; trackBy: trackByGroupId"
-            >
-              <p class="arabic-text-heading glow-card">
-                <span class="arabic-heading-text">{{ group.verseArabic }}</span>
-              </p>
-
-              <hr class="study-card-divider" />
-              <hr class="study-card-divider" />
-
-              <div
-                class="arabic-text arabic-text-row"
-                *ngFor="let sentence of group.sentences; let idx = index"
-                [class.arabic-text-selected]="selectedSentenceKey === sentenceKey(group.unitId, idx)"
-                (click)="selectSentence(group.unitId, idx); $event.stopPropagation()"
-              >
-                <span class="arabic-text-run">{{ sentence.arabic }}</span>
-              </div>
+            <div class="lesson-grid">
+              <article class="lesson-card">
+                <h4>{{ lessonHeading }}</h4>
+                <p class="note-muted">{{ lessonDetail }}</p>
+                <div class="field-row">
+                  <div class="rule-card">
+                    <strong>Episode Intro</strong>
+                    <span>{{ episodeIntro }}</span>
+                  </div>
+                  <div class="rule-card">
+                    <strong>Scene</strong>
+                    <span>{{ sceneDetail }}</span>
+                  </div>
+                  <div class="rule-card">
+                    <strong>Aesthetic</strong>
+                    <span>{{ sceneAesthetic }}</span>
+                  </div>
+                </div>
+              </article>
             </div>
           </div>
+        </ng-container>
 
-          <ng-template #noSentences>
-            <p class="text-muted">Sentence segmentation is not available yet.</p>
-          </ng-template>
-        </article>
-      </div>
-    </ng-container>
+        <ng-template #taskPane>
+          <div class="task-editor" *ngIf="activeTaskTab as tab">
+            <div class="task-meta">
+              <span>Linked unit: Surah {{ state.selectedSurah || '--' }} Ayah {{ rangeLabelShort }}</span>
+              <span>Study mode: {{ tab.label }}</span>
+            </div>
 
-    <!-- =========================
-         TAB: MCQ
-         ========================= -->
-    <ng-container *ngSwitchCase="'mcq'">
-      <div class="study-grid study-grid--mcq">
-        <article
-          class="study-card mcq-card glow-card"
-          *ngIf="mcqQuestions.length > 0; else noMcqs"
-        >
-          <div class="study-card-heading">
-            <h4>Comprehension MCQs</h4>
-            <h4 class="study-card-mode">{{ mcqQuestions.length }} questions</h4>
-          </div>
+            <ng-container [ngSwitch]="tab.type">
+              <div class="reading-layout" *ngSwitchCase="'reading'">
+                <article class="reading-summary-card">
+                  <span class="reading-kicker">Reading Text</span>
+                  <p
+                    class="reading-text-primary text-arabic"
+                    *ngIf="readingAyahWordGroups.length; else noReadingText"
+                    dir="rtl"
+                    translate="no"
+                  >
+                    <ng-container *ngFor="let ayahGroup of readingAyahWordGroups; let isLastAyah = last">
+                      <ng-container *ngFor="let token of ayahGroup.words; let isLastWord = last">
+                        <span
+                          class="quran-word quran-word--interactive"
+                          [class.quran-word--active]="isReadingWordSelected(token.location)"
+                          role="button"
+                          tabindex="0"
+                          [attr.aria-pressed]="isReadingWordSelected(token.location)"
+                          [attr.data-word-location]="token.location"
+                          [attr.aria-label]="'Word ' + token.location"
+                          (click)="selectReadingWord(token)"
+                          (keydown)="onReadingWordKeydown($event, token)"
+                        >
+                          {{ token.text }}
+                        </span>
+                        <span *ngIf="!isLastWord"> </span>
+                      </ng-container>
+                      <span class="reading-ayah-mark" aria-hidden="true">{{ toArabicIndicDigits(ayahGroup.ayah) }}</span>
+                      <span *ngIf="!isLastAyah"> </span>
+                    </ng-container>
+                  </p>
+                  <ng-template #noReadingText>
+                    <p class="text-muted">No reading text available.</p>
+                  </ng-template>
+                </article>
 
-          <hr class="study-card-divider" />
-
-          <div class="mcq-list">
-            <section
-              class="mcq-question-card"
-              *ngFor="let mcq of mcqQuestions; trackBy: trackByMcqId"
-            >
-              <p class="mcq-question-text">{{ mcq.question }}</p>
-
-              <ul class="mcq-options">
-                <li
-                  class="mcq-option"
-                  *ngFor="let option of mcq.options; let optionIdx = index"
-                  (click)="onMcqOptionSelect(mcq.mcq_id, optionIdx, option.is_correct)"
-                  [class.mcq-option--correct]="mcqSelections[mcq.mcq_id]?.selectedIndex === optionIdx && option.is_correct"
-                  [class.mcq-option--incorrect]="mcqSelections[mcq.mcq_id]?.selectedIndex === optionIdx && !option.is_correct"
-                >
-                  {{ option.option }}
-                </li>
-              </ul>
-
-              <p class="mcq-feedback" *ngIf="mcqSelections[mcq.mcq_id]">
-                <span
-                  [class.mcq-feedback-text--correct]="mcqSelections[mcq.mcq_id]?.isCorrect"
-                  [class.mcq-feedback-text--incorrect]="!mcqSelections[mcq.mcq_id]?.isCorrect"
-                >
-                  {{ mcqSelections[mcq.mcq_id]?.isCorrect ? 'Correct answer!' : 'Not quite, try again.' }}
-                </span>
-              </p>
-            </section>
-          </div>
-        </article>
-
-        <ng-template #noMcqs>
-          <article class="study-card mcq-card">
-            <p class="text-muted">Comprehension MCQs are not available for this lesson yet.</p>
-          </article>
-        </ng-template>
-      </div>
-    </ng-container>
-
-    <!-- =========================
-         TAB: Passage
-         ========================= -->
-    <ng-container *ngSwitchCase="'passage'">
-      <div class="study-grid comprehension-grid">
-        <article
-          class="study-card passage-card glow-card"
-          *ngIf="passageCacheText; else noPassageText"
-        >
-          <div class="study-card-heading">
-            <h4>Passage text</h4>
-            <h4 class="study-card-mode">{{ passageUnitLabel || 'Passage' }}</h4>
-          </div>
-
-          <hr class="study-card-divider" />
-
-          <textarea class="passage-textarea" rows="6" readonly>
-{{ passageCacheText }}</textarea
-          >
-        </article>
-
-        <ng-template #noPassageText>
-          <article class="study-card passage-card">
-            <p class="text-muted">Passage text is not available yet.</p>
-          </article>
-        </ng-template>
-
-        <article
-          class="study-card comprehension-card"
-          *ngIf="hasComprehensionQuestions; else noComprehension"
-        >
-          <div class="study-card-heading">
-            <h4>Comprehension questions</h4>
-            <h4 class="study-card-mode">
-              {{ reflectiveQuestions.length + analyticalQuestions.length }} questions
-            </h4>
-          </div>
-
-          <hr class="study-card-divider" />
-
-          <div class="comprehension-sections">
-            <section class="comp-section" *ngIf="reflectiveQuestions.length > 0">
-              <div class="comp-section-heading">
-                <span>Reflective</span>
-                <small>Spend time thinking through the passage.</small>
+                <app-quran-word-inspector
+                  class="reading-word-inspector"
+                  [selection]="selectedReadingWord"
+                  [contextLabel]="lessonSubtitle"
+                  [morphologyItems]="morphologyItems"
+                  [lexiconMorphologyItems]="lexiconMorphologyItems"
+                  [evidenceItems]="morphologyEvidenceItems"
+                  (close)="clearReadingWordSelection()"
+                ></app-quran-word-inspector>
               </div>
 
-              <article
-                class="comp-item glow-card"
-                *ngFor="let question of reflectiveQuestions; trackBy: trackByQuestionKey"
-                (click)="selectQuestion(question)"
-                [class.active]="selectedQuestionId === getQuestionKey(question)"
-              >
-                <p class="comp-question text-gold">{{ question.question }}</p>
-                <p class="comp-hint" *ngIf="question.answer_hint">
-                  Hint: {{ question.answer_hint }}
-                </p>
-              </article>
-            </section>
+              <div class="morphology-layout" *ngSwitchCase="'morphology'">
+                <div class="morphology-grid">
+                  <article class="morph-bucket morph-bucket--noun">
+                    <div class="morph-bucket-head">
+                      <h4>Nouns</h4>
+                      <span class="morph-count">{{ nounMorphologyItems.length }}</span>
+                    </div>
 
-            <section class="comp-section" *ngIf="analyticalQuestions.length > 0">
-              <div class="comp-section-heading">
-                <span>Analytical</span>
-                <small>Trace how the story is constructed.</small>
+                    <app-pills
+                      *ngIf="nounMorphologyPills.length; else noMorphNouns"
+                      [items]="nounMorphologyPills"
+                      ariaLabel="Noun word and root pills"
+                    ></app-pills>
+                    <ng-template #noMorphNouns>
+                      <p class="text-muted">No noun entries available.</p>
+                    </ng-template>
+                  </article>
+
+                  <article class="morph-bucket morph-bucket--verb">
+                    <div class="morph-bucket-head">
+                      <h4>Verbs</h4>
+                      <span class="morph-count">{{ verbMorphologyItems.length }}</span>
+                    </div>
+
+                    <app-pills
+                      *ngIf="verbMorphologyPills.length; else noMorphVerbs"
+                      [items]="verbMorphologyPills"
+                      ariaLabel="Verb word and root pills"
+                    ></app-pills>
+                    <ng-template #noMorphVerbs>
+                      <p class="text-muted">No verb entries available.</p>
+                    </ng-template>
+                  </article>
+                </div>
               </div>
 
-              <article
-                class="comp-item glow-card"
-                *ngFor="let question of analyticalQuestions; trackBy: trackByQuestionKey"
-                (click)="selectQuestion(question)"
-                [class.active]="selectedQuestionId === getQuestionKey(question)"
-              >
-                <p class="comp-question text-gold">{{ question.question }}</p>
-                <p class="comp-hint" *ngIf="question.answer_hint">
-                  Hint: {{ question.answer_hint }}
-                </p>
-              </article>
-            </section>
-          </div>
-        </article>
+              <div class="sentence-layout" *ngSwitchCase="'sentence_structure'">
+                <app-tabs
+                  class="sentence-tabs"
+                  [tabs]="sentenceTabs"
+                  [activeId]="state.sentenceSubTab"
+                  variant="tabs"
+                  orientation="horizontal"
+                  ariaLabel="Sentence structure tabs"
+                  [primaryIds]="sentencePrimaryIds"
+                  overflowLabel="More"
+                  (tabChange)="onSentenceTabChange($event)"
+                ></app-tabs>
 
-        <ng-template #noComprehension>
-          <article class="study-card comprehension-card">
-            <p class="text-muted">Comprehension questions are not available for this lesson yet.</p>
-          </article>
+                <div class="sentence-pane">
+                  <ng-container *ngIf="state.sentenceSubTab === 'verses'">
+                    <div class="unit-preview" *ngIf="sentenceAyahsForStudy.length; else noSentenceVerses">
+                      <article class="unit-ayah" *ngFor="let ayah of sentenceAyahsForStudy">
+                        <span class="unit-ayah-index">Ayah {{ ayah.ayah }}</span>
+                        <p class="unit-ayah-text">{{ ayah.text_uthmani || ayah.text || '—' }}</p>
+                      </article>
+                    </div>
+                    <ng-template #noSentenceVerses>
+                      <p class="text-muted">No verse preview available.</p>
+                    </ng-template>
+                  </ng-container>
+
+                  <ng-container *ngIf="state.sentenceSubTab === 'items'">
+                    <div class="table-wrap" *ngIf="sentenceItems.length; else noSentenceItems">
+                      <table class="table align-middle app-crud-table editor-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Canonical Sentence</th>
+                            <th>Structure Summary</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let item of sentenceItems; let i = index">
+                            <td>{{ i + 1 }}</td>
+                            <td>{{ valueOf(item, ['canonical_sentence', 'text']) }}</td>
+                            <td>{{ valueOf(item, ['structure_summary', 'summary', 'notes']) }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <ng-template #noSentenceItems>
+                      <p class="text-muted">No sentence items available.</p>
+                    </ng-template>
+                  </ng-container>
+
+                  <ng-container *ngIf="state.sentenceSubTab === 'json'">
+                    <pre class="study-json">{{ sentenceTaskJson }}</pre>
+                  </ng-container>
+                </div>
+              </div>
+
+              <div *ngSwitchDefault>
+                <pre class="study-json">{{ formatJson(tab.json) }}</pre>
+              </div>
+            </ng-container>
+          </div>
         </ng-template>
       </div>
-    </ng-container>
-  </ng-container>
+    </main>
+  </div>
 </section>
 
 <ng-template #loadingTpl>
-  <div class="loading text-muted">Loading study data…</div>
+  <div class="loading text-muted">Loading study data...</div>
 </ng-template>

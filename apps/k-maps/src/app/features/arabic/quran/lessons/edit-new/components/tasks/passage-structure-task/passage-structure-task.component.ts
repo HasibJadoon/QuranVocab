@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { QuranLessonTaskJsonComponent } from '../task-json/task-json.component';
 
 @Component({
@@ -8,4 +8,6 @@ import { QuranLessonTaskJsonComponent } from '../task-json/task-json.component';
   imports: [CommonModule, QuranLessonTaskJsonComponent],
   templateUrl: './passage-structure-task.component.html',
 })
-export class PassageStructureTaskComponent {}
+export class PassageStructureTaskComponent {
+  @Input() readOnly = false;
+}

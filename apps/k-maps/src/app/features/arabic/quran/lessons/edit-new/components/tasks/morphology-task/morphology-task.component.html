@@ -13,7 +13,7 @@
       <div class="sentence-card">
         <div class="sentence-card-head">
           <h4>Morphology Items</h4>
-          <div class="action-row">
+          <div class="action-row" *ngIf="!readOnly">
             <button type="button" class="btn btn-ghost btn-sm" (click)="openCreateModal($event, 'items')">Add JSON</button>
             <button type="button" class="btn btn-ghost btn-sm" (click)="loadFromVerses()">Load from verses</button>
             <button
@@ -47,7 +47,7 @@
                 <th>Root</th>
                 <th>POS</th>
                 <th>Pattern</th>
-                <th></th>
+                <th *ngIf="!readOnly"></th>
               </tr>
             </thead>
             <tbody>
@@ -56,41 +56,61 @@
                 <td>{{ item['word_location'] || (item['surah'] + ':' + item['ayah'] + ':' + item['token_index']) }}</td>
                 <td class="text-arabic" dir="rtl">{{ item['surface_ar'] || '—' }}</td>
                 <td>
-                  <input
-                    type="text"
-                    class="text-arabic"
-                    dir="rtl"
-                    [ngModel]="itemValue(item, 'lemma_ar')"
-                    (ngModelChange)="updateItem(i, 'lemma_ar', $event)"
-                  />
+                  <ng-container *ngIf="readOnly; else editLemma">
+                    <span class="text-arabic" dir="rtl">{{ itemValue(item, 'lemma_ar') || '—' }}</span>
+                  </ng-container>
+                  <ng-template #editLemma>
+                    <input
+                      type="text"
+                      class="text-arabic"
+                      dir="rtl"
+                      [ngModel]="itemValue(item, 'lemma_ar')"
+                      (ngModelChange)="updateItem(i, 'lemma_ar', $event)"
+                    />
+                  </ng-template>
                 </td>
                 <td>
-                  <input
-                    type="text"
-                    class="text-arabic"
-                    dir="rtl"
-                    [ngModel]="itemValue(item, 'root_norm')"
-                    (ngModelChange)="updateItem(i, 'root_norm', $event)"
-                  />
+                  <ng-container *ngIf="readOnly; else editRoot">
+                    <span class="text-arabic" dir="rtl">{{ itemValue(item, 'root_norm') || '—' }}</span>
+                  </ng-container>
+                  <ng-template #editRoot>
+                    <input
+                      type="text"
+                      class="text-arabic"
+                      dir="rtl"
+                      [ngModel]="itemValue(item, 'root_norm')"
+                      (ngModelChange)="updateItem(i, 'root_norm', $event)"
+                    />
+                  </ng-template>
                 </td>
                 <td>
-                  <select [ngModel]="itemValue(item, 'pos')" (ngModelChange)="updatePos(i, $event)">
-                    <option [ngValue]="''">—</option>
-                    <option [ngValue]="'noun'">noun</option>
-                    <option [ngValue]="'verb'">verb</option>
-                    <option [ngValue]="'adj'">adj</option>
-                    <option [ngValue]="'particle'">particle</option>
-                    <option [ngValue]="'phrase'">phrase</option>
-                  </select>
+                  <ng-container *ngIf="readOnly; else editPos">
+                    <span>{{ itemValue(item, 'pos') || '—' }}</span>
+                  </ng-container>
+                  <ng-template #editPos>
+                    <select [ngModel]="itemValue(item, 'pos')" (ngModelChange)="updatePos(i, $event)">
+                      <option [ngValue]="''">—</option>
+                      <option [ngValue]="'noun'">noun</option>
+                      <option [ngValue]="'verb'">verb</option>
+                      <option [ngValue]="'adj'">adj</option>
+                      <option [ngValue]="'particle'">particle</option>
+                      <option [ngValue]="'phrase'">phrase</option>
+                    </select>
+                  </ng-template>
                 </td>
                 <td>
-                  <input
-                    type="text"
-                    [ngModel]="itemValue(item, 'morph_pattern')"
-                    (ngModelChange)="updateItem(i, 'morph_pattern', $event)"
-                  />
+                  <ng-container *ngIf="readOnly; else editPattern">
+                    <span>{{ itemValue(item, 'morph_pattern') || '—' }}</span>
+                  </ng-container>
+                  <ng-template #editPattern>
+                    <input
+                      type="text"
+                      [ngModel]="itemValue(item, 'morph_pattern')"
+                      (ngModelChange)="updateItem(i, 'morph_pattern', $event)"
+                    />
+                  </ng-template>
                 </td>
-                <td>
+                <td *ngIf="!readOnly">
                   <button
                     type="button"
                     class="btn btn-ghost btn-sm"
@@ -109,7 +129,9 @@
           </table>
         </div>
         <ng-template #noItems>
-          <p class="text-muted">No morphology items yet. Click “Load from verses” to populate.</p>
+          <p class="text-muted">
+            {{ readOnly ? 'No morphology items available for this lesson yet.' : 'No morphology items yet. Click “Load from verses” to populate.' }}
+          </p>
         </ng-template>
       </div>
     </ng-container>
@@ -118,7 +140,7 @@
       <div class="sentence-card">
         <div class="sentence-card-head">
           <h4>Lexicon Evidence</h4>
-          <div class="action-row">
+          <div class="action-row" *ngIf="!readOnly">
             <button type="button" class="btn btn-ghost btn-sm" (click)="openCreateModal($event, 'evidence')">Add JSON</button>
             <button
               type="button"
@@ -149,7 +171,7 @@
                 <th>Locator</th>
                 <th>Source/Ref</th>
                 <th>Role</th>
-                <th></th>
+                <th *ngIf="!readOnly"></th>
               </tr>
             </thead>
             <tbody>
@@ -163,7 +185,7 @@
                     {{ roleLabel(item['link_role'], 'supports') }}
                   </span>
                 </td>
-                <td>
+                <td *ngIf="!readOnly">
                   <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'evidence')">
                     JSON
                   </button>
@@ -183,7 +205,7 @@
       <div class="sentence-card">
         <div class="sentence-card-head">
           <h4>Lexicon Morphology Links</h4>
-          <div class="action-row">
+          <div class="action-row" *ngIf="!readOnly">
             <button type="button" class="btn btn-ghost btn-sm" (click)="openCreateModal($event, 'links')">Add JSON</button>
             <button
               type="button"
@@ -213,7 +235,7 @@
                 <th>Lexicon</th>
                 <th>Morphology</th>
                 <th>Role</th>
-                <th></th>
+                <th *ngIf="!readOnly"></th>
               </tr>
             </thead>
             <tbody>
@@ -226,7 +248,7 @@
                     {{ roleLabel(item['link_role'], 'primary') }}
                   </span>
                 </td>
-                <td>
+                <td *ngIf="!readOnly">
                   <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'links')">
                     JSON
                   </button>
@@ -245,6 +267,7 @@
 </div>
 
 <app-json-editor-modal
+  *ngIf="!readOnly"
   [open]="editModalOpen"
   [title]="editModalTitle"
   [value]="editModalJson"

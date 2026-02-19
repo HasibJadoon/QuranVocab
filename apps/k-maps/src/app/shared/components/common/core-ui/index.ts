@@ -14,9 +14,11 @@ export {
   AppHeaderbarComponent,
   type AppHeaderbarPagination,
 } from './app-headerbar/app-headerbar.component';
+export { AppFontSizeControlsComponent } from './app-font-size-controls/app-font-size-controls.component';
 export { AppStickyPanelComponent } from './app-sticky-panel/app-sticky-panel.component';
 export { AppPageHeaderTabsComponent } from './app-page-header-tabs/app-page-header-tabs.component';
 export { AppTabsComponent, type AppTabItem } from './app-tabs/app-tabs.component';
+export { AppPillsComponent, type AppPillItem } from './app-pills/app-pills.component';
 export { AppJsonCodeEditorComponent } from './app-json-code-editor/app-json-code-editor.component';
 export { AppJsonEditorModalComponent } from './app-json-editor-modal/app-json-editor-modal.component';
 export { AppViewJsonModalComponent } from './app-view-json-modal/app-view-json-modal.component';

@@ -735,7 +735,7 @@
   margin: 0.25rem 0 0;
   font-family: var(--arabic-font);
   direction: rtl;
-  font-size: 1.05rem;
+  font-size: calc(var(--app-ar-font-size, 1.35rem) * 0.78);
   color: var(--paper-ink);
 }
 

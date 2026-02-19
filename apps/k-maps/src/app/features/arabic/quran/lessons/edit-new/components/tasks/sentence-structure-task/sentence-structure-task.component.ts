@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, inject } from '@angular/core';
+import { Component, HostListener, Input, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   AppJsonCodeEditorComponent,
@@ -17,8 +17,12 @@ import { selectSelectedAyahs } from '../../../state/editor.selectors';
   imports: [CommonModule, FormsModule, AppTabsComponent, AppJsonEditorModalComponent, AppJsonCodeEditorComponent],
   templateUrl: './sentence-structure-task.component.html',
 })
-export class SentenceStructureTaskComponent {
+export class SentenceStructureTaskComponent implements OnInit {
   private readonly facade = inject(QuranLessonEditorFacade);
+  @Input() readOnly = false;
+  private fontRem = 1.35;
+  private readonly minFontRem = 1;
+  private readonly maxFontRem = 2.4;
   readonly sentenceTabs: AppTabItem[] = [
     { id: 'verses', label: 'Verse Selection' },
     { id: 'items', label: 'Sentence Items' },
@@ -63,6 +67,31 @@ export class SentenceStructureTaskComponent {
     return this.facade.getSentenceItems();
   }
 
+  get arabicFontSize(): string {
+    return `${this.fontRem.toFixed(2)}rem`;
+  }
+
+  increaseFont() {
+    this.fontRem = Math.min(this.fontRem + 0.1, this.maxFontRem);
+    this.persistFontSize();
+  }
+
+  decreaseFont() {
+    this.fontRem = Math.max(this.fontRem - 0.1, this.minFontRem);
+    this.persistFontSize();
+  }
+
+  resetFont() {
+    this.fontRem = 1.35;
+    this.persistFontSize();
+  }
+
+  ngOnInit() {
+    const stored = this.readStoredFontSize();
+    if (stored == null) return;
+    this.fontRem = stored;
+  }
+
   trackBySentenceItem(index: number, item: any) {
     if (item && typeof item === 'object') {
       const order = (item as Record<string, unknown>)['sentence_order'];
@@ -83,6 +112,7 @@ export class SentenceStructureTaskComponent {
   }
 
   set sentenceJson(value: string) {
+    if (this.readOnly) return;
     const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
     if (!tab) return;
     tab.json = value;
@@ -93,10 +123,12 @@ export class SentenceStructureTaskComponent {
   }
 
   extractSentenceCandidates() {
+    if (this.readOnly) return;
     this.facade.extractSentenceCandidates();
   }
 
   addSelectionFromPreview() {
+    if (this.readOnly) return;
     const selection = window.getSelection ? window.getSelection() : null;
     const text = selection?.toString() ?? '';
     this.facade.addSentenceTextToTask(text, null, 'selection');
@@ -107,6 +139,7 @@ export class SentenceStructureTaskComponent {
   }
 
   openContextMenu(event: MouseEvent, ayah?: any) {
+    if (this.readOnly) return;
     event.preventDefault();
     event.stopPropagation();
     const selection = window.getSelection ? window.getSelection() : null;
@@ -134,12 +167,14 @@ export class SentenceStructureTaskComponent {
   }
 
   addContextSelection() {
+    if (this.readOnly) return;
     if (!this.contextMenuSelection) return;
     this.facade.addSentenceTextToTask(this.contextMenuSelection, this.contextMenuAyahNumber, 'selection');
     this.closeContextMenu();
   }
 
   addContextAyah() {
+    if (this.readOnly) return;
     if (!this.contextMenuAyahText) return;
     this.facade.addSentenceTextToTask(this.contextMenuAyahText, this.contextMenuAyahNumber, 'ayah');
     this.closeContextMenu();
@@ -160,6 +195,7 @@ export class SentenceStructureTaskComponent {
   }
 
   openEditModal(item: any, index: number) {
+    if (this.readOnly) return;
     this.editModalIndex = index;
     const base = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
     this.editModalJson = JSON.stringify(this.withStructureSummary({ ...base }), null, 2);
@@ -169,6 +205,7 @@ export class SentenceStructureTaskComponent {
   }
 
   openCreateModal() {
+    if (this.readOnly) return;
     this.editModalIndex = -1;
     this.editModalJson = JSON.stringify(this.buildSentenceTemplate(), null, 2);
     this.editModalError = '';
@@ -177,6 +214,7 @@ export class SentenceStructureTaskComponent {
   }
 
   openPasteSentenceModal() {
+    if (this.readOnly) return;
     this.editModalIndex = -1;
     this.editModalJson = '';
     this.editModalError = '';
@@ -185,6 +223,7 @@ export class SentenceStructureTaskComponent {
   }
 
   startEditSentence(item: any, index: number) {
+    if (this.readOnly) return;
     const record = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
     const current = typeof record['canonical_sentence'] === 'string' ? record['canonical_sentence'] : '';
     this.editingIndex = index;
@@ -192,6 +231,7 @@ export class SentenceStructureTaskComponent {
   }
 
   saveEditSentence(index: number) {
+    if (this.readOnly) return;
     if (this.editingIndex !== index) return;
     this.facade.updateSentenceItem(index, this.editingValue);
     this.cancelEditSentence();
@@ -210,6 +250,7 @@ export class SentenceStructureTaskComponent {
   }
 
   submitEditModal() {
+    if (this.readOnly) return;
     if (this.editModalIndex == null) return;
     let parsed: unknown;
     const trimmed = this.editModalJson.trim();
@@ -256,22 +297,27 @@ export class SentenceStructureTaskComponent {
   }
 
   addSentenceCandidateToTask(candidate: SentenceCandidate) {
+    if (this.readOnly) return;
     this.facade.addSentenceCandidateToTask(candidate);
   }
 
   removeSentenceItem(index: number) {
+    if (this.readOnly) return;
     this.facade.removeSentenceItem(index);
   }
 
   validateTaskJson() {
+    if (this.readOnly) return;
     this.facade.validateTaskJson('sentence_structure');
   }
 
   formatTaskJson() {
+    if (this.readOnly) return;
     this.facade.formatTaskJson('sentence_structure');
   }
 
   commitTask() {
+    if (this.readOnly) return;
     this.facade.saveTask('sentence_structure' as TaskType);
   }
 
@@ -367,5 +413,33 @@ export class SentenceStructureTaskComponent {
       }
     }
     return this.buildSentenceTemplate();
+  }
+
+  private get storageKey(): string {
+    const lessonId = this.state.lessonId ?? 'global';
+    return `km:quran:lesson-font:${lessonId}:sentence_structure`;
+  }
+
+  private readStoredFontSize(): number | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem(this.storageKey);
+      if (!raw) return null;
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed)) return null;
+      if (parsed < this.minFontRem || parsed > this.maxFontRem) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  private persistFontSize() {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(this.storageKey, String(this.fontRem));
+    } catch {
+      // localStorage may be unavailable in restricted environments.
+    }
   }
 }

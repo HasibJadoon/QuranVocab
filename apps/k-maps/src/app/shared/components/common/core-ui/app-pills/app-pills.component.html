@@ -1,0 +1,10 @@
+<div class="app-pills" role="list" [attr.aria-label]="ariaLabel">
+  <div class="app-pill" role="listitem" *ngFor="let item of items; trackBy: trackByItem">
+    <span class="app-pill-primary text-arabic" dir="rtl">{{ item.primary || '—' }}</span>
+    <span class="app-pill-root-wrap" *ngIf="item.secondary" dir="ltr" aria-hidden="true">
+      <span class="app-pill-root-bracket">(</span>
+      <span class="app-pill-secondary text-arabic" dir="rtl">{{ item.secondary }}</span>
+      <span class="app-pill-root-bracket">)</span>
+    </span>
+  </div>
+</div>

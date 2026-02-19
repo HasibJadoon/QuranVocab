@@ -1,620 +1,656 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
-import { QuranLessonService } from '../../../../../shared/services/quran-lesson.service';
-import { TokensService } from '../../../../../shared/services/tokens.service';
-import { PageHeaderService } from '../../../../../shared/services/page-header.service';
-import { TokenRow } from '../../../../../shared/models/arabic/token.model';
-import { PageHeaderTabsConfig } from '../../../../../shared/models/core/page-header.model';
 import {
-  QuranLesson,
-  QuranLessonComprehensionQuestion,
-  QuranLessonMcq,
-  QuranLessonUnit,
-} from '../../../../../shared/models/arabic/quran-lesson.model';
-
-type StudyTab = 'study' | 'sentences' | 'mcq' | 'passage';
-type StudyHeaderTab = 'reading' | 'memory' | 'mcq' | 'passage';
-type McqSelection = { selectedIndex: number; isCorrect: boolean };
-
-type VerseWordView = {
-  key: string;
-  surface: string;
-  tokenIndex: number;
-  pos?: string | null;
-  wordLocation?: string;
-  lemmaId?: number;
-  lemmaText?: string;
-  lemmaTextClean?: string;
-  arUToken?: string | null;
-};
-
-type VerseView = {
-  id: string;
-  text: string;
-  marker: string;
-  words: VerseWordView[];
-  surah?: number;
-  ayah?: number;
-};
-
-type SentenceGroup = {
-  unitId: string;
-  verseArabic: string;
-  surah?: number;
-  ayah?: number;
-  sentences: Array<{ arabic?: string; translation?: string | null }>;
-};
-
-type AyahUnit = QuranLesson['text']['arabic_full'][number];
-type LemmaLocation = NonNullable<AyahUnit['lemmas']>[number];
+  AppFontSizeControlsComponent,
+  AppPillsComponent,
+  type AppPillItem,
+  AppTabsComponent,
+  type AppTabItem,
+} from '../../../../../shared/components';
+import { QuranAyah } from '../../../../../shared/models/arabic/quran-data.model';
+import { PageHeaderTabsConfig } from '../../../../../shared/models/core/page-header.model';
+import { PageHeaderService } from '../../../../../shared/services/page-header.service';
+import { QuranWordInspectorComponent, type QuranWordInspectorSelection } from '../../shared';
+import { QuranLessonEditorFacade } from '../edit-new/facade/editor.facade';
+import { EditorState, SentenceSubTab, TaskTab, TaskType } from '../edit-new/models/editor.types';
+import { selectSelectedAyahs, selectSelectedRangeLabelShort } from '../edit-new/state/editor.selectors';
 
 const ARABIC_DIACRITICS_RE = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
+const ARABIC_INDIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'] as const;
+
+const LEGACY_STUDY_TAB_MAP: Record<string, TaskType> = {
+  study: 'reading',
+  reading: 'reading',
+  memory: 'sentence_structure',
+  sentences: 'sentence_structure',
+  mcq: 'comprehension',
+  passage: 'passage_structure',
+};
+
+const STUDY_TASK_TAB_ORDER: Array<'lesson' | TaskType> = [
+  'lesson',
+  'reading',
+  'morphology',
+  'sentence_structure',
+  'grammar_concepts',
+  'expressions',
+  'comprehension',
+  'passage_structure',
+];
+
+const SENTENCE_SUB_TABS: AppTabItem[] = [
+  { id: 'verses', label: 'Verses' },
+  { id: 'items', label: 'Items' },
+  { id: 'json', label: 'JSON' },
+];
+
+type ReadingWordToken = {
+  text: string;
+  location: string;
+  surah: number;
+  ayah: number;
+  tokenIndex: number;
+};
 
 @Component({
   selector: 'app-quran-lesson-study',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AppTabsComponent, AppPillsComponent, AppFontSizeControlsComponent, QuranWordInspectorComponent],
   templateUrl: './quran-lesson-study.component.html',
   styleUrls: ['./quran-lesson-study.component.scss'],
+  providers: [QuranLessonEditorFacade],
 })
 export class QuranLessonStudyComponent implements OnInit, OnDestroy {
-  // =========================================================================
-  // SEGMENT: Dependencies & State
-  // =========================================================================
-
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly service = inject(QuranLessonService);
-  private readonly tokensService = inject(TokensService);
-  private readonly pageHeaderService = inject(PageHeaderService);
+  private readonly facade = inject(QuranLessonEditorFacade);
+  private readonly pageHeader = inject(PageHeaderService);
   private readonly subs = new Subscription();
-  private readonly defaultText: QuranLesson['text'] = { arabic_full: [], mode: 'original' };
 
-  lesson: QuranLesson | null = null;
-  activeTab: StudyTab = 'study';
-  readingMode: 'verse' | 'reading' = 'verse';
+  private facadeReady = false;
+  private fontRem = 1.35;
+  private readonly minFontRem = 1;
+  private readonly maxFontRem = 9.6;
 
-  selectedVerseId: string | null = null;
-  selectedSentenceKey: string | null = null;
-  selectedQuestionId: string | null = null;
-  activeWordKey: string | null = null;
-  lexiconError: string | null = null;
+  ready = false;
+  studyActiveTaskTab: 'lesson' | TaskType = 'lesson';
+  selectedReadingWord: QuranWordInspectorSelection | null = null;
 
-  mcqSelections: Record<string, McqSelection> = {};
+  get state(): EditorState {
+    return this.facade.state;
+  }
 
-  private openingLexicon = false;
-  private audioContext?: AudioContext;
+  get lessonTitle() {
+    return this.state.lessonTitleEn || (this.state.lessonId ? `Lesson #${this.state.lessonId}` : 'Quran Lesson');
+  }
 
-  // =========================================================================
-  // SEGMENT: Computed View Models
-  // =========================================================================
+  get lessonSubtitle() {
+    const surah = this.state.selectedSurah;
+    const start = this.state.rangeStart;
+    const end = this.state.rangeEnd ?? start;
 
-  get verseList(): VerseView[] {
-    return this.verseRows
-      .map((verse): VerseView | null => {
-        const id = (verse.unit_id ?? '').trim();
-        const text = this.getVerseDisplayText(verse);
-        if (!id || !text) return null;
+    if (!surah || start == null || end == null) {
+      return 'Reference not available yet.';
+    }
 
-        return {
-          id,
-          text,
-          marker: this.getVerseMarker(verse),
-          words: this.buildVerseWords(id, text, verse.lemmas ?? [], verse.surah, verse.ayah),
-          surah: verse.surah ?? undefined,
-          ayah: verse.ayah ?? undefined,
-        };
+    return start === end
+      ? `Surah ${surah}, Ayah ${start}`
+      : `Surah ${surah}, Ayah ${start}-${end}`;
+  }
+
+  get activeTaskTab(): TaskTab | null {
+    if (this.studyActiveTaskTab === 'lesson') return null;
+    return this.state.taskTabs.find((tab) => tab.type === this.studyActiveTaskTab) ?? null;
+  }
+
+  get sentenceTabs(): AppTabItem[] {
+    return SENTENCE_SUB_TABS;
+  }
+
+  get sentencePrimaryIds(): string[] {
+    return SENTENCE_SUB_TABS.map((tab) => tab.id);
+  }
+
+  get selectedAyahs() {
+    return selectSelectedAyahs(this.state);
+  }
+
+  get sentenceAyahsForStudy() {
+    const selected = new Set(this.state.sentenceAyahSelections);
+    if (!selected.size) return this.selectedAyahs;
+    return this.selectedAyahs.filter((ayah) => selected.has(ayah.ayah));
+  }
+
+  get rangeLabelShort() {
+    return selectSelectedRangeLabelShort(this.state);
+  }
+
+  get arabicFontSize(): string {
+    return `${this.fontRem.toFixed(2)}rem`;
+  }
+
+  get readingTextNonDiacritic(): string {
+    return this.getReadingSourceAyahs()
+      .map((ayah) => this.resolveReadingAyahText(ayah))
+      .filter((text) => Boolean(text))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  get readingAyahWordGroups(): Array<{ ayah: number; words: ReadingWordToken[] }> {
+    return this.getReadingSourceAyahs()
+      .map((ayah) => {
+        const words = this.splitWords(this.resolveReadingAyahText(ayah)).map((word, index) => ({
+          text: word,
+          location: `${ayah.surah}:${ayah.ayah}:${index + 1}`,
+          surah: ayah.surah,
+          ayah: ayah.ayah,
+          tokenIndex: index + 1,
+        }));
+        return { ayah: ayah.ayah, words };
       })
-      .filter((verse): verse is VerseView => !!verse);
+      .filter((group) => group.words.length > 0);
   }
 
-  get sentenceGroups(): SentenceGroup[] {
-    const sentences = this.lesson?.sentences ?? [];
-    if (!sentences.length) return [];
-
-    const verseMap = new Map<string, { arabic: string; surah?: number; ayah?: number }>();
-    for (const verse of this.verseRows) {
-      const unitId = (verse.unit_id ?? '').trim();
-      if (!unitId) continue;
-      verseMap.set(unitId, {
-        arabic: verse.arabic ?? '',
-        surah: verse.surah ?? undefined,
-        ayah: verse.ayah ?? undefined,
-      });
-    }
-
-    const groupMap = new Map<string, SentenceGroup>();
-    for (const sentence of sentences) {
-      const unitId = (sentence.unit_id ?? '').trim();
-      if (!unitId) continue;
-
-      let group = groupMap.get(unitId);
-      if (!group) {
-        const verseInfo = verseMap.get(unitId);
-        group = {
-          unitId,
-          verseArabic: verseInfo?.arabic ?? '',
-          surah: verseInfo?.surah,
-          ayah: verseInfo?.ayah,
-          sentences: [],
-        };
-        groupMap.set(unitId, group);
-      }
-
-      group.sentences.push({
-        arabic: sentence.arabic ?? undefined,
-        translation: sentence.translation ?? null,
-      });
-    }
-
-    return Array.from(groupMap.values());
+  get readingTaskPayload(): Record<string, unknown> {
+    const readingTask = this.state.taskTabs.find((entry) => entry.type === 'reading');
+    return this.parseTaskJsonObject(readingTask?.json ?? '');
   }
 
-  get passageCacheText(): string {
-    const lines = this.verseRows
-      .map((verse) => {
-        const words = this.buildPassageVerseText(verse);
-        if (!words) return '';
-        const marker = this.getVerseMarker(verse);
-        return marker ? `${words} ${marker}` : words;
-      })
-      .filter(Boolean);
-
-    if (lines.length > 0) return lines.join('\n');
-
-    const fallback = (this.passageUnitEntry?.text_cache ?? '').trim();
-    return fallback ? this.stripArabicDiacritics(fallback) : '';
+  get morphologyTaskPayload(): Record<string, unknown> {
+    const morphologyTask = this.state.taskTabs.find((entry) => entry.type === 'morphology');
+    return this.parseTaskJsonObject(morphologyTask?.json ?? '');
   }
 
-  get readingText(): string {
-    const lines = this.verseList.map((verse) => verse.text);
-    return lines.join(' ');
+  get lexiconMorphologyItems(): Array<Record<string, unknown>> {
+    const payload = this.morphologyTaskPayload;
+    return this.objectArray(payload['lexicon_morphology']);
   }
 
-  get passageUnitLabel(): string {
-    const unit = this.passageUnitEntry;
-    if (!unit) return '';
-    if (unit.start_ref && unit.end_ref) return `${unit.start_ref}-${unit.end_ref}`;
-    return unit.start_ref ?? unit.end_ref ?? unit.unit_type ?? '';
+  get morphologyEvidenceItems(): Array<Record<string, unknown>> {
+    const payload = this.morphologyTaskPayload;
+    return this.objectArray(payload['lexicon_evidence']);
   }
 
-  get mcqQuestions(): QuranLessonMcq[] {
-    const mcqs = this.lesson?.comprehension?.mcqs;
-    if (!mcqs) return [];
-    if (Array.isArray(mcqs)) return mcqs;
-
-    const grouped = mcqs as {
-      text?: QuranLessonMcq[];
-      vocabulary?: QuranLessonMcq[];
-      grammar?: QuranLessonMcq[];
-    };
-
-    return [
-      ...(Array.isArray(grouped.text) ? grouped.text : []),
-      ...(Array.isArray(grouped.vocabulary) ? grouped.vocabulary : []),
-      ...(Array.isArray(grouped.grammar) ? grouped.grammar : []),
-    ];
+  get morphologyItems(): Array<Record<string, unknown>> {
+    const payload = this.morphologyTaskPayload;
+    const fromItems = this.objectArray(payload['items']);
+    if (fromItems.length) return fromItems;
+    return this.lexiconMorphologyItems;
   }
 
-  get reflectiveQuestions(): QuranLessonComprehensionQuestion[] {
-    const questions = this.lesson?.comprehension?.reflective;
-    return Array.isArray(questions) ? questions : [];
+  get nounMorphologyItems(): Array<Record<string, unknown>> {
+    return this.morphologyItems.filter((item) => this.morphologyPos(item) === 'noun');
   }
 
-  get analyticalQuestions(): QuranLessonComprehensionQuestion[] {
-    const questions = this.lesson?.comprehension?.analytical;
-    return Array.isArray(questions) ? questions : [];
+  get verbMorphologyItems(): Array<Record<string, unknown>> {
+    return this.morphologyItems.filter((item) => this.morphologyPos(item) === 'verb');
   }
 
-  get hasComprehensionQuestions(): boolean {
-    return this.reflectiveQuestions.length > 0 || this.analyticalQuestions.length > 0;
+  get nounMorphologyPills(): AppPillItem[] {
+    return this.toMorphologyPills(this.nounMorphologyItems, 'noun');
   }
 
-  getQuestionKey(question: QuranLessonComprehensionQuestion) {
-    return question.question_id ?? question.question ?? null;
+  get verbMorphologyPills(): AppPillItem[] {
+    return this.toMorphologyPills(this.verbMorphologyItems, 'verb');
   }
 
-  // =========================================================================
-  // SEGMENT: Template TrackBy
-  // =========================================================================
-
-  trackByVerseId(_: number, verse: VerseView) {
-    return verse.id;
+  get lessonHeading(): string {
+    const payload = this.getPassageStructurePayload();
+    return this.pickFirst(payload, ['heading', 'title', 'study_heading', 'lesson_heading']) || this.lessonTitle;
   }
 
-  trackByWordKey(_: number, word: VerseWordView) {
-    return word.key;
+  get lessonDetail(): string {
+    const payload = this.getPassageStructurePayload();
+    return this.pickFirst(payload, ['detail', 'description', 'summary', 'overview']) || 'No lesson detail available yet.';
   }
 
-  trackByGroupId(_: number, group: SentenceGroup) {
-    return group.unitId;
+  get episodeIntro(): string {
+    const payload = this.getPassageStructurePayload();
+    return this.pickFirst(payload, ['episode_intro', 'episodeIntro', 'intro']) || 'Not provided';
   }
 
-  trackByMcqId(_: number, mcq: QuranLessonMcq) {
-    return mcq.mcq_id;
+  get sceneDetail(): string {
+    const payload = this.getPassageStructurePayload();
+    return this.pickFirst(payload, ['scene', 'scene_intro', 'scene_detail']) || 'Not provided';
   }
 
-  trackByQuestionKey = (_: number, question: QuranLessonComprehensionQuestion) =>
-    this.getQuestionKey(question) ?? `${question.question ?? ''}-${_}`;
-
-  // =========================================================================
-  // SEGMENT: UI Actions
-  // =========================================================================
-
-  selectVerse(unitId: string) {
-    const id = unitId.trim();
-    this.selectedVerseId = this.selectedVerseId === id ? null : id;
-
-    if (!this.selectedVerseId) {
-      this.selectedSentenceKey = null;
-    }
+  get sceneAesthetic(): string {
+    const payload = this.getPassageStructurePayload();
+    return this.pickFirst(payload, ['scene_aesthetic', 'aesthetic', 'style', 'tone']) || 'Not provided';
   }
 
-  sentenceKey(unitId: string, index: number) {
-    return `${unitId}-${index}`;
-  }
-
-  selectSentence(unitId: string, index: number) {
-    const key = this.sentenceKey(unitId, index);
-    if (this.selectedSentenceKey === key) {
-      this.selectedSentenceKey = null;
-      this.selectedVerseId = null;
-      return;
-    }
-
-    this.selectedSentenceKey = key;
-    this.selectedVerseId = unitId;
-  }
-
-  selectQuestion(question: QuranLessonComprehensionQuestion) {
-    const id = this.getQuestionKey(question);
-    if (!id) return;
-    this.selectedQuestionId = this.selectedQuestionId === id ? null : id;
-  }
-
-  onMcqOptionSelect(mcqId: string, optionIndex: number, optionIsCorrect: boolean) {
-    const current = this.mcqSelections[mcqId];
-    if (current?.selectedIndex === optionIndex && current.isCorrect === optionIsCorrect) return;
-
-    this.mcqSelections[mcqId] = { selectedIndex: optionIndex, isCorrect: optionIsCorrect };
-    if (!optionIsCorrect) this.playErrorTone();
-  }
-
-  async onWordDoubleClick(event: MouseEvent, word: VerseWordView) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (this.openingLexicon) return;
-
-    this.lexiconError = null;
-    this.activeWordKey = word.key;
-
-    const query = (word.lemmaTextClean ?? word.lemmaText ?? word.surface ?? '').trim();
-    if (!query) {
-      this.lexiconError = 'No lemma metadata for this word.';
-      return;
-    }
-
-    this.openingLexicon = true;
+  get sentenceItems(): Array<Record<string, unknown>> {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
+    if (!tab?.json?.trim()) return [];
     try {
-      const token = await this.findTokenForWord(word, query);
-      const root = token?.root?.trim();
-
-      if (!root) {
-        this.lexiconError = 'No lexicon entry found for this word.';
-        return;
-      }
-
-      this.router.navigate(['/arabic/lexicon/roots'], { queryParams: { q: root } });
-    } catch (error: unknown) {
-      this.lexiconError = error instanceof Error ? error.message : 'Unable to open lexicon.';
-    } finally {
-      this.openingLexicon = false;
+      const parsed = JSON.parse(tab.json) as Record<string, unknown>;
+      const items = Array.isArray(parsed['items']) ? parsed['items'] : [];
+      return items.filter((item) => item && typeof item === 'object') as Array<Record<string, unknown>>;
+    } catch {
+      return [];
     }
   }
 
-  // =========================================================================
-  // SEGMENT: Lifecycle
-  // =========================================================================
+  get sentenceTaskJson(): string {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
+    return this.formatJson(tab?.json ?? '');
+  }
 
   ngOnInit() {
+    const stored = this.readStoredFontSize();
+    if (stored != null) {
+      this.fontRem = stored;
+    }
+
     this.subs.add(
       this.route.queryParamMap.subscribe((params) => {
-        this.activeTab = this.parseTab(params.get('tab'));
+        if (!this.facadeReady) return;
+        this.applyRouteParams(params);
+      })
+    );
+
+    void this.facade
+      .init()
+      .then(() => {
+        this.facadeReady = true;
+        this.applyRouteParams(this.route.snapshot.queryParamMap);
         this.syncPageHeaderTabs();
       })
-    );
-
-    const lessonId = Number(this.route.snapshot.paramMap.get('id'));
-    if (!Number.isFinite(lessonId)) return;
-
-    this.subs.add(
-      this.service.getLesson(lessonId).subscribe({
-        next: (lesson: QuranLesson) => {
-          this.lesson = {
-            ...lesson,
-            text: lesson.text ?? { ...this.defaultText },
-          };
-        },
-        error: () => {
-          this.lesson = null;
-        },
+      .catch(() => {
+        // state.statusMessage is set by facade
       })
-    );
+      .finally(() => {
+        this.ready = true;
+      });
   }
 
   ngOnDestroy() {
     this.subs.unsubscribe();
-    this.pageHeaderService.clearTabs();
-    this.audioContext?.close?.();
+    this.pageHeader.clearTabs();
+    this.facade.destroy();
   }
 
-  // =========================================================================
-  // SEGMENT: Data Builders
-  // =========================================================================
-
-  private get verseRows(): AyahUnit[] {
-    return this.lesson?.text?.arabic_full ?? [];
+  onSentenceTabChange(tab: AppTabItem) {
+    const sub = tab.id as SentenceSubTab;
+    if (!this.isSentenceSubTab(sub)) return;
+    this.facade.selectSentenceSubTab(sub, false);
+    this.syncQueryParams({ sub });
   }
 
-  private get passageUnitEntry(): QuranLessonUnit | null {
-    const units = this.lesson?.units ?? [];
-    if (!units.length) return null;
-    return units.find((unit) => unit.unit_type === 'passage') ?? units[0] ?? null;
-  }
-
-  private buildVerseWords(
-    verseId: string,
-    text: string,
-    lemmas: NonNullable<AyahUnit['lemmas']>,
-    surah?: number,
-    ayah?: number
-  ): VerseWordView[] {
-    const posMap = this.buildTokenPosMap();
-    const lemmasByToken = this.indexLemmasByToken(lemmas);
-    const words = this.tokenizeWords(text);
-
-    return words.map((rawWord, index) => {
-      const tokenIndex = index + 1;
-      const lemma = lemmasByToken.get(tokenIndex);
-      const fallbackWordLocation =
-        surah && ayah ? `${surah}:${ayah}:${tokenIndex}` : undefined;
-      const posKey = lemma?.ar_u_token ? `u:${lemma.ar_u_token}` : null;
-      const pos = posKey ? posMap.get(posKey) ?? null : null;
-
-      const simpleWord = this.stripArabicDiacritics((lemma?.word_simple ?? '').trim());
-      const plainWord = this.stripArabicDiacritics(rawWord);
-      const surface = simpleWord || plainWord || rawWord;
-
-      return {
-        key: `${verseId}-${tokenIndex}`,
-        surface,
-        tokenIndex,
-        pos,
-        wordLocation: lemma?.word_location ?? fallbackWordLocation,
-        lemmaId: lemma?.lemma_id,
-        lemmaText: lemma?.lemma_text,
-        lemmaTextClean: lemma?.lemma_text_clean,
-        arUToken: lemma?.ar_u_token ?? null,
-      };
-    });
-  }
-
-  private buildTokenPosMap(): Map<string, string> {
-    const map = new Map<string, string>();
-    const tokens = this.lesson?.analysis?.tokens ?? [];
-    for (const token of tokens) {
-      if (!token?.u_token_id || !token.pos) continue;
-      map.set(`u:${token.u_token_id}`, token.pos);
+  selectReadingWord(token: ReadingWordToken) {
+    const location = token.location.trim();
+    if (!location) return;
+    if (this.selectedReadingWord?.location === location) {
+      this.selectedReadingWord = null;
+      return;
     }
-    return map;
+    this.selectedReadingWord = {
+      text: token.text,
+      location,
+      surah: token.surah,
+      ayah: token.ayah,
+      tokenIndex: token.tokenIndex,
+    };
   }
 
-  private buildPassageVerseText(verse: AyahUnit): string {
-    const lemmas = Array.isArray(verse.lemmas) ? verse.lemmas : [];
-    const simpleWords = [...lemmas]
-      .filter((lemma) => Number.isFinite(lemma.token_index) && lemma.token_index > 0)
-      .sort((a, b) => a.token_index - b.token_index)
-      .map((lemma) => this.stripArabicDiacritics((lemma.word_simple ?? '').trim()))
-      .filter(Boolean);
-
-    if (simpleWords.length > 0) return simpleWords.join(' ');
-
-    const fallback = (
-      verse.arabic_non_diacritics ??
-      verse.arabic_diacritics ??
-      verse.arabic ??
-      ''
-    ).trim();
-
-    return fallback ? this.stripArabicDiacritics(fallback) : '';
+  onReadingWordKeydown(event: KeyboardEvent, token: ReadingWordToken) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.selectReadingWord(token);
   }
 
-  private indexLemmasByToken(lemmas: NonNullable<AyahUnit['lemmas']>): Map<number, LemmaLocation> {
-    const byToken = new Map<number, LemmaLocation>();
-    for (const lemma of lemmas) {
-      const tokenIndex = Number(lemma.token_index);
-      if (!Number.isFinite(tokenIndex) || tokenIndex <= 0) continue;
-      if (!byToken.has(tokenIndex)) byToken.set(tokenIndex, lemma);
+  isReadingWordSelected(location: string): boolean {
+    return this.selectedReadingWord?.location === location;
+  }
+
+  clearReadingWordSelection() {
+    this.selectedReadingWord = null;
+  }
+
+  increaseFont() {
+    this.fontRem = Math.min(this.fontRem + 0.1, this.maxFontRem);
+    this.persistFontSize();
+  }
+
+  decreaseFont() {
+    this.fontRem = Math.max(this.fontRem - 0.1, this.minFontRem);
+    this.persistFontSize();
+  }
+
+  resetFont() {
+    this.fontRem = 1.35;
+    this.persistFontSize();
+  }
+
+  valueOf(item: Record<string, unknown>, keys: string[]): string {
+    for (const key of keys) {
+      const value = item[key];
+      if (value == null) continue;
+      if (typeof value === 'string' && value.trim()) return value.trim();
+      if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+      if (typeof value === 'object') {
+        try {
+          return JSON.stringify(value);
+        } catch {
+          return '[object]';
+        }
+      }
     }
-    return byToken;
+    return '—';
   }
 
-  // =========================================================================
-  // SEGMENT: Lexicon Lookup
-  // =========================================================================
-
-  private async findTokenForWord(word: VerseWordView, query: string): Promise<TokenRow | null> {
-    const response = await this.tokensService.list({
-      q: query,
-      page: 1,
-      pageSize: 50,
-    });
-
-    const rows = response?.results ?? [];
-    if (!rows.length) return null;
-
-    if (word.arUToken) {
-      const byTokenId = rows.find((row) => row.id === word.arUToken);
-      if (byTokenId) return byTokenId;
+  formatJson(raw: string): string {
+    const trimmed = raw.trim();
+    if (!trimmed) return 'No task data available.';
+    try {
+      return JSON.stringify(JSON.parse(trimmed), null, 2);
+    } catch {
+      return trimmed;
     }
-
-    const targetLemmaNorm = this.normalizeWordKey(word.lemmaTextClean ?? query);
-    if (targetLemmaNorm) {
-      const byLemmaNorm = rows.find(
-        (row) => this.normalizeWordKey(row.lemma_norm) === targetLemmaNorm
-      );
-      if (byLemmaNorm) return byLemmaNorm;
-    }
-
-    const targetLemmaAr = this.normalizeWordKey(word.lemmaText ?? word.surface);
-    if (targetLemmaAr) {
-      const byLemmaAr = rows.find(
-        (row) => this.normalizeWordKey(row.lemma_ar) === targetLemmaAr
-      );
-      if (byLemmaAr) return byLemmaAr;
-    }
-
-    return rows.find((row) => !!row.root) ?? rows[0];
   }
 
-  // =========================================================================
-  // SEGMENT: Text Utilities
-  // =========================================================================
-
-  private getVerseDisplayText(verse: AyahUnit): string {
-    return (verse.arabic_diacritics ?? verse.arabic ?? verse.arabic_non_diacritics ?? '').trim();
+  toArabicIndicDigits(value: number): string {
+    return String(Math.max(0, Math.trunc(value)))
+      .split('')
+      .map((ch) => {
+        const code = ch.charCodeAt(0) - 48;
+        if (code < 0 || code > 9) return ch;
+        return ARABIC_INDIC_DIGITS[code];
+      })
+      .join('');
   }
 
-  private getVerseMarker(verse: AyahUnit): string {
-    return (
-      verse.verse_mark ??
-      verse.verse_full ??
-      (verse.ayah != null ? `﴿${verse.ayah}﴾` : '')
-    ).trim();
+  morphologyRef(item: Record<string, unknown>): string {
+    const location = this.textFromUnknown(item['word_location']);
+    if (location) return location;
+
+    const surah = this.numberFromUnknown(item['surah']);
+    const ayah = this.numberFromUnknown(item['ayah']);
+    const token = this.numberFromUnknown(item['token_index']);
+    if (surah != null && ayah != null && token != null) return `${surah}:${ayah}:${token}`;
+    if (surah != null && ayah != null) return `${surah}:${ayah}`;
+    return '—';
+  }
+
+  morphologyWord(item: Record<string, unknown>): string {
+    const raw = this.firstText(item, ['surface_ar', 'word', 'text']);
+    if (!raw) return '—';
+    return this.normalizeMorphologyDisplayText(raw);
+  }
+
+  morphologyRoot(item: Record<string, unknown>): string {
+    const raw = this.firstText(item, ['root_norm']);
+    if (!raw) return '';
+    return this.normalizeMorphologyDisplayText(raw);
+  }
+
+  private applyRouteParams(params: ParamMap) {
+    let task: TaskType | null = null;
+
+    const requestedTask = params.get('task');
+    if (requestedTask && this.isTaskType(requestedTask)) {
+      task = requestedTask;
+    } else {
+      const legacyTab = params.get('tab');
+      if (legacyTab && LEGACY_STUDY_TAB_MAP[legacyTab]) {
+        task = LEGACY_STUDY_TAB_MAP[legacyTab];
+      }
+    }
+
+    if (task) {
+      this.studyActiveTaskTab = task;
+      this.facade.selectTaskTab(task, false);
+    } else {
+      this.studyActiveTaskTab = 'lesson';
+    }
+
+    if (this.studyActiveTaskTab !== 'reading') {
+      this.clearReadingWordSelection();
+    }
+
+    const sub = params.get('sub');
+    if (sub && this.isSentenceSubTab(sub)) {
+      this.facade.selectSentenceSubTab(sub, false);
+    }
+
+    this.syncPageHeaderTabs();
   }
 
   private syncPageHeaderTabs() {
     const lessonId = this.route.snapshot.paramMap.get('id');
     if (!lessonId) {
-      this.pageHeaderService.clearTabs();
+      this.pageHeader.clearTabs();
       return;
     }
 
     const baseCommands = ['/arabic/quran/lessons', lessonId, 'study'];
+    const tabs = STUDY_TASK_TAB_ORDER.map((id) => {
+      if (id === 'lesson') {
+        return {
+          id,
+          label: 'Lesson',
+          commands: baseCommands,
+          queryParams: { task: null, sub: null },
+        };
+      }
+
+      return {
+        id,
+        label: this.state.taskTabs.find((tab) => tab.type === id)?.label ?? this.toTitle(id),
+        commands: baseCommands,
+        queryParams: { task: id, sub: id === 'sentence_structure' ? this.state.sentenceSubTab : null },
+      };
+    });
+
     const config: PageHeaderTabsConfig = {
-      activeTabId: this.toHeaderTab(this.activeTab),
-      tabs: [
-        {
-          id: 'reading',
-          iconUrl: '/assets/images/app-icons/study-reading-tab.png',
-          commands: baseCommands,
-          queryParams: { tab: 'reading' },
-        },
-        {
-          id: 'memory',
-          iconUrl: '/assets/images/app-icons/study-vocab-tab.png',
-          commands: baseCommands,
-          queryParams: { tab: 'memory' },
-        },
-        {
-          id: 'mcq',
-          iconUrl: '/assets/images/app-icons/study-mcqs-tab.png',
-          commands: baseCommands,
-          queryParams: { tab: 'mcq' },
-        },
-        {
-          id: 'passage',
-          iconUrl: '/assets/images/app-icons/study-reflection-tab.png',
-          commands: baseCommands,
-          queryParams: { tab: 'passage' },
-        },
-      ],
+      activeTabId: this.studyActiveTaskTab,
+      tabs,
       action: {
         label: 'Edit Lesson',
         commands: ['/arabic/quran/lessons', lessonId, 'edit'],
       },
     };
-    this.pageHeaderService.setTabs(config);
+
+    this.pageHeader.setTabs(config);
   }
 
-  private toHeaderTab(tab: StudyTab): StudyHeaderTab {
-    switch (tab) {
-      case 'sentences':
-        return 'memory';
-      case 'mcq':
-        return 'mcq';
-      case 'passage':
-        return 'passage';
-      default:
-        return 'reading';
+  private syncQueryParams(params: Record<string, string | null>) {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: params,
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private isTaskType(value: string): value is TaskType {
+    return (
+      value === 'reading' ||
+      value === 'sentence_structure' ||
+      value === 'morphology' ||
+      value === 'grammar_concepts' ||
+      value === 'expressions' ||
+      value === 'comprehension' ||
+      value === 'passage_structure'
+    );
+  }
+
+  private isSentenceSubTab(value: string): value is SentenceSubTab {
+    return value === 'verses' || value === 'items' || value === 'json';
+  }
+
+  private getPassageStructurePayload(): Record<string, unknown> {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'passage_structure');
+    if (!tab?.json?.trim()) return {};
+    try {
+      const parsed = JSON.parse(tab.json);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+      return {};
+    } catch {
+      return {};
     }
   }
 
-  private parseTab(tab: string | null): StudyTab {
-    switch (tab) {
-      case 'reading':
-      case 'study':
-        return 'study';
-      case 'memory':
-      case 'sentences':
-        return 'sentences';
-      case 'mcq':
-        return 'mcq';
-      case 'passage':
-        return 'passage';
-      default:
-        return 'study';
+  private parseTaskJsonObject(raw: string): Record<string, unknown> {
+    const trimmed = raw.trim();
+    if (!trimmed) return {};
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+      return {};
+    } catch {
+      return {};
     }
   }
 
-  private tokenizeWords(text: string): string[] {
+  private stripArabicDiacritics(value: string): string {
+    return value.replace(ARABIC_DIACRITICS_RE, '').trim();
+  }
+
+  private splitWords(text: string): string[] {
     return text
       .split(/\s+/)
       .map((word) => word.trim())
       .filter(Boolean);
   }
 
-  private normalizeWordKey(text?: string | null): string {
-    if (!text) return '';
-    return this.stripArabicDiacritics(text).replace(/\s+/g, '').toLowerCase();
+  private asFiniteNumber(value: unknown): number | null {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    return parsed;
   }
 
-  private stripArabicDiacritics(text: string): string {
-    return text.normalize('NFKC').replace(ARABIC_DIACRITICS_RE, '').trim();
+  private get storageKey(): string {
+    const lessonId = this.state.lessonId ?? this.route.snapshot.paramMap.get('id') ?? 'global';
+    return `km:quran:study-font:${lessonId}`;
   }
 
-  // =========================================================================
-  // SEGMENT: Audio Feedback
-  // =========================================================================
+  private readStoredFontSize(): number | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem(this.storageKey);
+      if (!raw) return null;
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed)) return null;
+      if (parsed < this.minFontRem || parsed > this.maxFontRem) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
 
-  private playErrorTone() {
-    const withAudioCtor = window as Window & {
-      AudioContext?: typeof AudioContext;
-      webkitAudioContext?: typeof AudioContext;
-    };
+  private persistFontSize() {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(this.storageKey, String(this.fontRem));
+    } catch {
+      // localStorage may be unavailable in restricted environments.
+    }
+  }
 
-    const AudioCtor = withAudioCtor.AudioContext ?? withAudioCtor.webkitAudioContext;
-    if (!AudioCtor) return;
+  private getReadingSourceAyahs() {
+    const payload = this.readingTaskPayload;
+    const from = this.asFiniteNumber(payload['ayah_from']);
+    const to = this.asFiniteNumber(payload['ayah_to']);
+    if (from == null || to == null) {
+      return this.selectedAyahs;
+    }
+    const min = Math.min(from, to);
+    const max = Math.max(from, to);
+    return this.selectedAyahs.filter((ayah) => ayah.ayah >= min && ayah.ayah <= max);
+  }
 
-    if (!this.audioContext) this.audioContext = new AudioCtor();
-    if (this.audioContext.state === 'suspended') this.audioContext.resume();
+  private resolveReadingAyahText(ayah: QuranAyah): string {
+    const original = (ayah.text_uthmani || ayah.text || '').trim();
+    const strippedOriginal = this.stripArabicDiacritics(original);
+    const simple = (ayah.text_simple || ayah.text_imlaei_simple || '').trim().replace(/\s+/g, ' ');
+    const simpleWords = this.splitWords(simple).length;
+    const originalWords = this.splitWords(strippedOriginal).length;
 
-    const oscillator = this.audioContext.createOscillator();
-    const gain = this.audioContext.createGain();
+    if (simple && (originalWords <= 1 || simpleWords >= Math.max(2, Math.ceil(originalWords * 0.6)))) {
+      return simple;
+    }
 
-    oscillator.type = 'sine';
-    oscillator.frequency.value = 320;
-    gain.gain.value = 0.2;
+    return strippedOriginal || simple || original;
+  }
 
-    oscillator.connect(gain);
-    gain.connect(this.audioContext.destination);
+  private morphologyPos(item: Record<string, unknown>): 'noun' | 'verb' | null {
+    const posRaw = this.firstText(item, ['pos', 'pos2']).toLowerCase();
+    if (posRaw === 'noun' || posRaw === 'adj') return 'noun';
+    if (posRaw === 'verb') return 'verb';
+    return null;
+  }
 
-    oscillator.start();
-    gain.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.2);
-    oscillator.stop(this.audioContext.currentTime + 0.25);
+  private firstText(item: Record<string, unknown>, keys: string[]): string {
+    for (const key of keys) {
+      const value = this.textFromUnknown(item[key]);
+      if (value) return value;
+    }
+    return '';
+  }
+
+  private textFromUnknown(value: unknown): string {
+    if (typeof value === 'string') return value.trim();
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    return '';
+  }
+
+  private numberFromUnknown(value: unknown): number | null {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    return Math.trunc(numeric);
+  }
+
+  private toMorphologyPills(items: Array<Record<string, unknown>>, prefix: 'noun' | 'verb'): AppPillItem[] {
+    return items.map((item, index) => {
+      const ref = this.morphologyRef(item);
+      const root = this.morphologyRoot(item);
+      return {
+        id: ref === '—' ? `${prefix}-${index}` : `${prefix}-${ref}-${index}`,
+        primary: this.morphologyWord(item),
+        secondary: root || undefined,
+      };
+    });
+  }
+
+  private normalizeMorphologyDisplayText(value: string): string {
+    const stripped = this.stripArabicDiacritics(value);
+    return stripped || value.trim();
+  }
+
+  private objectArray(value: unknown): Array<Record<string, unknown>> {
+    if (!Array.isArray(value)) return [];
+    return value.filter((entry) => entry && typeof entry === 'object' && !Array.isArray(entry)) as Array<Record<string, unknown>>;
+  }
+
+  private pickFirst(payload: Record<string, unknown>, keys: string[]): string {
+    for (const key of keys) {
+      const value = payload[key];
+      if (typeof value === 'string' && value.trim()) return value.trim();
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const nested = value as Record<string, unknown>;
+        const text = ['text', 'value', 'label', 'title', 'description']
+          .map((nestedKey) => nested[nestedKey])
+          .find((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
+        if (text) return text.trim();
+      }
+    }
+    return '';
+  }
+
+  private toTitle(value: string): string {
+    return value
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
   }
 }

@@ -1,0 +1,146 @@
+<aside class="quran-word-inspector" [class.quran-word-inspector--empty]="!hasSelection">
+  <header class="inspector-header">
+    <div class="inspector-copy">
+      <p class="inspector-kicker">Word Insight</p>
+      <h3 class="inspector-word text-arabic" dir="rtl">{{ activeWord }}</h3>
+      <p class="inspector-meta">
+        <span>{{ activeReferenceLabel }}</span>
+        <span *ngIf="contextLabel">{{ contextLabel }}</span>
+      </p>
+    </div>
+    <button
+      *ngIf="hasSelection"
+      type="button"
+      class="inspector-close"
+      aria-label="Close word insights"
+      (click)="requestClose()"
+    >
+      ×
+    </button>
+  </header>
+
+  <ng-container *ngIf="hasSelection; else emptyStateTpl">
+    <nav class="inspector-tabs" role="tablist" aria-label="Word inspector tabs">
+      <button
+        type="button"
+        role="tab"
+        class="tab-btn"
+        [class.active]="activeTab === 'lexicon'"
+        [attr.aria-selected]="activeTab === 'lexicon'"
+        (click)="setActiveTab('lexicon')"
+      >
+        Lexicon
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab-btn"
+        [class.active]="activeTab === 'morphology'"
+        [attr.aria-selected]="activeTab === 'morphology'"
+        (click)="setActiveTab('morphology')"
+      >
+        Morphology
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab-btn"
+        [class.active]="activeTab === 'evidence'"
+        [attr.aria-selected]="activeTab === 'evidence'"
+        (click)="setActiveTab('evidence')"
+      >
+        Evidence ({{ evidenceCount }})
+      </button>
+    </nav>
+
+    <div class="inspector-body" [ngSwitch]="activeTab">
+      <section *ngSwitchCase="'lexicon'" class="tab-section">
+        <div class="loading-state" *ngIf="remoteLoading && resolvedLexiconId">
+          Loading {{ resolvedLexiconId }} details...
+        </div>
+        <div class="error-state" *ngIf="remoteError">{{ remoteError }}</div>
+
+        <ng-container *ngIf="hasLexiconData; else noLexiconTpl">
+          <div class="field-grid">
+            <div class="field-row" *ngFor="let field of lexiconFields; trackBy: trackByField">
+              <span class="field-label">{{ field.label }}</span>
+              <span class="field-value" [class.field-value--arabic]="field.arabic" [attr.dir]="field.arabic ? 'rtl' : null">
+                {{ field.value }}
+              </span>
+            </div>
+          </div>
+
+          <div class="terms-wrap" *ngIf="relatedTerms.length">
+            <p class="terms-label">Related</p>
+            <div class="terms-list">
+              <span class="term-pill" *ngFor="let term of relatedTerms; trackBy: trackByTerm">{{ term }}</span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #noLexiconTpl>
+          <p class="empty-inline">No lexicon details available for this word yet.</p>
+        </ng-template>
+      </section>
+
+      <section *ngSwitchCase="'morphology'" class="tab-section">
+        <div class="loading-state" *ngIf="remoteLoading && resolvedLexiconId">
+          Fetching morphology for {{ resolvedLexiconId }}...
+        </div>
+        <div class="error-state" *ngIf="remoteError">{{ remoteError }}</div>
+
+        <ng-container *ngIf="hasMorphologyData; else noMorphTpl">
+          <div class="field-grid">
+            <div class="field-row" *ngFor="let field of morphologyFields; trackBy: trackByField">
+              <span class="field-label">{{ field.label }}</span>
+              <span class="field-value" [class.field-value--arabic]="field.arabic" [attr.dir]="field.arabic ? 'rtl' : null">
+                {{ field.value }}
+              </span>
+            </div>
+          </div>
+
+          <div class="feature-wrap" *ngIf="morphologyFeatures.length">
+            <p class="terms-label">Features</p>
+            <div class="feature-list">
+              <span class="feature-pill" *ngFor="let feature of morphologyFeatures; trackBy: trackByFeature">
+                {{ feature.key }}: {{ feature.value }}
+              </span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #noMorphTpl>
+          <p class="empty-inline">No morphology details available for this word yet.</p>
+        </ng-template>
+      </section>
+
+      <section *ngSwitchCase="'evidence'" class="tab-section">
+        <div class="loading-state" *ngIf="remoteLoading && resolvedLexiconId">
+          Fetching all evidence for {{ resolvedLexiconId }}...
+        </div>
+        <div class="error-state" *ngIf="remoteError">{{ remoteError }}</div>
+
+        <ng-container *ngIf="evidenceRecords.length; else noEvidenceTpl">
+          <div class="evidence-list">
+            <article class="evidence-card" *ngFor="let evidence of evidenceRecords; trackBy: trackByEvidence">
+              <div class="evidence-head">
+                <span class="role-chip">{{ evidenceRole(evidence) }}</span>
+                <span class="evidence-source">{{ evidenceSource(evidence) }}</span>
+              </div>
+              <h4>{{ evidenceHeading(evidence) }}</h4>
+              <p *ngIf="evidenceNote(evidence)">{{ evidenceNote(evidence) }}</p>
+            </article>
+          </div>
+        </ng-container>
+        <ng-template #noEvidenceTpl>
+          <p class="empty-inline">No evidence is linked to this word yet.</p>
+        </ng-template>
+      </section>
+    </div>
+  </ng-container>
+
+  <ng-template #emptyStateTpl>
+    <div class="empty-state">
+      <h4>Select a word</h4>
+      <p>Click any Qur'an word to open Lexicon, Morphology, and Evidence details.</p>
+    </div>
+  </ng-template>
+</aside>

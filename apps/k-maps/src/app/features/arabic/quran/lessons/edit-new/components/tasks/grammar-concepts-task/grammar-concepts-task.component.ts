@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DoCheck, inject } from '@angular/core';
+import { Component, DoCheck, Input, inject } from '@angular/core';
 import { AppTabsComponent, type AppTabItem } from '../../../../../../../../shared/components';
 import { QuranLessonTaskJsonComponent } from '../task-json/task-json.component';
 import { QuranLessonEditorFacade } from '../../../facade/editor.facade';
@@ -15,6 +15,7 @@ import { EditorState, TaskTab } from '../../../models/editor.types';
 export class GrammarConceptsTaskComponent implements DoCheck {
   private readonly facade = inject(QuranLessonEditorFacade);
   private autoSeeded = false;
+  @Input() readOnly = false;
   readonly tabs: AppTabItem[] = [
     { id: 'items', label: 'Concept Items' },
     { id: 'json', label: 'Task JSON' },
@@ -59,6 +60,7 @@ export class GrammarConceptsTaskComponent implements DoCheck {
   }
 
   ngDoCheck() {
+    if (this.readOnly) return;
     this.ensureSeededFromSentenceStructure();
   }
 
@@ -67,12 +69,14 @@ export class GrammarConceptsTaskComponent implements DoCheck {
   }
 
   loadFromSentenceStructure() {
+    if (this.readOnly) return;
     const items = this.mapDerivedToItems(this.derivedConcepts);
     this.writeItems(items);
     this.activeTabId = 'json';
   }
 
   removeItem(index: number) {
+    if (this.readOnly) return;
     const items = [...this.displayItems];
     if (index < 0 || index >= items.length) return;
     items.splice(index, 1);

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DoCheck, inject } from '@angular/core';
+import { Component, DoCheck, Input, inject } from '@angular/core';
 import { QuranLessonEditorFacade } from '../../../facade/editor.facade';
 import { TaskTab } from '../../../models/editor.types';
 import { QuranLessonTaskJsonComponent } from '../task-json/task-json.component';
@@ -13,8 +13,10 @@ import { QuranLessonTaskJsonComponent } from '../task-json/task-json.component';
 export class ExpressionsTaskComponent implements DoCheck {
   private readonly facade = inject(QuranLessonEditorFacade);
   private seededTab: TaskTab | null = null;
+  @Input() readOnly = false;
 
   ngDoCheck() {
+    if (this.readOnly) return;
     this.ensureDefaultExpressionsJson();
   }
 

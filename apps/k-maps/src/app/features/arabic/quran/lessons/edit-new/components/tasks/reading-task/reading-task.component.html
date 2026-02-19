@@ -1,12 +1,17 @@
 <p class="note-muted">Reading is locked to the Unit verse range. No edits are allowed.</p>
-<div class="unit-preview">
+<div class="action-row">
+  <button type="button" class="btn btn-ghost btn-sm" (click)="decreaseFont()">A-</button>
+  <button type="button" class="btn btn-ghost btn-sm" (click)="resetFont()">Reset</button>
+  <button type="button" class="btn btn-ghost btn-sm" (click)="increaseFont()">A+</button>
+</div>
+<div class="unit-preview" [style.--app-ar-font-size]="arabicFontSize">
   <article class="unit-ayah" *ngFor="let ayah of selectedAyahs">
     <span class="unit-ayah-index">Ayah {{ ayah.ayah }}</span>
     <p class="unit-ayah-text">{{ ayah.text }}</p>
   </article>
 </div>
 <div class="text-muted" *ngIf="!selectedAyahs.length">No passage loaded.</div>
-<div class="action-row">
+<div class="action-row" *ngIf="!readOnly">
   <button
     type="button"
     class="btn btn-primary"

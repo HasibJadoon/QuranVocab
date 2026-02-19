@@ -1,1 +1,226 @@
-/* Page styling moved to global stylesheet: src/scss/quran-lesson-study.scss */
+:host {
+  display: block;
+}
+
+.quran-study-shell .hero-actions {
+  align-items: center;
+}
+
+.quran-study-shell .panel-body {
+  padding-top: 1rem;
+}
+
+.quran-study-shell .task-editor {
+  margin-top: 0.2rem;
+}
+
+.quran-study-shell .reading-layout {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: minmax(0, 1.65fr) minmax(20rem, 1fr);
+  align-items: start;
+}
+
+.quran-study-shell .reading-summary-card {
+  border: 1px solid var(--paper-line);
+  border-radius: 14px;
+  background: rgba(20, 26, 34, 0.88);
+  padding: 0.85rem 1rem;
+}
+
+.quran-study-shell .reading-kicker {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-ink-soft);
+  font-family: var(--ui-font);
+}
+
+.quran-study-shell .reading-text-primary {
+  margin: 0;
+  text-align: justify;
+  text-align-last: right;
+  direction: rtl;
+  font-size: var(--app-ar-font-size, 1.35rem);
+  line-height: 1.95;
+  color: var(--paper-ink);
+}
+
+.quran-study-shell .reading-text-primary .quran-word {
+  border-radius: 0;
+  padding: 0;
+  border-bottom: 0;
+  transition: color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.quran-study-shell .reading-text-primary .quran-word--interactive:hover {
+  background: transparent;
+  box-shadow: none;
+  color: #7fd7ff;
+}
+
+.quran-study-shell .reading-text-primary .quran-word--interactive:focus-visible {
+  outline: none;
+  color: #7fd7ff;
+}
+
+.quran-study-shell .reading-text-primary .quran-word--active {
+  color: #9cf8df;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: rgba(125, 217, 189, 0.7);
+}
+
+.quran-study-shell .reading-text-primary .reading-ayah-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.95em;
+  block-size: 1.95em;
+  margin-inline: 0.28rem 0.5rem;
+  border-radius: 999px;
+  border: 1.5px solid rgba(46, 210, 234, 0.88);
+  box-shadow: inset 0 0 0 1px rgba(46, 210, 234, 0.2);
+  background: radial-gradient(circle at 32% 24%, rgba(46, 210, 234, 0.18), rgba(46, 210, 234, 0.03) 62%, transparent 72%);
+  color: #35d7f2;
+  font-size: clamp(0.9rem, 0.56em, 1.25rem);
+  font-family: var(--ui-font);
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.quran-study-shell .reading-text-primary .reading-ayah-mark::before {
+  content: '';
+  position: absolute;
+  inset: -0.16em;
+  border-radius: 999px;
+  border: 1px solid rgba(46, 210, 234, 0.42);
+  pointer-events: none;
+}
+
+.quran-study-shell .reading-text-primary .reading-ayah-mark::after {
+  content: '••';
+  position: absolute;
+  top: -0.62em;
+  left: 50%;
+  transform: translateX(-50%);
+  letter-spacing: 0.1em;
+  font-size: 0.34em;
+  line-height: 1;
+  color: rgba(46, 210, 234, 0.95);
+  pointer-events: none;
+}
+
+.quran-study-shell .morphology-layout {
+  display: grid;
+}
+
+.quran-study-shell .morphology-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.quran-study-shell .morph-bucket {
+  border: 1px solid var(--paper-line);
+  border-radius: 14px;
+  background: rgba(20, 26, 34, 0.88);
+  padding: 0.85rem;
+  text-align: right;
+}
+
+.quran-study-shell .morph-bucket--noun {
+  box-shadow: inset 0 0 0 1px rgba(80, 180, 255, 0.12);
+}
+
+.quran-study-shell .morph-bucket--verb {
+  box-shadow: inset 0 0 0 1px rgba(0, 210, 170, 0.12);
+}
+
+.quran-study-shell .morph-bucket-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.65rem;
+}
+
+.quran-study-shell .morph-bucket-head h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.quran-study-shell .morph-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9rem;
+  height: 1.9rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--paper-line);
+  background: rgba(14, 20, 29, 0.92);
+  color: var(--paper-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.quran-study-shell .morph-bucket--noun app-pills {
+  --app-pill-accent: #68e6ff;
+  --app-pill-border: rgba(104, 230, 255, 0.68);
+  --app-pill-glow-rgb: 104 230 255;
+  --app-pill-bg: linear-gradient(180deg, rgba(45, 111, 148, 0.7), rgba(28, 73, 101, 0.84));
+  --app-pill-bg-hover: linear-gradient(180deg, rgba(58, 132, 174, 0.82), rgba(31, 84, 117, 0.9));
+  --app-pill-primary-size: clamp(1.05rem, calc(var(--app-ar-font-size, 1.35rem) * 0.72), 3.35rem);
+  --app-pill-secondary-size: clamp(0.98rem, calc(var(--app-ar-font-size, 1.35rem) * 0.64), 3rem);
+  --app-pill-min-width: 14rem;
+}
+
+.quran-study-shell .morph-bucket--verb app-pills {
+  --app-pill-accent: #5ff7d6;
+  --app-pill-border: rgba(95, 247, 214, 0.66);
+  --app-pill-glow-rgb: 95 247 214;
+  --app-pill-bg: linear-gradient(180deg, rgba(38, 109, 123, 0.68), rgba(22, 71, 84, 0.84));
+  --app-pill-bg-hover: linear-gradient(180deg, rgba(48, 132, 151, 0.8), rgba(26, 88, 102, 0.9));
+  --app-pill-primary-size: clamp(1.05rem, calc(var(--app-ar-font-size, 1.35rem) * 0.72), 3.35rem);
+  --app-pill-secondary-size: clamp(0.98rem, calc(var(--app-ar-font-size, 1.35rem) * 0.64), 3rem);
+  --app-pill-min-width: 14rem;
+}
+
+.quran-study-shell .reading-word-inspector {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .quran-study-shell .reading-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quran-study-shell .sentence-tabs .nav {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.quran-study-shell .study-json {
+  margin: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--paper-line);
+  border-radius: 12px;
+  background: rgba(12, 18, 26, 0.82);
+  color: var(--paper-ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 28rem;
+  overflow: auto;
+}

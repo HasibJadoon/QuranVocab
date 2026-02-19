@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   AppJsonEditorModalComponent,
@@ -19,6 +19,7 @@ type ModalKind = 'items' | 'evidence' | 'links';
 })
 export class MorphologyTaskComponent {
   private readonly facade = inject(QuranLessonEditorFacade);
+  @Input() readOnly = false;
   readonly tabs: AppTabItem[] = [
     { id: 'items', label: 'Current' },
     { id: 'evidence', label: 'Lexicon Evidence' },
@@ -85,14 +86,17 @@ export class MorphologyTaskComponent {
   }
 
   loadFromVerses() {
+    if (this.readOnly) return;
     this.facade.loadMorphologyFromSelectedAyahs({ merge: true });
   }
 
   saveTask() {
+    if (this.readOnly) return;
     this.facade.saveTask('morphology');
   }
 
   commitLexicon() {
+    if (this.readOnly) return;
     const tab = this.tab;
     if (!tab) return;
     this.facade.commitMorphologyTask(tab);
@@ -200,6 +204,7 @@ export class MorphologyTaskComponent {
   }
 
   updateItem(index: number, key: string, value: string) {
+    if (this.readOnly) return;
     const items = this.items;
     if (index < 0 || index >= items.length) return;
     const item = items[index];
@@ -242,6 +247,7 @@ export class MorphologyTaskComponent {
   }
 
   removeItem(index: number) {
+    if (this.readOnly) return;
     const items = this.items;
     if (index < 0 || index >= items.length) return;
     items.splice(index, 1);
@@ -249,6 +255,7 @@ export class MorphologyTaskComponent {
   }
 
   removeEvidence(index: number) {
+    if (this.readOnly) return;
     const items = this.evidenceItems;
     if (index < 0 || index >= items.length) return;
     items.splice(index, 1);
@@ -256,6 +263,7 @@ export class MorphologyTaskComponent {
   }
 
   removeLexiconMorphology(index: number) {
+    if (this.readOnly) return;
     const items = this.lexiconMorphologyItems;
     if (index < 0 || index >= items.length) return;
     items.splice(index, 1);
@@ -263,6 +271,7 @@ export class MorphologyTaskComponent {
   }
 
   addEvidenceAndMorphologyFromItem(event: Event, index: number) {
+    if (this.readOnly) return;
     event.preventDefault();
     event.stopPropagation();
 
@@ -272,6 +281,7 @@ export class MorphologyTaskComponent {
   }
 
   openEditModal(event: Event, item: Record<string, unknown>, index: number, kind: ModalKind = 'items') {
+    if (this.readOnly) return;
     event.preventDefault();
     event.stopPropagation();
     const items = this.itemsByKind(kind);
@@ -283,6 +293,7 @@ export class MorphologyTaskComponent {
   }
 
   openCreateModal(event: Event, kind: ModalKind = 'items') {
+    if (this.readOnly) return;
     event.preventDefault();
     event.stopPropagation();
     this.editModalKind = kind;
@@ -310,6 +321,7 @@ export class MorphologyTaskComponent {
   }
 
   onModalSave(draft: string) {
+    if (this.readOnly) return;
     this.editModalJson = draft;
     if (this.rowEvidenceMorphologyModal) {
       this.submitRowEvidenceMorphologyModal({ close: false, commit: true });
@@ -319,6 +331,7 @@ export class MorphologyTaskComponent {
   }
 
   submitEditModal(options: { close?: boolean } = {}) {
+    if (this.readOnly) return;
     if (this.editModalIndex == null) return;
     const record = this.parseModalDraft(this.editModalJson);
     if (!record) return;
@@ -341,6 +354,7 @@ export class MorphologyTaskComponent {
   }
 
   onModalPrevious(draft: string) {
+    if (this.readOnly) return;
     if (this.rowEvidenceMorphologyModal) {
       this.navigateRowEvidenceMorphologyModal(-1, draft);
       return;
@@ -349,6 +363,7 @@ export class MorphologyTaskComponent {
   }
 
   onModalNext(draft: string) {
+    if (this.readOnly) return;
     if (this.rowEvidenceMorphologyModal) {
       this.navigateRowEvidenceMorphologyModal(1, draft);
       return;
