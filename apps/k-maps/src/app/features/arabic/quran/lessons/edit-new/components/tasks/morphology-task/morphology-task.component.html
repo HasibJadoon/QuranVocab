@@ -155,7 +155,7 @@
             <tbody>
               <tr *ngFor="let item of evidenceItems; let i = index; trackBy: trackByEvidence">
                 <td>{{ i + 1 }}</td>
-                <td>{{ evidenceLexiconLabel(item) }}</td>
+                <td class="text-arabic" dir="rtl">{{ evidenceLexiconLabel(item) }}</td>
                 <td>{{ item['locator_type'] || 'chunk' }}</td>
                 <td>{{ evidenceSourceLabel(item) }}</td>
                 <td>
@@ -219,7 +219,7 @@
             <tbody>
               <tr *ngFor="let item of lexiconMorphologyItems; let i = index; trackBy: trackByLink">
                 <td>{{ i + 1 }}</td>
-                <td>{{ linkLexiconLabel(item) }}</td>
+                <td class="text-arabic" dir="rtl">{{ linkLexiconLabel(item) }}</td>
                 <td>{{ linkMorphologyLabel(item) }}</td>
                 <td>
                   <span [class]="roleClass(item['link_role'], 'primary')">
