@@ -134,6 +134,71 @@ export class MorphologyTaskComponent {
     return item[key] ?? '';
   }
 
+  evidenceLexiconLabel(item: Record<string, unknown>): string {
+    const extract = this.textValue(item['extract_text']);
+    if (extract) return extract;
+
+    const heading = this.textValue(item['heading_raw']);
+    if (heading) return heading;
+
+    const wordLocation = this.textValue(item['word_location']);
+    if (wordLocation) return `Word ${wordLocation}`;
+
+    return '—';
+  }
+
+  evidenceSourceLabel(item: Record<string, unknown>): string {
+    const heading = this.textValue(item['heading_raw']);
+    const pageNo = this.numberValue(item['page_no']);
+    if (heading && pageNo !== null) return `${heading} (p.${pageNo})`;
+    if (heading) return heading;
+    if (pageNo !== null) return `Page ${pageNo}`;
+
+    const wordLocation = this.textValue(item['word_location']);
+    if (wordLocation) return `Word ${wordLocation}`;
+
+    const sourceType = this.textValue(item['source_type']);
+    if (sourceType) return sourceType;
+
+    return '—';
+  }
+
+  linkLexiconLabel(item: Record<string, unknown>): string {
+    const surfaceAr = this.textValue(item['surface_ar']);
+    if (surfaceAr) return surfaceAr;
+
+    const wordLocation = this.textValue(item['word_location']);
+    if (wordLocation) return `Word ${wordLocation}`;
+
+    return '—';
+  }
+
+  linkMorphologyLabel(item: Record<string, unknown>): string {
+    const pos = this.textValue(item['pos2']);
+    const pattern = this.textValue(item['derived_pattern']) || this.textValue(item['verb_form']);
+
+    if (pos && pattern) return `${pos} • ${pattern}`;
+    if (pos) return pos;
+    if (pattern) return pattern;
+
+    return 'new-from-payload';
+  }
+
+  roleLabel(value: unknown, fallback: 'supports' | 'primary'): string {
+    return this.normalizeRole(value, fallback);
+  }
+
+  roleClass(value: unknown, fallback: 'supports' | 'primary'): string {
+    const role = this.normalizeRole(value, fallback);
+    if (role === 'primary') return 'role-chip role-chip--primary';
+    if (role === 'supports') return 'role-chip role-chip--supports';
+    if (role === 'secondary') return 'role-chip role-chip--secondary';
+    if (role === 'related') return 'role-chip role-chip--related';
+    if (role === 'example') return 'role-chip role-chip--example';
+    if (role === 'conflicts' || role === 'contradicts') return 'role-chip role-chip--danger';
+    return 'role-chip role-chip--neutral';
+  }
+
   updateItem(index: number, key: string, value: string) {
     const items = this.items;
     if (index < 0 || index >= items.length) return;
@@ -820,6 +885,13 @@ export class MorphologyTaskComponent {
 
   private textValue(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+  }
+
+  private normalizeRole(value: unknown, fallback: 'supports' | 'primary'): string {
+    const role = String(value ?? '')
+      .trim()
+      .toLowerCase();
+    return role || fallback;
   }
 
   private numberValue(value: unknown): number | null {

@@ -104,6 +104,8 @@
       <div class="workspace-body indexes-body">
         <p class="feedback muted" *ngIf="booksLoading">Loading books…</p>
         <p class="feedback error" *ngIf="booksError">{{ booksError }}</p>
+        <p class="feedback muted" *ngIf="searchLoading">Searching…</p>
+        <p class="feedback error" *ngIf="searchError">{{ searchError }}</p>
         <p class="feedback error" *ngIf="readError">{{ readError }}</p>
 
         <app-sticky-panel

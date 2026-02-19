@@ -36,8 +36,8 @@
         </div>
         <p class="note-muted">Current morphology rows for this task JSON.</p>
 
-        <div class="table-wrap" *ngIf="items.length; else noItems">
-          <table class="editor-table editor-table--morph">
+        <div class="table-wrap table-responsive app-crud-table-shell" *ngIf="items.length; else noItems">
+          <table class="table align-middle app-crud-table editor-table editor-table--morph">
             <thead>
               <tr>
                 <th>#</th>
@@ -140,8 +140,8 @@
         </div>
         <p class="note-muted">Rows from <code>task_json.lexicon_evidence</code> (upserted into <code>ar_u_lexicon_evidence</code> on commit).</p>
 
-        <div class="table-wrap" *ngIf="evidenceItems.length; else noEvidence">
-          <table class="editor-table editor-table--morph">
+        <div class="table-wrap table-responsive app-crud-table-shell" *ngIf="evidenceItems.length; else noEvidence">
+          <table class="table align-middle app-crud-table editor-table editor-table--morph">
             <thead>
               <tr>
                 <th>#</th>
@@ -155,10 +155,14 @@
             <tbody>
               <tr *ngFor="let item of evidenceItems; let i = index; trackBy: trackByEvidence">
                 <td>{{ i + 1 }}</td>
-                <td class="mono">{{ item['ar_u_lexicon'] || item['lexicon_id'] || '—' }}</td>
+                <td>{{ evidenceLexiconLabel(item) }}</td>
                 <td>{{ item['locator_type'] || 'chunk' }}</td>
-                <td class="mono">{{ item['chunk_id'] || item['url'] || item['source_id'] || '—' }}</td>
-                <td>{{ item['link_role'] || 'supports' }}</td>
+                <td>{{ evidenceSourceLabel(item) }}</td>
+                <td>
+                  <span [class]="roleClass(item['link_role'], 'supports')">
+                    {{ roleLabel(item['link_role'], 'supports') }}
+                  </span>
+                </td>
                 <td>
                   <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'evidence')">
                     JSON
@@ -201,8 +205,8 @@
         </div>
         <p class="note-muted">Rows from <code>task_json.lexicon_morphology</code> (upserted into <code>ar_u_lexicon_morphology</code> on commit).</p>
 
-        <div class="table-wrap" *ngIf="lexiconMorphologyItems.length; else noLinks">
-          <table class="editor-table editor-table--morph">
+        <div class="table-wrap table-responsive app-crud-table-shell" *ngIf="lexiconMorphologyItems.length; else noLinks">
+          <table class="table align-middle app-crud-table editor-table editor-table--morph">
             <thead>
               <tr>
                 <th>#</th>
@@ -215,9 +219,13 @@
             <tbody>
               <tr *ngFor="let item of lexiconMorphologyItems; let i = index; trackBy: trackByLink">
                 <td>{{ i + 1 }}</td>
-                <td class="mono">{{ item['ar_u_lexicon'] || item['lexicon_id'] || '—' }}</td>
-                <td class="mono">{{ item['ar_u_morphology'] || 'new-from-payload' }}</td>
-                <td>{{ item['link_role'] || 'primary' }}</td>
+                <td>{{ linkLexiconLabel(item) }}</td>
+                <td>{{ linkMorphologyLabel(item) }}</td>
+                <td>
+                  <span [class]="roleClass(item['link_role'], 'primary')">
+                    {{ roleLabel(item['link_role'], 'primary') }}
+                  </span>
+                </td>
                 <td>
                   <button type="button" class="btn btn-ghost btn-sm" (click)="openEditModal($event, item, i, 'links')">
                     JSON

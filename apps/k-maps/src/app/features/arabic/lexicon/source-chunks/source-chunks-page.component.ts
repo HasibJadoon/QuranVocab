@@ -303,8 +303,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   runSearch(): void {
-    void this.loadSearchRows(true);
-    this.syncUrl();
+    void this.runSearchAndOpenFirstHit();
   }
 
   applyFilters(): void {
@@ -864,6 +863,30 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     return this.openSearchResultRow(row, moveToReaderTab);
   }
 
+  private async runSearchAndOpenFirstHit(): Promise<void> {
+    const query = this.query.trim();
+    if (!query) {
+      this.searchRows = [];
+      this.searchTotal = 0;
+      this.searchError = '';
+      this.syncUrl();
+      return;
+    }
+
+    await this.loadSearchRows(true, true);
+    if (this.searchError) {
+      this.readerError = this.searchError;
+      this.syncUrl();
+      return;
+    }
+
+    const opened = await this.openInitialSearchResult(true);
+    if (!opened) {
+      this.readerError = `No matches found for "${query}".`;
+    }
+    this.syncUrl();
+  }
+
   private async openSearchResultRow(row: SearchRow, moveToReaderTab: boolean): Promise<boolean> {
     if (row.page_no !== null) {
       await this.jumpReaderToPage(row.page_no, moveToReaderTab);
@@ -878,7 +901,7 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
     return true;
   }
 
-  private async loadSearchRows(moveToResultsTab: boolean): Promise<void> {
+  private async loadSearchRows(moveToResultsTab: boolean, forceRefresh = false): Promise<void> {
     const requestId = ++this.searchRequestSeq;
     this.searchLoading = true;
     this.searchError = '';
@@ -899,11 +922,13 @@ export class SourceChunksPageComponent implements OnInit, OnDestroy, AfterViewIn
       }
 
       const cacheKey = this.searchCacheKey(query);
-      const cached = this.searchCache.get(cacheKey);
-      if (cached) {
-        this.searchRows = [...cached.rows];
-        this.searchTotal = cached.total;
-        return;
+      if (!forceRefresh) {
+        const cached = this.searchCache.get(cacheKey);
+        if (cached) {
+          this.searchRows = [...cached.rows];
+          this.searchTotal = cached.total;
+          return;
+        }
       }
 
       const res = await firstValueFrom(
