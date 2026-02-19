@@ -282,36 +282,37 @@
   margin-top: 0.44rem;
 }
 
-.morphology-pill {
-  padding: 0.34rem 0.78rem;
-  border-radius: 999px;
-  border: 1px solid rgba(153, 182, 217, 0.4);
-  background: rgba(69, 94, 136, 0.55);
-  color: #e9f3ff;
-  font-size: 0.9rem;
-  letter-spacing: 0.01em;
-  line-height: 1.34;
+.term-pill.morphology-pill {
+  --qi-pill-size: clamp(0.96rem, 1vw, 1.1rem);
+  --qi-pill-top: rgba(109, 160, 230, 0.8);
+  --qi-pill-bottom: rgba(40, 86, 152, 0.94);
+  --qi-pill-border: rgba(198, 229, 255, 0.75);
+  padding: 0.34rem 0.82rem;
 }
 
-.morphology-pill:nth-child(3n + 1) {
-  background: rgba(46, 124, 89, 0.7);
-  border-color: rgba(112, 199, 162, 0.5);
+.term-pill.morphology-pill:nth-child(3n + 1) {
+  --qi-pill-top: rgba(89, 181, 153, 0.8);
+  --qi-pill-bottom: rgba(35, 102, 90, 0.94);
+  --qi-pill-border: rgba(167, 241, 218, 0.72);
 }
 
-.morphology-pill:nth-child(3n + 2) {
-  background: rgba(61, 90, 151, 0.68);
+.term-pill.morphology-pill:nth-child(3n + 2) {
+  --qi-pill-top: rgba(116, 154, 223, 0.8);
+  --qi-pill-bottom: rgba(45, 81, 141, 0.94);
 }
 
-.morphology-pill:nth-child(3n + 3) {
-  background: rgba(48, 111, 169, 0.7);
+.term-pill.morphology-pill:nth-child(3n + 3) {
+  --qi-pill-top: rgba(92, 168, 229, 0.8);
+  --qi-pill-bottom: rgba(34, 95, 148, 0.94);
 }
 
-.morphology-pill--meaning {
-  background: rgba(76, 91, 126, 0.58);
-  border-color: rgba(156, 176, 209, 0.38);
-  color: #f3f7ff;
-  font-size: 0.95rem;
-  padding: 0.36rem 0.86rem;
+.term-pill.morphology-pill.morphology-pill--meaning {
+  --qi-pill-size: clamp(1.04rem, 1.08vw, 1.17rem);
+  --qi-pill-top: rgba(142, 164, 220, 0.82);
+  --qi-pill-bottom: rgba(62, 84, 138, 0.95);
+  --qi-pill-border: rgba(205, 224, 250, 0.78);
+  color: #102842;
+  padding: 0.36rem 0.88rem;
 }
 
 .morphology-meanings {
@@ -592,17 +593,37 @@
 
 .term-pill,
 .feature-pill {
+  --qi-pill-top: rgba(110, 160, 223, 0.8);
+  --qi-pill-bottom: rgba(42, 88, 144, 0.94);
+  --qi-pill-border: rgba(197, 229, 255, 0.72);
+  --qi-pill-size: clamp(0.84rem, 0.9vw, 0.98rem);
+  --qi-pill-text: #102842;
   border-radius: 999px;
-  border: 1px solid rgba(132, 188, 235, 0.4);
-  background: rgba(27, 59, 86, 0.56);
-  color: #ddf1ff;
-  font-size: 0.75rem;
-  padding: 0.2rem 0.52rem;
+  border: 1px solid var(--qi-pill-border);
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14) 36%, rgba(255, 255, 255, 0.02) 58%),
+    linear-gradient(180deg, var(--qi-pill-top), var(--qi-pill-bottom));
+  color: var(--qi-pill-text);
+  font-size: var(--qi-pill-size);
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.36);
+  letter-spacing: 0.012em;
+  line-height: 1.35;
+  padding: 0.24rem 0.64rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(10, 31, 49, 0.62),
+    0 0 0 1px rgba(17, 50, 80, 0.52),
+    0 8px 18px rgba(4, 13, 24, 0.44),
+    0 0 14px rgba(128, 189, 246, 0.22);
+  backdrop-filter: blur(6px) saturate(155%);
+  -webkit-backdrop-filter: blur(6px) saturate(155%);
 }
 
 .feature-pill {
-  border-color: rgba(126, 220, 190, 0.38);
-  background: rgba(30, 70, 73, 0.58);
+  --qi-pill-top: rgba(98, 186, 164, 0.8);
+  --qi-pill-bottom: rgba(32, 96, 90, 0.94);
+  --qi-pill-border: rgba(172, 243, 223, 0.72);
 }
 
 .evidence-list {
@@ -649,25 +670,29 @@
   gap: 0.36rem;
 }
 
-.evidence-meta-pill {
+.term-pill.evidence-meta-pill {
+  --qi-pill-size: clamp(0.82rem, 0.86vw, 0.94rem);
+  --qi-pill-top: rgba(112, 163, 226, 0.8);
+  --qi-pill-bottom: rgba(42, 88, 142, 0.94);
+  --qi-pill-border: rgba(192, 224, 252, 0.74);
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  background: rgba(23, 48, 72, 0.62);
-  border-color: rgba(126, 188, 229, 0.42);
-  padding: 0.2rem 0.54rem;
+  gap: 0.32rem;
+  padding: 0.22rem 0.58rem;
 }
 
 .evidence-meta-key {
-  color: rgba(170, 201, 231, 0.84);
-  font-size: 0.66rem;
+  color: #254664;
+  font-size: 0.73rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
 }
 
 .evidence-meta-value {
-  color: #ecf6ff;
-  font-size: 0.75rem;
+  color: #0e2944;
+  font-size: 0.86rem;
+  font-weight: 700;
   line-height: 1.3;
 }
 

@@ -18,6 +18,16 @@ type ItemResponse<T> = {
   result?: T | null;
 };
 
+type QuranLexiconSynonymsResponse = {
+  ok?: boolean;
+  error?: string;
+  topic_ids?: unknown;
+  topics?: unknown;
+  entries?: unknown;
+  synonyms_json?: unknown;
+  lexicon?: unknown;
+};
+
 export interface QuranLexiconMorphologyLink {
   ar_u_lexicon: string;
   ar_u_morphology: string;
@@ -60,11 +70,43 @@ export interface QuranMorphologyDetail {
   updated_at: string | null;
 }
 
+export interface QuranLexiconSynonymTopic {
+  topic_id: string;
+  topic_en: string;
+  topic_ur: string | null;
+  meta: unknown;
+}
+
+export interface QuranLexiconSynonymWord {
+  topic_id: string | null;
+  word_norm: string | null;
+  word_ar: string | null;
+  word_en: string | null;
+  root_norm: string | null;
+  root_ar: string | null;
+  order_index: number | null;
+}
+
+export interface QuranLexiconMorphologyPayload {
+  ar_u_lexicon: string;
+  lemma_ar: string | null;
+  lemma_norm: string | null;
+  root_norm: string | null;
+  pos: string | null;
+  morph_pattern: string | null;
+  morph_features: unknown;
+  morph_derivations: unknown;
+}
+
 export interface QuranLexiconBundle {
   lexiconId: string;
   morphologyLinks: QuranLexiconMorphologyLink[];
   evidenceRows: QuranLexiconEvidenceRow[];
   morphologyById: Record<string, QuranMorphologyDetail>;
+  synonymTopicIds: string[];
+  synonymTopics: QuranLexiconSynonymTopic[];
+  synonymWords: QuranLexiconSynonymWord[];
+  lexiconMorphology: QuranLexiconMorphologyPayload | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -81,6 +123,10 @@ export class QuranLexiconDataService {
         morphologyLinks: [],
         evidenceRows: [],
         morphologyById: {},
+        synonymTopicIds: [],
+        synonymTopics: [],
+        synonymWords: [],
+        lexiconMorphology: null,
       });
     }
 
@@ -100,9 +146,10 @@ export class QuranLexiconDataService {
   }
 
   private async loadBundle(lexiconId: string): Promise<QuranLexiconBundle> {
-    const [morphologyLinks, evidenceRows] = await Promise.all([
+    const [morphologyLinks, evidenceRows, synonyms] = await Promise.all([
       this.fetchAllMorphologyLinks(lexiconId),
       this.fetchAllEvidenceRows(lexiconId),
+      this.fetchSynonymsByLexicon(lexiconId),
     ]);
 
     const morphologyIds = Array.from(
@@ -119,6 +166,10 @@ export class QuranLexiconDataService {
       morphologyLinks,
       evidenceRows,
       morphologyById,
+      synonymTopicIds: synonyms.topicIds,
+      synonymTopics: synonyms.topics,
+      synonymWords: synonyms.words,
+      lexiconMorphology: synonyms.lexiconMorphology,
     };
   }
 
@@ -142,6 +193,35 @@ export class QuranLexiconDataService {
       200,
       2500
     );
+  }
+
+  private async fetchSynonymsByLexicon(lexiconId: string): Promise<{
+    topicIds: string[];
+    topics: QuranLexiconSynonymTopic[];
+    words: QuranLexiconSynonymWord[];
+    lexiconMorphology: QuranLexiconMorphologyPayload | null;
+  }> {
+    try {
+      const payload = await this.fetchJson<QuranLexiconSynonymsResponse>(
+        `${API_BASE}/ar/lexicon-synonyms?ar_u_lexicon=${encodeURIComponent(lexiconId)}`
+      );
+      if (payload.ok === false) {
+        return { topicIds: [], topics: [], words: [], lexiconMorphology: null };
+      }
+
+      const topicIds = Array.isArray(payload.topic_ids)
+        ? payload.topic_ids.map((entry) => String(entry ?? '').trim()).filter(Boolean)
+        : [];
+
+      const topics = this.parseSynonymTopics(payload.topics);
+      const entryRows = this.parseSynonymWords(payload.entries);
+      const synonymJsonRows = this.parseSynonymWords(payload.synonyms_json);
+      const words = this.mergeSynonymWords(entryRows, synonymJsonRows);
+      const lexiconMorphology = this.parseLexiconMorphologyPayload(payload.lexicon);
+      return { topicIds, topics, words, lexiconMorphology };
+    } catch {
+      return { topicIds: [], topics: [], words: [], lexiconMorphology: null };
+    }
   }
 
   private async fetchAllPages<T>(
@@ -220,5 +300,111 @@ export class QuranLexiconDataService {
     }
 
     return payload as T;
+  }
+
+  private parseSynonymTopics(value: unknown): QuranLexiconSynonymTopic[] {
+    if (!Array.isArray(value)) return [];
+    const topics: QuranLexiconSynonymTopic[] = [];
+    for (const item of value) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+      const row = item as Record<string, unknown>;
+      const topicId = String(row['topic_id'] ?? '').trim();
+      const topicEn = String(row['topic_en'] ?? '').trim();
+      if (!topicId || !topicEn) continue;
+      const topicUrRaw = String(row['topic_ur'] ?? '').trim();
+      topics.push({
+        topic_id: topicId,
+        topic_en: topicEn,
+        topic_ur: topicUrRaw || null,
+        meta: row['meta'],
+      });
+    }
+    return topics;
+  }
+
+  private parseSynonymWords(value: unknown): QuranLexiconSynonymWord[] {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map((item, index) => {
+        if (typeof item === 'string') {
+          const text = item.trim();
+          if (!text) return null;
+          return {
+            topic_id: null,
+            word_norm: text,
+            word_ar: null,
+            word_en: text,
+            root_norm: null,
+            root_ar: null,
+            order_index: index,
+          } satisfies QuranLexiconSynonymWord;
+        }
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+        const row = item as Record<string, unknown>;
+        const toText = (input: unknown): string | null => {
+          const text = String(input ?? '').trim();
+          return text || null;
+        };
+        const wordNorm = toText(row['word_norm']);
+        const wordAr = toText(row['word_ar']);
+        const wordEn = toText(row['word_en']);
+        if (!wordNorm && !wordAr && !wordEn) return null;
+        const orderRaw = Number(row['order_index']);
+        return {
+          topic_id: toText(row['topic_id']),
+          word_norm: wordNorm,
+          word_ar: wordAr,
+          word_en: wordEn,
+          root_norm: toText(row['root_norm']),
+          root_ar: toText(row['root_ar']),
+          order_index: Number.isFinite(orderRaw) ? Math.trunc(orderRaw) : null,
+        } satisfies QuranLexiconSynonymWord;
+      })
+      .filter((row): row is QuranLexiconSynonymWord => Boolean(row));
+  }
+
+  private mergeSynonymWords(
+    primary: QuranLexiconSynonymWord[],
+    secondary: QuranLexiconSynonymWord[]
+  ): QuranLexiconSynonymWord[] {
+    const merged: QuranLexiconSynonymWord[] = [];
+    const seen = new Set<string>();
+    const push = (entry: QuranLexiconSynonymWord) => {
+      const key = [
+        entry.topic_id ?? '',
+        entry.word_norm ?? '',
+        entry.word_ar ?? '',
+        entry.word_en ?? '',
+        entry.root_norm ?? '',
+        entry.root_ar ?? '',
+      ].join('|');
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      merged.push(entry);
+    };
+    for (const entry of primary) push(entry);
+    for (const entry of secondary) push(entry);
+    return merged;
+  }
+
+  private parseLexiconMorphologyPayload(value: unknown): QuranLexiconMorphologyPayload | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    const row = value as Record<string, unknown>;
+    const toText = (input: unknown): string | null => {
+      const text = String(input ?? '').trim();
+      return text || null;
+    };
+    const lexiconId = toText(row['ar_u_lexicon']);
+    if (!lexiconId) return null;
+    return {
+      ar_u_lexicon: lexiconId,
+      lemma_ar: toText(row['lemma_ar']),
+      lemma_norm: toText(row['lemma_norm']),
+      root_norm: toText(row['root_norm']),
+      pos: toText(row['pos']),
+      morph_pattern: toText(row['morph_pattern']),
+      morph_features: row['morph_features'] ?? null,
+      morph_derivations: row['morph_derivations'] ?? null,
+    };
   }
 }

@@ -142,6 +142,13 @@
                 </span>
               </div>
             </article>
+
+            <article class="insight-card" *ngIf="synonymChips.length">
+              <p class="terms-label">Synonyms</p>
+              <div class="terms-list">
+                <span class="term-pill" *ngFor="let term of synonymChips; trackBy: trackByTerm">{{ term }}</span>
+              </div>
+            </article>
           </ng-container>
           <ng-template #lexiconClassicTpl>
             <div class="field-grid">
@@ -157,6 +164,13 @@
               <p class="terms-label">Related</p>
               <div class="terms-list">
                 <span class="term-pill" *ngFor="let term of relatedTerms; trackBy: trackByTerm">{{ term }}</span>
+              </div>
+            </div>
+
+            <div class="terms-wrap" *ngIf="synonymChips.length">
+              <p class="terms-label">Synonyms</p>
+              <div class="terms-list">
+                <span class="term-pill" *ngFor="let term of synonymChips; trackBy: trackByTerm">{{ term }}</span>
               </div>
             </div>
           </ng-template>

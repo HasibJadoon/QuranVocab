@@ -5,7 +5,9 @@ import {
   QuranLexiconBundle,
   QuranLexiconDataService,
   QuranLexiconEvidenceRow,
+  QuranLexiconMorphologyPayload,
   QuranLexiconMorphologyLink,
+  QuranLexiconSynonymWord,
   QuranMorphologyDetail,
 } from '../../services/quran-lexicon-data.service';
 
@@ -90,6 +92,8 @@ export class QuranWordInspectorComponent implements OnChanges {
   resolvedLexiconId = '';
 
   private readonly arabicDiacriticsRe = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
+  private readonly arabicTatweelRe = /\u0640/g;
+  private readonly arabicNonLettersRe = /[^\u0621-\u063A\u0641-\u064A]/g;
   private readonly arabicScriptRe = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
   private selectedMorphologyRecord: Record<string, unknown> | null = null;
   private selectedLinkRecord: Record<string, unknown> | null = null;
@@ -288,7 +292,7 @@ export class QuranWordInspectorComponent implements OnChanges {
   }
 
   get lexicalInsightPairs(): InsightPair[] {
-    const form = this.firstText(this.activeLinkRecord, ['verb_form', 'form']);
+    const form = this.firstText(this.activeLinkRecord, ['verb_form', 'form']) || this.lexiconFormValue;
     return [
       {
         id: 'pair-root',
@@ -308,6 +312,11 @@ export class QuranWordInspectorComponent implements OnChanges {
         value: this.patternValue || '—',
       },
       {
+        id: 'pair-pos',
+        label: 'POS',
+        value: this.posValue ? this.posValue.toUpperCase() : '—',
+      },
+      {
         id: 'pair-form',
         label: 'Form',
         value: form || '—',
@@ -325,7 +334,40 @@ export class QuranWordInspectorComponent implements OnChanges {
     for (const item of this.relatedTerms) {
       if (item) out.add(item);
     }
+    for (const item of this.synonymChips) {
+      if (item) out.add(item);
+    }
     return Array.from(out).slice(0, 10);
+  }
+
+  get synonymChips(): string[] {
+    const chips: string[] = [];
+    const seen = new Set<string>();
+    const selectedWords = new Set<string>(
+      [
+        this.normalizeSynonymWord(this.activeWord),
+        this.normalizeSynonymWord(this.lemmaValue),
+        this.normalizeSynonymWord(this.rootValue),
+      ].filter(Boolean)
+    );
+
+    const pushEntry = (entry: Record<string, unknown>) => {
+      const normalizedWord =
+        this.normalizeSynonymWord(this.textValue(entry['word_norm'])) ||
+        this.normalizeSynonymWord(this.textValue(entry['word_ar']));
+      if (normalizedWord && selectedWords.has(normalizedWord)) return;
+
+      const label = this.synonymLabel(entry);
+      if (!label) return;
+      const dedupeKey = label.toLowerCase();
+      if (seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      chips.push(label);
+    };
+
+    for (const entry of this.localSynonymRecords) pushEntry(entry);
+    for (const entry of this.remoteSynonymRecords) pushEntry(entry);
+    return chips.slice(0, 14);
   }
 
   get morphologyCardWord(): string {
@@ -469,7 +511,7 @@ export class QuranWordInspectorComponent implements OnChanges {
 
   get hasLexiconData(): boolean {
     const fields = this.lexiconFields;
-    return fields.some((field) => field.value !== '—') || this.relatedTerms.length > 0;
+    return fields.some((field) => field.value !== '—') || this.relatedTerms.length > 0 || this.synonymChips.length > 0;
   }
 
   setActiveTab(tab: QuranWordInspectorTab) {
@@ -495,7 +537,6 @@ export class QuranWordInspectorComponent implements OnChanges {
     const segments = location.split(':').filter(Boolean);
     const sourceType = this.cleanEvidenceText(item['source_type']);
     const sourceId = this.cleanEvidenceText(item['source_id']);
-    const chunkId = this.cleanEvidenceText(item['chunk_id']);
     const page = this.numberValue(item['page_no']);
     const parts: string[] = [];
 
@@ -507,9 +548,10 @@ export class QuranWordInspectorComponent implements OnChanges {
       }
     }
 
-    if (sourceType) parts.push(sourceType);
-    if (sourceId && sourceId !== sourceType) parts.push(sourceId);
-    if (chunkId) parts.push(`chunk:${chunkId}`);
+    const sourceLabel = this.humanizeEvidenceSource(sourceId || sourceType);
+    if (sourceLabel) {
+      parts.push(sourceLabel);
+    }
     if (page != null) parts.push(`p.${page}`);
 
     if (!parts.length) {
@@ -702,25 +744,35 @@ export class QuranWordInspectorComponent implements OnChanges {
   private get rootValue(): string {
     const fromMorphology = this.firstText(this.activeMorphologyRecord, ['root_norm', 'root']);
     if (fromMorphology) return fromMorphology;
-    return this.firstText(this.activeLinkRecord, ['root_norm', 'root']);
+    const fromLink = this.firstText(this.activeLinkRecord, ['root_norm', 'root']);
+    if (fromLink) return fromLink;
+    return this.firstText(this.lexiconMorphPayloadRecord, ['root_norm']);
   }
 
   private get lemmaValue(): string {
     const fromMorphology = this.firstText(this.activeMorphologyRecord, ['lemma_ar', 'lemma_norm']);
     if (fromMorphology) return fromMorphology;
-    return this.firstText(this.activeLinkRecord, ['surface_ar', 'surface_norm']);
+    const fromLink = this.firstText(this.activeLinkRecord, ['surface_ar', 'surface_norm', 'lemma_ar', 'lemma_norm']);
+    if (fromLink) return fromLink;
+    return this.firstText(this.lexiconMorphPayloadRecord, ['lemma_ar', 'lemma_norm']);
   }
 
   private get posValue(): string {
     const fromMorphology = this.firstText(this.activeMorphologyRecord, ['pos', 'pos2']);
     if (fromMorphology) return fromMorphology;
-    return this.firstText(this.activeLinkRecord, ['pos2', 'pos']);
+    const fromLink = this.firstText(this.activeLinkRecord, ['pos2', 'pos']);
+    if (fromLink) return fromLink;
+    return this.firstText(this.lexiconMorphPayloadRecord, ['pos']);
   }
 
   private get patternValue(): string {
     const fromMorphology = this.patternFromRecord(this.activeMorphologyRecord);
     if (fromMorphology) return fromMorphology;
-    return this.patternFromRecord(this.activeLinkRecord);
+    const fromLink = this.patternFromRecord(this.activeLinkRecord);
+    if (fromLink) return fromLink;
+    const fromLexicon = this.firstText(this.lexiconMorphPayloadRecord, ['morph_pattern']);
+    if (fromLexicon) return fromLexicon;
+    return this.firstText(this.lexiconPrimaryDerivationRecord, ['pattern']);
   }
 
   private get meaningPrimary(): string {
@@ -943,6 +995,79 @@ export class QuranWordInspectorComponent implements OnChanges {
     return bundle.evidenceRows.map((row) => this.toEvidenceRecord(row, bundle.lexiconId));
   }
 
+  private get remoteSynonymRecords(): Array<Record<string, unknown>> {
+    const bundle = this.remoteBundle;
+    if (!bundle) return [];
+    return bundle.synonymWords.map((entry) => this.toSynonymRecord(entry));
+  }
+
+  private get lexiconMorphPayloadRecord(): Record<string, unknown> | null {
+    const bundle = this.remoteBundle;
+    if (!bundle?.lexiconMorphology) return null;
+    return this.toLexiconMorphologyRecord(bundle.lexiconMorphology);
+  }
+
+  private get lexiconMorphFeaturesRecord(): Record<string, unknown> | null {
+    return this.asRecord(this.lexiconMorphPayloadRecord?.['morph_features']);
+  }
+
+  private get lexiconMorphDerivationRecords(): Array<Record<string, unknown>> {
+    const raw = this.lexiconMorphPayloadRecord?.['morph_derivations'];
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((entry) => this.asRecord(entry))
+      .filter((entry): entry is Record<string, unknown> => Boolean(entry));
+  }
+
+  private get lexiconPrimaryDerivationRecord(): Record<string, unknown> | null {
+    const records = this.lexiconMorphDerivationRecords;
+    if (!records.length) return null;
+    return (
+      records.find((entry) => {
+        const kind = this.firstText(entry, ['kind', 'type']).toLowerCase();
+        return kind.includes('singular') || kind.includes('single') || kind.includes('مفرد');
+      }) ??
+      records[0]
+    );
+  }
+
+  private get lexiconFormValue(): string {
+    const features = this.lexiconMorphFeaturesRecord;
+    const pieces: string[] = [];
+    const derivationType = this.firstText(features, ['derivation_type']);
+    if (derivationType) pieces.push(derivationType);
+
+    const isMushtaq = features?.['is_mushtaq'];
+    if (isMushtaq === true) pieces.push('مشتق');
+    if (isMushtaq === false) pieces.push('جامد');
+
+    const rootClassRaw = this.firstText(features, ['root_class']);
+    const rootClass = this.normalizeRootClassLabel(rootClassRaw);
+    if (rootClass) pieces.push(rootClass);
+
+    const derivationKind = this.firstText(this.lexiconPrimaryDerivationRecord, ['type', 'kind']);
+    if (derivationKind && !pieces.includes(derivationKind)) pieces.push(derivationKind);
+
+    const deduped: string[] = [];
+    const seen = new Set<string>();
+    for (const piece of pieces) {
+      const normalized = piece.trim();
+      if (!normalized) continue;
+      const key = normalized.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(normalized);
+    }
+    return deduped.join(' • ');
+  }
+
+  private get localSynonymRecords(): Array<Record<string, unknown>> {
+    const records: Array<Record<string, unknown>> = [];
+    records.push(...this.parseSynonymRecords(this.activeMorphologyRecord?.['synonyms_json']));
+    records.push(...this.parseSynonymRecords(this.activeLinkRecord?.['synonyms_json']));
+    return records;
+  }
+
   private resolveFocusedMorphologyId(bundle: QuranLexiconBundle): string {
     const directIds = [
       this.firstText(this.selectedLinkRecord, ['ar_u_morphology']),
@@ -993,6 +1118,31 @@ export class QuranWordInspectorComponent implements OnChanges {
       derived_pattern: link.derived_pattern,
       verb_form: link.verb_form,
       created_at: link.created_at,
+    };
+  }
+
+  private toSynonymRecord(entry: QuranLexiconSynonymWord): Record<string, unknown> {
+    return {
+      topic_id: entry.topic_id,
+      word_norm: entry.word_norm,
+      word_ar: entry.word_ar,
+      word_en: entry.word_en,
+      root_norm: entry.root_norm,
+      root_ar: entry.root_ar,
+      order_index: entry.order_index,
+    };
+  }
+
+  private toLexiconMorphologyRecord(entry: QuranLexiconMorphologyPayload): Record<string, unknown> {
+    return {
+      ar_u_lexicon: entry.ar_u_lexicon,
+      lemma_ar: entry.lemma_ar,
+      lemma_norm: entry.lemma_norm,
+      root_norm: entry.root_norm,
+      pos: entry.pos,
+      morph_pattern: entry.morph_pattern,
+      morph_features: entry.morph_features,
+      morph_derivations: entry.morph_derivations,
     };
   }
 
@@ -1320,6 +1470,76 @@ export class QuranWordInspectorComponent implements OnChanges {
       .filter(Boolean);
   }
 
+  private parseSynonymRecords(value: unknown): Array<Record<string, unknown>> {
+    const toRecord = (entry: unknown): Record<string, unknown> | null => {
+      if (!entry) return null;
+      if (typeof entry === 'string') {
+        const text = entry.trim();
+        if (!text) return null;
+        return {
+          word_norm: text,
+          word_en: text,
+        };
+      }
+      if (typeof entry !== 'object' || Array.isArray(entry)) return null;
+      return { ...(entry as Record<string, unknown>) };
+    };
+
+    if (Array.isArray(value)) {
+      return value.map((entry) => toRecord(entry)).filter((entry): entry is Record<string, unknown> => Boolean(entry));
+    }
+
+    const raw = this.textValue(value);
+    if (!raw) return [];
+    const trimmed = raw.trim();
+
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((entry) => toRecord(entry))
+            .filter((entry): entry is Record<string, unknown> => Boolean(entry));
+        }
+      } catch {
+        // Fallback to simple token list below.
+      }
+    }
+
+    return trimmed
+      .split(/[|;,]/)
+      .map((entry) => toRecord(entry))
+      .filter((entry): entry is Record<string, unknown> => Boolean(entry));
+  }
+
+  private normalizeSynonymWord(value: string): string {
+    return String(value ?? '')
+      .normalize('NFKC')
+      .replace(this.arabicDiacriticsRe, '')
+      .replace(this.arabicTatweelRe, '')
+      .replace(this.arabicNonLettersRe, '')
+      .trim();
+  }
+
+  private normalizeRootClassLabel(value: string): string {
+    const normalized = this.textValue(value);
+    if (!normalized) return '';
+    const lower = normalized.toLowerCase();
+    if (lower === 'triliteral') return 'ثلاثي';
+    if (lower === 'quadriliteral') return 'رباعي';
+    return normalized;
+  }
+
+  private synonymLabel(entry: Record<string, unknown>): string {
+    const wordAr = this.textValue(entry['word_ar']);
+    const wordEn = this.textValue(entry['word_en']);
+    const wordNorm = this.textValue(entry['word_norm']);
+    if (wordAr && wordEn) return `${wordAr} · ${wordEn}`;
+    if (wordEn) return wordEn;
+    if (wordAr) return wordAr;
+    return wordNorm;
+  }
+
   private tokenizeListValue(value: unknown): string[] {
     if (Array.isArray(value)) {
       return value.map((entry) => this.textValue(entry)).filter(Boolean);
@@ -1385,6 +1605,35 @@ export class QuranWordInspectorComponent implements OnChanges {
       .replace(/^[\s|:,\-.]+/, '')
       .replace(/[\s|:,\-.]+$/, '')
       .trim();
+  }
+
+  private humanizeEvidenceSource(value: string): string {
+    let text = this.textValue(value);
+    if (!text) return '';
+
+    // Drop transport prefixes and keep only the meaningful source label.
+    text = text
+      .replace(/^SRC\s*:\s*/i, '')
+      .replace(/^source\s*:\s*/i, '')
+      .replace(/^chunk\s*:\s*/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!text) return '';
+
+    const lower = text.toLowerCase();
+    if (lower === 'book' || lower === 'source' || lower === 'lexicon') return '';
+
+    if (text.includes(':')) {
+      const firstPart = text.split(':')[0]?.trim() ?? text;
+      if (firstPart) text = firstPart;
+    }
+
+    text = text.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+    if (text && text === text.toUpperCase()) {
+      text = text.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+    return text;
   }
 
   private looksArabic(value: string): boolean {
