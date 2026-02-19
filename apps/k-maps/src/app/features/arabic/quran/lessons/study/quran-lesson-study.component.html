@@ -2,6 +2,7 @@
   class="quran-edit-new quran-study-shell"
   *ngIf="ready; else loadingTpl"
   [style.--app-ar-font-size]="arabicFontSize"
+  [class.quran-study-shell--dialog-open]="morphologyDialogWord !== null"
 >
   <header class="edit-hero">
     <div>

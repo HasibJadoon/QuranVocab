@@ -33,12 +33,6 @@ type InspectorField = {
   arabic?: boolean;
 };
 
-type MorphologyFeature = {
-  id: string;
-  key: string;
-  value: string;
-};
-
 type InsightPair = {
   id: string;
   label: string;
@@ -51,6 +45,12 @@ type KeyInfoBadge = {
   label: string;
   value: string;
   arabic?: boolean;
+};
+
+type EvidenceMetaPill = {
+  id: string;
+  label: string;
+  value: string;
 };
 
 type EvidenceExample = {
@@ -90,6 +90,7 @@ export class QuranWordInspectorComponent implements OnChanges {
   resolvedLexiconId = '';
 
   private readonly arabicDiacriticsRe = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
+  private readonly arabicScriptRe = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
   private selectedMorphologyRecord: Record<string, unknown> | null = null;
   private selectedLinkRecord: Record<string, unknown> | null = null;
   private selectedEvidenceRecords: Array<Record<string, unknown>> = [];
@@ -135,7 +136,7 @@ export class QuranWordInspectorComponent implements OnChanges {
   }
 
   get evidenceCount(): number {
-    return this.evidenceRecords.length;
+    return this.evidenceDisplayRecords.length;
   }
 
   get lexiconFields(): InspectorField[] {
@@ -327,106 +328,100 @@ export class QuranWordInspectorComponent implements OnChanges {
     return Array.from(out).slice(0, 10);
   }
 
-  get morphologyCompactLine(): string {
-    const root = this.rootValue || this.lemmaValue || this.activeWord || '—';
-    const paradigm = this.morphologyParadigm || '—';
-    return `${root}: ${paradigm}`;
+  get morphologyCardWord(): string {
+    return this.morphologySingularForm || this.lemmaValue || this.activeWord || '—';
   }
 
-  get morphologyExamplesLine(): string {
-    const examples = this.morphologyExampleTerms;
-    if (!examples.length) return '—';
-    const joined = examples.join(', ');
-    return /[.!?]$/.test(joined) ? joined : `${joined}.`;
+  get morphologyCardRoot(): string {
+    return this.rootValue || '—';
   }
 
-  get morphologyFields(): InspectorField[] {
-    const linkRecord = this.activeLinkRecord;
-    const fields: InspectorField[] = [];
-    fields.push({
-      id: 'm-location',
-      label: 'Location',
-      value: this.activeLocation,
-    });
-    fields.push({
-      id: 'm-pos',
-      label: 'Part of Speech',
-      value: this.posValue || '—',
-    });
-    fields.push({
-      id: 'm-pattern',
-      label: 'Pattern',
-      value: this.patternValue || '—',
-    });
-    fields.push({
-      id: 'm-morph-id',
-      label: 'ar_u_morphology',
-      value: this.firstText(linkRecord, ['ar_u_morphology']) || '—',
-    });
-    fields.push({
-      id: 'm-verb-form',
-      label: 'Verb Form',
-      value: this.firstText(linkRecord, ['verb_form']) || '—',
-    });
-    fields.push({
-      id: 'm-derivation',
-      label: 'Derivation',
-      value: this.firstText(linkRecord, ['derivation_type']) || '—',
-    });
-    fields.push({
-      id: 'm-transitivity',
-      label: 'Transitivity',
-      value: this.firstText(linkRecord, ['transitivity']) || '—',
-    });
-    fields.push({
-      id: 'm-obj-count',
-      label: 'Object Count',
-      value: this.textValue(linkRecord?.['obj_count']) || '—',
-    });
-    fields.push({
-      id: 'm-number',
-      label: 'Noun Number',
-      value: this.firstText(linkRecord, ['noun_number']) || '—',
-    });
-    return fields;
+  get morphologyCardPattern(): string {
+    return this.morphologySingularPattern || this.patternValue || '—';
   }
 
-  get morphologyFeatures(): MorphologyFeature[] {
+  get morphologyCardDerivationType(): string {
+    return this.firstText(this.morphologyFeatureRecord, ['derivation_type']);
+  }
+
+  get morphologySingularForm(): string {
+    return this.firstText(this.morphologySingularRecord, ['form_ar']);
+  }
+
+  get morphologySingularPattern(): string {
+    return this.firstText(this.morphologySingularRecord, ['pattern']);
+  }
+
+  get morphologyPluralForm(): string {
+    return this.firstText(this.morphologyPluralRecord, ['form_ar']);
+  }
+
+  get morphologyPluralPattern(): string {
+    return this.firstText(this.morphologyPluralRecord, ['pattern']);
+  }
+
+  get morphologyPluralType(): string {
+    return this.firstText(this.morphologyPluralRecord, ['type']);
+  }
+
+  get morphologyDerivedTriplet(): string {
+    const source = this.morphologyDerivedFromVerbRecord;
+    if (!source) return '';
+    const parts = [
+      this.firstText(source, ['past']),
+      this.firstText(source, ['present']),
+      this.firstText(source, ['masdar']),
+    ].filter(Boolean);
+    return parts.join(' - ');
+  }
+
+  get morphologyFeatureBadges(): string[] {
+    const features = this.morphologyFeatureRecord;
+    if (!features) return [];
+
+    const labels: string[] = [];
+    const isMushtaq = features['is_mushtaq'] === true;
+    if (isMushtaq) labels.push('مشتق');
+
+    const isTriliteral = features['is_triliteral_root'] === true;
+    const rootClass = this.firstText(features, ['root_class']);
+    if (isTriliteral && rootClass) {
+      labels.push(`ثلاثي ${rootClass}`);
+    } else if (isTriliteral) {
+      labels.push('ثلاثي');
+    } else if (rootClass) {
+      labels.push(rootClass);
+    }
+
+    return labels;
+  }
+
+  get morphologyHeaderPills(): string[] {
+    const out = new Set<string>();
+    if (this.morphologyCardDerivationType) out.add(this.morphologyCardDerivationType);
+    for (const feature of this.morphologyFeatureBadges) {
+      if (feature) out.add(feature);
+    }
+    return Array.from(out).slice(0, 4);
+  }
+
+  get morphologyCardMeanings(): string[] {
     const record = this.activeMorphologyRecord;
     if (!record) return [];
+    const meanings = record['meanings'];
+    if (!Array.isArray(meanings)) return [];
+    return meanings.map((item) => this.textValue(item)).filter(Boolean);
+  }
 
-    const features: MorphologyFeature[] = [];
-    const morphology = record['morphology'];
-    if (morphology && typeof morphology === 'object' && !Array.isArray(morphology)) {
-      const featureSource = (morphology as Record<string, unknown>)['morph_features'];
-      if (featureSource && typeof featureSource === 'object' && !Array.isArray(featureSource)) {
-        for (const [key, value] of Object.entries(featureSource as Record<string, unknown>)) {
-          const text = this.valueToDisplayText(value);
-          if (!text) continue;
-          features.push({
-            id: `morph-feature-${key}`,
-            key,
-            value: text,
-          });
-        }
-      }
-    }
-
-    const tagPairs: Array<[string, unknown]> = [
-      ['tags_ar', record['tags_ar']],
-      ['tags_en', record['tags_en']],
-    ];
-    for (const [key, value] of tagPairs) {
-      const text = this.tokenizeListValue(value).join(', ');
-      if (!text) continue;
-      features.push({
-        id: `morph-feature-${key}`,
-        key,
-        value: text,
-      });
-    }
-
-    return features;
+  get hasMorphologyCardData(): boolean {
+    return Boolean(
+      this.morphologyCardWord !== '—' ||
+        this.morphologyCardRoot !== '—' ||
+        this.morphologySingularForm ||
+        this.morphologyPluralForm ||
+        this.morphologyDerivedTriplet ||
+        this.morphologyCardMeanings.length
+    );
   }
 
   get relatedTerms(): string[] {
@@ -468,8 +463,8 @@ export class QuranWordInspectorComponent implements OnChanges {
     return deduped;
   }
 
-  get hasMorphologyData(): boolean {
-    return Boolean(this.activeMorphologyRecord || this.activeLinkRecord || this.morphologyFeatures.length);
+  get evidenceDisplayRecords(): Array<Record<string, unknown>> {
+    return this.evidenceRecords.filter((item) => Boolean(this.evidenceExtractText(item)));
   }
 
   get hasLexiconData(): boolean {
@@ -486,11 +481,11 @@ export class QuranWordInspectorComponent implements OnChanges {
   }
 
   evidenceHeading(item: Record<string, unknown>): string {
-    const extract = this.textValue(item['extract_text']);
+    const extract = this.cleanEvidenceText(item['extract_text']);
     if (extract) return extract;
-    const heading = this.textValue(item['heading_raw']);
+    const heading = this.cleanEvidenceText(item['heading_raw']);
     if (heading) return heading;
-    const location = this.textValue(item['word_location']);
+    const location = this.cleanEvidenceText(item['word_location']);
     if (location) return `Word ${location}`;
     return 'Evidence';
   }
@@ -498,9 +493,9 @@ export class QuranWordInspectorComponent implements OnChanges {
   evidenceSource(item: Record<string, unknown>): string {
     const location = this.locationFromRecord(item);
     const segments = location.split(':').filter(Boolean);
-    const sourceType = this.textValue(item['source_type']);
-    const sourceId = this.textValue(item['source_id']);
-    const chunkId = this.textValue(item['chunk_id']);
+    const sourceType = this.cleanEvidenceText(item['source_type']);
+    const sourceId = this.cleanEvidenceText(item['source_id']);
+    const chunkId = this.cleanEvidenceText(item['chunk_id']);
     const page = this.numberValue(item['page_no']);
     const parts: string[] = [];
 
@@ -524,6 +519,39 @@ export class QuranWordInspectorComponent implements OnChanges {
     return parts.join(' | ');
   }
 
+  evidenceMetaPills(item: Record<string, unknown>): EvidenceMetaPill[] {
+    const pills: EvidenceMetaPill[] = [];
+    const linkRole = this.textValue(item['link_role']) || this.evidenceRole(item);
+    const evidenceKind = this.textValue(item['evidence_kind']);
+    const evidenceStrength = this.textValue(item['evidence_strength']);
+
+    if (linkRole) {
+      pills.push({
+        id: 'link_role',
+        label: 'link_role',
+        value: linkRole,
+      });
+    }
+
+    if (evidenceKind) {
+      pills.push({
+        id: 'evidence_kind',
+        label: 'evidence_kind',
+        value: evidenceKind,
+      });
+    }
+
+    if (evidenceStrength) {
+      pills.push({
+        id: 'evidence_strength',
+        label: 'evidence_strength',
+        value: evidenceStrength,
+      });
+    }
+
+    return pills;
+  }
+
   evidenceRole(item: Record<string, unknown>): string {
     const role = this.textValue(item['link_role']).toLowerCase();
     if (!role) return 'supports';
@@ -532,11 +560,15 @@ export class QuranWordInspectorComponent implements OnChanges {
   }
 
   evidenceNote(item: Record<string, unknown>): string {
-    const note = this.textValue(item['note_md']);
+    const note = this.cleanEvidenceText(item['note_md']);
     if (note) return note;
-    const extract = this.textValue(item['extract_text']);
+    const extract = this.cleanEvidenceText(item['extract_text']);
     if (extract) return extract;
     return '';
+  }
+
+  evidenceExtractText(item: Record<string, unknown>): string {
+    return this.cleanEvidenceText(item['extract_text']);
   }
 
   isArabicText(value: string): boolean {
@@ -555,8 +587,6 @@ export class QuranWordInspectorComponent implements OnChanges {
 
   trackByField = (_: number, field: InspectorField): string => field.id;
 
-  trackByFeature = (_: number, feature: MorphologyFeature): string => feature.id;
-
   trackByPair = (_: number, pair: InsightPair): string => pair.id;
 
   trackByBadge = (_: number, badge: KeyInfoBadge): string => badge.id;
@@ -566,6 +596,8 @@ export class QuranWordInspectorComponent implements OnChanges {
     if (evidenceId) return evidenceId;
     return `${trackTextValue(item['source_id'])}|${trackTextValue(item['chunk_id'])}|${index}`;
   };
+
+  trackByEvidencePill = (_: number, pill: EvidenceMetaPill): string => pill.id;
 
   trackByTerm = (index: number, term: string): string => `${term}-${index}`;
 
@@ -732,20 +764,64 @@ export class QuranWordInspectorComponent implements OnChanges {
     return this.normalizeParadigmCandidate(fallback);
   }
 
-  private get morphologyExampleTerms(): string[] {
+  private get nounLemma(): string {
+    const pos = this.posValue.toLowerCase();
+    if (pos && pos !== 'noun') return '';
+
+    return (
+      this.firstText(this.activeMorphologyRecord, ['lemma_ar', 'surface_ar']) ||
+      this.firstText(this.activeLinkRecord, ['lemma_ar', 'surface_ar']) ||
+      this.lemmaValue
+    );
+  }
+
+  private get derivedVerbTriplet(): string {
+    const record = this.derivedFromVerbRecord;
+    if (!record) return '';
+
+    const past = this.firstText(record, ['past', 'verb_past', 'perfect']);
+    const present = this.firstText(record, ['present', 'verb_present', 'imperfect']);
+    const masdar = this.firstText(record, ['masdar', 'verbal_noun', 'infinitive']);
+
+    const parts = [past, present, masdar].filter(Boolean);
+    if (!parts.length) return '';
+    return parts.join('-');
+  }
+
+  private get derivedFromVerbRecord(): Record<string, unknown> | null {
+    const candidates = [
+      this.extractDerivedFromVerb(this.activeMorphologyRecord),
+      this.extractDerivedFromVerb(this.activeLinkRecord),
+    ];
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      return candidate;
+    }
+    return null;
+  }
+
+  private get meaningRangeTerms(): string[] {
     const values: string[] = [];
 
     const pushTokens = (value: unknown) => {
-      for (const token of this.tokenizeListValue(value)) {
+      for (const token of this.parseMeaningTokens(value)) {
         const normalized = token.replace(/\s+/g, ' ').trim();
         if (normalized) values.push(normalized);
       }
     };
 
-    pushTokens(this.meaningPrimary);
-    for (const item of this.meaningAlternatives) pushTokens(item);
+    pushTokens(this.firstText(this.activeMorphologyRecord, ['gloss_en']));
+    pushTokens(this.firstText(this.activeLinkRecord, ['gloss_en']));
+    pushTokens(this.firstText(this.activeMorphologyRecord, ['notes']));
+    pushTokens(this.firstText(this.activeLinkRecord, ['notes']));
+    pushTokens(this.activeMorphologyRecord?.['synonyms_json']);
+    pushTokens(this.activeLinkRecord?.['synonyms_json']);
     pushTokens(this.activeMorphologyRecord?.['tags_en']);
     pushTokens(this.activeLinkRecord?.['tags_en']);
+    pushTokens(this.meaningPrimary);
+    for (const item of this.meaningAlternatives) {
+      pushTokens(item);
+    }
 
     const deduped: string[] = [];
     const seen = new Set<string>();
@@ -759,6 +835,68 @@ export class QuranWordInspectorComponent implements OnChanges {
     const englishFirst = deduped.filter((entry) => !this.looksArabic(entry));
     const selected = englishFirst.length ? englishFirst : deduped;
     return selected.slice(0, 8);
+  }
+
+  private get morphologyRecord(): Record<string, unknown> | null {
+    return this.asRecord(this.activeMorphologyRecord?.['morphology']);
+  }
+
+  private get morphologySingularRecord(): Record<string, unknown> | null {
+    return this.asRecord(this.morphologyRecord?.['singular']);
+  }
+
+  private get morphologyPluralRecord(): Record<string, unknown> | null {
+    return this.asRecord(this.morphologyRecord?.['plural']);
+  }
+
+  private get morphologyFeatureRecord(): Record<string, unknown> | null {
+    return this.asRecord(this.morphologyRecord?.['morph_features']);
+  }
+
+  private get morphologyDerivedFromVerbRecord(): Record<string, unknown> | null {
+    return this.asRecord(this.morphologyFeatureRecord?.['derived_from_verb']);
+  }
+
+  private extractDerivedFromVerb(source: Record<string, unknown> | null): Record<string, unknown> | null {
+    if (!source) return null;
+
+    const direct = this.asRecord(source['derived_from_verb']);
+    if (direct && this.hasVerbTripletParts(direct)) return direct;
+
+    const morphMeta = this.asRecord(source['morph_meta']);
+    if (morphMeta) {
+      const nested = this.asRecord(morphMeta['derived_from_verb']);
+      if (nested && this.hasVerbTripletParts(nested)) return nested;
+      if (this.hasVerbTripletParts(morphMeta)) return morphMeta;
+    }
+
+    const meta = this.asRecord(source['meta']);
+    if (meta) {
+      const nested = this.asRecord(meta['derived_from_verb']);
+      if (nested && this.hasVerbTripletParts(nested)) return nested;
+      const nestedMorphMeta = this.asRecord(meta['morph_meta']);
+      if (nestedMorphMeta) {
+        const nestedFromMorphMeta = this.asRecord(nestedMorphMeta['derived_from_verb']);
+        if (nestedFromMorphMeta && this.hasVerbTripletParts(nestedFromMorphMeta)) return nestedFromMorphMeta;
+        if (this.hasVerbTripletParts(nestedMorphMeta)) return nestedMorphMeta;
+      }
+    }
+
+    const morphology = this.asRecord(source['morphology']);
+    if (morphology) {
+      const nested = this.asRecord(morphology['derived_from_verb']);
+      if (nested && this.hasVerbTripletParts(nested)) return nested;
+    }
+
+    return null;
+  }
+
+  private hasVerbTripletParts(record: Record<string, unknown>): boolean {
+    return Boolean(
+      this.firstText(record, ['past', 'verb_past', 'perfect']) ||
+        this.firstText(record, ['present', 'verb_present', 'imperfect']) ||
+        this.firstText(record, ['masdar', 'verbal_noun', 'infinitive'])
+    );
   }
 
   private get activeMorphologyRecord(): Record<string, unknown> | null {
@@ -1150,6 +1288,38 @@ export class QuranWordInspectorComponent implements OnChanges {
     return '';
   }
 
+  private parseMeaningTokens(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value
+        .map((entry) => this.textValue(entry))
+        .map((entry) => entry.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+    }
+
+    const raw = this.textValue(value);
+    if (!raw) return [];
+
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((entry) => this.textValue(entry))
+            .map((entry) => entry.replace(/\s+/g, ' ').trim())
+            .filter(Boolean);
+        }
+      } catch {
+        // Ignore parse errors and fall back to token split.
+      }
+    }
+
+    return trimmed
+      .split(/[|;,]/)
+      .map((entry) => entry.replace(/^["']|["']$/g, '').replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+  }
+
   private tokenizeListValue(value: unknown): string[] {
     if (Array.isArray(value)) {
       return value.map((entry) => this.textValue(entry)).filter(Boolean);
@@ -1200,6 +1370,21 @@ export class QuranWordInspectorComponent implements OnChanges {
       }
     }
     return '';
+  }
+
+  private cleanEvidenceText(value: unknown): string {
+    const raw = this.textValue(value);
+    if (!raw) return '';
+    return raw
+      .replace(this.arabicScriptRe, ' ')
+      .replace(/\*+/g, '')
+      .replace(/\s*-\s*/g, ' - ')
+      .replace(/\s*:\s*/g, ': ')
+      .replace(/\s*\|\s*/g, ' | ')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/^[\s|:,\-.]+/, '')
+      .replace(/[\s|:,\-.]+$/, '')
+      .trim();
   }
 
   private looksArabic(value: string): boolean {
