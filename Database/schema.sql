@@ -609,6 +609,7 @@ CREATE INDEX IF NOT EXISTS idx_ar_u_sentences_kind ON ar_u_sentences(sentence_ki
 CREATE TABLE IF NOT EXISTS ar_u_expressions (
   ar_u_expression  TEXT PRIMARY KEY,
   canonical_input  TEXT NOT NULL UNIQUE,
+  ar_u_lexicon     TEXT,
 
   label            TEXT,
   text_ar          TEXT,
@@ -616,10 +617,13 @@ CREATE TABLE IF NOT EXISTS ar_u_expressions (
   meta_json        JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
 
   created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at       TEXT
+  updated_at       TEXT,
+
+  FOREIGN KEY (ar_u_lexicon) REFERENCES ar_u_lexicon(ar_u_lexicon) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_ar_u_expressions_label ON ar_u_expressions(label);
+CREATE INDEX IF NOT EXISTS idx_ar_u_expressions_lexicon ON ar_u_expressions(ar_u_lexicon);
 
 CREATE TABLE IF NOT EXISTS ar_u_grammar (
   ar_u_grammar     TEXT PRIMARY KEY,
@@ -771,32 +775,6 @@ CREATE TABLE IF NOT EXISTS ar_occ_sentence (
 
 CREATE INDEX IF NOT EXISTS idx_ar_occ_sentence_unit ON ar_occ_sentence(container_id, unit_id);
 CREATE INDEX IF NOT EXISTS idx_ar_occ_sentence_u_sentence ON ar_occ_sentence(ar_u_sentence);
-
-CREATE TABLE IF NOT EXISTS ar_occ_expression (
-  ar_expression_occ_id  TEXT PRIMARY KEY,
-  user_id               INTEGER,
-  container_id          TEXT,
-  unit_id               TEXT,
-
-  start_index           INTEGER,
-  end_index             INTEGER,
-  text_cache            TEXT,
-  ar_u_expression       TEXT,
-
-  note                  TEXT,
-  meta_json             JSON CHECK (meta_json IS NULL OR json_valid(meta_json)),
-
-  created_at            TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at            TEXT,
-
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (container_id) REFERENCES ar_containers(id) ON DELETE SET NULL,
-  FOREIGN KEY (unit_id) REFERENCES ar_container_units(id) ON DELETE SET NULL,
-  FOREIGN KEY (ar_u_expression) REFERENCES ar_u_expressions(ar_u_expression) ON DELETE SET NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_ar_occ_expression_unit ON ar_occ_expression(container_id, unit_id);
-CREATE INDEX IF NOT EXISTS idx_ar_occ_expression_u_expression ON ar_occ_expression(ar_u_expression);
 
 CREATE TABLE IF NOT EXISTS ar_occ_grammar (
   id              TEXT PRIMARY KEY,

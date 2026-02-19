@@ -1,1 +1,41 @@
-<app-quran-lesson-task-json taskType="expressions"></app-quran-lesson-task-json>
+<div class="sentence-layout">
+  <div class="sentence-pane">
+    <div class="sentence-card">
+      <div class="sentence-card-head">
+        <h4>Expressions</h4>
+        <div class="action-row">
+          <button type="button" class="btn btn-ghost btn-sm" (click)="openInsertModal($event)">
+            Insert JSON List
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            [disabled]="state.taskSavingType === 'expressions' || !state.lessonId || !state.passageUnitId"
+            (click)="saveTask()"
+          >
+            {{ state.taskSavingType === 'expressions' ? 'Saving...' : 'Save Task' }}
+          </button>
+        </div>
+      </div>
+      <p class="note-muted">
+        Paste either <code>u_expressions[]</code> or a plain JSON array (treated as
+        <code>u_expressions[]</code>).
+      </p>
+      <p class="text-muted">
+        Current rows: <code>u_expressions</code> {{ uExpressionCount }}
+      </p>
+    </div>
+
+    <app-quran-lesson-task-json taskType="expressions"></app-quran-lesson-task-json>
+  </div>
+</div>
+
+<app-json-editor-modal
+  [open]="insertModalOpen"
+  [title]="insertModalTitle"
+  [value]="insertModalJson"
+  [placeholder]="insertModalPlaceholder"
+  [error]="insertModalError"
+  (close)="closeInsertModal()"
+  (save)="onInsertSave($event)"
+></app-json-editor-modal>

@@ -308,9 +308,8 @@ function validateStepPayload(
       return null;
     }
     case 'expressions': {
-      const occExpressions = asArray(payload['occ_expressions']);
-      if (!occExpressions.length) return 'Expressions step requires occurrence expressions.';
-      if (!containerId) return 'Expressions step requires container_id.';
+      const uExpressions = asArray(payload['u_expressions']);
+      if (!uExpressions.length) return 'Expressions step requires u_expressions.';
       return null;
     }
     case 'links': {
@@ -1091,6 +1090,7 @@ async function upsertExpression(
     .filter((entry): entry is string => !!entry);
   const textAr = asString(row['text_ar']) ?? asString(row['text']) ?? '';
   const label = asString(row['label']) ?? textAr;
+  const arULexicon = asString(row['ar_u_lexicon']) ?? asString(row['u_lexicon_id']);
 
   const canonicalInput = canonicalize(
     asString(row['canonical_input']) ??
@@ -1102,10 +1102,11 @@ async function upsertExpression(
     .prepare(
       `
       INSERT INTO ar_u_expressions (
-        ar_u_expression, canonical_input, label, text_ar, sequence_json, meta_json, created_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
+        ar_u_expression, canonical_input, ar_u_lexicon, label, text_ar, sequence_json, meta_json, created_at
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'))
       ON CONFLICT(ar_u_expression) DO UPDATE SET
         canonical_input = excluded.canonical_input,
+        ar_u_lexicon = excluded.ar_u_lexicon,
         label = excluded.label,
         text_ar = excluded.text_ar,
         sequence_json = excluded.sequence_json,
@@ -1113,7 +1114,15 @@ async function upsertExpression(
         updated_at = datetime('now')
     `
     )
-    .bind(id, canonicalInput, label, textAr, JSON.stringify(sequence), toJsonOrNull(row['meta_json']))
+    .bind(
+      id,
+      canonicalInput,
+      arULexicon,
+      label,
+      textAr,
+      JSON.stringify(sequence),
+      toJsonOrNull(row['meta_json'])
+    )
     .run();
 
   return id;
@@ -1121,71 +1130,15 @@ async function upsertExpression(
 
 async function commitExpressionsStep(
   db: D1Database,
-  userId: number,
-  containerId: string,
-  unitId: string | null,
   payload: JsonRecord,
   counts: Counts
 ) {
-  const expressionMap = new Map<string, string>();
-
   const uExpressions = asArray(payload['u_expressions']);
   for (const item of uExpressions) {
     const row = asRecord(item);
     if (!row) continue;
-    const expressionId = await upsertExpression(db, row);
-    const provided = asString(row['ar_u_expression']) ?? asString(row['u_expression_id']);
-    if (provided) expressionMap.set(provided, expressionId);
-    expressionMap.set(expressionId, expressionId);
+    await upsertExpression(db, row);
     bump(counts, 'ar_u_expressions');
-  }
-
-  const occExpressions = asArray(payload['occ_expressions']);
-  for (const item of occExpressions) {
-    const row = asRecord(item);
-    if (!row) continue;
-    const providedExpression = asString(row['ar_u_expression']) ?? asString(row['u_expression_id']);
-    let expressionId =
-      (providedExpression ? expressionMap.get(providedExpression) ?? providedExpression : null) ??
-      null;
-    if (!expressionId) {
-      expressionId = await upsertExpression(db, row);
-      expressionMap.set(expressionId, expressionId);
-      bump(counts, 'ar_u_expressions');
-    }
-
-    const occContainerId = asString(row['container_id']) ?? containerId;
-    const occUnitId = asString(row['unit_id']) ?? unitId;
-    const textCache = asString(row['text_cache']) ?? asString(row['text']) ?? null;
-    const expressionOccId =
-      asString(row['ar_expression_occ_id']) ??
-      asString(row['expression_occ_id']) ??
-      (await sha256Hex(buildCommitId(['occ_expression', occContainerId, occUnitId, expressionId, textCache])));
-
-    await db
-      .prepare(
-        `
-        INSERT OR REPLACE INTO ar_occ_expression (
-          ar_expression_occ_id, user_id, container_id, unit_id,
-          start_index, end_index, text_cache, ar_u_expression,
-          note, meta_json, created_at
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, datetime('now'))
-      `
-      )
-      .bind(
-        expressionOccId,
-        userId,
-        occContainerId,
-        occUnitId,
-        asInteger(row['start_index']),
-        asInteger(row['end_index']),
-        textCache,
-        expressionId,
-        asString(row['note']),
-        toJsonOrNull(row['meta_json'])
-      )
-      .run();
-    bump(counts, 'ar_occ_expression');
   }
 }
 
@@ -1417,12 +1370,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
           );
           break;
         case 'expressions':
-          if (!resolvedContainerId) throw new Error('Expressions step requires container_id.');
           await commitExpressionsStep(
             ctx.env.DB,
-            user.id,
-            resolvedContainerId,
-            resolvedUnitId,
             payload,
             counts
           );
