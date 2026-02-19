@@ -11,20 +11,37 @@
   --qi-ink: #e7f2ff;
   --qi-ink-muted: rgba(198, 214, 236, 0.82);
   --qi-accent: #7de6c6;
+  --qi-font-ui: 'IBM Plex Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --qi-font-ar: var(--app-font-ar, 'Uthmanic Hafs', 'Scheherazade New', 'Amiri', 'Noto Naskh Arabic', 'Cairo', serif);
   border: 1px solid var(--qi-border);
   border-radius: 16px;
   background: var(--qi-bg);
-  box-shadow:
-    0 18px 40px rgba(2, 8, 16, 0.55),
-    inset 0 0 0 1px rgba(157, 223, 255, 0.08);
+  box-shadow: 0 10px 24px rgba(2, 8, 16, 0.42), inset 0 0 0 1px rgba(157, 223, 255, 0.05);
   color: var(--qi-ink);
+  font-family: var(--qi-font-ui);
   overflow: hidden;
   position: sticky;
   top: 0.8rem;
 }
 
+.quran-word-inspector [dir='rtl'],
+.quran-word-inspector .qi-ar {
+  font-family: var(--qi-font-ar);
+}
+
 .quran-word-inspector--empty {
   border-style: dashed;
+}
+
+.quran-word-inspector--panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  position: static;
+  top: auto;
+  height: 100%;
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
 }
 
 .inspector-header {
@@ -39,6 +56,7 @@
 
 .inspector-copy {
   min-width: 0;
+  width: 100%;
 }
 
 .inspector-kicker {
@@ -53,8 +71,9 @@
 .inspector-word {
   margin: 0.2rem 0 0;
   font-size: clamp(1.45rem, 2.6vw, 2rem);
-  line-height: 1.2;
+  line-height: 1.34;
   color: var(--qi-accent);
+  font-family: var(--qi-font-ar);
 }
 
 .inspector-meta {
@@ -63,7 +82,26 @@
   flex-direction: column;
   gap: 0.08rem;
   color: var(--qi-ink-muted);
-  font-size: 0.82rem;
+  font-size: 0.98rem;
+  font-family: 'Noto Serif', 'Georgia', serif;
+  overflow-wrap: anywhere;
+}
+
+.quran-word-inspector--panel .inspector-header {
+  position: relative;
+  justify-content: center;
+  text-align: center;
+  padding-right: 3rem;
+}
+
+.quran-word-inspector--panel .inspector-meta {
+  align-items: center;
+}
+
+.quran-word-inspector--panel .inspector-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
 }
 
 .inspector-close {
@@ -124,6 +162,210 @@
   gap: 0.6rem;
 }
 
+.quran-word-inspector--panel .inspector-body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.quran-word-inspector--panel .tab-section {
+  min-height: 0;
+  overflow: auto;
+  padding-bottom: 0.15rem;
+}
+
+.insight-card {
+  border: 1px solid rgba(130, 168, 204, 0.24);
+  border-radius: 12px;
+  background: rgba(16, 28, 43, 0.74);
+  padding: 0.64rem 0.7rem;
+}
+
+.insight-card--word {
+  background:
+    radial-gradient(circle at 8% 18%, rgba(80, 185, 149, 0.2), transparent 40%),
+    rgba(14, 30, 44, 0.82);
+}
+
+.insight-word-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.insight-word {
+  margin: 0;
+  font-size: clamp(1.55rem, 2.8vw, 2.2rem);
+  line-height: 1.38;
+  color: #9bf0cf;
+  font-family: var(--qi-font-ar);
+}
+
+.insight-pos-badge {
+  border-radius: 999px;
+  border: 1px solid rgba(126, 220, 190, 0.48);
+  background: rgba(25, 65, 67, 0.72);
+  color: #e4fff5;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.16rem 0.48rem;
+}
+
+.insight-translit {
+  margin: 0.18rem 0 0;
+  color: rgba(187, 210, 235, 0.88);
+  font-size: 0.92rem;
+}
+
+.insight-meaning {
+  margin: 0.42rem 0 0;
+  color: #ecfbff;
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+.key-badge-list {
+  margin-top: 0.52rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+}
+
+.key-badge-title {
+  width: 100%;
+  margin: 0;
+  color: rgba(170, 197, 227, 0.86);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.key-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  border-radius: 999px;
+  border: 1px solid rgba(126, 190, 231, 0.42);
+  background: rgba(19, 44, 63, 0.75);
+  padding: 0.2rem 0.46rem;
+}
+
+.key-badge-label {
+  color: rgba(171, 201, 230, 0.88);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.key-badge-value {
+  color: #eef8ff;
+  font-size: 0.79rem;
+  font-family: 'Noto Serif', 'Georgia', serif;
+  line-height: 1.45;
+}
+
+.meaning-stack {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.meaning-item {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.48rem;
+}
+
+.meaning-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(126, 220, 190, 0.52);
+  color: #c6ffec;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.meaning-text {
+  color: rgba(220, 237, 255, 0.96);
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: 'Noto Serif', 'Georgia', serif;
+  overflow-wrap: anywhere;
+}
+
+.meaning-text--arabic {
+  font-family: var(--qi-font-ar);
+  line-height: 1.95;
+}
+
+.insight-card--example {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(66, 124, 183, 0.18), transparent 44%),
+    rgba(14, 28, 43, 0.8);
+}
+
+.example-title {
+  margin: 0;
+  color: #edf8ff;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.example-text {
+  margin: 0.42rem 0 0;
+  color: rgba(212, 232, 251, 0.95);
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: 'Noto Serif', 'Georgia', serif;
+  overflow-wrap: anywhere;
+}
+
+.example-text[dir='rtl'] {
+  font-family: var(--qi-font-ar);
+  font-size: clamp(1.1rem, 1.35vw, 1.5rem);
+  line-height: 2;
+}
+
+.example-source {
+  margin: 0.45rem 0 0;
+  color: rgba(165, 194, 225, 0.86);
+  font-size: 0.84rem;
+  font-family: 'Noto Serif', 'Georgia', serif;
+}
+
+.insight-pairs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.42rem 0.56rem;
+}
+
+.insight-pair {
+  border: 1px solid rgba(129, 170, 207, 0.2);
+  border-radius: 10px;
+  background: rgba(17, 29, 44, 0.7);
+  padding: 0.42rem 0.52rem;
+}
+
+.insight-pair-label {
+  display: block;
+  color: rgba(172, 196, 223, 0.78);
+  font-size: 0.72rem;
+  margin-bottom: 0.18rem;
+}
+
+.insight-pair-value {
+  display: block;
+  color: var(--qi-ink);
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
 .field-grid {
   border: 1px solid rgba(130, 168, 204, 0.25);
   border-radius: 12px;
@@ -154,11 +396,14 @@
   text-align: right;
   font-size: 0.88rem;
   color: var(--qi-ink);
-  line-height: 1.35;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .field-value--arabic {
-  font-size: 0.98rem;
+  font-size: 1rem;
+  font-family: var(--qi-font-ar);
+  line-height: 1.8;
 }
 
 .terms-wrap,
@@ -207,6 +452,16 @@
   padding-right: 0.15rem;
 }
 
+.quran-word-inspector--panel .evidence-list {
+  max-height: none;
+  padding-right: 0;
+  overflow: visible;
+}
+
+.evidence-list--panel {
+  gap: 0.72rem;
+}
+
 .evidence-card {
   border: 1px solid rgba(130, 168, 204, 0.25);
   border-radius: 12px;
@@ -234,16 +489,21 @@
 }
 
 .evidence-source {
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   color: rgba(182, 206, 236, 0.82);
   text-align: right;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-family: 'Noto Serif', 'Georgia', serif;
+  white-space: normal;
 }
 
 .evidence-card h4 {
   margin: 0;
   font-size: 0.92rem;
-  line-height: 1.35;
+  line-height: 1.5;
   color: #e7f6ff;
+  overflow-wrap: anywhere;
 }
 
 .evidence-card p {
@@ -251,6 +511,67 @@
   color: rgba(197, 217, 242, 0.86);
   font-size: 0.82rem;
   line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.evidence-card--panel {
+  padding: 0.74rem 0.8rem;
+  background: rgba(15, 29, 45, 0.76);
+}
+
+.evidence-panel-title {
+  margin: 0;
+  color: #ecf8ff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.56;
+  font-family: 'Noto Serif', 'Georgia', serif;
+  overflow-wrap: anywhere;
+}
+
+.evidence-panel-title-main {
+  color: #ecf8ff;
+}
+
+.evidence-panel-title-text {
+  overflow-wrap: anywhere;
+}
+
+.evidence-panel-title-text--arabic {
+  font-family: var(--qi-font-ar);
+  line-height: 1.9;
+}
+
+.evidence-source--inline {
+  margin-top: 0.28rem;
+  text-align: right;
+}
+
+.evidence-panel-body {
+  margin-top: 0.54rem;
+  border-top: 1px solid rgba(129, 171, 208, 0.2);
+  padding-top: 0.56rem;
+}
+
+.evidence-panel-body p {
+  margin-top: 0.46rem;
+  font-size: 1.02rem;
+  line-height: 1.68;
+  color: rgba(214, 232, 248, 0.96);
+  font-family: 'Noto Serif', 'Georgia', serif;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.evidence-panel-body p[dir='rtl'] {
+  font-family: var(--qi-font-ar);
+  font-size: clamp(1.14rem, 1.3vw, 1.7rem);
+  line-height: 2.05;
+}
+
+.evidence-note--arabic {
+  font-family: var(--qi-font-ar);
+  line-height: 2.05;
 }
 
 .loading-state,
@@ -300,5 +621,9 @@
 @media (max-width: 1100px) {
   .quran-word-inspector {
     position: static;
+  }
+
+  .insight-pairs {
+    grid-template-columns: 1fr;
   }
 }

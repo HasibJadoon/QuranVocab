@@ -114,6 +114,7 @@
                   class="reading-word-inspector"
                   [selection]="selectedReadingWord"
                   [contextLabel]="lessonSubtitle"
+                  [surahLabel]="readingInspectorSurahName"
                   [morphologyItems]="morphologyItems"
                   [lexiconMorphologyItems]="lexiconMorphologyItems"
                   [evidenceItems]="morphologyEvidenceItems"
@@ -172,14 +173,88 @@
                     aria-label="Word details"
                     (click)="$event.stopPropagation()"
                   >
-                    <app-quran-word-inspector
-                      [selection]="dialogWord"
-                      [contextLabel]="lessonSubtitle"
-                      [morphologyItems]="morphologyItems"
-                      [lexiconMorphologyItems]="lexiconMorphologyItems"
-                      [evidenceItems]="morphologyEvidenceItems"
-                      (close)="closeMorphologyWordDialog()"
-                    ></app-quran-word-inspector>
+                    <header class="study-word-dialog-head">
+                      <div>
+                        <h3 class="study-word-dialog-title">
+                          {{ morphologyDialogSurahName ? 'Surah ' + morphologyDialogSurahName : 'Word Study' }}
+                        </h3>
+                      </div>
+                      <div class="study-word-dialog-controls">
+                        <div class="study-word-dialog-mode-toggle">
+                          <button
+                            type="button"
+                            class="study-word-dialog-toggle-btn"
+                            [class.study-word-dialog-toggle-btn--active]="dialogViewMode === 'context'"
+                            (click)="setDialogViewMode('context')"
+                          >
+                            Context
+                          </button>
+                          <button
+                            type="button"
+                            class="study-word-dialog-toggle-btn"
+                            [class.study-word-dialog-toggle-btn--active]="dialogViewMode === 'analysis'"
+                            (click)="setDialogViewMode('analysis')"
+                          >
+                            Analysis
+                          </button>
+                        </div>
+                        <button type="button" class="study-word-dialog-toggle-btn study-word-dialog-toggle-btn--wide" (click)="toggleDialogTranslation()">
+                          {{ showDialogTranslation ? 'Hide Translation' : 'Show Translation' }}
+                        </button>
+                        <span class="study-word-dialog-ref">{{ morphologyDialogReference }}</span>
+                      </div>
+                    </header>
+
+                    <div class="study-word-dialog-layout" [class.study-word-dialog-layout--analysis]="dialogViewMode === 'analysis'">
+                      <section class="study-word-context">
+                        <p class="study-word-context-bar" *ngIf="morphologyDialogContextBar">{{ morphologyDialogContextBar }}</p>
+                        <div class="study-word-context-head">
+                          <p>Context Verses</p>
+                          <span>{{ morphologyDialogContextAyahs.length }} ayah{{ morphologyDialogContextAyahs.length === 1 ? '' : 's' }}</span>
+                        </div>
+
+                        <div class="study-word-context-list" *ngIf="morphologyDialogContextAyahs.length; else noDialogContext">
+                          <article
+                            class="study-word-context-ayah"
+                            *ngFor="let ayah of morphologyDialogContextAyahs"
+                            [class.study-word-context-ayah--focus]="ayah.isFocus"
+                          >
+                            <div class="study-word-context-ayah-head">
+                              <span class="study-word-context-ayah-badge">{{ toArabicIndicDigits(ayah.ayah) }}</span>
+                              <span>Ayah {{ ayah.ayah }}</span>
+                            </div>
+                            <p class="study-word-context-ar text-arabic" dir="rtl" translate="no">
+                              <ng-container *ngFor="let token of ayah.words; let tokenIndex = index; let isLastToken = last">
+                                <span
+                                  class="study-word-context-token"
+                                  [class.study-word-context-token--active]="isDialogTokenSelected(ayah.surah, ayah.ayah, tokenIndex + 1)"
+                                  [attr.data-pos]="dialogTokenPos(ayah.surah, ayah.ayah, tokenIndex + 1) || null"
+                                  [attr.title]="dialogTokenHint(ayah.surah, ayah.ayah, tokenIndex + 1, token)"
+                                >
+                                  {{ token }}
+                                </span>
+                                <span *ngIf="!isLastToken"> </span>
+                              </ng-container>
+                            </p>
+                            <p class="study-word-context-translation" *ngIf="showDialogTranslation && ayah.translation">{{ ayah.translation }}</p>
+                          </article>
+                        </div>
+                        <ng-template #noDialogContext>
+                          <p class="study-word-context-empty">No verse context available for this word.</p>
+                        </ng-template>
+                      </section>
+
+                      <app-quran-word-inspector
+                        class="study-word-inspector-panel"
+                        [selection]="dialogWord"
+                        [surahLabel]="morphologyDialogSurahName"
+                        [appearance]="'panel'"
+                        [morphologyItems]="morphologyItems"
+                        [lexiconMorphologyItems]="lexiconMorphologyItems"
+                        [evidenceItems]="morphologyEvidenceItems"
+                        (close)="closeMorphologyWordDialog()"
+                      ></app-quran-word-inspector>
+                    </div>
 
                     <div class="study-word-dialog-actions">
                       <button type="button" class="btn btn-ghost btn-sm" (click)="closeMorphologyWordDialog()">Close</button>

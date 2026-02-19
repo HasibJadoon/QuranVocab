@@ -1,10 +1,14 @@
-<aside class="quran-word-inspector" [class.quran-word-inspector--empty]="!hasSelection">
+<aside
+  class="quran-word-inspector"
+  [class.quran-word-inspector--empty]="!hasSelection"
+  [class.quran-word-inspector--panel]="appearance === 'panel'"
+>
   <header class="inspector-header">
     <div class="inspector-copy">
-      <p class="inspector-kicker">Word Insight</p>
+      <p class="inspector-kicker" *ngIf="appearance !== 'panel'">Word Insight</p>
       <h3 class="inspector-word text-arabic" dir="rtl">{{ activeWord }}</h3>
       <p class="inspector-meta">
-        <span>{{ activeReferenceLabel }}</span>
+        <span>{{ activeSurahReferenceLabel }}</span>
         <span *ngIf="contextLabel">{{ contextLabel }}</span>
       </p>
     </div>
@@ -61,21 +65,101 @@
         <div class="error-state" *ngIf="remoteError">{{ remoteError }}</div>
 
         <ng-container *ngIf="hasLexiconData; else noLexiconTpl">
-          <div class="field-grid">
-            <div class="field-row" *ngFor="let field of lexiconFields; trackBy: trackByField">
-              <span class="field-label">{{ field.label }}</span>
-              <span class="field-value" [class.field-value--arabic]="field.arabic" [attr.dir]="field.arabic ? 'rtl' : null">
-                {{ field.value }}
-              </span>
-            </div>
-          </div>
+          <ng-container *ngIf="appearance === 'panel'; else lexiconClassicTpl">
+            <article class="insight-card insight-card--word">
+              <div class="insight-word-head">
+                <h4 class="insight-word text-arabic" dir="rtl">{{ activeWord }}</h4>
+                <span class="insight-pos-badge" *ngIf="posBadge">{{ posBadge }}</span>
+              </div>
+              <p class="insight-translit" *ngIf="transliterationValue">{{ transliterationValue }}</p>
+              <p class="insight-meaning">{{ primaryMeaning }}</p>
+              <div class="key-badge-list" *ngIf="keyInfoBadges.length">
+                <p class="key-badge-title">Key Information</p>
+                <span class="key-badge" *ngFor="let badge of keyInfoBadges; trackBy: trackByBadge">
+                  <span class="key-badge-label">{{ badge.label }}</span>
+                  <span class="key-badge-value" [class.qi-ar]="badge.arabic" [attr.dir]="badge.arabic ? 'rtl' : null">{{ badge.value }}</span>
+                </span>
+              </div>
+            </article>
 
-          <div class="terms-wrap" *ngIf="relatedTerms.length">
-            <p class="terms-label">Related</p>
-            <div class="terms-list">
-              <span class="term-pill" *ngFor="let term of relatedTerms; trackBy: trackByTerm">{{ term }}</span>
+            <article class="insight-card">
+              <p class="terms-label">Meanings</p>
+              <div class="meaning-stack">
+                <p class="meaning-item">
+                  <span class="meaning-index">1</span>
+                  <span
+                    class="meaning-text"
+                    [class.meaning-text--arabic]="isArabicText(primaryMeaning)"
+                    [attr.dir]="isArabicText(primaryMeaning) ? 'rtl' : null"
+                  >
+                    {{ primaryMeaning }}
+                  </span>
+                </p>
+                <p class="meaning-item" *ngIf="secondaryMeaning">
+                  <span class="meaning-index">2</span>
+                  <span
+                    class="meaning-text"
+                    [class.meaning-text--arabic]="isArabicText(secondaryMeaning)"
+                    [attr.dir]="isArabicText(secondaryMeaning) ? 'rtl' : null"
+                  >
+                    {{ secondaryMeaning }}
+                  </span>
+                </p>
+              </div>
+            </article>
+
+            <article class="insight-card insight-card--example" *ngIf="featuredEvidenceExample as example">
+              <p class="terms-label">Example</p>
+              <h5 class="example-title">{{ example.title }}</h5>
+              <p class="example-text" [class.qi-ar]="isArabicText(example.text)" [attr.dir]="isArabicText(example.text) ? 'rtl' : null">
+                {{ example.text }}
+              </p>
+              <p class="example-source">{{ example.source }}</p>
+            </article>
+
+            <article class="insight-card">
+              <p class="terms-label">Linguistic Profile</p>
+              <div class="insight-pairs">
+                <div class="insight-pair" *ngFor="let pair of lexicalInsightPairs; trackBy: trackByPair">
+                  <span class="insight-pair-label">{{ pair.label }}</span>
+                  <span class="insight-pair-value" [class.field-value--arabic]="pair.arabic" [attr.dir]="pair.arabic ? 'rtl' : null">
+                    {{ pair.value }}
+                  </span>
+                </div>
+              </div>
+            </article>
+
+            <article class="insight-card" *ngIf="semanticChips.length">
+              <p class="terms-label">Semantic Range</p>
+              <div class="terms-list">
+                <span
+                  class="term-pill"
+                  *ngFor="let term of semanticChips; trackBy: trackByTerm"
+                  [class.qi-ar]="isArabicText(term)"
+                  [attr.dir]="isArabicText(term) ? 'rtl' : null"
+                >
+                  {{ term }}
+                </span>
+              </div>
+            </article>
+          </ng-container>
+          <ng-template #lexiconClassicTpl>
+            <div class="field-grid">
+              <div class="field-row" *ngFor="let field of lexiconFields; trackBy: trackByField">
+                <span class="field-label">{{ field.label }}</span>
+                <span class="field-value" [class.field-value--arabic]="field.arabic" [attr.dir]="field.arabic ? 'rtl' : null">
+                  {{ field.value }}
+                </span>
+              </div>
             </div>
-          </div>
+
+            <div class="terms-wrap" *ngIf="relatedTerms.length">
+              <p class="terms-label">Related</p>
+              <div class="terms-list">
+                <span class="term-pill" *ngFor="let term of relatedTerms; trackBy: trackByTerm">{{ term }}</span>
+              </div>
+            </div>
+          </ng-template>
         </ng-container>
         <ng-template #noLexiconTpl>
           <p class="empty-inline">No lexicon details available for this word yet.</p>
@@ -119,15 +203,52 @@
         <div class="error-state" *ngIf="remoteError">{{ remoteError }}</div>
 
         <ng-container *ngIf="evidenceRecords.length; else noEvidenceTpl">
-          <div class="evidence-list">
-            <article class="evidence-card" *ngFor="let evidence of evidenceRecords; trackBy: trackByEvidence">
-              <div class="evidence-head">
-                <span class="role-chip">{{ evidenceRole(evidence) }}</span>
-                <span class="evidence-source">{{ evidenceSource(evidence) }}</span>
-              </div>
-              <h4>{{ evidenceHeading(evidence) }}</h4>
-              <p *ngIf="evidenceNote(evidence)">{{ evidenceNote(evidence) }}</p>
-            </article>
+          <div class="evidence-list" [class.evidence-list--panel]="appearance === 'panel'">
+            <ng-container *ngIf="appearance === 'panel'; else evidenceClassicTpl">
+              <article class="evidence-card evidence-card--panel" *ngFor="let evidence of evidenceRecords; trackBy: trackByEvidence">
+                <ng-container *ngIf="evidenceHeading(evidence) as heading">
+                  <h4 class="evidence-panel-title">
+                    <span class="evidence-panel-title-main">{{ evidenceGroupTitle(evidence) }} - </span>
+                    <span
+                      class="evidence-panel-title-text"
+                      [class.evidence-panel-title-text--arabic]="isArabicText(heading)"
+                      [attr.dir]="isArabicText(heading) ? 'rtl' : null"
+                    >
+                      {{ heading }}
+                    </span>
+                  </h4>
+                </ng-container>
+                <ng-container *ngIf="evidenceSource(evidence) as source">
+                  <p class="evidence-source evidence-source--inline" [class.qi-ar]="isArabicText(source)">
+                    {{ source }}
+                  </p>
+                </ng-container>
+                <div class="evidence-panel-body" *ngIf="evidenceNote(evidence) as note">
+                  <span class="role-chip">{{ evidenceRole(evidence) }}</span>
+                  <p class="evidence-note" [class.evidence-note--arabic]="isArabicText(note)" [attr.dir]="isArabicText(note) ? 'rtl' : null">
+                    {{ note }}
+                  </p>
+                </div>
+              </article>
+            </ng-container>
+            <ng-template #evidenceClassicTpl>
+              <article class="evidence-card" *ngFor="let evidence of evidenceRecords; trackBy: trackByEvidence">
+                <ng-container *ngIf="evidenceSource(evidence) as source">
+                  <div class="evidence-head">
+                    <span class="role-chip">{{ evidenceRole(evidence) }}</span>
+                    <span class="evidence-source" [class.qi-ar]="isArabicText(source)">
+                      {{ source }}
+                    </span>
+                  </div>
+                </ng-container>
+                <ng-container *ngIf="evidenceHeading(evidence) as heading">
+                  <h4 [class.qi-ar]="isArabicText(heading)" [attr.dir]="isArabicText(heading) ? 'rtl' : null">{{ heading }}</h4>
+                </ng-container>
+                <ng-container *ngIf="evidenceNote(evidence) as note">
+                  <p [class.qi-ar]="isArabicText(note)" [attr.dir]="isArabicText(note) ? 'rtl' : null">{{ note }}</p>
+                </ng-container>
+              </article>
+            </ng-template>
           </div>
         </ng-container>
         <ng-template #noEvidenceTpl>

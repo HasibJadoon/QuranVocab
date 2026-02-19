@@ -55,6 +55,20 @@ type ReadingWordToken = {
   tokenIndex: number;
 };
 
+type StudyWordLocationParts = {
+  surah: number | null;
+  ayah: number | null;
+  tokenIndex: number | null;
+};
+
+type MorphologyDialogContextAyah = {
+  surah: number;
+  ayah: number;
+  words: string[];
+  translation: string;
+  isFocus: boolean;
+};
+
 @Component({
   selector: 'app-quran-lesson-study',
   standalone: true,
@@ -79,6 +93,8 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
   studyActiveTaskTab: 'lesson' | TaskType = 'lesson';
   selectedReadingWord: QuranWordInspectorSelection | null = null;
   morphologyDialogWord: QuranWordInspectorSelection | null = null;
+  dialogViewMode: 'context' | 'analysis' = 'context';
+  showDialogTranslation = true;
 
   get state(): EditorState {
     return this.facade.state;
@@ -198,6 +214,72 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
 
   get verbMorphologyPills(): AppPillItem[] {
     return this.toMorphologyPills(this.verbMorphologyItems, 'verb');
+  }
+
+  get readingInspectorSurahName(): string {
+    if (!this.selectedReadingWord) return '';
+    return this.resolveSurahName(this.selectedReadingWord.surah ?? null);
+  }
+
+  get morphologyDialogSurahName(): string {
+    if (!this.morphologyDialogWord) return '';
+    return this.resolveSurahName(this.morphologyDialogWord.surah ?? null);
+  }
+
+  get morphologyDialogReference(): string {
+    if (!this.morphologyDialogWord) return '—';
+    const parsed = this.morphologyDialogLocationParts;
+    if (parsed.surah == null || parsed.ayah == null) {
+      const direct = this.morphologyDialogWord.location?.trim();
+      return direct || '—';
+    }
+    if (parsed.tokenIndex == null) return `${parsed.surah}:${parsed.ayah}`;
+    return `${parsed.surah}:${parsed.ayah}:${parsed.tokenIndex}`;
+  }
+
+  get morphologyDialogContextBar(): string {
+    const parts: string[] = [];
+    const surah = this.morphologyDialogSurahName;
+    if (surah) parts.push(`Surah ${surah}`);
+
+    const range = this.dialogRangeCompact;
+    if (range) parts.push(range);
+
+    const narrativeLabel = this.dialogNarrativeLabel;
+    if (narrativeLabel) parts.push(narrativeLabel);
+
+    return parts.join(' | ');
+  }
+
+  get morphologyDialogContextAyahs(): MorphologyDialogContextAyah[] {
+    if (!this.morphologyDialogWord) return [];
+    const parsed = this.morphologyDialogLocationParts;
+    const sameSurah = this.selectedAyahs.filter((entry) => parsed.surah == null || entry.surah === parsed.surah);
+    let windowAyahs = sameSurah;
+
+    if (parsed.ayah != null) {
+      const centerIndex = sameSurah.findIndex((entry) => entry.ayah === parsed.ayah);
+      if (centerIndex >= 0) {
+        const start = Math.max(0, centerIndex - 1);
+        const end = Math.min(sameSurah.length, centerIndex + 2);
+        windowAyahs = sameSurah.slice(start, end);
+      } else {
+        windowAyahs = sameSurah.filter((entry) => entry.ayah === parsed.ayah);
+      }
+    }
+
+    if (!windowAyahs.length && parsed.surah != null && parsed.ayah != null) {
+      const fallback = this.selectedAyahs.find((entry) => entry.surah === parsed.surah && entry.ayah === parsed.ayah);
+      if (fallback) windowAyahs = [fallback];
+    }
+
+    return windowAyahs.map((ayah) => ({
+      surah: ayah.surah,
+      ayah: ayah.ayah,
+      words: this.splitWords(this.resolveReadingAyahText(ayah)),
+      translation: this.ayahTranslationText(ayah),
+      isFocus: parsed.surah === ayah.surah && parsed.ayah === ayah.ayah,
+    }));
   }
 
   get lessonHeading(): string {
@@ -325,6 +407,14 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     this.morphologyDialogWord = null;
   }
 
+  setDialogViewMode(mode: 'context' | 'analysis') {
+    this.dialogViewMode = mode;
+  }
+
+  toggleDialogTranslation() {
+    this.showDialogTranslation = !this.showDialogTranslation;
+  }
+
   increaseFont() {
     this.fontRem = Math.min(this.fontRem + 0.1, this.maxFontRem);
     this.persistFontSize();
@@ -365,6 +455,41 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     } catch {
       return trimmed;
     }
+  }
+
+  isDialogTokenSelected(surah: number, ayah: number, tokenIndex: number): boolean {
+    const parsed = this.morphologyDialogLocationParts;
+    if (parsed.surah == null || parsed.ayah == null || parsed.tokenIndex == null) return false;
+    return parsed.surah === surah && parsed.ayah === ayah && parsed.tokenIndex === tokenIndex;
+  }
+
+  dialogTokenPos(surah: number, ayah: number, tokenIndex: number): string {
+    const record = this.findMorphologyRecordByLocation(surah, ayah, tokenIndex);
+    if (!record) return '';
+    const pos = this.firstText(record, ['pos', 'pos2']).toLowerCase();
+    if (pos === 'noun') return 'N';
+    if (pos === 'verb') return 'V';
+    if (pos === 'adj') return 'Adj';
+    if (pos === 'prep') return 'P';
+    if (pos === 'pron') return 'Pr';
+    return pos ? pos.slice(0, 3) : '';
+  }
+
+  dialogTokenHint(surah: number, ayah: number, tokenIndex: number, fallbackText: string): string {
+    const record = this.findMorphologyRecordByLocation(surah, ayah, tokenIndex);
+    if (!record) return fallbackText;
+
+    const root = this.firstText(record, ['root_norm', 'root']);
+    const form = this.firstText(record, ['verb_form', 'derived_pattern', 'morph_pattern']);
+    const meaning = this.translationPrimaryFromRecord(record);
+    const pos = this.firstText(record, ['pos', 'pos2']);
+
+    const details: string[] = [];
+    if (root) details.push(`Root: ${root}`);
+    if (form) details.push(`Form: ${form}`);
+    if (pos) details.push(`POS: ${pos}`);
+    if (meaning) details.push(`Meaning: ${meaning}`);
+    return details.length ? details.join(' | ') : fallbackText;
   }
 
   toArabicIndicDigits(value: number): string {
@@ -624,6 +749,101 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return null;
     return Math.trunc(numeric);
+  }
+
+  private resolveSurahName(surah: number | null): string {
+    const target = surah ?? this.numberFromUnknown(this.state.selectedSurah);
+    if (target == null) return '';
+    const fromAyah = this.selectedAyahs.find((ayah) => ayah.surah === target);
+    const name = (fromAyah?.surah_name_en || '').trim();
+    if (name) return name;
+    return String(target);
+  }
+
+  private get dialogRangeCompact(): string {
+    const raw = this.rangeLabelShort?.trim();
+    if (!raw) return '';
+    const match = raw.match(/^Surah\s+(\d+)\s+(.+)$/i);
+    if (!match) return raw;
+    return `${match[1]}:${match[2].replace('-', '–')}`;
+  }
+
+  private get dialogNarrativeLabel(): string {
+    const subtype = this.state.lessonSubtype?.trim();
+    if (subtype) return this.toTitle(subtype);
+
+    const heading = this.lessonHeading?.trim();
+    if (!heading) return '';
+    if (heading.length <= 32) return heading;
+    return '';
+  }
+
+  private get morphologyDialogLocationParts(): StudyWordLocationParts {
+    return this.parseWordLocation(this.morphologyDialogWord?.location ?? '', this.morphologyDialogWord);
+  }
+
+  private parseWordLocation(
+    location: string,
+    fallback?: { surah?: number | null; ayah?: number | null; tokenIndex?: number | null } | null
+  ): StudyWordLocationParts {
+    const text = this.textFromUnknown(location);
+    if (text) {
+      const segments = text
+        .split(':')
+        .map((part) => part.trim())
+        .filter(Boolean);
+      if (segments.length >= 2) {
+        const surah = this.numberFromUnknown(segments[0]);
+        const ayah = this.numberFromUnknown(segments[1]);
+        const tokenIndex = this.numberFromUnknown(segments[2]);
+        if (surah != null && ayah != null) {
+          return { surah, ayah, tokenIndex };
+        }
+      }
+    }
+
+    return {
+      surah: this.numberFromUnknown(fallback?.surah),
+      ayah: this.numberFromUnknown(fallback?.ayah),
+      tokenIndex: this.numberFromUnknown(fallback?.tokenIndex),
+    };
+  }
+
+  private ayahTranslationText(ayah: QuranAyah): string {
+    const direct = (ayah.translation || '').trim();
+    if (direct) return direct;
+
+    const translations = ayah.translations;
+    if (!translations) return '';
+    const candidates = [translations.haleem, translations.sahih, translations.asad, translations.usmani];
+    for (const item of candidates) {
+      if (typeof item === 'string' && item.trim()) return item.trim();
+    }
+    return '';
+  }
+
+  private translationPrimaryFromRecord(record: Record<string, unknown>): string {
+    const translation = record['translation'];
+    if (typeof translation === 'string') return translation.trim();
+    if (!translation || typeof translation !== 'object' || Array.isArray(translation)) return '';
+    const primary = (translation as Record<string, unknown>)['primary'];
+    return this.textFromUnknown(primary);
+  }
+
+  private findMorphologyRecordByLocation(surah: number, ayah: number, tokenIndex: number): Record<string, unknown> | null {
+    const target = `${surah}:${ayah}:${tokenIndex}`;
+    for (const item of this.morphologyItems) {
+      const direct = this.textFromUnknown(item['word_location']);
+      if (direct && direct === target) return item;
+
+      const itemSurah = this.numberFromUnknown(item['surah']);
+      const itemAyah = this.numberFromUnknown(item['ayah']);
+      const itemToken = this.numberFromUnknown(item['token_index']);
+      if (itemSurah === surah && itemAyah === ayah && itemToken === tokenIndex) {
+        return item;
+      }
+    }
+    return null;
   }
 
   private toMorphologyPills(items: Array<Record<string, unknown>>, prefix: 'noun' | 'verb'): AppPillItem[] {

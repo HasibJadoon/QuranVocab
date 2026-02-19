@@ -10,6 +10,7 @@ import {
 } from '../../services/quran-lexicon-data.service';
 
 export type QuranWordInspectorTab = 'lexicon' | 'morphology' | 'evidence';
+export type QuranWordInspectorAppearance = 'card' | 'panel';
 
 export interface QuranWordInspectorSelection {
   text: string;
@@ -38,6 +39,32 @@ type MorphologyFeature = {
   value: string;
 };
 
+type InsightPair = {
+  id: string;
+  label: string;
+  value: string;
+  arabic?: boolean;
+};
+
+type KeyInfoBadge = {
+  id: string;
+  label: string;
+  value: string;
+  arabic?: boolean;
+};
+
+type EvidenceExample = {
+  title: string;
+  text: string;
+  source: string;
+};
+
+const trackTextValue = (value: unknown): string => {
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return '';
+};
+
 @Component({
   selector: 'app-quran-word-inspector',
   standalone: true,
@@ -50,6 +77,8 @@ export class QuranWordInspectorComponent implements OnChanges {
 
   @Input() selection: QuranWordInspectorSelection | null = null;
   @Input() contextLabel = '';
+  @Input() surahLabel = '';
+  @Input() appearance: QuranWordInspectorAppearance = 'card';
   @Input() morphologyItems: Array<Record<string, unknown>> = [];
   @Input() lexiconMorphologyItems: Array<Record<string, unknown>> = [];
   @Input() evidenceItems: Array<Record<string, unknown>> = [];
@@ -95,6 +124,14 @@ export class QuranWordInspectorComponent implements OnChanges {
     if (parsed.surah == null || parsed.ayah == null) return this.activeLocation;
     const tokenPart = parsed.tokenIndex == null ? '' : `:${parsed.tokenIndex}`;
     return `${parsed.surah}:${parsed.ayah}${tokenPart}`;
+  }
+
+  get activeSurahReferenceLabel(): string {
+    const surah = this.textValue(this.surahLabel);
+    const reference = this.activeReferenceLabel;
+    if (surah && reference && reference !== '—') return `Surah ${surah} | ${reference}`;
+    if (surah) return `Surah ${surah}`;
+    return reference;
   }
 
   get evidenceCount(): number {
@@ -144,6 +181,150 @@ export class QuranWordInspectorComponent implements OnChanges {
       },
     ];
     return fields;
+  }
+
+  get transliterationValue(): string {
+    return (
+      this.firstText(this.activeMorphologyRecord, [
+        'transliteration',
+        'translit',
+        'latin',
+        'latin_text',
+        'pronunciation',
+        'phonetic',
+      ]) ||
+      this.firstText(this.activeLinkRecord, ['transliteration', 'translit', 'latin', 'latin_text', 'pronunciation', 'phonetic'])
+    );
+  }
+
+  get posBadge(): string {
+    const pos = this.posValue;
+    return pos ? pos.toUpperCase() : '';
+  }
+
+  get primaryMeaning(): string {
+    return this.meaningPrimary || '—';
+  }
+
+  get secondaryMeaning(): string {
+    return this.meaningHighlights[1] || '';
+  }
+
+  get meaningHighlights(): string[] {
+    const values: string[] = [];
+    const primary = this.meaningPrimary;
+    if (primary) values.push(primary);
+
+    for (const item of this.meaningAlternatives) {
+      const value = item.trim();
+      if (!value || values.includes(value)) continue;
+      values.push(value);
+      if (values.length >= 2) break;
+    }
+
+    return values;
+  }
+
+  get keyInfoBadges(): KeyInfoBadge[] {
+    const form = this.firstText(this.activeLinkRecord, ['verb_form', 'form']);
+    const badges: KeyInfoBadge[] = [];
+
+    if (this.rootValue) {
+      badges.push({
+        id: 'badge-root',
+        label: 'Root',
+        value: this.rootValue,
+        arabic: this.looksArabic(this.rootValue),
+      });
+    }
+
+    if (this.lemmaValue) {
+      badges.push({
+        id: 'badge-lemma',
+        label: 'Lemma',
+        value: this.lemmaValue,
+        arabic: this.looksArabic(this.lemmaValue),
+      });
+    }
+
+    if (this.patternValue) {
+      badges.push({
+        id: 'badge-pattern',
+        label: 'Pattern',
+        value: this.patternValue,
+      });
+    }
+
+    if (form) {
+      badges.push({
+        id: 'badge-form',
+        label: 'Form',
+        value: form,
+      });
+    }
+
+    if (this.posValue) {
+      badges.push({
+        id: 'badge-pos',
+        label: 'POS',
+        value: this.posValue.toUpperCase(),
+      });
+    }
+
+    return badges;
+  }
+
+  get featuredEvidenceExample(): EvidenceExample | null {
+    const candidate =
+      this.evidenceRecords.find((entry) => this.evidenceGroupTitle(entry) === 'Qur\'an Example' && Boolean(this.evidenceNote(entry))) ??
+      this.evidenceRecords.find((entry) => Boolean(this.evidenceNote(entry)));
+    if (!candidate) return null;
+    return {
+      title: this.evidenceGroupTitle(candidate),
+      text: this.evidenceNote(candidate),
+      source: this.evidenceSource(candidate),
+    };
+  }
+
+  get lexicalInsightPairs(): InsightPair[] {
+    const form = this.firstText(this.activeLinkRecord, ['verb_form', 'form']);
+    return [
+      {
+        id: 'pair-root',
+        label: 'Root',
+        value: this.rootValue || '—',
+        arabic: this.looksArabic(this.rootValue),
+      },
+      {
+        id: 'pair-lemma',
+        label: 'Lemma',
+        value: this.lemmaValue || '—',
+        arabic: this.looksArabic(this.lemmaValue),
+      },
+      {
+        id: 'pair-pattern',
+        label: 'Pattern',
+        value: this.patternValue || '—',
+      },
+      {
+        id: 'pair-form',
+        label: 'Form',
+        value: form || '—',
+      },
+    ];
+  }
+
+  get semanticChips(): string[] {
+    const out = new Set<string>();
+    const meaning = this.meaningPrimary;
+    if (meaning) out.add(meaning);
+    for (const item of this.meaningAlternatives) {
+      if (item) out.add(item);
+    }
+    for (const item of this.relatedTerms) {
+      if (item) out.add(item);
+    }
+    return Array.from(out).slice(0, 10);
   }
 
   get morphologyFields(): InspectorField[] {
@@ -302,21 +483,28 @@ export class QuranWordInspectorComponent implements OnChanges {
   }
 
   evidenceSource(item: Record<string, unknown>): string {
+    const location = this.locationFromRecord(item);
+    const segments = location.split(':').filter(Boolean);
     const sourceType = this.textValue(item['source_type']);
     const sourceId = this.textValue(item['source_id']);
     const chunkId = this.textValue(item['chunk_id']);
     const page = this.numberValue(item['page_no']);
-    const heading = this.textValue(item['heading_raw']);
     const parts: string[] = [];
 
-    if (heading) parts.push(heading);
+    if (segments.length >= 2) {
+      const surah = this.numberValue(segments[0]);
+      const ayah = this.numberValue(segments[1]);
+      if (surah != null && ayah != null) {
+        parts.push(`Surah ${surah}:${ayah}`);
+      }
+    }
+
     if (sourceType) parts.push(sourceType);
-    if (sourceId) parts.push(sourceId);
+    if (sourceId && sourceId !== sourceType) parts.push(sourceId);
     if (chunkId) parts.push(`chunk:${chunkId}`);
     if (page != null) parts.push(`p.${page}`);
 
     if (!parts.length) {
-      const location = this.textValue(item['word_location']);
       if (location) return `Word ${location}`;
       return 'Source not set';
     }
@@ -338,23 +526,35 @@ export class QuranWordInspectorComponent implements OnChanges {
     return '';
   }
 
-  trackByField(_: number, field: InspectorField): string {
-    return field.id;
+  isArabicText(value: string): boolean {
+    return this.looksArabic(value);
   }
 
-  trackByFeature(_: number, feature: MorphologyFeature): string {
-    return feature.id;
+  evidenceGroupTitle(item: Record<string, unknown>): string {
+    const sourceType = this.textValue(item['source_type']);
+    const sourceId = this.textValue(item['source_id']);
+    const source = `${sourceType} ${sourceId}`.toLowerCase();
+    if (source.includes('quran')) return 'Qur\'an Example';
+    if (source.includes('lex') || source.includes('dictionary') || source.includes('book')) return 'Definition';
+    if (source.includes('sinai') || source.includes('scholar') || source.includes('tafsir')) return 'Scholarly Note';
+    return 'Evidence';
   }
 
-  trackByEvidence(index: number, item: Record<string, unknown>): string {
-    const evidenceId = this.textValue(item['evidence_id']);
+  trackByField = (_: number, field: InspectorField): string => field.id;
+
+  trackByFeature = (_: number, feature: MorphologyFeature): string => feature.id;
+
+  trackByPair = (_: number, pair: InsightPair): string => pair.id;
+
+  trackByBadge = (_: number, badge: KeyInfoBadge): string => badge.id;
+
+  trackByEvidence = (index: number, item: Record<string, unknown>): string => {
+    const evidenceId = trackTextValue(item['evidence_id']);
     if (evidenceId) return evidenceId;
-    return `${this.textValue(item['source_id'])}|${this.textValue(item['chunk_id'])}|${index}`;
-  }
+    return `${trackTextValue(item['source_id'])}|${trackTextValue(item['chunk_id'])}|${index}`;
+  };
 
-  trackByTerm(index: number, term: string): string {
-    return `${term}-${index}`;
-  }
+  trackByTerm = (index: number, term: string): string => `${term}-${index}`;
 
   private recomputeSelectionDetails() {
     if (!this.hasSelection || !this.selection) {
