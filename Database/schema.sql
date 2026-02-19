@@ -610,6 +610,8 @@ CREATE TABLE IF NOT EXISTS ar_u_expressions (
   ar_u_expression  TEXT PRIMARY KEY,
   canonical_input  TEXT NOT NULL UNIQUE,
   ar_u_lexicon     TEXT,
+  surah            INTEGER,
+  ayah             INTEGER,
 
   label            TEXT,
   text_ar          TEXT,
@@ -619,11 +621,18 @@ CREATE TABLE IF NOT EXISTS ar_u_expressions (
   created_at       TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at       TEXT,
 
-  FOREIGN KEY (ar_u_lexicon) REFERENCES ar_u_lexicon(ar_u_lexicon) ON DELETE SET NULL
+  CHECK (
+    (surah IS NULL AND ayah IS NULL)
+    OR (surah BETWEEN 1 AND 114 AND ayah >= 1)
+  ),
+
+  FOREIGN KEY (ar_u_lexicon) REFERENCES ar_u_lexicon(ar_u_lexicon) ON DELETE SET NULL,
+  FOREIGN KEY (surah, ayah) REFERENCES ar_quran_ayah(surah, ayah) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_ar_u_expressions_label ON ar_u_expressions(label);
 CREATE INDEX IF NOT EXISTS idx_ar_u_expressions_lexicon ON ar_u_expressions(ar_u_lexicon);
+CREATE INDEX IF NOT EXISTS idx_ar_u_expressions_ref ON ar_u_expressions(surah, ayah);
 
 CREATE TABLE IF NOT EXISTS ar_u_grammar (
   ar_u_grammar     TEXT PRIMARY KEY,

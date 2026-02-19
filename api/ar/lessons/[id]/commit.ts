@@ -1096,23 +1096,122 @@ async function upsertExpression(
     asString(row['text']) ??
     '';
   const label = asString(row['label']) ?? asString(row['expression_norm']) ?? textAr;
-  const arULexicon = asString(row['ar_u_lexicon']) ?? asString(row['u_lexicon_id']);
+  const metaRecord = asRecordFromJson(row['meta_json']) ?? asRecordFromJson(row['meta']);
+  const requestedLexicon =
+    asString(row['ar_u_lexicon']) ??
+    asString(row['u_lexicon_id']) ??
+    asString(row['lexicon_id']);
+  const lemmaNorm = asString(row['lemma_norm']) ?? asString(metaRecord?.['lemma_norm']);
+  const lemmaAr = asString(row['lemma_ar']) ?? asString(metaRecord?.['lemma_ar']);
+  let arULexicon = requestedLexicon;
+  if (!arULexicon && (lemmaNorm || lemmaAr)) {
+    const byLemma = await db
+      .prepare(
+        `
+        SELECT ar_u_lexicon
+        FROM ar_u_lexicon
+        WHERE status <> 'deprecated'
+          AND (
+            (?1 IS NOT NULL AND lemma_norm = ?1)
+            OR (?2 IS NOT NULL AND lemma_ar = ?2)
+          )
+        ORDER BY
+          CASE
+            WHEN ?1 IS NOT NULL AND lemma_norm = ?1 THEN 0
+            WHEN ?2 IS NOT NULL AND lemma_ar = ?2 THEN 1
+            ELSE 2
+          END,
+          CASE unit_type
+            WHEN 'word' THEN 0
+            WHEN 'key_term' THEN 1
+            WHEN 'verbal_idiom' THEN 2
+            WHEN 'expression' THEN 3
+            ELSE 4
+          END,
+          CASE status
+            WHEN 'active' THEN 0
+            WHEN 'draft' THEN 1
+            ELSE 2
+          END,
+          updated_at DESC,
+          created_at DESC,
+          ar_u_lexicon ASC
+        LIMIT 1
+      `
+      )
+      .bind(lemmaNorm, lemmaAr)
+      .first<{ ar_u_lexicon: string }>();
+    arULexicon = byLemma?.ar_u_lexicon ?? null;
+  }
+  const surahRaw = asInteger(row['surah']) ?? asInteger(metaRecord?.['surah']);
+  const ayahRaw = asInteger(row['ayah']) ?? asInteger(metaRecord?.['ayah']);
+  const surah = surahRaw != null && ayahRaw != null ? surahRaw : null;
+  const ayah = surahRaw != null && ayahRaw != null ? ayahRaw : null;
 
   const canonicalInput = canonicalize(
     asString(row['canonical_input']) ??
       `EXP|${normalizeTextNorm(label ?? textAr)}|${sequenceTokens.join(';')}`
   );
-  const id = asString(row['ar_u_expression']) ?? asString(row['id']) ?? (await sha256Hex(canonicalInput));
+  const requestedId = asString(row['ar_u_expression']) ?? asString(row['id']);
+  const id = requestedId ?? (await sha256Hex(canonicalInput));
+  const sequenceJson = toJsonOrNull(sequence);
+  const metaJson = toJsonOrNull(row['meta_json'] ?? row['meta']);
+
+  const existingByCanonical = await db
+    .prepare(
+      `
+      SELECT ar_u_expression
+      FROM ar_u_expressions
+      WHERE canonical_input = ?1
+      LIMIT 1
+    `
+    )
+    .bind(canonicalInput)
+    .first<{ ar_u_expression: string }>();
+
+  if (existingByCanonical?.ar_u_expression) {
+    await db
+      .prepare(
+        `
+        UPDATE ar_u_expressions
+        SET
+          ar_u_lexicon = ?2,
+          surah = ?3,
+          ayah = ?4,
+          label = ?5,
+          text_ar = ?6,
+          sequence_json = ?7,
+          meta_json = ?8,
+          updated_at = datetime('now')
+        WHERE ar_u_expression = ?1
+      `
+      )
+      .bind(
+        existingByCanonical.ar_u_expression,
+        arULexicon,
+        surah,
+        ayah,
+        label,
+        textAr,
+        sequenceJson,
+        metaJson
+      )
+      .run();
+
+    return existingByCanonical.ar_u_expression;
+  }
 
   await db
     .prepare(
       `
       INSERT INTO ar_u_expressions (
-        ar_u_expression, canonical_input, ar_u_lexicon, label, text_ar, sequence_json, meta_json, created_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'))
+        ar_u_expression, canonical_input, ar_u_lexicon, surah, ayah, label, text_ar, sequence_json, meta_json, created_at
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, datetime('now'))
       ON CONFLICT(ar_u_expression) DO UPDATE SET
         canonical_input = excluded.canonical_input,
         ar_u_lexicon = excluded.ar_u_lexicon,
+        surah = excluded.surah,
+        ayah = excluded.ayah,
         label = excluded.label,
         text_ar = excluded.text_ar,
         sequence_json = excluded.sequence_json,
@@ -1124,10 +1223,12 @@ async function upsertExpression(
       id,
       canonicalInput,
       arULexicon,
+      surah,
+      ayah,
       label,
       textAr,
-      toJsonOrNull(sequence),
-      toJsonOrNull(row['meta_json'] ?? row['meta'])
+      sequenceJson,
+      metaJson
     )
     .run();
 

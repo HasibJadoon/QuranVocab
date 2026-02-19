@@ -701,7 +701,53 @@ async function upsertExpressionRow(
 ): Promise<Record<string, unknown>> {
   const textAr = asString(row['text_ar']) ?? asString(row['expression_ar']) ?? asString(row['text']) ?? '';
   const label = asString(row['label']) ?? asString(row['expression_norm']) ?? textAr;
-  const arULexicon = asString(row['ar_u_lexicon']) ?? asString(row['u_lexicon_id']);
+  const requestedLexicon =
+    asString(row['ar_u_lexicon']) ??
+    asString(row['u_lexicon_id']) ??
+    asString(row['lexicon_id']);
+  const baseMeta = asJsonRecord(row['meta_json']) ?? asJsonRecord(row['meta']) ?? {};
+  const lemmaNorm = asString(row['lemma_norm']) ?? asString(baseMeta['lemma_norm']);
+  const lemmaAr = asString(row['lemma_ar']) ?? asString(baseMeta['lemma_ar']);
+  let arULexicon = requestedLexicon;
+  if (!arULexicon && (lemmaNorm || lemmaAr)) {
+    const byLemma = await db
+      .prepare(
+        `
+      SELECT ar_u_lexicon
+      FROM ar_u_lexicon
+      WHERE status <> 'deprecated'
+        AND (
+          (?1 IS NOT NULL AND lemma_norm = ?1)
+          OR (?2 IS NOT NULL AND lemma_ar = ?2)
+        )
+      ORDER BY
+        CASE
+          WHEN ?1 IS NOT NULL AND lemma_norm = ?1 THEN 0
+          WHEN ?2 IS NOT NULL AND lemma_ar = ?2 THEN 1
+          ELSE 2
+        END,
+        CASE unit_type
+          WHEN 'word' THEN 0
+          WHEN 'key_term' THEN 1
+          WHEN 'verbal_idiom' THEN 2
+          WHEN 'expression' THEN 3
+          ELSE 4
+        END,
+        CASE status
+          WHEN 'active' THEN 0
+          WHEN 'draft' THEN 1
+          ELSE 2
+        END,
+        updated_at DESC,
+        created_at DESC,
+        ar_u_lexicon ASC
+      LIMIT 1
+      `
+      )
+      .bind(lemmaNorm, lemmaAr)
+      .first<{ ar_u_lexicon: string }>();
+    arULexicon = byLemma?.ar_u_lexicon ?? null;
+  }
   const sequence = expressionSequenceFromRow(row, textAr);
   const tokens = expressionTokenList(sequence);
 
@@ -709,12 +755,16 @@ async function upsertExpressionRow(
     asString(row['canonical_input']) ??
       `EXP|${normalizeArabic(label || textAr)}|${tokens.join(';')}`
   );
-  const arUExpression = asString(row['ar_u_expression']) ?? asString(row['id']) ?? (await sha256Hex(canonicalInput));
+  const requestedId = asString(row['ar_u_expression']) ?? asString(row['id']);
+  const arUExpression = requestedId ?? (await sha256Hex(canonicalInput));
 
-  const baseMeta = asJsonRecord(row['meta_json']) ?? asJsonRecord(row['meta']) ?? {};
+  const surahCandidate = asInteger(row['surah']) ?? asInteger(baseMeta['surah']);
+  const ayahCandidate = asInteger(row['ayah']) ?? asInteger(baseMeta['ayah']);
+  const surah = surahCandidate != null && ayahCandidate != null ? surahCandidate : null;
+  const ayah = surahCandidate != null && ayahCandidate != null ? ayahCandidate : null;
   const topLevelMeta: Record<string, unknown> = {};
-  if (asInteger(row['surah']) != null) topLevelMeta['surah'] = asInteger(row['surah']);
-  if (asInteger(row['ayah']) != null) topLevelMeta['ayah'] = asInteger(row['ayah']);
+  if (surah != null) topLevelMeta['surah'] = surah;
+  if (ayah != null) topLevelMeta['ayah'] = ayah;
   if (asString(row['category'])) topLevelMeta['category'] = asString(row['category']);
   if (asString(row['scholarly_status'])) topLevelMeta['scholarly_status'] = asString(row['scholarly_status']);
   if (asString(row['significance_summary'])) topLevelMeta['significance_summary'] = asString(row['significance_summary']);
@@ -725,38 +775,90 @@ async function upsertExpressionRow(
     ...topLevelMeta,
     ...baseMeta,
   };
+  const sequenceJson = toJsonOrNull(sequence);
+  const metaJson = toJsonOrNull(mergedMeta);
 
-  await db
+  const existingByCanonical = await db
     .prepare(
       `
+      SELECT ar_u_expression
+      FROM ar_u_expressions
+      WHERE canonical_input = ?1
+      LIMIT 1
+      `
+    )
+    .bind(canonicalInput)
+    .first<{ ar_u_expression: string }>();
+
+  const resolvedExpressionId = existingByCanonical?.ar_u_expression ?? arUExpression;
+
+  if (existingByCanonical?.ar_u_expression) {
+    await db
+      .prepare(
+        `
+        UPDATE ar_u_expressions
+        SET
+          ar_u_lexicon = ?2,
+          surah = ?3,
+          ayah = ?4,
+          label = ?5,
+          text_ar = ?6,
+          sequence_json = ?7,
+          meta_json = ?8,
+          updated_at = datetime('now')
+        WHERE ar_u_expression = ?1
+      `
+      )
+      .bind(
+        resolvedExpressionId,
+        arULexicon,
+        surah,
+        ayah,
+        label,
+        textAr,
+        sequenceJson,
+        metaJson
+      )
+      .run();
+  } else {
+    await db
+      .prepare(
+        `
       INSERT INTO ar_u_expressions (
-        ar_u_expression, canonical_input, ar_u_lexicon, label, text_ar, sequence_json, meta_json, created_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'))
+        ar_u_expression, canonical_input, ar_u_lexicon, surah, ayah, label, text_ar, sequence_json, meta_json, created_at
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, datetime('now'))
       ON CONFLICT(ar_u_expression) DO UPDATE SET
         canonical_input = excluded.canonical_input,
         ar_u_lexicon = excluded.ar_u_lexicon,
+        surah = excluded.surah,
+        ayah = excluded.ayah,
         label = excluded.label,
         text_ar = excluded.text_ar,
         sequence_json = excluded.sequence_json,
         meta_json = excluded.meta_json,
         updated_at = datetime('now')
       `
-    )
-    .bind(
-      arUExpression,
-      canonicalInput,
-      arULexicon,
-      label,
-      textAr,
-      toJsonOrNull(sequence),
-      toJsonOrNull(mergedMeta)
-    )
-    .run();
+      )
+      .bind(
+        arUExpression,
+        canonicalInput,
+        arULexicon,
+        surah,
+        ayah,
+        label,
+        textAr,
+        sequenceJson,
+        metaJson
+      )
+      .run();
+  }
 
   return {
     ...row,
-    ar_u_expression: arUExpression,
+    ar_u_expression: resolvedExpressionId,
     ar_u_lexicon: arULexicon,
+    surah,
+    ayah,
     canonical_input: canonicalInput,
     label,
     text_ar: textAr,
