@@ -260,6 +260,29 @@
   justify-content: flex-end;
 }
 
+.quran-study-shell .study-word-dialog-close-top {
+  flex-shrink: 0;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 13px;
+  border: 1px solid rgba(128, 185, 231, 0.35);
+  background: rgba(12, 25, 39, 0.88);
+  color: rgba(205, 226, 247, 0.94);
+  font-size: 1.55rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.quran-study-shell .study-word-dialog-close-top:hover {
+  color: #ffffff;
+  border-color: rgba(125, 217, 189, 0.58);
+  box-shadow: inset 0 0 0 1px rgba(125, 217, 189, 0.18);
+}
+
 .quran-study-shell .study-word-dialog-mode-toggle {
   display: inline-flex;
   align-items: center;
@@ -299,11 +322,11 @@
 .quran-study-shell .study-word-dialog-layout {
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-columns: minmax(0, 2.65fr) minmax(0, 2.15fr);
 }
 
 .quran-study-shell .study-word-dialog-layout--analysis {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
 }
 
 .quran-study-shell .study-word-context {

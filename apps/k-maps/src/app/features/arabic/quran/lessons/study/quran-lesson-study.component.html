@@ -202,6 +202,14 @@
                           {{ showDialogTranslation ? 'Hide Translation' : 'Show Translation' }}
                         </button>
                         <span class="study-word-dialog-ref">{{ morphologyDialogReference }}</span>
+                        <button
+                          type="button"
+                          class="study-word-dialog-close-top"
+                          aria-label="Close word details"
+                          (click)="closeMorphologyWordDialog()"
+                        >
+                          ×
+                        </button>
                       </div>
                     </header>
 

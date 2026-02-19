@@ -327,6 +327,19 @@ export class QuranWordInspectorComponent implements OnChanges {
     return Array.from(out).slice(0, 10);
   }
 
+  get morphologyCompactLine(): string {
+    const root = this.rootValue || this.lemmaValue || this.activeWord || '—';
+    const paradigm = this.morphologyParadigm || '—';
+    return `${root}: ${paradigm}`;
+  }
+
+  get morphologyExamplesLine(): string {
+    const examples = this.morphologyExampleTerms;
+    if (!examples.length) return '—';
+    const joined = examples.join(', ');
+    return /[.!?]$/.test(joined) ? joined : `${joined}.`;
+  }
+
   get morphologyFields(): InspectorField[] {
     const linkRecord = this.activeLinkRecord;
     const fields: InspectorField[] = [];
@@ -694,6 +707,60 @@ export class QuranWordInspectorComponent implements OnChanges {
     return alternatives.map((entry) => this.textValue(entry)).filter(Boolean);
   }
 
+  private get morphologyParadigm(): string {
+    const directCandidates = [
+      this.firstText(this.activeMorphologyRecord, [
+        'morph_triplet',
+        'morphology_triplet',
+        'verb_triplet',
+        'paradigm_ar',
+        'paradigm',
+        'canonical_input',
+      ]),
+      this.firstText(this.activeLinkRecord, ['paradigm_ar', 'paradigm']),
+    ];
+
+    for (const candidate of directCandidates) {
+      const normalized = this.normalizeParadigmCandidate(candidate);
+      if (normalized) return normalized;
+    }
+
+    const fromObject = this.paradigmFromMorphologyObject(this.activeMorphologyRecord?.['morphology']);
+    if (fromObject) return fromObject;
+
+    const fallback = this.firstText(this.activeMorphologyRecord, ['surface_ar', 'lemma_ar']);
+    return this.normalizeParadigmCandidate(fallback);
+  }
+
+  private get morphologyExampleTerms(): string[] {
+    const values: string[] = [];
+
+    const pushTokens = (value: unknown) => {
+      for (const token of this.tokenizeListValue(value)) {
+        const normalized = token.replace(/\s+/g, ' ').trim();
+        if (normalized) values.push(normalized);
+      }
+    };
+
+    pushTokens(this.meaningPrimary);
+    for (const item of this.meaningAlternatives) pushTokens(item);
+    pushTokens(this.activeMorphologyRecord?.['tags_en']);
+    pushTokens(this.activeLinkRecord?.['tags_en']);
+
+    const deduped: string[] = [];
+    const seen = new Set<string>();
+    for (const value of values) {
+      const key = value.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      deduped.push(value.replace(/\.$/, '').trim());
+    }
+
+    const englishFirst = deduped.filter((entry) => !this.looksArabic(entry));
+    const selected = englishFirst.length ? englishFirst : deduped;
+    return selected.slice(0, 8);
+  }
+
   private get activeMorphologyRecord(): Record<string, unknown> | null {
     const local = this.selectedMorphologyRecord;
     const remote = this.remoteFocusedMorphologyRecord;
@@ -967,6 +1034,97 @@ export class QuranWordInspectorComponent implements OnChanges {
     const singular = (morphology as Record<string, unknown>)['singular'];
     if (!singular || typeof singular !== 'object' || Array.isArray(singular)) return '';
     return this.textValue((singular as Record<string, unknown>)['pattern']);
+  }
+
+  private normalizeParadigmCandidate(value: string): string {
+    const raw = this.textValue(value);
+    if (!raw) return '';
+
+    const afterPipe = raw.includes('|') ? raw.split('|').pop() ?? '' : raw;
+    const normalized = afterPipe
+      .replace(/\s*[-–—]\s*/g, '-')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!normalized) return '';
+    if (normalized.includes('-')) return normalized;
+
+    if (this.looksArabic(normalized)) {
+      const words = normalized.split(/\s+/).filter(Boolean);
+      if (words.length >= 3) return words.slice(0, 3).join('-');
+    }
+
+    return normalized;
+  }
+
+  private paradigmFromMorphologyObject(value: unknown): string {
+    const morphology = this.asRecord(value);
+    if (!morphology) return '';
+
+    const collected = this.collectParadigmParts(morphology);
+    if (collected.length >= 2) return collected.slice(0, 3).join('-');
+    if (collected.length === 1) return collected[0];
+
+    const singular = this.asRecord(morphology['singular']);
+    if (!singular) return '';
+    const fromSingular = this.collectParadigmParts(singular);
+    if (fromSingular.length >= 2) return fromSingular.slice(0, 3).join('-');
+    if (fromSingular.length === 1) return fromSingular[0];
+    return '';
+  }
+
+  private collectParadigmParts(record: Record<string, unknown>): string[] {
+    const keys = [
+      'past',
+      'present',
+      'masdar',
+      'perfect',
+      'imperfect',
+      'verbal_noun',
+      'verb_past',
+      'verb_present',
+      'infinitive',
+      'form',
+      'pattern',
+    ];
+
+    const values: string[] = [];
+    for (const key of keys) {
+      const text = this.extractParadigmText(record[key]);
+      if (!text || values.includes(text)) continue;
+      values.push(text);
+      if (values.length >= 3) break;
+    }
+    return values;
+  }
+
+  private extractParadigmText(value: unknown): string {
+    if (typeof value === 'string') {
+      const text = value.trim();
+      return text;
+    }
+
+    if (!value || typeof value !== 'object') return '';
+
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        const text = this.extractParadigmText(entry);
+        if (text) return text;
+      }
+      return '';
+    }
+
+    const record = value as Record<string, unknown>;
+    for (const key of ['ar', 'surface_ar', 'lemma_ar', 'text', 'word', 'value', 'form', 'past', 'present', 'masdar']) {
+      const text = this.extractParadigmText(record[key]);
+      if (text) return text;
+    }
+    return '';
+  }
+
+  private asRecord(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    return value as Record<string, unknown>;
   }
 
   private translationPrimary(record: Record<string, unknown> | null): string {

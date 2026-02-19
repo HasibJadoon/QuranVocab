@@ -13,7 +13,7 @@
       </p>
     </div>
     <button
-      *ngIf="hasSelection"
+      *ngIf="hasSelection && appearance !== 'panel'"
       type="button"
       class="inspector-close"
       aria-label="Close word insights"
@@ -172,28 +172,9 @@
         </div>
         <div class="error-state" *ngIf="remoteError">{{ remoteError }}</div>
 
-        <ng-container *ngIf="hasMorphologyData; else noMorphTpl">
-          <div class="field-grid">
-            <div class="field-row" *ngFor="let field of morphologyFields; trackBy: trackByField">
-              <span class="field-label">{{ field.label }}</span>
-              <span class="field-value" [class.field-value--arabic]="field.arabic" [attr.dir]="field.arabic ? 'rtl' : null">
-                {{ field.value }}
-              </span>
-            </div>
-          </div>
-
-          <div class="feature-wrap" *ngIf="morphologyFeatures.length">
-            <p class="terms-label">Features</p>
-            <div class="feature-list">
-              <span class="feature-pill" *ngFor="let feature of morphologyFeatures; trackBy: trackByFeature">
-                {{ feature.key }}: {{ feature.value }}
-              </span>
-            </div>
-          </div>
-        </ng-container>
-        <ng-template #noMorphTpl>
-          <p class="empty-inline">No morphology details available for this word yet.</p>
-        </ng-template>
+        <p class="morphology-line text-arabic" dir="rtl" translate="no">{{ morphologyCompactLine }}</p>
+        <p class="morphology-examples-title">Examples</p>
+        <p class="morphology-examples">{{ morphologyExamplesLine }}</p>
       </section>
 
       <section *ngSwitchCase="'evidence'" class="tab-section">
