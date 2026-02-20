@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { IconDirective } from '@coreui/icons-angular';
 import { Subscription } from 'rxjs';
 
 import {
@@ -26,6 +27,7 @@ import { EditorState, SentenceSubTab, TaskTab, TaskType } from '../edit-new/mode
 import { selectSelectedAyahs, selectSelectedRangeLabelShort } from '../edit-new/state/editor.selectors';
 
 const ARABIC_DIACRITICS_RE = /[\u064B-\u065F\u0670\u06D6-\u06ED]/g;
+const ARABIC_SCRIPT_CHAR_RE = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
 const ARABIC_INDIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'] as const;
 
 const LEGACY_STUDY_TAB_MAP: Record<string, TaskType> = {
@@ -54,6 +56,14 @@ const SENTENCE_SUB_TABS: AppTabItem[] = [
   { id: 'json', label: 'JSON' },
 ];
 
+const COMPREHENSION_GROUP_ORDER = [
+  'comprehension',
+  'reflective',
+  'analytical',
+  'morphological',
+  'grammatical',
+] as const;
+
 type ReadingWordToken = {
   text: string;
   location: string;
@@ -76,11 +86,94 @@ type MorphologyDialogContextAyah = {
   isFocus: boolean;
 };
 
+type PassageAccent = 'blue' | 'green' | 'orange' | 'violet' | 'gray';
+type PassageRenderer = 'keyvalue' | 'clusters' | 'chiasm' | 'timeline';
+
+type PassageKeyValueRow = {
+  key: string;
+  text: string;
+  chips: string[];
+};
+
+type PassageCluster = {
+  title: string;
+  items: string[];
+  accent: PassageAccent;
+};
+
+type PassageChiasmModel = {
+  outerTop: string;
+  outerBottom: string;
+  innerLeft: string;
+  innerRight: string;
+  axis: string;
+  interpretation: string;
+};
+
+type PassageTimelineStep = {
+  id: string;
+  title: string;
+  text: string;
+};
+
+type PassageTextSegment = {
+  text: string;
+  isArabic: boolean;
+};
+
+type PassageSectionCard = {
+  id: string;
+  key: string;
+  title: string;
+  badge: string;
+  renderer: PassageRenderer;
+  accent: PassageAccent;
+  iconName: string;
+  summary: string;
+  keyValueRows: PassageKeyValueRow[];
+  clusters: PassageCluster[];
+  chiasm: PassageChiasmModel | null;
+  timeline: PassageTimelineStep[];
+};
+
+type ComprehensionQuestionGroup = {
+  id: string;
+  key: string;
+  title: string;
+  accent: PassageAccent;
+  questions: string[];
+};
+
+type ExpressionSequenceToken = {
+  text: string;
+  type: string;
+};
+
+type ExpressionSource = {
+  author: string;
+  work: string;
+};
+
+type ExpressionStudyCard = {
+  id: string;
+  label: string;
+  textAr: string;
+  canonical: string;
+  reference: string;
+  category: string;
+  status: string;
+  lemma: string;
+  accent: PassageAccent;
+  sequence: ExpressionSequenceToken[];
+  sources: ExpressionSource[];
+};
+
 @Component({
   selector: 'app-quran-lesson-study',
   standalone: true,
   imports: [
     CommonModule,
+    IconDirective,
     AppTabsComponent,
     AppPillsComponent,
     AppFontSizeControlsComponent,
@@ -88,7 +181,6 @@ type MorphologyDialogContextAyah = {
     QuranSentenceStructureComponent,
   ],
   templateUrl: './quran-lesson-study.component.html',
-  styleUrls: ['./quran-lesson-study.component.scss'],
   providers: [QuranLessonEditorFacade],
 })
 export class QuranLessonStudyComponent implements OnInit, OnDestroy {
@@ -109,6 +201,13 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
   morphologyDialogWord: QuranWordInspectorSelection | null = null;
   dialogViewMode: 'context' | 'analysis' = 'context';
   showDialogTranslation = true;
+  private readonly collapsedPassageSectionIds = new Set<string>();
+  private passageSectionsCacheKey = '';
+  private passageSectionsCache: PassageSectionCard[] = [];
+  private comprehensionGroupsCacheKey = '';
+  private comprehensionGroupsCache: ComprehensionQuestionGroup[] = [];
+  private expressionCardsCacheKey = '';
+  private expressionCardsCache: ExpressionStudyCard[] = [];
 
   get state(): EditorState {
     return this.facade.state;
@@ -321,6 +420,106 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     return this.pickFirst(payload, ['scene_aesthetic', 'aesthetic', 'style', 'tone']) || 'Not provided';
   }
 
+  get passageHeaderTitle(): string {
+    const payload = this.getPassageStructurePayload();
+    const analysis = this.recordFromUnknown(payload['analysis']);
+    const heading = this.pickFirst(analysis ?? payload, ['passage_title', 'title', 'heading', 'study_heading']);
+    if (heading) return heading;
+
+    const surahNo = this.numberFromUnknown(this.state.selectedSurah);
+    const surahName = this.resolveSurahName(surahNo);
+    const ref = this.passageReferenceBadge;
+    if (surahName && ref) return `Surah ${surahName} ${ref}`;
+    if (surahName) return `Surah ${surahName}`;
+    if (ref) return `Surah Yusuf ${ref}`;
+    return this.lessonTitle || 'Passage Structure';
+  }
+
+  get passageHeaderSubtitle(): string {
+    const payload = this.getPassageStructurePayload();
+    const analysis = this.recordFromUnknown(payload['analysis']);
+    const subtitle = this.pickFirst(analysis ?? payload, ['subtitle', 'description', 'summary', 'overview']);
+    if (subtitle) return subtitle;
+    return 'Structured cognitive map of discourse, conflict, providence, and narrative flow.';
+  }
+
+  get passageReferenceBadge(): string {
+    const payload = this.getPassageStructurePayload();
+    const scope = this.recordFromUnknown(payload['scope']);
+    const ref = this.recordFromUnknown(scope?.['ref']);
+
+    const surah = this.numberFromUnknown(ref?.['surah']) ?? this.numberFromUnknown(this.state.selectedSurah);
+    let verses = this.textFromUnknown(ref?.['verses']).replace(/\s+/g, '');
+    if (!verses) {
+      const start = this.state.rangeStart;
+      const end = this.state.rangeEnd ?? start;
+      if (start != null && end != null) {
+        verses = start === end ? `${start}` : `${start}-${end}`;
+      }
+    }
+
+    if (verses) {
+      verses = verses.replace(/-/g, '–');
+    }
+
+    if (surah != null && verses) return `${surah}:${verses}`;
+    if (surah != null) return String(surah);
+    return this.rangeLabelShort || '—';
+  }
+
+  get passageStructureSections(): PassageSectionCard[] {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'passage_structure');
+    const cacheKey = tab?.json?.trim() ?? '';
+    if (cacheKey === this.passageSectionsCacheKey) {
+      return this.passageSectionsCache;
+    }
+
+    const sections = this.buildPassageSections(this.getPassageStructurePayload());
+    this.passageSectionsCacheKey = cacheKey;
+    this.passageSectionsCache = sections;
+    this.pruneCollapsedPassageSections(sections);
+    return sections;
+  }
+
+  get areAllPassageSectionsCollapsed(): boolean {
+    const sections = this.passageStructureSections;
+    return sections.length > 0 && this.collapsedPassageSectionIds.size >= sections.length;
+  }
+
+  get hasCollapsedPassageSections(): boolean {
+    return this.collapsedPassageSectionIds.size > 0;
+  }
+
+  get comprehensionQuestionGroups(): ComprehensionQuestionGroup[] {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'comprehension');
+    const cacheKey = tab?.json?.trim() ?? '';
+    if (cacheKey === this.comprehensionGroupsCacheKey) {
+      return this.comprehensionGroupsCache;
+    }
+
+    const groups = this.buildComprehensionQuestionGroups(this.parseTaskJsonUnknown(cacheKey));
+    this.comprehensionGroupsCacheKey = cacheKey;
+    this.comprehensionGroupsCache = groups;
+    return groups;
+  }
+
+  get comprehensionQuestionTotal(): number {
+    return this.comprehensionQuestionGroups.reduce((total, group) => total + group.questions.length, 0);
+  }
+
+  get expressionStudyCards(): ExpressionStudyCard[] {
+    const tab = this.state.taskTabs.find((entry) => entry.type === 'expressions');
+    const cacheKey = tab?.json?.trim() ?? '';
+    if (cacheKey === this.expressionCardsCacheKey) {
+      return this.expressionCardsCache;
+    }
+
+    const cards = this.buildExpressionStudyCards(this.parseTaskJsonUnknown(cacheKey));
+    this.expressionCardsCacheKey = cacheKey;
+    this.expressionCardsCache = cards;
+    return cards;
+  }
+
   get sentenceStructureSentences(): QuranSentenceStructureSentence[] {
     const tab = this.state.taskTabs.find((entry) => entry.type === 'sentence_structure');
     if (!tab?.json?.trim()) return [];
@@ -380,6 +579,39 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     if (!this.isSentenceSubTab(sub)) return;
     this.facade.selectSentenceSubTab(sub, false);
     this.syncQueryParams({ sub });
+  }
+
+  passageSectionDomId(id: string): string {
+    const safe = id.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+    return `kmap-section-${safe || 'unknown'}`;
+  }
+
+  isPassageSectionCollapsed(id: string): boolean {
+    return this.collapsedPassageSectionIds.has(id);
+  }
+
+  togglePassageSection(id: string): void {
+    if (this.collapsedPassageSectionIds.has(id)) {
+      this.collapsedPassageSectionIds.delete(id);
+      return;
+    }
+    this.collapsedPassageSectionIds.add(id);
+  }
+
+  collapseAllPassageSections(): void {
+    for (const section of this.passageStructureSections) {
+      this.collapsedPassageSectionIds.add(section.id);
+    }
+  }
+
+  expandAllPassageSections(): void {
+    this.collapsedPassageSectionIds.clear();
+  }
+
+  scrollToPassageSection(sectionId: string): void {
+    if (typeof document === 'undefined') return;
+    const target = document.getElementById(this.passageSectionDomId(sectionId));
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
   }
 
   selectReadingWord(token: ReadingWordToken) {
@@ -501,6 +733,20 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
         return ARABIC_INDIC_DIGITS[code];
       })
       .join('');
+  }
+
+  toPassageTextSegments(value: string): PassageTextSegment[] {
+    if (!value) return [];
+    const parts = value.split(/([\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)/);
+    const segments: PassageTextSegment[] = [];
+    for (const part of parts) {
+      if (!part) continue;
+      segments.push({
+        text: part,
+        isArabic: ARABIC_SCRIPT_CHAR_RE.test(part),
+      });
+    }
+    return segments;
   }
 
   morphologyRef(item: Record<string, unknown>): string {
@@ -636,6 +882,735 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
       return {};
     } catch {
       return {};
+    }
+  }
+
+  private buildPassageSections(payload: Record<string, unknown>): PassageSectionCard[] {
+    const analysis = this.recordFromUnknown(payload['analysis']);
+    const rawSections = Array.isArray(analysis?.['sections']) ? analysis['sections'] : [];
+    const parsed = rawSections
+      .map((entry, index) => this.toPassageSection(entry, index))
+      .filter((entry): entry is PassageSectionCard => entry != null);
+    if (parsed.length) return parsed;
+    return this.buildFallbackPassageSections(payload);
+  }
+
+  private toPassageSection(entry: unknown, index: number): PassageSectionCard | null {
+    const section = this.recordFromUnknown(entry);
+    if (!section) return null;
+
+    const key = this.textFromUnknown(section['key']) || `section_${index + 1}`;
+    const data = this.recordFromUnknown(section['data']) ?? {};
+    const ui = this.recordFromUnknown(section['ui']);
+    const renderer = this.resolvePassageRenderer(this.textFromUnknown(section['renderer']), data);
+    const title = this.textFromUnknown(section['title']) || this.toReadableLabel(key);
+    const badge = this.textFromUnknown(ui?.['badge']) || this.defaultPassageBadge(renderer);
+    const accent = this.resolvePassageAccent({
+      key,
+      title,
+      badge,
+      renderer,
+      tone: this.textFromUnknown(ui?.['tone']),
+    });
+    const iconName = this.resolvePassageIcon(this.textFromUnknown(ui?.['icon']), renderer, accent);
+
+    const keyValueRows = renderer === 'keyvalue' ? this.toPassageKeyValueRows(data) : [];
+    const clusters = renderer === 'clusters' ? this.toPassageClusters(data, accent) : [];
+    const chiasm = renderer === 'chiasm' ? this.toPassageChiasm(data) : null;
+    const timeline = renderer === 'timeline' ? this.toPassageTimeline(data) : [];
+    const summary = this.pickFirst(data, ['function', 'effect', 'interpretation', 'projection', 'semantic_center', 'purpose']);
+
+    const idSource = this.textFromUnknown(section['id']) || key || `section_${index + 1}`;
+    const id = idSource.toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+
+    return {
+      id,
+      key,
+      title,
+      badge,
+      renderer,
+      accent,
+      iconName,
+      summary,
+      keyValueRows,
+      clusters,
+      chiasm,
+      timeline,
+    };
+  }
+
+  private resolvePassageRenderer(renderer: string, data: Record<string, unknown>): PassageRenderer {
+    const normalized = renderer.trim().toLowerCase();
+    if (normalized === 'keyvalue' || normalized === 'clusters' || normalized === 'chiasm' || normalized === 'timeline') {
+      return normalized;
+    }
+    if (Array.isArray(data['clusters'])) return 'clusters';
+    if (Array.isArray(data['steps'])) return 'timeline';
+    if (this.recordFromUnknown(data['outer_frame']) || this.recordFromUnknown(data['core_axis'])) return 'chiasm';
+    return 'keyvalue';
+  }
+
+  private defaultPassageBadge(renderer: PassageRenderer): string {
+    if (renderer === 'clusters') return 'Clusters';
+    if (renderer === 'chiasm') return 'Chiasm';
+    if (renderer === 'timeline') return 'Flow';
+    return 'Insight';
+  }
+
+  private resolvePassageAccent(context: {
+    key: string;
+    title: string;
+    badge: string;
+    renderer: PassageRenderer;
+    tone: string;
+  }): PassageAccent {
+    const signal = `${context.key} ${context.title} ${context.badge}`.toLowerCase();
+    if (
+      signal.includes('providence') ||
+      signal.includes('divine') ||
+      signal.includes('blessing') ||
+      signal.includes('selection') ||
+      signal.includes('purpose')
+    ) {
+      return 'green';
+    }
+    if (
+      signal.includes('conflict') ||
+      signal.includes('threat') ||
+      signal.includes('enemy') ||
+      signal.includes('warning') ||
+      signal.includes('jealousy')
+    ) {
+      return 'orange';
+    }
+    if (signal.includes('seed') || signal.includes('dream') || signal.includes('narrative')) {
+      return 'violet';
+    }
+    if (signal.includes('time') || signal.includes('temporal') || signal.includes('timeline') || signal.includes('flow')) {
+      return 'gray';
+    }
+    if (signal.includes('discourse') || signal.includes('knowledge') || signal.includes('voice') || signal.includes('lexicon')) {
+      return 'blue';
+    }
+
+    const tone = context.tone.toLowerCase();
+    if (tone === 'success') return 'green';
+    if (tone === 'warning' || tone === 'danger') return 'orange';
+    if (tone === 'secondary') return 'gray';
+    if (tone === 'primary' && context.renderer === 'keyvalue') {
+      return signal.includes('seed') ? 'violet' : 'blue';
+    }
+    return 'blue';
+  }
+
+  private resolvePassageIcon(iconName: string, renderer: PassageRenderer, accent: PassageAccent): string {
+    const normalized = iconName.trim();
+    const aliasMap: Record<string, string> = {
+      cilwarning: 'cilBell',
+      cillightbulb: 'cilStar',
+      cilclock: 'cilCalendar',
+      cilswaphorizontal: 'cilShareAll',
+      cillistrich: 'cilList',
+      ciltransfer: 'cilShareBoxed',
+      cilstream: 'cilListNumbered',
+      cileducation: 'cilPuzzle',
+    };
+
+    const known = new Set([
+      'cilSpeech',
+      'cilMoon',
+      'cilBell',
+      'cilStar',
+      'cilCalendar',
+      'cilShareAll',
+      'cilList',
+      'cilShareBoxed',
+      'cilListNumbered',
+      'cilPuzzle',
+      'cilLayers',
+      'cilTags',
+      'cilMap',
+      'cilNotes',
+      'cilTask',
+      'cilDescription',
+    ]);
+
+    if (normalized) {
+      const mapped = aliasMap[normalized.toLowerCase()];
+      if (mapped) return mapped;
+      if (known.has(normalized)) return normalized;
+    }
+
+    if (renderer === 'clusters') return 'cilTags';
+    if (renderer === 'chiasm') return 'cilShareAll';
+    if (renderer === 'timeline') return 'cilListNumbered';
+    if (accent === 'green') return 'cilStar';
+    if (accent === 'orange') return 'cilBell';
+    if (accent === 'violet') return 'cilMoon';
+    if (accent === 'gray') return 'cilCalendar';
+    return 'cilSpeech';
+  }
+
+  private toPassageKeyValueRows(data: Record<string, unknown>): PassageKeyValueRow[] {
+    const rows: PassageKeyValueRow[] = [];
+    for (const [rawKey, value] of Object.entries(data)) {
+      const label = this.toReadableLabel(rawKey);
+      let text = '';
+      let chips: string[] = [];
+
+      if (Array.isArray(value)) {
+        chips = this.uniqueChips(this.toPassageChipValues(value));
+      } else {
+        const nested = this.recordFromUnknown(value);
+        if (nested) {
+          const textParts: string[] = [];
+          for (const [nestedKey, nestedValue] of Object.entries(nested)) {
+            if (Array.isArray(nestedValue) || this.recordFromUnknown(nestedValue)) {
+              chips.push(...this.toPassageChipValues(nestedValue));
+              continue;
+            }
+            const scalar = this.textFromUnknown(nestedValue);
+            if (scalar) textParts.push(`${this.toReadableLabel(nestedKey)}: ${scalar}`);
+          }
+          text = textParts.join(' • ');
+        } else {
+          text = this.textFromUnknown(value);
+        }
+      }
+
+      chips = this.uniqueChips(chips);
+      if (!text && !chips.length) continue;
+      rows.push({ key: label, text, chips });
+    }
+    return rows;
+  }
+
+  private toPassageClusters(data: Record<string, unknown>, parentAccent: PassageAccent): PassageCluster[] {
+    const clusters: PassageCluster[] = [];
+    const source = this.objectArray(data['clusters']);
+
+    if (source.length) {
+      for (const [index, cluster] of source.entries()) {
+        const title = this.firstText(cluster, ['name', 'title', 'label', 'key']) || `Cluster ${index + 1}`;
+        let items = this.uniqueChips(this.toPassageChipValues(cluster['items']));
+
+        if (!items.length) {
+          const remainder: Record<string, unknown> = {};
+          for (const [key, value] of Object.entries(cluster)) {
+            if (key === 'name' || key === 'title' || key === 'label' || key === 'key') continue;
+            remainder[key] = value;
+          }
+          items = this.uniqueChips(this.toPassageChipValues(remainder));
+        }
+
+        if (!items.length) continue;
+        clusters.push({
+          title: this.toReadableLabel(title),
+          items,
+          accent: this.resolveClusterAccent(title, parentAccent),
+        });
+      }
+    }
+
+    if (clusters.length) return clusters;
+
+    for (const [key, value] of Object.entries(data)) {
+      if (!Array.isArray(value)) continue;
+      const items = this.uniqueChips(this.toPassageChipValues(value));
+      if (!items.length) continue;
+      clusters.push({
+        title: this.toReadableLabel(key),
+        items,
+        accent: this.resolveClusterAccent(key, parentAccent),
+      });
+    }
+
+    return clusters;
+  }
+
+  private toPassageChiasm(data: Record<string, unknown>): PassageChiasmModel | null {
+    const outerEntries = this.recordEntriesToLines(this.recordFromUnknown(data['outer_frame']));
+    const innerEntries = this.recordEntriesToLines(this.recordFromUnknown(data['inner_frame']));
+    const axisEntries = this.recordEntriesToLines(this.recordFromUnknown(data['core_axis']));
+    const interpretation = this.textFromUnknown(data['interpretation']);
+
+    if (!outerEntries.length && !innerEntries.length && !axisEntries.length && !interpretation) return null;
+
+    return {
+      outerTop: outerEntries[0] || 'Outer frame',
+      outerBottom: outerEntries[1] || outerEntries[0] || 'Outer frame',
+      innerLeft: innerEntries[0] || 'Inner frame',
+      innerRight: innerEntries[1] || innerEntries[0] || 'Inner frame',
+      axis: axisEntries[0] || 'Core axis',
+      interpretation,
+    };
+  }
+
+  private toPassageTimeline(data: Record<string, unknown>): PassageTimelineStep[] {
+    const source = Array.isArray(data['steps']) ? data['steps'] : [];
+    const steps: PassageTimelineStep[] = [];
+
+    for (const [index, raw] of source.entries()) {
+      const record = this.recordFromUnknown(raw);
+      if (!record) {
+        const text = this.textFromUnknown(raw);
+        if (!text) continue;
+        const id = `step_${index + 1}`;
+        steps.push({ id, title: `Step ${index + 1}`, text });
+        continue;
+      }
+
+      const stepKey = this.textFromUnknown(record['key']) || `step_${index + 1}`;
+      const title = this.textFromUnknown(record['title']) || this.toReadableLabel(stepKey);
+      const text =
+        this.pickFirst(record, ['text', 'value', 'description', 'detail', 'summary']) ||
+        this.textFromUnknown(record['label']) ||
+        title;
+      const id = `${stepKey}_${index + 1}`.toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+      steps.push({ id, title, text });
+    }
+
+    if (steps.length) return steps;
+
+    for (const [index, ayah] of this.selectedAyahs.slice(0, 7).entries()) {
+      const detail = this.ayahTranslationText(ayah) || this.resolveReadingAyahText(ayah);
+      steps.push({
+        id: `ayah_${ayah.ayah}`,
+        title: `Ayah ${ayah.ayah}`,
+        text: detail || `Verse ${index + 1}`,
+      });
+    }
+    return steps;
+  }
+
+  private buildFallbackPassageSections(payload: Record<string, unknown>): PassageSectionCard[] {
+    const lessonContextRows: PassageKeyValueRow[] = [
+      { key: 'Passage', text: this.passageReferenceBadge, chips: [] },
+      { key: 'Heading', text: this.lessonHeading, chips: [] },
+      { key: 'Overview', text: this.lessonDetail, chips: [] },
+      { key: 'Scene', text: this.sceneDetail, chips: [] },
+      { key: 'Aesthetic', text: this.sceneAesthetic, chips: [] },
+    ];
+
+    const clusters = this.toPassageClusters(payload, 'blue');
+    const timeline = this.toPassageTimeline(payload);
+
+    return [
+      {
+        id: 'passage_context',
+        key: 'passage_context',
+        title: 'Passage Context',
+        badge: 'Context',
+        renderer: 'keyvalue',
+        accent: 'blue',
+        iconName: 'cilSpeech',
+        summary: '',
+        keyValueRows: lessonContextRows.filter((row) => row.text.trim().length > 0),
+        clusters: [],
+        chiasm: null,
+        timeline: [],
+      },
+      {
+        id: 'passage_flow',
+        key: 'passage_flow',
+        title: 'Passage Flow',
+        badge: 'Flow',
+        renderer: timeline.length ? 'timeline' : 'clusters',
+        accent: 'gray',
+        iconName: timeline.length ? 'cilListNumbered' : 'cilTags',
+        summary: '',
+        keyValueRows: [],
+        clusters: timeline.length ? [] : clusters,
+        chiasm: null,
+        timeline,
+      },
+    ];
+  }
+
+  private pruneCollapsedPassageSections(sections: PassageSectionCard[]): void {
+    const allowed = new Set(sections.map((section) => section.id));
+    for (const id of Array.from(this.collapsedPassageSectionIds)) {
+      if (!allowed.has(id)) {
+        this.collapsedPassageSectionIds.delete(id);
+      }
+    }
+  }
+
+  private buildComprehensionQuestionGroups(source: unknown): ComprehensionQuestionGroup[] {
+    const payload = this.recordFromUnknown(source);
+    const questionRoot = this.recordFromUnknown(payload?.['questions']) ?? payload;
+    if (!questionRoot) return [];
+
+    const ignoredKeys = new Set(['surah', 'verses', 'task_type', 'schema_version', 'title', 'subtitle']);
+    const availableKeys = Object.keys(questionRoot).filter((key) => {
+      if (!key || ignoredKeys.has(key)) return false;
+      const value = questionRoot[key];
+      return (
+        Array.isArray(value) ||
+        this.recordFromUnknown(value) != null ||
+        (typeof value === 'string' && value.trim().length > 0)
+      );
+    });
+
+    if (!availableKeys.length) return [];
+
+    const preferredOrder = new Set<string>(COMPREHENSION_GROUP_ORDER);
+    const orderedKeys = [
+      ...COMPREHENSION_GROUP_ORDER.filter((key) => availableKeys.includes(key)),
+      ...availableKeys.filter((key) => !preferredOrder.has(key)),
+    ];
+
+    const groups: ComprehensionQuestionGroup[] = [];
+    for (const key of orderedKeys) {
+      const questions = this.toQuestionList(questionRoot[key]);
+      if (!questions.length) continue;
+
+      const id = key.toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+      groups.push({
+        id: id || `group_${groups.length + 1}`,
+        key,
+        title: this.comprehensionGroupTitle(key),
+        accent: this.resolveComprehensionAccent(key),
+        questions,
+      });
+    }
+
+    return groups;
+  }
+
+  private comprehensionGroupTitle(key: string): string {
+    const normalized = key.trim().toLowerCase();
+    if (normalized === 'comprehension') return 'Core Comprehension';
+    if (normalized === 'reflective') return 'Reflective Inquiry';
+    if (normalized === 'analytical') return 'Analytical Inquiry';
+    if (normalized === 'morphological') return 'Morphological Focus';
+    if (normalized === 'grammatical') return 'Grammatical Focus';
+    return this.toReadableLabel(key);
+  }
+
+  private resolveComprehensionAccent(key: string): PassageAccent {
+    const normalized = key.trim().toLowerCase();
+    if (normalized === 'reflective') return 'green';
+    if (normalized === 'analytical') return 'violet';
+    if (normalized === 'morphological') return 'orange';
+    if (normalized === 'grammatical') return 'gray';
+    return 'blue';
+  }
+
+  private toQuestionList(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      const items = value.flatMap((entry) => this.toQuestionList(entry));
+      return this.uniqueTexts(items, 80);
+    }
+
+    const record = this.recordFromUnknown(value);
+    if (record) {
+      const direct = this.pickFirst(record, ['question', 'prompt', 'text', 'value', 'label']);
+      if (direct) return [direct];
+      const nested = Object.values(record).flatMap((entry) => this.toQuestionList(entry));
+      return this.uniqueTexts(nested, 80);
+    }
+
+    const scalar = this.textFromUnknown(value);
+    if (!scalar) return [];
+    return [scalar];
+  }
+
+  private uniqueTexts(values: string[], limit = 80): string[] {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const entry of values) {
+      const text = entry.trim();
+      if (!text || seen.has(text)) continue;
+      seen.add(text);
+      result.push(text);
+      if (result.length >= limit) break;
+    }
+    return result;
+  }
+
+  private buildExpressionStudyCards(source: unknown): ExpressionStudyCard[] {
+    let entries: Array<Record<string, unknown>> = [];
+    const sourceArray = Array.isArray(source) ? this.objectArray(source) : [];
+    if (sourceArray.length) {
+      entries = sourceArray;
+    } else {
+      const payload = this.recordFromUnknown(source);
+      if (payload) {
+        const fromUExpressions = this.objectArray(payload['u_expressions']);
+        const fromExpressions = this.objectArray(payload['expressions']);
+        const fromItems = this.objectArray(payload['items']);
+        if (fromUExpressions.length) entries = fromUExpressions;
+        else if (fromExpressions.length) entries = fromExpressions;
+        else if (fromItems.length) entries = fromItems;
+        if (!entries.length) {
+          const isSingleExpression =
+            this.textFromUnknown(payload['canonical_input']) ||
+            this.textFromUnknown(payload['text_ar']) ||
+            this.textFromUnknown(payload['ar_u_expression']);
+          if (isSingleExpression) {
+            entries = [payload];
+          }
+        }
+      }
+    }
+
+    return entries
+      .map((entry, index) => this.toExpressionStudyCard(entry, index))
+      .filter((entry): entry is ExpressionStudyCard => entry != null);
+  }
+
+  private toExpressionStudyCard(entry: Record<string, unknown>, index: number): ExpressionStudyCard | null {
+    const canonicalInput = this.firstText(entry, ['canonical_input']);
+    const canonicalTail = canonicalInput.includes('|') ? canonicalInput.split('|').slice(1).join('|').trim() : '';
+    const textAr = this.firstText(entry, ['text_ar', 'expression_ar']) || canonicalTail;
+    const canonical = canonicalInput || this.firstText(entry, ['ar_u_expression', 'id', 'expression_norm']);
+
+    const meta =
+      this.recordFromJsonLike(entry['meta_json']) ??
+      this.recordFromJsonLike(entry['meta']) ??
+      ({} as Record<string, unknown>);
+
+    const categoryRaw = this.pickFirst(meta, ['category', 'type', 'domain']) || this.firstText(entry, ['category']);
+    const statusRaw =
+      this.pickFirst(meta, ['scholarly_status', 'status']) || this.firstText(entry, ['scholarly_status', 'status']);
+    const category = categoryRaw ? this.toReadableLabel(categoryRaw) : '';
+    const status = statusRaw ? this.toReadableLabel(statusRaw) : '';
+    const lemma = this.firstText(entry, ['lemma_ar', 'lemma_norm', 'lemma']);
+
+    const label =
+      this.firstText(entry, ['label']) ||
+      this.firstText(entry, ['ar_u_expression']) ||
+      (canonicalInput ? canonicalInput.split('|')[0].trim() : '') ||
+      `Expression ${index + 1}`;
+
+    const surah = this.numberFromUnknown(entry['surah']);
+    const ayah = this.numberFromUnknown(entry['ayah']);
+    const fallbackRef = this.firstText(entry, ['reference', 'verse']);
+    const reference = surah != null && ayah != null ? `${surah}:${ayah}` : fallbackRef;
+
+    const sources = this.toExpressionSources(meta['sources'] ?? entry['sources']);
+    const sequence = this.toExpressionSequence(entry['sequence_json'] ?? entry['sequence']);
+    const accent = this.resolveExpressionAccent({
+      category: categoryRaw,
+      status: statusRaw,
+      label,
+    });
+
+    if (!textAr && !canonical && !sources.length && !sequence.length) return null;
+
+    const idSource = this.firstText(entry, ['ar_u_expression', 'id']) || canonical || label || `expr_${index + 1}`;
+    const id = idSource.toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+
+    return {
+      id: id || `expr_${index + 1}`,
+      label,
+      textAr,
+      canonical,
+      reference,
+      category,
+      status,
+      lemma,
+      accent,
+      sequence,
+      sources,
+    };
+  }
+
+  private toExpressionSequence(value: unknown): ExpressionSequenceToken[] {
+    const source = Array.isArray(value) ? value : this.arrayFromJsonLike(value);
+    const steps: ExpressionSequenceToken[] = [];
+
+    for (const raw of source) {
+      const record = this.recordFromUnknown(raw);
+      if (record) {
+        const text = this.pickFirst(record, ['token', 'text', 'value', 'label']);
+        const type = this.pickFirst(record, ['type', 'role', 'pos']);
+        if (!text) continue;
+        steps.push({
+          text,
+          type: type ? this.toReadableLabel(type) : '',
+        });
+        continue;
+      }
+
+      const scalar = this.textFromUnknown(raw);
+      if (!scalar) continue;
+      steps.push({ text: scalar, type: '' });
+    }
+
+    return this.uniqueTexts(steps.map((step) => `${step.text}||${step.type}`), 16)
+      .map((entry) => {
+        const [text, type] = entry.split('||');
+        return { text, type };
+      })
+      .filter((entry) => Boolean(entry.text));
+  }
+
+  private toExpressionSources(value: unknown): ExpressionSource[] {
+    const source = Array.isArray(value) ? value : this.arrayFromJsonLike(value);
+    const items: ExpressionSource[] = [];
+    for (const raw of source) {
+      const record = this.recordFromUnknown(raw);
+      if (record) {
+        const author = this.pickFirst(record, ['author', 'name']);
+        const work = this.pickFirst(record, ['work', 'title', 'source']);
+        if (!author && !work) continue;
+        items.push({ author: author || 'Source', work: work || 'Untitled' });
+        continue;
+      }
+
+      const scalar = this.textFromUnknown(raw);
+      if (!scalar) continue;
+      items.push({ author: 'Source', work: scalar });
+    }
+
+    return this.uniqueTexts(items.map((item) => `${item.author}||${item.work}`), 8)
+      .map((entry) => {
+        const [author, work] = entry.split('||');
+        return { author: author || 'Source', work: work || 'Untitled' };
+      })
+      .filter((entry) => Boolean(entry.author) || Boolean(entry.work));
+  }
+
+  private resolveExpressionAccent(context: { category: string; status: string; label: string }): PassageAccent {
+    const signal = `${context.category} ${context.status} ${context.label}`.toLowerCase();
+    if (
+      signal.includes('conflict') ||
+      signal.includes('enemy') ||
+      signal.includes('anthropological') ||
+      signal.includes('threat')
+    ) {
+      return 'orange';
+    }
+    if (signal.includes('divine') || signal.includes('election') || signal.includes('providence')) {
+      return 'green';
+    }
+    if (signal.includes('narrative') || signal.includes('story') || signal.includes('superlative')) {
+      return 'violet';
+    }
+    if (signal.includes('grammar') || signal.includes('morphology') || signal.includes('form')) {
+      return 'gray';
+    }
+    return 'blue';
+  }
+
+  private recordEntriesToLines(record: Record<string, unknown> | null): string[] {
+    if (!record) return [];
+    const lines: string[] = [];
+    for (const [key, value] of Object.entries(record)) {
+      const valueText = this.valueToPassageText(value);
+      if (key && valueText) {
+        lines.push(`${key} · ${valueText}`);
+      } else if (valueText) {
+        lines.push(valueText);
+      } else if (key) {
+        lines.push(key);
+      }
+    }
+    return lines;
+  }
+
+  private valueToPassageText(value: unknown): string {
+    const scalar = this.textFromUnknown(value);
+    if (scalar) return scalar;
+    const chips = this.uniqueChips(this.toPassageChipValues(value));
+    if (!chips.length) return '';
+    return chips.join(', ');
+  }
+
+  private toPassageChipValues(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return value.flatMap((entry) => this.toPassageChipValues(entry));
+    }
+
+    const record = this.recordFromUnknown(value);
+    if (record) {
+      const chips: string[] = [];
+      for (const [key, nested] of Object.entries(record)) {
+        if (Array.isArray(nested) || this.recordFromUnknown(nested)) {
+          chips.push(...this.toPassageChipValues(nested));
+          continue;
+        }
+        const scalar = this.textFromUnknown(nested);
+        if (scalar) chips.push(`${this.toReadableLabel(key)}: ${scalar}`);
+      }
+      return chips;
+    }
+
+    const scalar = this.textFromUnknown(value);
+    if (!scalar) return [];
+    return [scalar];
+  }
+
+  private uniqueChips(values: string[]): string[] {
+    const seen = new Set<string>();
+    const chips: string[] = [];
+    for (const entry of values) {
+      const text = entry.trim();
+      if (!text || seen.has(text)) continue;
+      seen.add(text);
+      chips.push(text);
+      if (chips.length >= 20) break;
+    }
+    return chips;
+  }
+
+  private resolveClusterAccent(name: string, fallback: PassageAccent): PassageAccent {
+    const signal = name.toLowerCase();
+    if (signal.includes('knowledge') || signal.includes('sign') || signal.includes('discourse') || signal.includes('lex')) {
+      return 'blue';
+    }
+    if (signal.includes('selection') || signal.includes('providence') || signal.includes('divine') || signal.includes('blessing')) {
+      return 'green';
+    }
+    if (signal.includes('conflict') || signal.includes('threat') || signal.includes('enemy') || signal.includes('jealous')) {
+      return 'orange';
+    }
+    if (signal.includes('seed') || signal.includes('dream') || signal.includes('narrative')) {
+      return 'violet';
+    }
+    if (signal.includes('time') || signal.includes('flow') || signal.includes('structure')) {
+      return 'gray';
+    }
+    return fallback;
+  }
+
+  private toReadableLabel(raw: string): string {
+    return raw
+      .trim()
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  private recordFromUnknown(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    return value as Record<string, unknown>;
+  }
+
+  private recordFromJsonLike(value: unknown): Record<string, unknown> | null {
+    const direct = this.recordFromUnknown(value);
+    if (direct) return direct;
+    if (typeof value !== 'string') return null;
+    const parsed = this.parseTaskJsonUnknown(value);
+    return this.recordFromUnknown(parsed);
+  }
+
+  private arrayFromJsonLike(value: unknown): unknown[] {
+    if (Array.isArray(value)) return value;
+    if (typeof value !== 'string') return [];
+    const parsed = this.parseTaskJsonUnknown(value);
+    return Array.isArray(parsed) ? parsed : [];
+  }
+
+  private parseTaskJsonUnknown(raw: string): unknown {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return null;
     }
   }
 

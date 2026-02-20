@@ -308,6 +308,273 @@
                 </div>
               </div>
 
+              <div class="study-comprehension-layout" *ngSwitchCase="'comprehension'">
+                <header class="study-task-head">
+                  <div class="study-task-head-copy">
+                    <p class="study-task-kicker">Comprehension Matrix</p>
+                    <h3>Structured Question Bank</h3>
+                    <p>{{ comprehensionQuestionTotal }} prompts across {{ comprehensionQuestionGroups.length }} categories.</p>
+                  </div>
+                  <span class="study-task-ref">{{ passageReferenceBadge }}</span>
+                </header>
+
+                <section class="study-question-grid" *ngIf="comprehensionQuestionGroups.length; else noComprehensionPrompts">
+                  <article
+                    class="study-question-card"
+                    *ngFor="let group of comprehensionQuestionGroups; let groupIndex = index"
+                    [attr.data-accent]="group.accent"
+                    [style.--group-index]="groupIndex"
+                  >
+                    <header class="study-question-card-head">
+                      <h4>{{ group.title }}</h4>
+                      <span class="study-question-count">{{ group.questions.length }}</span>
+                    </header>
+
+                    <ol class="study-question-list">
+                      <li class="study-question-item" *ngFor="let question of group.questions; let questionIndex = index">
+                        <span class="study-question-index">{{ questionIndex + 1 }}</span>
+                        <p>{{ question }}</p>
+                      </li>
+                    </ol>
+                  </article>
+                </section>
+
+                <ng-template #noComprehensionPrompts>
+                  <p class="text-muted">No comprehension prompts available.</p>
+                </ng-template>
+              </div>
+
+              <div class="study-expressions-layout" *ngSwitchCase="'expressions'">
+                <header class="study-task-head">
+                  <div class="study-task-head-copy">
+                    <p class="study-task-kicker">Expressions Desk</p>
+                    <h3>Scholarly Expression Set</h3>
+                    <p>{{ expressionStudyCards.length }} expression entries with lexical and source metadata.</p>
+                  </div>
+                  <span class="study-task-ref">{{ passageReferenceBadge }}</span>
+                </header>
+
+                <section class="study-expression-grid" *ngIf="expressionStudyCards.length; else noExpressions">
+                  <article
+                    class="study-expression-card"
+                    *ngFor="let expression of expressionStudyCards; let expressionIndex = index"
+                    [attr.data-accent]="expression.accent"
+                    [style.--expr-index]="expressionIndex"
+                  >
+                    <header class="study-expression-head">
+                      <div class="study-expression-heading">
+                        <h4>{{ expression.label }}</h4>
+                        <p class="study-expression-ref">{{ expression.reference }}</p>
+                      </div>
+                      <span class="study-expression-status" *ngIf="expression.status">{{ expression.status }}</span>
+                    </header>
+
+                    <p class="study-expression-ar text-arabic" dir="rtl" translate="no" *ngIf="expression.textAr">
+                      {{ expression.textAr }}
+                    </p>
+                    <p class="study-expression-canonical" *ngIf="expression.canonical">{{ expression.canonical }}</p>
+
+                    <div class="study-expression-meta">
+                      <span *ngIf="expression.category">{{ expression.category }}</span>
+                      <span *ngIf="expression.lemma">Lemma: {{ expression.lemma }}</span>
+                    </div>
+
+                    <div class="study-expression-sequence" *ngIf="expression.sequence.length">
+                      <span class="study-expression-token" *ngFor="let token of expression.sequence">
+                        <strong>{{ token.text }}</strong>
+                        <small *ngIf="token.type">{{ token.type }}</small>
+                      </span>
+                    </div>
+
+                    <ul class="study-expression-sources" *ngIf="expression.sources.length">
+                      <li *ngFor="let source of expression.sources">
+                        <span>{{ source.author }}</span>
+                        <em>{{ source.work }}</em>
+                      </li>
+                    </ul>
+                  </article>
+                </section>
+
+                <ng-template #noExpressions>
+                  <p class="text-muted">No expressions metadata available.</p>
+                </ng-template>
+              </div>
+
+              <div class="passage-structure-layout" *ngSwitchCase="'passage_structure'">
+                <header class="kmap-passage-header">
+                  <div class="kmap-passage-header-copy">
+                    <p class="kmap-passage-kicker">Passage Analysis</p>
+                    <h3>{{ passageHeaderTitle }}</h3>
+                    <p>{{ passageHeaderSubtitle }}</p>
+                  </div>
+                  <div class="kmap-passage-header-actions">
+                    <span class="kmap-reference-badge">{{ passageReferenceBadge }}</span>
+                    <button type="button" class="kmap-control-btn" [disabled]="!hasCollapsedPassageSections" (click)="expandAllPassageSections()">
+                      Expand all
+                    </button>
+                    <button type="button" class="kmap-control-btn" [disabled]="areAllPassageSectionsCollapsed" (click)="collapseAllPassageSections()">
+                      Collapse all
+                    </button>
+                  </div>
+                </header>
+
+                <nav class="kmap-mini-nav" *ngIf="passageStructureSections.length > 1" aria-label="Passage section navigation">
+                  <button
+                    type="button"
+                    class="kmap-mini-nav-btn"
+                    *ngFor="let section of passageStructureSections"
+                    [attr.data-accent]="section.accent"
+                    (click)="scrollToPassageSection(section.id)"
+                  >
+                    {{ section.badge || section.title }}
+                  </button>
+                </nav>
+
+                <section class="kmap-analysis-grid" aria-label="Structured passage analysis">
+                  <article
+                    class="kmap-analysis-card"
+                    *ngFor="let section of passageStructureSections; let sectionIndex = index"
+                    [attr.id]="passageSectionDomId(section.id)"
+                    [attr.data-accent]="section.accent"
+                    [class.kmap-analysis-card--collapsed]="isPassageSectionCollapsed(section.id)"
+                    [class.kmap-analysis-card--providence]="section.key.includes('providence')"
+                    [style.--card-index]="sectionIndex"
+                  >
+                    <button
+                      type="button"
+                      class="kmap-analysis-card-head"
+                      [attr.aria-expanded]="!isPassageSectionCollapsed(section.id)"
+                      [attr.aria-controls]="passageSectionDomId(section.id) + '-content'"
+                      (click)="togglePassageSection(section.id)"
+                    >
+                      <span class="kmap-icon-circle" [attr.data-accent]="section.accent">
+                        <svg cIcon [name]="section.iconName"></svg>
+                      </span>
+                      <span class="kmap-analysis-head-copy">
+                        <span class="kmap-analysis-title">{{ section.title }}</span>
+                        <span class="kmap-analysis-badge">{{ section.badge }}</span>
+                      </span>
+                      <span class="kmap-analysis-toggle" aria-hidden="true">{{ isPassageSectionCollapsed(section.id) ? '+' : '-' }}</span>
+                    </button>
+
+                    <div
+                      class="kmap-analysis-card-content-wrap"
+                      [attr.id]="passageSectionDomId(section.id) + '-content'"
+                      [class.is-collapsed]="isPassageSectionCollapsed(section.id)"
+                    >
+                      <div class="kmap-analysis-card-content">
+                        <p class="kmap-analysis-summary" *ngIf="section.summary">
+                          <ng-container *ngFor="let segment of toPassageTextSegments(section.summary)">
+                            <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                          </ng-container>
+                        </p>
+
+                        <ng-container [ngSwitch]="section.renderer">
+                          <div class="kmap-keyvalue-renderer" *ngSwitchCase="'keyvalue'">
+                            <article class="kmap-kv-row" *ngFor="let row of section.keyValueRows">
+                              <p class="kmap-kv-key">{{ row.key }}</p>
+                              <div class="kmap-kv-value">
+                                <p class="kmap-kv-text" *ngIf="row.text">
+                                  <ng-container *ngFor="let segment of toPassageTextSegments(row.text)">
+                                    <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                  </ng-container>
+                                </p>
+                                <div class="kmap-chip-list" *ngIf="row.chips.length">
+                                  <span class="kmap-chip" *ngFor="let chip of row.chips">
+                                    <ng-container *ngFor="let segment of toPassageTextSegments(chip)">
+                                      <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                    </ng-container>
+                                  </span>
+                                </div>
+                              </div>
+                            </article>
+                            <p class="text-muted" *ngIf="!section.keyValueRows.length">No structured values available.</p>
+                          </div>
+
+                          <div class="kmap-clusters-renderer" *ngSwitchCase="'clusters'">
+                            <article class="kmap-cluster" *ngFor="let cluster of section.clusters" [attr.data-accent]="cluster.accent">
+                              <h4>{{ cluster.title }}</h4>
+                              <div class="kmap-cluster-tags">
+                                <span class="kmap-cluster-tag" *ngFor="let item of cluster.items" [attr.data-accent]="cluster.accent">
+                                  <ng-container *ngFor="let segment of toPassageTextSegments(item)">
+                                    <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                  </ng-container>
+                                </span>
+                              </div>
+                            </article>
+                            <p class="text-muted" *ngIf="!section.clusters.length">No lexical clusters available.</p>
+                          </div>
+
+                          <div class="kmap-chiasm-renderer" *ngSwitchCase="'chiasm'">
+                            <ng-container *ngIf="section.chiasm as chiasm; else emptyChiasm">
+                              <div class="kmap-chiasm-frame kmap-chiasm-frame--outer">
+                                <ng-container *ngFor="let segment of toPassageTextSegments(chiasm.outerTop)">
+                                  <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                </ng-container>
+                              </div>
+                              <div class="kmap-chiasm-track">
+                                <div class="kmap-chiasm-node">
+                                  <ng-container *ngFor="let segment of toPassageTextSegments(chiasm.innerLeft)">
+                                    <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                  </ng-container>
+                                </div>
+                                <div class="kmap-chiasm-connector" aria-hidden="true"></div>
+                                <div class="kmap-chiasm-node">
+                                  <ng-container *ngFor="let segment of toPassageTextSegments(chiasm.innerRight)">
+                                    <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                  </ng-container>
+                                </div>
+                              </div>
+                              <div class="kmap-chiasm-axis">
+                                <ng-container *ngFor="let segment of toPassageTextSegments(chiasm.axis)">
+                                  <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                </ng-container>
+                              </div>
+                              <div class="kmap-chiasm-frame kmap-chiasm-frame--outer">
+                                <ng-container *ngFor="let segment of toPassageTextSegments(chiasm.outerBottom)">
+                                  <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                </ng-container>
+                              </div>
+                              <p class="kmap-chiasm-interpretation" *ngIf="chiasm.interpretation">
+                                <ng-container *ngFor="let segment of toPassageTextSegments(chiasm.interpretation)">
+                                  <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                </ng-container>
+                              </p>
+                            </ng-container>
+                            <ng-template #emptyChiasm>
+                              <p class="text-muted">No chiastic pattern found.</p>
+                            </ng-template>
+                          </div>
+
+                          <div class="kmap-timeline-renderer" *ngSwitchCase="'timeline'">
+                            <ol class="kmap-timeline" *ngIf="section.timeline.length; else emptyTimeline">
+                              <li class="kmap-timeline-step" *ngFor="let step of section.timeline; let stepIndex = index" [style.--step-index]="stepIndex">
+                                <span class="kmap-timeline-bullet" aria-hidden="true"></span>
+                                <div class="kmap-timeline-copy">
+                                  <h4>
+                                    <ng-container *ngFor="let segment of toPassageTextSegments(step.title)">
+                                      <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                    </ng-container>
+                                  </h4>
+                                  <p>
+                                    <ng-container *ngFor="let segment of toPassageTextSegments(step.text)">
+                                      <span [class.kmap-arabic-run]="segment.isArabic">{{ segment.text }}</span>
+                                    </ng-container>
+                                  </p>
+                                </div>
+                              </li>
+                            </ol>
+                            <ng-template #emptyTimeline>
+                              <p class="text-muted">No timeline steps available.</p>
+                            </ng-template>
+                          </div>
+                        </ng-container>
+                      </div>
+                    </div>
+                  </article>
+                </section>
+              </div>
+
               <div *ngSwitchDefault>
                 <pre class="study-json">{{ formatJson(tab.json) }}</pre>
               </div>
