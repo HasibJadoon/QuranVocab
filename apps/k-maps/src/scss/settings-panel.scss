@@ -173,7 +173,11 @@
 
 .preview-box--arabic {
   direction: rtl;
-  text-align: right;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
 }
 
 .preview-box--english {

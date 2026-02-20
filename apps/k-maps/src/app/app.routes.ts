@@ -68,6 +68,11 @@ export const routes: Routes = [
           import('./features/planner/routes').then(m => m.routes),
       },
       {
+        path: 'notes',
+        loadChildren: () =>
+          import('./notes-web/notes-web.routes').then((m) => m.routes),
+      },
+      {
         path: 'discourse',
         loadChildren: () =>
           import('./features/discourse/routes').then(m => m.routes),

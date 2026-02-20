@@ -1600,7 +1600,7 @@ app-quran-lesson-study {
 .quran-study-shell .reading-layout {
   display: grid;
   gap: 0.9rem;
-  grid-template-columns: minmax(0, 1.65fr) minmax(20rem, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
@@ -2118,6 +2118,64 @@ app-quran-lesson-study {
     border-top: 1px solid rgba(120, 164, 198, 0.22);
     background: rgba(10, 16, 25, 0.78);
   }
+}
+
+.quran-study-shell .study-targeted-notes {
+  margin-bottom: 0.8rem;
+}
+
+.quran-study-shell .study-targeted-notes--inline {
+  margin-top: 0.5rem;
+}
+
+.quran-study-shell .sentence-item-notes {
+  margin-top: 0.85rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.quran-study-shell .sentence-item-note-row {
+  border: 1px solid rgba(123, 162, 196, 0.22);
+  border-radius: 10px;
+  background: rgba(14, 21, 31, 0.68);
+  padding: 0.55rem;
+}
+
+.quran-study-shell .sentence-item-note-btn {
+  border: 1px solid rgba(126, 166, 202, 0.32);
+  border-radius: 8px;
+  background: rgba(15, 24, 35, 0.72);
+  color: rgba(196, 216, 238, 0.9);
+  font-size: 0.78rem;
+  padding: 0.35rem 0.62rem;
+}
+
+.quran-study-shell .study-question-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+.quran-study-shell .study-question-note-btn {
+  border: 1px solid rgba(124, 164, 198, 0.28);
+  border-radius: 8px;
+  background: rgba(15, 24, 35, 0.72);
+  color: rgba(188, 215, 238, 0.9);
+  font-size: 0.74rem;
+  padding: 0.25rem 0.52rem;
+  white-space: nowrap;
+}
+
+.quran-study-shell .study-question-notes-wrap {
+  list-style: none;
+  margin-top: 0.35rem;
+}
+
+.quran-study-shell .study-word-note-popover {
+  border-bottom: 1px solid rgba(120, 164, 198, 0.22);
+  padding: 0.7rem 0.9rem;
+  background: rgba(10, 16, 25, 0.76);
 }
 
 .quran-study-shell .sentence-tabs .nav {

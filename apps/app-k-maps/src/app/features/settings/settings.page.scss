@@ -95,7 +95,12 @@
 }
 
 .arabic-preview {
-  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
+  text-align: center;
+  direction: rtl;
 }
 
 ion-range::part(bar) {

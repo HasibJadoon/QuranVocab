@@ -24,6 +24,8 @@
 
         <app-study-morphology-tab
           *ngSwitchCase="'morphology'"
+          [unitId]="facade.studyUnitId"
+          [rangeRef]="facade.studyRangeRef"
           [nouns]="facade.morphologyNouns"
           [verbs]="facade.morphologyVerbs"
           [morphologyItems]="facade.morphologyRawItems"
@@ -33,6 +35,8 @@
 
         <app-study-sentence-structure-tab
           *ngSwitchCase="'sentence_structure'"
+          [unitId]="facade.studyUnitId"
+          [rangeRef]="facade.studyRangeRef"
           [entries]="facade.sentenceEntries"
         ></app-study-sentence-structure-tab>
 
@@ -44,12 +48,16 @@
 
         <app-study-comprehension-tab
           *ngSwitchCase="'comprehension'"
+          [unitId]="facade.studyUnitId"
+          [rangeRef]="facade.studyRangeRef"
           [total]="facade.comprehensionQuestionTotal"
           [groups]="facade.comprehensionQuestionGroups"
         ></app-study-comprehension-tab>
 
         <app-study-passage-structure-tab
           *ngSwitchCase="'passage_structure'"
+          [unitId]="facade.studyUnitId"
+          [rangeRef]="facade.studyRangeRef"
           [headerTitle]="facade.passageHeaderTitle"
           [headerSubtitle]="facade.passageHeaderSubtitle"
           [sections]="facade.passageStructureSections"

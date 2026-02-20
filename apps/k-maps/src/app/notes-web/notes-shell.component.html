@@ -1,0 +1,29 @@
+<section class="notes-shell">
+  <aside class="notes-panel">
+    <app-notes-list
+      [notes]="notes()"
+      [selectedId]="selectedId()"
+      [status]="status()"
+      [query]="query()"
+      [loading]="loading()"
+      [creating]="creating()"
+      (statusChanged)="onStatusChanged($event)"
+      (queryChanged)="onQueryChanged($event)"
+      (noteSelected)="selectNote($event)"
+      (createRequested)="createNote()"
+    ></app-notes-list>
+
+    @if (listError()) {
+      <p class="list-error">{{ listError() }}</p>
+    }
+  </aside>
+
+  <main class="editor-panel">
+    <app-note-editor
+      [noteId]="selectedId()"
+      (draftChanged)="onDraftChanged($event)"
+      (notePatched)="onNotePatched($event)"
+      (noteStatusChanged)="onNoteStatusChanged($event)"
+    ></app-note-editor>
+  </main>
+</section>

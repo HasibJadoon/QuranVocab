@@ -231,6 +231,24 @@ export class ArQuranStudyFacade {
     return `Surah ${surah}, Ayah ${from}-${to}`;
   }
 
+  get studyUnitId(): string {
+    const fromReference = this.textFromUnknown(this.lesson?.reference?.source_ref_id);
+    if (fromReference) return fromReference;
+
+    const fromAyahUnit = this.lesson?.text?.arabic_full
+      .map((ayah) => this.textFromUnknown(ayah.unit_id))
+      .find((value) => value.length > 0);
+    if (fromAyahUnit) return fromAyahUnit;
+
+    return this.textFromUnknown(this.lesson?.id);
+  }
+
+  get studyRangeRef(): string {
+    const badge = this.passageReferenceBadge.trim();
+    if (badge && badge !== '—') return badge;
+    return this.lessonSubtitle;
+  }
+
   get hasTaskData(): boolean {
     return Object.keys(this.taskPayloads).length > 0;
   }

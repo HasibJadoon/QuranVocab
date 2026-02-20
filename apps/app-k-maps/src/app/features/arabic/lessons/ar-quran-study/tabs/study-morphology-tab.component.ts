@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
+import { TargetedNotesPanelComponent } from '../../../../../notes/targeting/targeted-notes-panel/targeted-notes-panel.component';
+import { TargetRef, makeTaskTarget, makeWordTarget } from '../../../../../notes/targeting/targeting.models';
 
 import { StudyMorphologyItem } from '../ar-quran-study.facade';
 import {
@@ -37,7 +39,7 @@ type MorphologyField = {
 @Component({
   selector: 'app-study-morphology-tab',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [CommonModule, IonicModule, TargetedNotesPanelComponent],
   templateUrl: './study-morphology-tab.component.html',
 })
 export class StudyMorphologyTabComponent implements OnChanges {
@@ -48,10 +50,15 @@ export class StudyMorphologyTabComponent implements OnChanges {
   @Input() morphologyItems: Array<Record<string, unknown>> = [];
   @Input() lexiconMorphologyItems: Array<Record<string, unknown>> = [];
   @Input() evidenceItems: Array<Record<string, unknown>> = [];
+  @Input() unitId = '';
+  @Input() rangeRef = '';
 
   isMorphologyModalOpen = false;
   activeMorphologyDetailTab: MorphologyDetailTab = 'lexicon';
   selectedMorphologyItem: StudyMorphologyItem | null = null;
+  taskTarget: TargetRef | null = null;
+  activeWordNoteKey = '';
+  activeWordNoteTarget: TargetRef | null = null;
 
   remoteLoading = false;
   remoteError = '';
@@ -70,10 +77,36 @@ export class StudyMorphologyTabComponent implements OnChanges {
   private readonly arabicScriptRe = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['unitId'] || changes['rangeRef']) {
+      this.taskTarget = this.buildTaskTarget();
+    }
+
     if (!this.selectedMorphologyItem) return;
     if (changes['morphologyItems'] || changes['lexiconMorphologyItems'] || changes['evidenceItems']) {
       this.recomputeSelectionDetails();
     }
+  }
+
+  toggleWordNotes(event: Event, item: StudyMorphologyItem): void {
+    event.stopPropagation();
+
+    const target = this.buildWordTarget(item);
+    const key = `${item.location}|${item.word}`;
+
+    if (!target) {
+      this.activeWordNoteKey = '';
+      this.activeWordNoteTarget = null;
+      return;
+    }
+
+    if (this.activeWordNoteKey === key) {
+      this.activeWordNoteKey = '';
+      this.activeWordNoteTarget = null;
+      return;
+    }
+
+    this.activeWordNoteKey = key;
+    this.activeWordNoteTarget = target;
   }
 
   openMorphologyDetails(item: StudyMorphologyItem): void {
@@ -870,6 +903,33 @@ export class StudyMorphologyTabComponent implements OnChanges {
       this.firstText(record, ['present', 'verb_present', 'imperfect']) ||
       this.firstText(record, ['masdar', 'verbal_noun', 'infinitive'])
     );
+  }
+
+  private buildTaskTarget(): TargetRef | null {
+    const unit = this.unitId.trim();
+    if (!unit) return null;
+
+    const range = this.rangeRef.trim();
+    const refText = range ? `${range} • morphology` : 'morphology';
+
+    try {
+      return makeTaskTarget(unit, 'morphology', refText);
+    } catch {
+      return null;
+    }
+  }
+
+  private buildWordTarget(item: StudyMorphologyItem): TargetRef | null {
+    const parsed = this.parseLocation(item.location, null);
+    if (parsed.surah == null || parsed.ayah == null || parsed.tokenIndex == null) {
+      return null;
+    }
+
+    try {
+      return makeWordTarget(parsed.surah, parsed.ayah, parsed.tokenIndex);
+    } catch {
+      return null;
+    }
   }
 
   private locationFromRecord(item: Record<string, unknown>): string {

@@ -1,0 +1,144 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.editor-content::part(scroll) {
+  height: 100%;
+}
+
+.save-toolbar {
+  --min-height: 2rem;
+}
+
+.save-state {
+  display: block;
+  margin-inline-start: 1rem;
+  color: var(--ion-color-medium);
+  font-size: 0.82rem;
+}
+
+.editor-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.editor-loading {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.textarea-wrap {
+  flex: 1;
+  min-height: 60vh;
+  border: 1px solid var(--ion-color-step-200);
+  border-radius: 0.9rem;
+  background: var(--ion-color-step-50, transparent);
+  overflow: hidden;
+}
+
+.editor-textarea {
+  height: 100%;
+  --background: transparent;
+  --padding-start: 0.85rem;
+  --padding-end: 0.85rem;
+  --padding-top: 0.85rem;
+  --padding-bottom: 0.85rem;
+}
+
+.editor-textarea::part(native) {
+  min-height: 100%;
+  line-height: 1.55;
+  font-size: 1rem;
+  color: var(--ion-text-color);
+}
+
+.links-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.link-chip {
+  --background: var(--ion-color-step-100, transparent);
+}
+
+.chip-close {
+  margin-inline-start: 0.2rem;
+  color: var(--ion-color-medium);
+  cursor: pointer;
+}
+
+.comments-wrap {
+  border: 1px solid var(--ion-color-step-200);
+  border-radius: 0.9rem;
+  padding: 0.7rem;
+  display: grid;
+  gap: 0.55rem;
+  background: var(--ion-color-step-50, transparent);
+}
+
+.comments-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.comments-head h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ion-text-color);
+}
+
+.comments-state {
+  margin: 0;
+  font-size: 0.83rem;
+  color: var(--ion-color-medium);
+}
+
+.comments-list {
+  margin: 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.comment-item {
+  --padding-start: 0.65rem;
+  --padding-end: 0.65rem;
+  --background: var(--ion-color-step-100, transparent);
+  border-bottom: 1px solid var(--ion-color-step-200);
+}
+
+.comment-item:last-child {
+  border-bottom: 0;
+}
+
+.comment-body {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.45;
+  color: var(--ion-text-color);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.comment-time {
+  margin: 0.3rem 0 0;
+  font-size: 0.76rem;
+  color: var(--ion-color-medium);
+}
+
+.comment-input {
+  --background: var(--ion-color-step-100, transparent);
+  --padding-start: 0.75rem;
+  --padding-end: 0.75rem;
+  --padding-top: 0.7rem;
+  --padding-bottom: 0.7rem;
+  border: 1px solid var(--ion-color-step-200);
+  border-radius: 0.7rem;
+}

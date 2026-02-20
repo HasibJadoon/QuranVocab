@@ -4,6 +4,13 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { IconDirective } from '@coreui/icons-angular';
 import { Subscription } from 'rxjs';
 
+import { TargetedNotesPanelComponent } from '../../../../../notes-targeted/targeted-notes-panel/targeted-notes-panel.component';
+import {
+  TargetRef,
+  makeTaskItemTarget,
+  makeTaskTarget,
+  makeWordTarget,
+} from '../../../../../notes-targeted/targeting.models';
 import {
   AppFontSizeControlsComponent,
   AppPillsComponent,
@@ -174,6 +181,7 @@ type ExpressionStudyCard = {
   imports: [
     CommonModule,
     IconDirective,
+    TargetedNotesPanelComponent,
     AppTabsComponent,
     AppPillsComponent,
     AppFontSizeControlsComponent,
@@ -201,6 +209,11 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
   morphologyDialogWord: QuranWordInspectorSelection | null = null;
   dialogViewMode: 'context' | 'analysis' = 'context';
   showDialogTranslation = true;
+  showMorphologyWordNotes = false;
+  activeSentenceNoteKey = '';
+  activeSentenceNoteTarget: TargetRef | null = null;
+  activeComprehensionNoteKey = '';
+  activeComprehensionNoteTarget: TargetRef | null = null;
   private readonly collapsedPassageSectionIds = new Set<string>();
   private passageSectionsCacheKey = '';
   private passageSectionsCache: PassageSectionCard[] = [];
@@ -540,6 +553,115 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     return this.formatJson(tab?.json ?? '');
   }
 
+  get studyUnitId(): string {
+    const unit = (this.state.passageUnitId ?? '').trim();
+    if (unit) return unit;
+    return (this.state.lessonId ?? '').trim();
+  }
+
+  get studyRangeRef(): string {
+    const compact = this.passageReferenceBadge.trim();
+    if (compact && compact !== '—') return compact;
+    return this.rangeLabelShort || this.lessonSubtitle;
+  }
+
+  taskTarget(taskType: 'passage_structure' | 'sentence_structure' | 'morphology' | 'comprehension'): TargetRef | null {
+    const unitId = this.studyUnitId;
+    if (!unitId) return null;
+
+    const rangeRef = this.studyRangeRef.trim();
+    const refText = rangeRef ? `${rangeRef} • ${taskType}` : taskType;
+
+    try {
+      return makeTaskTarget(unitId, taskType, refText);
+    } catch {
+      return null;
+    }
+  }
+
+  sentenceItemTarget(sentence: QuranSentenceStructureSentence): TargetRef | null {
+    const unitId = this.studyUnitId;
+    if (!unitId) return null;
+
+    const order = Math.max(1, Math.trunc(sentence.sentence_order || 1));
+    const itemKey = `sent_${order}`;
+    const refText = `${this.studyRangeRef} • Sentence #${order}`;
+
+    try {
+      return makeTaskItemTarget(unitId, 'sentence_structure', itemKey, refText);
+    } catch {
+      return null;
+    }
+  }
+
+  toggleSentenceItemNotes(sentence: QuranSentenceStructureSentence): void {
+    const order = Math.max(1, Math.trunc(sentence.sentence_order || 1));
+    const nextKey = `sent_${order}`;
+
+    if (this.activeSentenceNoteKey === nextKey) {
+      this.activeSentenceNoteKey = '';
+      this.activeSentenceNoteTarget = null;
+      return;
+    }
+
+    this.activeSentenceNoteKey = nextKey;
+    this.activeSentenceNoteTarget = this.sentenceItemTarget(sentence);
+  }
+
+  comprehensionQuestionKey(groupIndex: number, questionIndex: number): string {
+    return `q_${this.comprehensionQuestionOrdinal(groupIndex, questionIndex)}`;
+  }
+
+  comprehensionQuestionTarget(groupIndex: number, questionIndex: number): TargetRef | null {
+    const unitId = this.studyUnitId;
+    if (!unitId) return null;
+
+    const ordinal = this.comprehensionQuestionOrdinal(groupIndex, questionIndex);
+    const itemKey = `q_${ordinal}`;
+    const refText = `${this.studyRangeRef} • Q#${ordinal}`;
+
+    try {
+      return makeTaskItemTarget(unitId, 'comprehension', itemKey, refText);
+    } catch {
+      return null;
+    }
+  }
+
+  toggleComprehensionItemNotes(groupIndex: number, questionIndex: number): void {
+    const key = this.comprehensionQuestionKey(groupIndex, questionIndex);
+
+    if (this.activeComprehensionNoteKey === key) {
+      this.activeComprehensionNoteKey = '';
+      this.activeComprehensionNoteTarget = null;
+      return;
+    }
+
+    this.activeComprehensionNoteKey = key;
+    this.activeComprehensionNoteTarget = this.comprehensionQuestionTarget(groupIndex, questionIndex);
+  }
+
+  get morphologyWordTarget(): TargetRef | null {
+    const parts = this.morphologyDialogLocationParts;
+    if (parts.surah == null || parts.ayah == null || parts.tokenIndex == null) {
+      return null;
+    }
+
+    try {
+      return makeWordTarget(parts.surah, parts.ayah, parts.tokenIndex);
+    } catch {
+      return null;
+    }
+  }
+
+  toggleMorphologyWordNotes(): void {
+    if (!this.morphologyWordTarget) {
+      this.showMorphologyWordNotes = false;
+      return;
+    }
+
+    this.showMorphologyWordNotes = !this.showMorphologyWordNotes;
+  }
+
   ngOnInit() {
     const stored = this.readStoredFontSize();
     if (stored != null) {
@@ -654,6 +776,7 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
 
   closeMorphologyWordDialog() {
     this.morphologyDialogWord = null;
+    this.showMorphologyWordNotes = false;
   }
 
   setDialogViewMode(mode: 'context' | 'analysis') {
@@ -800,6 +923,14 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     }
     if (this.studyActiveTaskTab !== 'morphology') {
       this.closeMorphologyWordDialog();
+    }
+    if (this.studyActiveTaskTab !== 'sentence_structure') {
+      this.activeSentenceNoteKey = '';
+      this.activeSentenceNoteTarget = null;
+    }
+    if (this.studyActiveTaskTab !== 'comprehension') {
+      this.activeComprehensionNoteKey = '';
+      this.activeComprehensionNoteTarget = null;
     }
 
     const sub = params.get('sub');
@@ -1315,6 +1446,14 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     const scalar = this.textFromUnknown(value);
     if (!scalar) return [];
     return [scalar];
+  }
+
+  private comprehensionQuestionOrdinal(groupIndex: number, questionIndex: number): number {
+    let offset = 0;
+    for (let index = 0; index < groupIndex; index += 1) {
+      offset += this.comprehensionQuestionGroups[index]?.questions?.length ?? 0;
+    }
+    return offset + questionIndex + 1;
   }
 
   private uniqueTexts(values: string[], limit = 80): string[] {

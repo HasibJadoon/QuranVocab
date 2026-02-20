@@ -126,6 +126,20 @@
         </ion-menu-toggle>
       </div>
 
+            <ion-item button detail="false" (click)="toggle('notes')">
+        <ion-icon name="document-text-outline" slot="start" class="menu-icon"></ion-icon>
+        <ion-label><h2>Notes</h2></ion-label>
+        <span class="menu-chevron" [class.open]="isOpen('notes')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </ion-item>
+      <div class="submenu" *ngIf="isOpen('notes')">
+        <ion-menu-toggle autoHide="true">
+          <ion-item routerLink="/notes/inbox" routerDirection="root" detail="false">
+            <ion-icon name="document-text-outline" slot="start" class="menu-icon"></ion-icon>
+            <ion-label><h2>Inbox</h2></ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+      </div>
+
       <ion-menu-toggle autoHide="true">
         <ion-item routerLink="/settings" routerDirection="root" detail="false">
           <ion-icon name="settings-outline" slot="start" class="menu-icon"></ion-icon>

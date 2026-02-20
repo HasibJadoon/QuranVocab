@@ -87,17 +87,7 @@
                   >
                     <ng-container *ngFor="let ayahGroup of readingAyahWordGroups; let isLastAyah = last">
                       <ng-container *ngFor="let token of ayahGroup.words; let isLastWord = last">
-                        <span
-                          class="quran-word quran-word--interactive"
-                          [class.quran-word--active]="isReadingWordSelected(token.location)"
-                          role="button"
-                          tabindex="0"
-                          [attr.aria-pressed]="isReadingWordSelected(token.location)"
-                          [attr.data-word-location]="token.location"
-                          [attr.aria-label]="'Word ' + token.location"
-                          (click)="selectReadingWord(token)"
-                          (keydown)="onReadingWordKeydown($event, token)"
-                        >
+                        <span class="quran-word">
                           {{ token.text }}
                         </span>
                         <span *ngIf="!isLastWord"> </span>
@@ -110,20 +100,15 @@
                     <p class="text-muted">No reading text available.</p>
                   </ng-template>
                 </article>
-
-                <app-quran-word-inspector
-                  class="reading-word-inspector"
-                  [selection]="selectedReadingWord"
-                  [contextLabel]="lessonSubtitle"
-                  [surahLabel]="readingInspectorSurahName"
-                  [morphologyItems]="morphologyItems"
-                  [lexiconMorphologyItems]="lexiconMorphologyItems"
-                  [evidenceItems]="morphologyEvidenceItems"
-                  (close)="clearReadingWordSelection()"
-                ></app-quran-word-inspector>
               </div>
 
               <div class="morphology-layout" *ngSwitchCase="'morphology'">
+                <app-targeted-notes-panel
+                  *ngIf="taskTarget('morphology') as target"
+                  class="study-targeted-notes"
+                  [target]="target"
+                ></app-targeted-notes-panel>
+
                 <div class="morphology-grid">
                   <article class="morph-bucket morph-bucket--noun">
                     <div class="morph-bucket-head">
@@ -205,6 +190,14 @@
                         <span class="study-word-dialog-ref">{{ morphologyDialogReference }}</span>
                         <button
                           type="button"
+                          class="study-word-dialog-toggle-btn study-word-dialog-toggle-btn--wide"
+                          [disabled]="!morphologyWordTarget"
+                          (click)="toggleMorphologyWordNotes()"
+                        >
+                          {{ showMorphologyWordNotes ? 'Hide Word Notes' : 'Word Notes' }}
+                        </button>
+                        <button
+                          type="button"
                           class="study-word-dialog-close-top"
                           aria-label="Close word details"
                           (click)="closeMorphologyWordDialog()"
@@ -213,6 +206,10 @@
                         </button>
                       </div>
                     </header>
+
+                    <div class="study-word-note-popover" *ngIf="showMorphologyWordNotes && morphologyWordTarget as target">
+                      <app-targeted-notes-panel [target]="target"></app-targeted-notes-panel>
+                    </div>
 
                     <div class="study-word-dialog-layout" [class.study-word-dialog-layout--analysis]="dialogViewMode === 'analysis'">
                       <section class="study-word-context">
@@ -273,6 +270,12 @@
               </div>
 
               <div class="sentence-layout" *ngSwitchCase="'sentence_structure'">
+                <app-targeted-notes-panel
+                  *ngIf="taskTarget('sentence_structure') as target"
+                  class="study-targeted-notes"
+                  [target]="target"
+                ></app-targeted-notes-panel>
+
                 <app-tabs
                   class="sentence-tabs"
                   [tabs]="sentenceTabs"
@@ -300,6 +303,25 @@
 
                   <ng-container *ngIf="state.sentenceSubTab === 'items'">
                     <app-quran-sentence-structure [sentences]="sentenceStructureSentences"></app-quran-sentence-structure>
+
+                    <section class="sentence-item-notes" *ngIf="sentenceStructureSentences.length">
+                      <article class="sentence-item-note-row" *ngFor="let sentence of sentenceStructureSentences">
+                        <button
+                          type="button"
+                          class="sentence-item-note-btn"
+                          (click)="toggleSentenceItemNotes(sentence)"
+                        >
+                          {{ activeSentenceNoteKey === ('sent_' + sentence.sentence_order) ? 'Hide' : 'Notes' }}
+                          Sentence #{{ sentence.sentence_order }}
+                        </button>
+
+                        <app-targeted-notes-panel
+                          *ngIf="activeSentenceNoteKey === ('sent_' + sentence.sentence_order) && activeSentenceNoteTarget"
+                          class="study-targeted-notes study-targeted-notes--inline"
+                          [target]="activeSentenceNoteTarget!"
+                        ></app-targeted-notes-panel>
+                      </article>
+                    </section>
                   </ng-container>
 
                   <ng-container *ngIf="state.sentenceSubTab === 'json'">
@@ -318,6 +340,12 @@
                   <span class="study-task-ref">{{ passageReferenceBadge }}</span>
                 </header>
 
+                <app-targeted-notes-panel
+                  *ngIf="taskTarget('comprehension') as target"
+                  class="study-targeted-notes"
+                  [target]="target"
+                ></app-targeted-notes-panel>
+
                 <section class="study-question-grid" *ngIf="comprehensionQuestionGroups.length; else noComprehensionPrompts">
                   <article
                     class="study-question-card"
@@ -331,10 +359,29 @@
                     </header>
 
                     <ol class="study-question-list">
-                      <li class="study-question-item" *ngFor="let question of group.questions; let questionIndex = index">
-                        <span class="study-question-index">{{ questionIndex + 1 }}</span>
-                        <p>{{ question }}</p>
-                      </li>
+                      <ng-container *ngFor="let question of group.questions; let questionIndex = index">
+                        <li class="study-question-item">
+                          <span class="study-question-index">{{ questionIndex + 1 }}</span>
+                          <p>{{ question }}</p>
+                          <button
+                            type="button"
+                            class="study-question-note-btn"
+                            (click)="toggleComprehensionItemNotes(groupIndex, questionIndex)"
+                          >
+                            Notes
+                          </button>
+                        </li>
+
+                        <li
+                          class="study-question-notes-wrap"
+                          *ngIf="activeComprehensionNoteKey === comprehensionQuestionKey(groupIndex, questionIndex) && activeComprehensionNoteTarget"
+                        >
+                          <app-targeted-notes-panel
+                            class="study-targeted-notes study-targeted-notes--inline"
+                            [target]="activeComprehensionNoteTarget!"
+                          ></app-targeted-notes-panel>
+                        </li>
+                      </ng-container>
                     </ol>
                   </article>
                 </section>
@@ -417,6 +464,12 @@
                     </button>
                   </div>
                 </header>
+
+                <app-targeted-notes-panel
+                  *ngIf="taskTarget('passage_structure') as target"
+                  class="study-targeted-notes"
+                  [target]="target"
+                ></app-targeted-notes-panel>
 
                 <nav class="kmap-mini-nav" *ngIf="passageStructureSections.length > 1" aria-label="Passage section navigation">
                   <button

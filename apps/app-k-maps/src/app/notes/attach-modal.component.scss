@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.attach-form-block {
+  margin-top: 1rem;
+}
+
+ion-item {
+  --background: var(--ion-color-step-50, transparent);
+  --border-radius: 0.75rem;
+  --padding-start: 0.8rem;
+  --inner-padding-end: 0.8rem;
+  margin-bottom: 0.65rem;
+}
+
+.input-error {
+  margin: 0.35rem 0 0.75rem;
+  color: var(--ion-color-danger);
+  font-size: 0.82rem;
+}
