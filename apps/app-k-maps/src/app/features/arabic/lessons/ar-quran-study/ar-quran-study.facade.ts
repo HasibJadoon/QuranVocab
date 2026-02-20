@@ -282,6 +282,43 @@ export class ArQuranStudyFacade {
     return this.morphologyItems.filter((entry) => entry.key === 'verb');
   }
 
+  get morphologyTaskPayload(): Record<string, unknown> {
+    return this.recordFromUnknown(this.taskPayloads['morphology']) ?? {};
+  }
+
+  get lexiconMorphologyItems(): Array<Record<string, unknown>> {
+    const payload = this.morphologyTaskPayload;
+    return this.objectArray(
+      payload['lexicon_morphology']
+      ?? payload['lexiconMorphology']
+      ?? payload['links']
+    );
+  }
+
+  get morphologyEvidenceItems(): Array<Record<string, unknown>> {
+    const payload = this.morphologyTaskPayload;
+    return this.objectArray(
+      payload['lexicon_evidence']
+      ?? payload['lexiconEvidence']
+      ?? payload['evidence']
+      ?? payload['evidence_items']
+    );
+  }
+
+  get morphologyRawItems(): Array<Record<string, unknown>> {
+    const payload = this.morphologyTaskPayload;
+    const items = this.objectArray(payload['items']);
+    if (items.length) return items;
+
+    const linked = this.lexiconMorphologyItems;
+    if (linked.length) return linked;
+
+    return [
+      ...this.objectArray(payload['nouns']),
+      ...this.objectArray(payload['verbs']),
+    ];
+  }
+
   get sentenceEntries(): StudySentenceEntry[] {
     const payload = this.recordFromUnknown(this.taskPayloads['sentence_structure']);
     const items = this.objectArray(payload?.['items']);

@@ -26,17 +26,15 @@
           *ngSwitchCase="'morphology'"
           [nouns]="facade.morphologyNouns"
           [verbs]="facade.morphologyVerbs"
+          [morphologyItems]="facade.morphologyRawItems"
+          [lexiconMorphologyItems]="facade.lexiconMorphologyItems"
+          [evidenceItems]="facade.morphologyEvidenceItems"
         ></app-study-morphology-tab>
 
         <app-study-sentence-structure-tab
           *ngSwitchCase="'sentence_structure'"
           [entries]="facade.sentenceEntries"
         ></app-study-sentence-structure-tab>
-
-        <app-study-grammar-concepts-tab
-          *ngSwitchCase="'grammar_concepts'"
-          [rows]="facade.grammarRows"
-        ></app-study-grammar-concepts-tab>
 
         <app-study-expressions-tab
           *ngSwitchCase="'expressions'"

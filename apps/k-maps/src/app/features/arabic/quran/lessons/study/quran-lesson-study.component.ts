@@ -35,6 +35,7 @@ const LEGACY_STUDY_TAB_MAP: Record<string, TaskType> = {
   reading: 'reading',
   memory: 'sentence_structure',
   sentences: 'sentence_structure',
+  grammar: 'sentence_structure',
   mcq: 'comprehension',
   passage: 'passage_structure',
 };
@@ -44,7 +45,6 @@ const STUDY_TASK_TAB_ORDER: Array<'lesson' | TaskType> = [
   'reading',
   'morphology',
   'sentence_structure',
-  'grammar_concepts',
   'expressions',
   'comprehension',
   'passage_structure',
@@ -777,7 +777,9 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
     let task: TaskType | null = null;
 
     const requestedTask = params.get('task');
-    if (requestedTask && this.isTaskType(requestedTask)) {
+    if (requestedTask === 'grammar_concepts') {
+      task = 'sentence_structure';
+    } else if (requestedTask && this.isTaskType(requestedTask)) {
       task = requestedTask;
     } else {
       const legacyTab = params.get('tab');
@@ -860,7 +862,6 @@ export class QuranLessonStudyComponent implements OnInit, OnDestroy {
       value === 'reading' ||
       value === 'sentence_structure' ||
       value === 'morphology' ||
-      value === 'grammar_concepts' ||
       value === 'expressions' ||
       value === 'comprehension' ||
       value === 'passage_structure'

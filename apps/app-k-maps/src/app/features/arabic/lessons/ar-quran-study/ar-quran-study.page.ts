@@ -10,14 +10,12 @@ import {
   gitMergeOutline,
   gitNetworkOutline,
   listOutline,
-  schoolOutline,
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 
 import { ArQuranStudyFacade, StudyTask } from './ar-quran-study.facade';
 import { StudyComprehensionTabComponent } from './tabs/study-comprehension-tab.component';
 import { StudyExpressionsTabComponent } from './tabs/study-expressions-tab.component';
-import { StudyGrammarConceptsTabComponent } from './tabs/study-grammar-concepts-tab.component';
 import { StudyMorphologyTabComponent } from './tabs/study-morphology-tab.component';
 import { StudyPassageStructureTabComponent } from './tabs/study-passage-structure-tab.component';
 import { StudyReadingTabComponent } from './tabs/study-reading-tab.component';
@@ -32,7 +30,7 @@ const LEGACY_STUDY_TAB_MAP: Record<string, StudyTask> = {
   passage: 'passage_structure',
   comprehension: 'comprehension',
   expressions: 'expressions',
-  grammar: 'grammar_concepts',
+  grammar: 'sentence_structure',
 };
 
 @Component({
@@ -44,7 +42,6 @@ const LEGACY_STUDY_TAB_MAP: Record<string, StudyTask> = {
     StudyReadingTabComponent,
     StudyMorphologyTabComponent,
     StudySentenceStructureTabComponent,
-    StudyGrammarConceptsTabComponent,
     StudyExpressionsTabComponent,
     StudyComprehensionTabComponent,
     StudyPassageStructureTabComponent,
@@ -63,7 +60,6 @@ export class ArQuranStudyPage implements OnInit, OnDestroy {
     { key: 'reading', label: 'Reading', icon: bookOutline },
     { key: 'morphology', label: 'Morphology', icon: constructOutline },
     { key: 'sentence_structure', label: 'Sentence Structure', icon: gitMergeOutline },
-    { key: 'grammar_concepts', label: 'Grammar Concepts', icon: schoolOutline },
     { key: 'expressions', label: 'Expressions', icon: flashOutline },
     { key: 'comprehension', label: 'Comprehension', icon: listOutline },
     { key: 'passage_structure', label: 'Passage Structure', icon: gitNetworkOutline },
@@ -113,6 +109,11 @@ export class ArQuranStudyPage implements OnInit, OnDestroy {
 
   private applyRouteTask(params: ParamMap): void {
     const task = params.get('task');
+    if (task === 'grammar_concepts') {
+      this.facade.setActiveTask('sentence_structure');
+      return;
+    }
+
     if (task && this.isStudyTask(task)) {
       this.facade.setActiveTask(task);
       return;
@@ -143,7 +144,6 @@ export class ArQuranStudyPage implements OnInit, OnDestroy {
       value === 'reading'
       || value === 'morphology'
       || value === 'sentence_structure'
-      || value === 'grammar_concepts'
       || value === 'expressions'
       || value === 'comprehension'
       || value === 'passage_structure'

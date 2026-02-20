@@ -1,0 +1,43 @@
+ion-content {
+  --background: var(--ion-color-light-shade);
+  padding-bottom: 2rem;
+}
+
+.filters {
+  margin: 0;
+  padding: 0.5rem 1rem;
+}
+
+ion-item {
+  --background: transparent;
+}
+
+ion-list {
+  margin: 0 1rem;
+}
+
+ion-label h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.caption {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium-shade);
+}
+
+.root,
+.canonical {
+  font-size: 0.75rem;
+  color: var(--ion-color-dark-shade);
+}
+
+.loading-state {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--ion-color-medium-shade);
+}
+
+.tokens-footer ion-toolbar {
+  margin-top: 1rem;
+}

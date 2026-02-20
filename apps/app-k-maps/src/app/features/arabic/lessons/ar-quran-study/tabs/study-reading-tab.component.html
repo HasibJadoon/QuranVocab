@@ -1,13 +1,23 @@
 <section class="study-tab study-tab--reading">
-  <ion-list class="study-list study-list--reading" lines="none" *ngIf="ayahs.length; else noReadingAyahs">
-    <ion-item class="study-item study-item--ayah" *ngFor="let ayah of ayahs">
-      <ion-label class="study-label">
-        <p class="study-ayah-text" dir="rtl" translate="no">{{ ayah.text }}</p>
-        <p class="study-ayah-marker" *ngIf="ayah.marker">{{ ayah.marker }}</p>
-        <p class="study-ayah-translation" *ngIf="ayah.translation">{{ ayah.translation }}</p>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+  <div class="study-reading-wrap" *ngIf="renderAyahs.length; else noReadingAyahs">
+    <p class="study-reading-flow" dir="rtl" translate="no">
+      <ng-container *ngFor="let ayah of renderAyahs; trackBy: trackByAyah">
+        <ng-container *ngFor="let word of ayah.words; trackBy: trackByWord">
+          <span class="study-word">{{ word }}</span>{{ ' ' }}
+        </ng-container>
+        <span class="study-reading-marker" *ngIf="ayah.marker">{{ ayah.marker }}</span>{{ ' ' }}
+      </ng-container>
+    </p>
+
+    <div class="study-reading-translations" *ngIf="hasTranslations">
+      <ng-container *ngFor="let ayah of renderAyahs; trackBy: trackByAyah">
+        <p class="study-reading-translation" *ngIf="ayah.translation">
+          <span class="study-reading-translation-marker" *ngIf="ayah.marker">{{ ayah.marker }}</span>
+          {{ ayah.translation }}
+        </p>
+      </ng-container>
+    </div>
+  </div>
 
   <ng-template #noReadingAyahs>
     <p class="study-empty">Reading text is not available for this lesson.</p>

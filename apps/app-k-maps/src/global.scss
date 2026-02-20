@@ -1431,30 +1431,28 @@ app-ar-quran-study .study-footer {
 app-ar-quran-study .study-tab-bar {
   --background: rgba(9, 13, 18, 0.97);
   --border: 0;
-  padding: 0.15rem 0.2rem calc(env(safe-area-inset-bottom) * 0.45);
+  --color: #67c4ff;
+  --color-selected: #ff4d66;
+  padding: 0.08rem 0 calc(env(safe-area-inset-bottom) * 0.45);
 }
 
 app-ar-quran-study .study-tab-button {
-  --color: rgba(161, 176, 196, 0.88);
-  --color-selected: #4e8fd7;
-  --ripple-color: rgba(78, 143, 215, 0.24);
-  min-height: 48px;
-}
-
-app-ar-quran-study .study-tab-button::part(native) {
-  margin: 0.18rem 0.1rem;
-  border-radius: 12px;
-}
-
-app-ar-quran-study .study-tab-button.tab-selected::part(native) {
-  background: rgba(78, 143, 215, 0.16);
-  box-shadow:
-    inset 0 0 0 1px rgba(110, 166, 226, 0.32),
-    0 8px 18px rgba(0, 0, 0, 0.28);
+  --color: #67c4ff;
+  --color-selected: #ff4d66;
+  --ripple-color: rgba(103, 196, 255, 0.24);
+  min-height: 50px;
 }
 
 app-ar-quran-study .study-tab-button ion-icon {
+  color: currentColor;
   font-size: 1.25rem;
+  filter: drop-shadow(0 0 8px rgba(103, 196, 255, 0.55));
+  transition: color 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+}
+
+app-ar-quran-study .study-tab-button.tab-selected ion-icon {
+  filter: drop-shadow(0 0 10px rgba(255, 77, 102, 0.62));
+  transform: translateY(-1px);
 }
 
 app-ar-quran-study .study-tab {
@@ -1622,6 +1620,75 @@ app-ar-quran-study .study-chip .arabic {
   line-height: 1.2;
 }
 
+app-ar-quran-study .study-morph-grid {
+  padding: 0;
+}
+
+app-ar-quran-study .study-morph-row {
+  margin: 0;
+}
+
+app-ar-quran-study .study-morph-col {
+  padding: 0.26rem;
+  display: flex;
+}
+
+app-ar-quran-study .study-morph-tile {
+  appearance: none;
+  border: 1px solid rgba(126, 168, 214, 0.46);
+  background: rgba(15, 30, 49, 0.9);
+  cursor: pointer;
+  width: 100%;
+  margin: 0;
+  min-height: 58px;
+  padding: 0.5rem 0.56rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 1px rgba(78, 143, 215, 0.22),
+    0 10px 18px rgba(0, 0, 0, 0.26),
+    0 0 16px rgba(78, 143, 215, 0.3);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+app-ar-quran-study .study-morph-tile:active {
+  transform: scale(0.96);
+}
+
+app-ar-quran-study .study-morph-tile:focus-visible {
+  outline: none;
+  border-color: rgba(114, 186, 255, 0.78);
+  box-shadow:
+    0 0 0 2px rgba(78, 143, 215, 0.35),
+    0 0 22px rgba(78, 143, 215, 0.5);
+}
+
+app-ar-quran-study .study-morph-label {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+app-ar-quran-study .study-morph-word {
+  font-size: calc(var(--app-font-ar-size, 32px) * 0.46);
+  line-height: 1.25;
+  color: #f4f8ff;
+}
+
+app-ar-quran-study .study-morph-root {
+  font-size: calc(var(--app-font-ar-size, 32px) * 0.32);
+  line-height: 1.25;
+  color: rgba(199, 213, 231, 0.9);
+}
+
 app-ar-quran-study .study-row-key {
   margin: 0;
   font-size: 0.78rem;
@@ -1653,30 +1720,77 @@ app-ar-quran-study .study-empty {
   font-size: 0.96rem;
 }
 
-app-ar-quran-study .study-ayah-text,
+app-ar-quran-study .study-reading-wrap {
+  padding: 0.15rem 0.1rem;
+}
+
+app-ar-quran-study .study-reading-flow,
 app-ar-quran-study .study-arabic-block {
   margin: 0;
   font-family: var(--app-font-ar);
-  font-size: calc(var(--app-font-ar-size, 32px) * 0.78);
-  line-height: 2;
+  font-size: calc(var(--app-font-ar-size, 32px) * 0.86);
+  line-height: 2.12;
   color: #f2f7ff;
 }
 
-app-ar-quran-study .study-ayah-text {
+app-ar-quran-study .study-reading-flow {
+  direction: rtl;
+  display: block;
+  width: 100%;
+  white-space: normal;
   text-align: justify;
+  text-justify: inter-word;
   text-align-last: right;
+  word-spacing: normal;
 }
 
 app-ar-quran-study .study-arabic-block {
   text-align: right;
 }
 
-app-ar-quran-study .study-ayah-marker {
-  margin: 0.38rem 0 0;
-  font-size: 0.82rem;
+app-ar-quran-study .study-word {
+  display: inline;
+  color: #f2f7ff;
+  border-radius: 0.3rem;
+  transition: color 0.16s ease, text-shadow 0.16s ease;
+}
+
+@media (hover: hover) {
+  app-ar-quran-study .study-word:hover {
+    color: #78c8ff;
+    text-shadow: 0 0 10px rgba(120, 200, 255, 0.35);
+  }
+}
+
+app-ar-quran-study .study-reading-marker {
+  display: inline;
+  vertical-align: middle;
+  color: rgba(228, 238, 249, 0.86);
+  font-size: calc(var(--app-font-ar-size, 32px) * 0.52);
+  line-height: 1;
+}
+
+app-ar-quran-study .study-reading-translation-marker {
+  color: rgba(201, 214, 230, 0.86);
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: rgba(201, 214, 230, 0.86);
+  margin-inline-end: 0.32rem;
+}
+
+app-ar-quran-study .study-reading-translations {
+  margin-top: 0.9rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+app-ar-quran-study .study-reading-translation {
+  margin: 0;
+  font-family: var(--app-font-sans);
+  color: var(--study-muted);
+  font-size: 0.98rem;
+  line-height: 1.62;
+  text-align: justify;
 }
 
 app-ar-quran-study .study-ayah-translation {
@@ -1746,6 +1860,14 @@ app-ar-quran-study .study-timeline-step:last-child .study-timeline-copy {
       0 0 0 1px rgba(160, 182, 209, 0.14);
   }
 
+  app-ar-quran-study .study-morph-tile:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 0 0 1px rgba(102, 171, 238, 0.42),
+      0 12px 22px rgba(0, 0, 0, 0.3),
+      0 0 24px rgba(78, 143, 215, 0.46);
+  }
+
   app-ar-quran-study .study-chip:hover {
     border-color: rgba(182, 203, 228, 0.56);
   }
@@ -1760,8 +1882,245 @@ app-ar-quran-study .study-timeline-step:last-child .study-timeline-copy {
     padding: 0.7rem;
   }
 
-  app-ar-quran-study .study-ayah-text,
+  app-ar-quran-study .study-reading-flow,
   app-ar-quran-study .study-arabic-block {
-    font-size: calc(var(--app-font-ar-size, 32px) * 0.72);
+    font-size: calc(var(--app-font-ar-size, 32px) * 0.76);
+  }
+}
+
+ion-modal.study-morph-modal {
+  --width: min(980px, 100vw);
+  --height: min(92%, 940px);
+  --border-radius: 18px 18px 0 0;
+  --box-shadow: 0 -20px 48px rgba(0, 0, 0, 0.55);
+}
+
+ion-modal.study-morph-modal ion-content {
+  --background: #0b0f14;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-toolbar {
+  --background: rgba(11, 15, 20, 0.98);
+  --color: #e8eef7;
+  --border-color: rgba(170, 183, 199, 0.2);
+}
+
+ion-modal.study-morph-modal .study-morph-modal-content {
+  color: #e8eef7;
+}
+
+ion-modal.study-morph-modal .study-list {
+  --background: transparent;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+
+ion-modal.study-morph-modal .study-item {
+  --background: rgba(15, 22, 32, 0.86);
+  --inner-border-width: 0;
+  --padding-start: 0.86rem;
+  --padding-end: 0.86rem;
+  --inner-padding-end: 0;
+  --inner-padding-top: 0.66rem;
+  --inner-padding-bottom: 0.66rem;
+  border: 1px solid rgba(172, 185, 199, 0.2);
+  border-radius: 12px;
+  margin: 0 0 0.52rem;
+}
+
+ion-modal.study-morph-modal .study-item:last-child {
+  margin-bottom: 0;
+}
+
+ion-modal.study-morph-modal .study-row-key {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #ffd84d;
+}
+
+ion-modal.study-morph-modal .study-body-text {
+  margin: 0.36rem 0 0;
+  font-size: 1rem;
+  line-height: 1.62;
+  color: #e8eef7;
+}
+
+ion-modal.study-morph-modal .study-muted {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.58;
+  color: #b4c0d0;
+}
+
+ion-modal.study-morph-modal .study-empty {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.58;
+  color: #b4c0d0;
+}
+
+ion-modal.study-morph-modal .study-chip-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+ion-modal.study-morph-modal .study-chip {
+  --background: rgba(78, 143, 215, 0.16);
+  --color: #e4efff;
+  border: 1px solid rgba(126, 166, 214, 0.42);
+  border-radius: 999px;
+  min-height: 32px;
+}
+
+ion-modal.study-morph-modal .study-chip ion-label.arabic {
+  font-size: calc(var(--app-font-ar-size, 32px) * 0.4);
+  line-height: 1.3;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-hero {
+  border: 1px solid rgba(120, 185, 168, 0.3);
+  border-radius: 14px;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(74, 184, 166, 0.2), transparent 45%),
+    rgba(15, 26, 40, 0.92);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-word {
+  margin: 0;
+  font-size: clamp(2rem, 1.8rem + 1vw, 2.5rem);
+  line-height: 1.45;
+  color: #8be7cc;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-gloss {
+  margin: 0.45rem 0 0;
+  color: #e3edf8;
+  font-size: 1.08rem;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-hero .study-body-text {
+  margin-top: 0.4rem;
+  color: #c5d3e4;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-pos {
+  --background: rgba(46, 123, 111, 0.32);
+  --color: #d7efe9;
+  border: 1px solid rgba(106, 194, 177, 0.5);
+  border-radius: 999px;
+  padding: 0.42rem 0.62rem;
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-panel {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.72rem;
+}
+
+ion-modal.study-morph-modal .study-morph-meaning-block {
+  border: 1px solid rgba(170, 183, 199, 0.18);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: rgba(15, 23, 34, 0.88);
+}
+
+ion-modal.study-morph-modal .study-morph-meaning-list {
+  margin: 0.5rem 0 0;
+  padding: 0 0 0 1.1rem;
+  display: grid;
+  gap: 0.36rem;
+  color: #e8eef7;
+}
+
+ion-modal.study-morph-modal .study-morph-form-row {
+  margin: 0.4rem 0 0;
+}
+
+ion-modal.study-morph-modal .study-morph-form-row strong {
+  color: #cedced;
+  font-weight: 700;
+  margin-inline-end: 0.28rem;
+}
+
+ion-modal.study-morph-modal .study-morph-form-row .arabic {
+  font-size: calc(var(--app-font-ar-size, 32px) * 0.45);
+  line-height: 1.3;
+}
+
+ion-modal.study-morph-modal .study-morph-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.64rem;
+}
+
+ion-modal.study-morph-modal .study-morph-profile-card {
+  border: 1px solid rgba(170, 183, 199, 0.2);
+  border-radius: 12px;
+  padding: 0.7rem 0.72rem;
+  background: rgba(14, 21, 31, 0.9);
+}
+
+ion-modal.study-morph-modal .study-morph-profile-card p {
+  margin: 0;
+  color: #aebfd5;
+  font-size: 0.88rem;
+}
+
+ion-modal.study-morph-modal .study-morph-profile-card h4 {
+  margin: 0.5rem 0 0;
+  color: #edf3fc;
+  font-size: 1.1rem;
+  line-height: 1.45;
+}
+
+ion-modal.study-morph-modal .study-morph-evidence-word {
+  margin: 0;
+  font-size: calc(var(--app-font-ar-size, 32px) * 0.58);
+  line-height: 1.5;
+  color: #f1f7ff;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-footer {
+  border-top: 1px solid rgba(170, 183, 199, 0.2);
+}
+
+ion-modal.study-morph-modal .study-morph-modal-tabs {
+  --background: transparent;
+  --indicator-color: transparent;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-tabs ion-segment-button {
+  --color: rgba(166, 180, 199, 0.9);
+  --color-checked: #e8eef7;
+  --background-checked: rgba(82, 176, 160, 0.24);
+  --indicator-color: transparent;
+  min-height: 42px;
+  border: 1px solid rgba(125, 151, 182, 0.3);
+  border-radius: 12px;
+  margin: 0.2rem 0.12rem 0.16rem;
+}
+
+ion-modal.study-morph-modal .study-morph-modal-tabs ion-segment-button.segment-button-checked {
+  border-color: rgba(112, 213, 192, 0.5);
+  box-shadow: 0 0 14px rgba(74, 184, 166, 0.26);
+}
+
+@media (max-width: 767px) {
+  ion-modal.study-morph-modal .study-morph-profile-grid {
+    grid-template-columns: 1fr;
   }
 }
