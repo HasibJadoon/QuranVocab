@@ -3,12 +3,31 @@ import { Routes } from '@angular/router';
 export const NOTES_ROUTES: Routes = [
   {
     path: '',
-    pathMatch: 'full',
-    redirectTo: 'inbox',
-  },
-  {
-    path: 'inbox',
     loadComponent: () => import('./inbox.page').then((m) => m.InboxPage),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'draft',
+      },
+      {
+        path: 'inbox',
+        pathMatch: 'full',
+        redirectTo: 'draft',
+      },
+      {
+        path: 'draft',
+        loadComponent: () => import('./tabs/notes-draft-tab.page').then((m) => m.NotesDraftTabPage),
+      },
+      {
+        path: 'flag',
+        loadComponent: () => import('./tabs/notes-flag-tab.page').then((m) => m.NotesFlagTabPage),
+      },
+      {
+        path: 'published',
+        loadComponent: () => import('./tabs/notes-published-tab.page').then((m) => m.NotesPublishedTabPage),
+      },
+    ],
   },
   {
     path: ':id',

@@ -1,17 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, HostListener, ViewChild, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, catchError, combineLatest, finalize, of, switchMap, take, tap } from 'rxjs';
 import { NoteEditorComponent, NoteDraftEvent } from './note-editor.component';
 import { NotesListComponent } from './notes-list.component';
 import { NotesApiService } from './notes-api.service';
-import { Note, NoteStatus } from './notes.models';
+import { Note, NoteStatus, computeTitleFromMarkdown } from './notes.models';
 
 @Component({
   selector: 'app-notes-shell',
   standalone: true,
-  imports: [CommonModule, NotesListComponent, NoteEditorComponent],
+  imports: [CommonModule, ReactiveFormsModule, NotesListComponent, NoteEditorComponent],
   templateUrl: './notes-shell.component.html',
   styleUrls: ['./notes-shell.component.scss'],
 })
@@ -33,6 +35,10 @@ export class NotesShellComponent {
   readonly status = signal<NoteStatus>('inbox');
   readonly query = signal('');
   readonly listError = signal<string | null>(null);
+  readonly captureOpen = signal(false);
+  readonly captureError = signal<string | null>(null);
+
+  readonly captureBodyControl = new FormControl('', { nonNullable: true });
 
   constructor() {
     this.route.paramMap.pipe(
@@ -49,8 +55,8 @@ export class NotesShellComponent {
         this.listError.set(null);
 
         return this.notesApi.listNotes(status, query).pipe(
-          catchError(() => {
-            this.listError.set('Could not load notes.');
+          catchError((error) => {
+            this.listError.set(this.readHttpError(error, 'Could not load notes.'));
             return of([] as Note[]);
           }),
           finalize(() => this.loading.set(false))
@@ -77,7 +83,7 @@ export class NotesShellComponent {
 
     if (key === 'n') {
       event.preventDefault();
-      this.createNote();
+      this.openCaptureModal();
       return;
     }
 
@@ -90,6 +96,69 @@ export class NotesShellComponent {
     if (key === 'k') {
       event.preventDefault();
       this.editorComponent?.openAttachDialog();
+    }
+  }
+
+  openCaptureModal(): void {
+    this.captureError.set(null);
+    this.captureBodyControl.setValue('', { emitEvent: false });
+    this.captureOpen.set(true);
+  }
+
+  closeCaptureModal(): void {
+    if (this.creating()) {
+      return;
+    }
+
+    this.captureOpen.set(false);
+    this.captureError.set(null);
+  }
+
+  submitCaptureNote(): void {
+    const body = this.captureBodyControl.value.trim();
+    if (!body || this.creating()) {
+      return;
+    }
+
+    this.creating.set(true);
+    this.captureError.set(null);
+
+    this.notesApi.createNote({
+      body_md: body,
+      title: computeTitleFromMarkdown(body) || null,
+      status: 'inbox',
+    }).pipe(
+      take(1),
+      finalize(() => this.creating.set(false))
+    ).subscribe({
+      next: (note) => {
+        this.captureOpen.set(false);
+        this.captureBodyControl.setValue('', { emitEvent: false });
+
+        if (this.status() !== 'inbox') {
+          this.status.set('inbox');
+          this.status$.next('inbox');
+        }
+
+        this.upsertNote(note);
+        void this.router.navigate(['/notes', note.id]);
+      },
+      error: (error) => {
+        this.captureError.set(this.readHttpError(error, 'Could not capture note.'));
+      },
+    });
+  }
+
+  onCaptureKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeCaptureModal();
+      return;
+    }
+
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'enter') {
+      event.preventDefault();
+      this.submitCaptureNote();
     }
   }
 
@@ -108,29 +177,7 @@ export class NotesShellComponent {
   }
 
   createNote(): void {
-    if (this.creating()) {
-      return;
-    }
-
-    this.creating.set(true);
-
-    this.notesApi.createNote({ body_md: '' }).pipe(
-      take(1),
-      finalize(() => this.creating.set(false))
-    ).subscribe({
-      next: (note) => {
-        if (this.status() !== 'inbox') {
-          this.status.set('inbox');
-          this.status$.next('inbox');
-        }
-
-        this.upsertNote(note);
-        void this.router.navigate(['/notes', note.id]);
-      },
-      error: () => {
-        this.listError.set('Could not create a note.');
-      },
-    });
+    this.openCaptureModal();
   }
 
   onDraftChanged(event: NoteDraftEvent): void {
@@ -181,5 +228,14 @@ export class NotesShellComponent {
       next[index] = { ...next[index], ...note };
       return next;
     });
+  }
+
+  private readHttpError(error: unknown, fallback: string): string {
+    if (error instanceof HttpErrorResponse && error.status === 401) {
+      void this.router.navigate(['/login']);
+      return 'Session expired. Please sign in again.';
+    }
+
+    return fallback;
   }
 }

@@ -1,17 +1,20 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, switchMap, throwError } from 'rxjs';
 import { API_BASE } from '../shared/api-base';
+import { AuthService } from '../shared/services/AuthService';
 import { CaptureNote, TargetRef, computeTitleFromMarkdown } from './targeting.models';
 
 @Injectable({ providedIn: 'root' })
 export class TargetedNotesApiService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
   private readonly apiRoot = this.resolveApiRoot(API_BASE);
 
   listTargetNotes(target: TargetRef): Observable<CaptureNote[]> {
     return this.http.get<unknown>(
-      `${this.apiRoot}/targets/${encodeURIComponent(target.target_type)}/${encodeURIComponent(target.target_id)}/notes`
+      `${this.apiRoot}/targets/${encodeURIComponent(target.target_type)}/${encodeURIComponent(target.target_id)}/notes`,
+      { headers: this.authHeaders() }
     ).pipe(
       map((response) => this.pickList<CaptureNote>(response, ['notes', 'results', 'items', 'data'])),
       catchError((error: unknown) => throwError(() => new Error(this.readError(error, 'Could not load notes.'))))
@@ -30,12 +33,16 @@ export class TargetedNotesApiService {
       status: 'inbox' as const,
     };
 
-    return this.http.post<unknown>(`${this.apiRoot}/notes`, payload).pipe(
+    return this.http.post<unknown>(`${this.apiRoot}/notes`, payload, {
+      headers: this.authHeaders(),
+    }).pipe(
       map((response) => this.pickItem<CaptureNote>(response, ['note', 'result', 'item', 'data']) ?? (response as CaptureNote)),
       switchMap((note) => this.http.post<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(note.id)}/links`, {
         target_type: target.target_type,
         target_id: target.target_id,
         ref: target.ref,
+      }, {
+        headers: this.authHeaders(),
       }).pipe(map(() => note))),
       catchError((error: unknown) => throwError(() => new Error(this.readError(error, 'Could not save note.'))))
     );
@@ -111,5 +118,11 @@ export class TargetedNotesApiService {
 
   private isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
+  }
+
+  private authHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      ...this.auth.authHeaders(),
+    });
   }
 }

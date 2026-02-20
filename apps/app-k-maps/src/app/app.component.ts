@@ -2,10 +2,14 @@ import { Component, inject } from '@angular/core';
 import { MenuController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
+  addOutline,
   bookOutline,
   calendarOutline,
+  checkmarkDoneOutline,
   chatbubblesOutline,
+  createOutline,
   documentTextOutline,
+  flagOutline,
   gitCompareOutline,
   globeOutline,
   homeOutline,
@@ -42,12 +46,16 @@ export class AppComponent {
       documentTextOutline,
       arrowBackOutline,
       chatbubblesOutline,
+      createOutline,
+      flagOutline,
+      checkmarkDoneOutline,
       pricetagsOutline,
       shuffleOutline,
       globeOutline,
       gitCompareOutline,
       micOutline,
       calendarOutline,
+      addOutline,
       chevronForward,
       settingsOutline,
     });

@@ -1,65 +1,45 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>Inbox</ion-title>
+  <ion-toolbar class="notes-shell-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Notes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        class="notes-add-button"
+        fill="clear"
+        (click)="createNote()"
+        [disabled]="creating()"
+        aria-label="Create note"
+      >
+        <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar>
+  <ion-toolbar class="notes-shell-search">
     <ion-searchbar
       [formControl]="searchControl"
-      [debounce]="250"
       placeholder="Search notes"
       show-clear-button="focus"
+      [debounce]="0"
     ></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="notes-inbox-content">
-  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
-    <ion-refresher-content></ion-refresher-content>
-  </ion-refresher>
+<ion-tabs>
+  <ion-router-outlet></ion-router-outlet>
 
-  @if (loading()) {
-    <ion-list>
-      @for (row of skeletonRows; track row) {
-        <ion-item lines="none" class="note-item">
-          <ion-label>
-            <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
-            <p><ion-skeleton-text animated style="width: 95%"></ion-skeleton-text></p>
-            <p><ion-skeleton-text animated style="width: 35%"></ion-skeleton-text></p>
-          </ion-label>
-        </ion-item>
-      }
-    </ion-list>
-  } @else {
-    <ion-list>
-      @for (note of (notes$ | async); track note.id) {
-        <ion-item
-          class="note-item"
-          lines="full"
-          button="true"
-          [routerLink]="['/notes', note.id]"
-        >
-          <ion-label>
-            <h3>{{ titleFor(note) }}</h3>
-            <p>{{ previewFor(note) }}</p>
-            <p class="note-time">{{ note.updated_at | date: 'MMM d, h:mm a' }}</p>
-          </ion-label>
-        </ion-item>
-      }
+  <ion-tab-bar slot="bottom" class="notes-bottom-tabs">
+    <ion-tab-button tab="draft" aria-label="Draft">
+      <ion-icon name="create-outline"></ion-icon>
+    </ion-tab-button>
 
-      @if (((notes$ | async) ?? []).length === 0) {
-        <ion-item lines="none">
-          <ion-label class="empty-state">
-            <h3>No notes yet</h3>
-            <p>Tap + to capture your first draft.</p>
-          </ion-label>
-        </ion-item>
-      }
-    </ion-list>
-  }
+    <ion-tab-button tab="flag" aria-label="Flag">
+      <ion-icon name="flag-outline"></ion-icon>
+    </ion-tab-button>
 
-  <ion-fab slot="fixed" horizontal="end" vertical="bottom">
-    <ion-fab-button (click)="createNote()" [disabled]="creating()" aria-label="Create note">
-      <ion-icon name="add-outline"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
-</ion-content>
+    <ion-tab-button tab="published" aria-label="Published">
+      <ion-icon name="checkmark-done-outline"></ion-icon>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-tabs>
