@@ -1,190 +1,152 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { IonicModule, SegmentCustomEvent } from '@ionic/angular';
-import { firstValueFrom } from 'rxjs';
-
-import { QuranLessonService } from '../../../../shared/services/quran-lesson.service';
-import {
-  QuranLesson,
-  QuranLessonComprehensionQuestion,
-  QuranLessonMcq,
-} from '../../../../shared/models/arabic/quran-lesson.model';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { IonicModule } from '@ionic/angular';
 import {
   arrowBackOutline,
   bookOutline,
-  documentTextOutline,
+  constructOutline,
+  flashOutline,
+  gitMergeOutline,
+  gitNetworkOutline,
   listOutline,
+  schoolOutline,
 } from 'ionicons/icons';
+import { Subscription } from 'rxjs';
 
-type StudyTab = 'study' | 'mcq' | 'passage';
+import { ArQuranStudyFacade, StudyTask } from './ar-quran-study.facade';
+import { StudyComprehensionTabComponent } from './tabs/study-comprehension-tab.component';
+import { StudyExpressionsTabComponent } from './tabs/study-expressions-tab.component';
+import { StudyGrammarConceptsTabComponent } from './tabs/study-grammar-concepts-tab.component';
+import { StudyMorphologyTabComponent } from './tabs/study-morphology-tab.component';
+import { StudyPassageStructureTabComponent } from './tabs/study-passage-structure-tab.component';
+import { StudyReadingTabComponent } from './tabs/study-reading-tab.component';
+import { StudySentenceStructureTabComponent } from './tabs/study-sentence-structure-tab.component';
+
+const LEGACY_STUDY_TAB_MAP: Record<string, StudyTask> = {
+  study: 'reading',
+  reading: 'reading',
+  memory: 'sentence_structure',
+  sentences: 'sentence_structure',
+  mcq: 'comprehension',
+  passage: 'passage_structure',
+  comprehension: 'comprehension',
+  expressions: 'expressions',
+  grammar: 'grammar_concepts',
+};
 
 @Component({
   selector: 'app-ar-quran-study',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [
+    CommonModule,
+    IonicModule,
+    StudyReadingTabComponent,
+    StudyMorphologyTabComponent,
+    StudySentenceStructureTabComponent,
+    StudyGrammarConceptsTabComponent,
+    StudyExpressionsTabComponent,
+    StudyComprehensionTabComponent,
+    StudyPassageStructureTabComponent,
+  ],
   templateUrl: './ar-quran-study.page.html',
+  providers: [ArQuranStudyFacade],
 })
-export class ArQuranStudyPage implements OnInit {
-  private readonly defaultText: QuranLesson['text'] = { arabic_full: [], mode: 'original' };
+export class ArQuranStudyPage implements OnInit, OnDestroy {
+  readonly facade = inject(ArQuranStudyFacade);
+
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly service = inject(QuranLessonService);
+  private readonly subs = new Subscription();
 
-  lesson: QuranLesson | null = null;
-  loading = true;
-  error = '';
-  activeTab: StudyTab = 'study';
-  selectedVerseId: string | null = null;
-  selectedSentenceKey: string | null = null;
-  selectedQuestionId: string | null = null;
-
-  mcqSelections: Record<string, { selectedIndex: number; isCorrect: boolean }> = {};
+  readonly taskTabs: Array<{ key: StudyTask; label: string; icon: string }> = [
+    { key: 'reading', label: 'Reading', icon: bookOutline },
+    { key: 'morphology', label: 'Morphology', icon: constructOutline },
+    { key: 'sentence_structure', label: 'Sentence Structure', icon: gitMergeOutline },
+    { key: 'grammar_concepts', label: 'Grammar Concepts', icon: schoolOutline },
+    { key: 'expressions', label: 'Expressions', icon: flashOutline },
+    { key: 'comprehension', label: 'Comprehension', icon: listOutline },
+    { key: 'passage_structure', label: 'Passage Structure', icon: gitNetworkOutline },
+  ];
 
   readonly icons = {
     arrowBackOutline,
-    bookOutline,
-    listOutline,
-    documentTextOutline,
   };
 
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
+    this.subs.add(
+      this.route.queryParamMap.subscribe((params) => {
+        this.applyRouteTask(params);
+      })
+    );
+
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!Number.isFinite(id)) {
-      this.error = 'Lesson not found';
-      this.loading = false;
+      this.facade.error = 'Lesson not found';
+      this.facade.loading = false;
       return;
     }
 
-    try {
-      const lesson = await firstValueFrom(this.service.getLesson(id));
-      this.lesson = {
-        ...lesson,
-        text: lesson.text ?? { ...this.defaultText },
-      };
-    } catch (err: any) {
-      this.error = err?.message ?? 'Failed to load lesson';
-    } finally {
-      this.loading = false;
-    }
+    await this.facade.loadLesson(id);
+    this.applyRouteTask(this.route.snapshot.queryParamMap);
   }
 
-  back() {
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
+  }
+
+  back(): void {
     this.router.navigate(['/arabic/lessons']);
   }
 
-  setActiveTab(tab: StudyTab) {
-    this.activeTab = tab;
+  onTaskSelect(task: StudyTask, event?: Event): void {
+    event?.preventDefault();
+    if (!this.isStudyTask(task)) return;
+    if (task === this.facade.activeTask) return;
+    this.facade.setActiveTask(task);
+    this.syncQueryTask(task);
   }
 
-  onTabChange(event: SegmentCustomEvent) {
-    const next = event.detail?.value as StudyTab | undefined;
-    if (next) {
-      this.setActiveTab(next);
-    }
+  trackByTask(_: number, tab: { key: StudyTask }): string {
+    return tab.key;
   }
 
-  selectVerse(unitId: string) {
-    this.selectedVerseId = this.selectedVerseId === unitId ? null : unitId;
-    if (!this.selectedVerseId) {
-      this.selectedSentenceKey = null;
-    }
-  }
-
-  selectSentence(unitId: string, index: number) {
-    const key = `${unitId}-${index}`;
-    if (this.selectedSentenceKey === key) {
-      this.selectedSentenceKey = null;
-      this.selectedVerseId = null;
+  private applyRouteTask(params: ParamMap): void {
+    const task = params.get('task');
+    if (task && this.isStudyTask(task)) {
+      this.facade.setActiveTask(task);
       return;
     }
-    this.selectedSentenceKey = key;
-    this.selectedVerseId = unitId;
-  }
 
-  selectQuestion(question: QuranLessonComprehensionQuestion) {
-    const id = this.getQuestionKey(question);
-    if (!id) return;
-    this.selectedQuestionId = this.selectedQuestionId === id ? null : id;
-  }
-
-  onMcqOptionSelect(mcqId: string, optionIndex: number, optionIsCorrect: boolean) {
-    const current = this.mcqSelections[mcqId];
-    if (current?.selectedIndex === optionIndex && current.isCorrect === optionIsCorrect) {
+    const legacy = params.get('tab');
+    if (legacy && LEGACY_STUDY_TAB_MAP[legacy]) {
+      this.facade.setActiveTask(LEGACY_STUDY_TAB_MAP[legacy]);
       return;
     }
-    this.mcqSelections[mcqId] = { selectedIndex: optionIndex, isCorrect: optionIsCorrect };
+
+    if (!task && !legacy) {
+      this.facade.setActiveTask('reading');
+    }
   }
 
-  getQuestionKey(question: QuranLessonComprehensionQuestion) {
-    return question.question_id ?? question.question ?? '';
-  }
-
-  get verseList() {
-    return (this.lesson?.text.arabic_full ?? []).map((verse) => {
-      const text = verse.arabic?.trim() ?? '';
-      const marker =
-        (verse.verse_mark ?? verse.verse_full ?? (verse.ayah ? `﴿${verse.ayah}﴾` : '')).trim();
-      return { id: verse.unit_id, text, marker };
+  private syncQueryTask(task: StudyTask): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { task, tab: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 
-  get sentenceGroups() {
-    const sentences = this.lesson?.sentences ?? [];
-    if (!sentences.length) return [];
-
-    const verseMap = new Map(
-      (this.lesson?.text.arabic_full ?? []).map((verse) => [verse.unit_id, verse.arabic ?? ''])
+  private isStudyTask(value: string | null | undefined): value is StudyTask {
+    return (
+      value === 'reading'
+      || value === 'morphology'
+      || value === 'sentence_structure'
+      || value === 'grammar_concepts'
+      || value === 'expressions'
+      || value === 'comprehension'
+      || value === 'passage_structure'
     );
-
-    const groups: Array<{ unitId: string; verseArabic: string; sentences: Array<{ arabic?: string }> }> = [];
-
-    for (const sentence of sentences) {
-      const existing = groups.find((group) => group.unitId === sentence.unit_id);
-      if (existing) {
-      existing.sentences.push({ arabic: sentence.arabic ?? undefined });
-        continue;
-      }
-      groups.push({
-        unitId: sentence.unit_id,
-        verseArabic: verseMap.get(sentence.unit_id) ?? '',
-        sentences: [{ arabic: sentence.arabic ?? undefined }],
-      });
-    }
-
-    return groups;
-  }
-
-  get mcqQuestions(): QuranLessonMcq[] {
-    const mcqs = this.lesson?.comprehension?.mcqs;
-    if (!mcqs) return [];
-    if (Array.isArray(mcqs)) return mcqs;
-    if (typeof mcqs === 'object' && mcqs !== null) {
-      const typed = mcqs as {
-        text?: QuranLessonMcq[];
-        vocabulary?: QuranLessonMcq[];
-        grammar?: QuranLessonMcq[];
-      };
-      return [
-        ...(Array.isArray(typed.text) ? typed.text : []),
-        ...(Array.isArray(typed.vocabulary) ? typed.vocabulary : []),
-        ...(Array.isArray(typed.grammar) ? typed.grammar : []),
-      ];
-    }
-    return [];
-  }
-
-  get reflectiveQuestions(): QuranLessonComprehensionQuestion[] {
-    const questions = this.lesson?.comprehension?.reflective;
-    return Array.isArray(questions) ? questions : [];
-  }
-
-  get analyticalQuestions(): QuranLessonComprehensionQuestion[] {
-    const questions = this.lesson?.comprehension?.analytical;
-    return Array.isArray(questions) ? questions : [];
-  }
-
-  get hasComprehensionQuestions() {
-    return this.reflectiveQuestions.length > 0 || this.analyticalQuestions.length > 0;
   }
 }

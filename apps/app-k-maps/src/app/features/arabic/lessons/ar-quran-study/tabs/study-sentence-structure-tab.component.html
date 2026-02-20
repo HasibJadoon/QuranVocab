@@ -1,0 +1,24 @@
+<section class="study-tab study-tab--sentence">
+  <ion-accordion-group class="study-accordion" *ngIf="entries.length; else noSentenceEntries">
+    <ion-accordion class="study-accordion-item" *ngFor="let sentence of entries" [value]="sentence.id">
+      <ion-item slot="header" class="study-accordion-header study-accordion-header--sentence">
+        <ion-label dir="auto" translate="no">{{ sentence.order }}. {{ sentence.summary }}</ion-label>
+      </ion-item>
+
+      <div slot="content" class="study-accordion-content">
+        <p class="study-arabic-block" dir="rtl" translate="no">{{ sentence.arabic }}</p>
+        <p class="study-body-text" *ngIf="sentence.translation">{{ sentence.translation }}</p>
+
+        <ion-list class="study-list" lines="none" *ngIf="sentence.components.length">
+          <ion-item class="study-item study-item--sub" *ngFor="let component of sentence.components" lines="none">
+            <ion-label>{{ component }}</ion-label>
+          </ion-item>
+        </ion-list>
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
+
+  <ng-template #noSentenceEntries>
+    <p class="study-empty">No sentence structure entries available.</p>
+  </ng-template>
+</section>

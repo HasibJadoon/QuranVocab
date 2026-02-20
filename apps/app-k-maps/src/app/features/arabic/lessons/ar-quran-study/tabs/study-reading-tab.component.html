@@ -1,0 +1,15 @@
+<section class="study-tab study-tab--reading">
+  <ion-list class="study-list study-list--reading" lines="none" *ngIf="ayahs.length; else noReadingAyahs">
+    <ion-item class="study-item study-item--ayah" *ngFor="let ayah of ayahs">
+      <ion-label class="study-label">
+        <p class="study-ayah-text" dir="rtl" translate="no">{{ ayah.text }}</p>
+        <p class="study-ayah-marker" *ngIf="ayah.marker">{{ ayah.marker }}</p>
+        <p class="study-ayah-translation" *ngIf="ayah.translation">{{ ayah.translation }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ng-template #noReadingAyahs>
+    <p class="study-empty">Reading text is not available for this lesson.</p>
+  </ng-template>
+</section>

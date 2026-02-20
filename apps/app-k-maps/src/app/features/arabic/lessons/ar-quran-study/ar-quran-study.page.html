@@ -1,231 +1,80 @@
-<ion-header translucent>
-  <ion-toolbar>
+<ion-header class="study-toolbar-wrap">
+  <ion-toolbar class="study-toolbar">
     <ion-buttons slot="start">
-      <ion-button class="back-icon" fill="clear" (click)="back()">
+      <ion-button class="study-back-button" fill="clear" (click)="back()" aria-label="Back to lessons">
         <ion-icon [icon]="icons.arrowBackOutline" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>{{ lesson?.title || 'Arabic Lesson Study' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div class="study-page ion-padding app-text-select">
-    <div *ngIf="error" class="alert alert-danger py-2">{{ error }}</div>
-    <section *ngIf="lesson; else loadingTpl" class="lesson-study">
-      <header class="study-header single-title">
-        <div class="study-title">
-          <h2>{{ lesson.title }}</h2>
-        </div>
-      </header>
+<ion-content class="study-content" [fullscreen]="true">
+  <div class="study-shell ion-padding app-text-select">
+    <ion-item class="study-state study-state--error" lines="none" *ngIf="facade.error">
+      <ion-label>{{ facade.error }}</ion-label>
+    </ion-item>
 
-      <hr class="study-divider" />
+    <ion-item class="study-state" lines="none" *ngIf="facade.loading">
+      <ion-label>Loading lesson study...</ion-label>
+    </ion-item>
 
-      <ng-container [ngSwitch]="activeTab">
+    <ng-container *ngIf="!facade.loading && !facade.error && facade.lesson">
+      <ng-container [ngSwitch]="facade.activeTask">
+        <app-study-reading-tab *ngSwitchCase="'reading'" [ayahs]="facade.readingAyahs"></app-study-reading-tab>
 
-        <ng-container *ngSwitchCase="'study'">
-          <div class="study-grid">
+        <app-study-morphology-tab
+          *ngSwitchCase="'morphology'"
+          [nouns]="facade.morphologyNouns"
+          [verbs]="facade.morphologyVerbs"
+        ></app-study-morphology-tab>
 
-            <article class="study-card">
-              <div class="study-card-heading">
-                <h4>Arabic Text</h4>
-                <h4 class="study-card-mode">
-                  {{ lesson.reference?.surah ? 'Surah ' + lesson.reference?.surah : 'Passage' }}
-                </h4>
-              </div>
+        <app-study-sentence-structure-tab
+          *ngSwitchCase="'sentence_structure'"
+          [entries]="facade.sentenceEntries"
+        ></app-study-sentence-structure-tab>
 
-              <hr class="study-card-divider" />
+        <app-study-grammar-concepts-tab
+          *ngSwitchCase="'grammar_concepts'"
+          [rows]="facade.grammarRows"
+        ></app-study-grammar-concepts-tab>
 
-              <div class="arabic-text-container" *ngIf="verseList.length; else noArabic">
-                <div
-                  *ngFor="let verse of verseList"
-                  class="arabic-text arabic-text-row"
-                  [class.arabic-text-selected]="selectedVerseId === verse.id"
-                  (click)="selectVerse(verse.id)"
-                >
-                  <span
-                    class="arabic-text-run glow-card verse-glow"
-                    [class.glow-card--active]="selectedVerseId === verse.id"
-                  >
-                    {{ verse.text }}
-                  </span>
-                  <span class="verse-marker" *ngIf="verse.marker">{{ verse.marker }}</span>
-                </div>
-              </div>
+        <app-study-expressions-tab
+          *ngSwitchCase="'expressions'"
+          [cards]="facade.expressionStudyCards"
+          [referenceBadge]="facade.passageReferenceBadge"
+        ></app-study-expressions-tab>
 
-              <ng-template #noArabic>
-                <p class="text-muted">Arabic text is not available for this lesson yet.</p>
-              </ng-template>
-            </article>
+        <app-study-comprehension-tab
+          *ngSwitchCase="'comprehension'"
+          [total]="facade.comprehensionQuestionTotal"
+          [groups]="facade.comprehensionQuestionGroups"
+        ></app-study-comprehension-tab>
 
-            <article class="study-card" *ngIf="sentenceGroups.length; else noSentences">
-              <div class="study-card-heading">
-                <h4>Sentences</h4>
-                <h4 class="study-card-mode">{{ sentenceGroups.length }} verse groups</h4>
-              </div>
-
-              <hr class="study-card-divider" />
-
-              <div class="arabic-text-container">
-                <div class="arabic-text-group " *ngFor="let group of sentenceGroups">
-                  <p class="arabic-text-heading glow-card">
-                    <span class="arabic-heading-text">{{ group.verseArabic }}</span>
-                  </p>
-
-                  <hr class="study-card-divider" />
-                  <hr class="study-card-divider" />
-
-                  <div
-                    class="arabic-text arabic-text-row"
-                    *ngFor="let sentence of group.sentences; let idx = index"
-                    [class.arabic-text-selected]="selectedSentenceKey === `${group.unitId}-${idx}`"
-                    (click)="selectSentence(group.unitId, idx); $event.stopPropagation()"
-                  >
-                    <span class="arabic-text-run">{{ sentence.arabic }}</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <ng-template #noSentences>
-              <article class="study-card">
-                <p class="text-muted">Sentence segmentation is not available yet.</p>
-              </article>
-            </ng-template>
-
-          </div>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="'mcq'">
-          <div class="study-grid study-grid--mcq">
-            <article class="study-card mcq-card " *ngIf="mcqQuestions.length; else noMcqs">
-              <div class="study-card-heading">
-                <h4>MCQs</h4>
-                <h4 class="study-card-mode">{{ mcqQuestions.length }} questions</h4>
-              </div>
-
-              <hr class="study-card-divider" />
-
-              <div class="mcq-list">
-                <section class="mcq-question-card" *ngFor="let mcq of mcqQuestions; let idx = index">
-                  <p class="mcq-question-text">{{ mcq.question }}</p>
-
-                  <ul class="mcq-options">
-                    <li
-                      class="mcq-option"
-                      *ngFor="let option of mcq.options; let optionIdx = index"
-                      (click)="onMcqOptionSelect(mcq.mcq_id, optionIdx, option.is_correct)"
-                      [class.mcq-option--correct]="
-                        mcqSelections[mcq.mcq_id]?.selectedIndex === optionIdx && option.is_correct
-                      "
-                      [class.mcq-option--incorrect]="
-                        mcqSelections[mcq.mcq_id]?.selectedIndex === optionIdx && !option.is_correct
-                      "
-                    >
-                      {{ option.option }}
-                    </li>
-                  </ul>
-
-                  <p class="mcq-feedback" *ngIf="mcqSelections[mcq.mcq_id]">
-                    <span
-                      [class.mcq-feedback-text--correct]="mcqSelections[mcq.mcq_id]?.isCorrect"
-                      [class.mcq-feedback-text--incorrect]="!mcqSelections[mcq.mcq_id]?.isCorrect"
-                    >
-                      {{
-                        mcqSelections[mcq.mcq_id]?.isCorrect
-                          ? 'Correct answer!'
-                          : 'Not quite, try again.'
-                      }}
-                    </span>
-                  </p>
-                </section>
-              </div>
-            </article>
-
-            <ng-template #noMcqs>
-              <article class="study-card mcq-card">
-                <p class="text-muted">Comprehension MCQs are not available for this lesson yet.</p>
-              </article>
-            </ng-template>
-          </div>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="'passage'">
-          <div class="study-grid comprehension-grid">
-            <article class="study-card comprehension-card" *ngIf="hasComprehensionQuestions; else noComprehension">
-              <div class="study-card-heading">
-                <h4>Comprehension</h4>
-                <h4 class="study-card-mode">
-                  {{ reflectiveQuestions.length + analyticalQuestions.length }} questions
-                </h4>
-              </div>
-
-              <hr class="study-card-divider" />
-
-              <div class="comprehension-sections">
-                <section class="comp-section" *ngIf="reflectiveQuestions.length">
-                  <div class="comp-section-heading">
-                    <span>Reflective</span>
-                  </div>
-
-                  <article
-                    class="comp-item glow-card"
-                    *ngFor="let question of reflectiveQuestions"
-                    (click)="selectQuestion(question)"
-                    [class.active]="selectedQuestionId === getQuestionKey(question)"
-                  >
-                    <p class="comp-question text-gold">{{ question.question }}</p>
-                    <p class="comp-hint" *ngIf="question.answer_hint">Hint: {{ question.answer_hint }}</p>
-                  </article>
-                </section>
-
-                <section class="comp-section" *ngIf="analyticalQuestions.length">
-                  <div class="comp-section-heading">
-                    <span>Analytical</span>
-                  </div>
-
-                  <article
-                    class="comp-item glow-card"
-                    *ngFor="let question of analyticalQuestions"
-                    (click)="selectQuestion(question)"
-                    [class.active]="selectedQuestionId === getQuestionKey(question)"
-                  >
-                    <p class="comp-question text-gold">{{ question.question }}</p>
-                    <p class="comp-hint" *ngIf="question.answer_hint">Hint: {{ question.answer_hint }}</p>
-                  </article>
-                </section>
-              </div>
-            </article>
-
-            <ng-template #noComprehension>
-              <article class="study-card comprehension-card">
-                <p class="text-muted">Comprehension questions are not available for this lesson yet.</p>
-              </article>
-            </ng-template>
-          </div>
-        </ng-container>
-
+        <app-study-passage-structure-tab
+          *ngSwitchCase="'passage_structure'"
+          [headerTitle]="facade.passageHeaderTitle"
+          [headerSubtitle]="facade.passageHeaderSubtitle"
+          [sections]="facade.passageStructureSections"
+          [toSegments]="facade.toPassageTextSegments.bind(facade)"
+          [resolveIcon]="facade.resolveSectionIcon.bind(facade)"
+        ></app-study-passage-structure-tab>
       </ng-container>
-    </section>
-
-    <ng-template #loadingTpl>
-      <div class="loading text-muted">Loading study data…</div>
-    </ng-template>
+    </ng-container>
   </div>
 </ion-content>
 
-<ion-footer>
-  <ion-toolbar>
-    <ion-segment class="study-tabs" [value]="activeTab" (ionChange)="onTabChange($event)">
-      <ion-segment-button value="study">
-        <ion-icon aria-hidden="true" [icon]="icons.bookOutline"></ion-icon>
-      </ion-segment-button>
-      <ion-segment-button value="mcq">
-        <ion-icon aria-hidden="true" [icon]="icons.listOutline"></ion-icon>
-      </ion-segment-button>
-      <ion-segment-button value="passage">
-        <ion-icon aria-hidden="true" [icon]="icons.documentTextOutline"></ion-icon>
-      </ion-segment-button>
-    </ion-segment>
-  </ion-toolbar>
+<ion-footer class="study-footer">
+  <ion-tab-bar class="study-tab-bar" slot="bottom">
+    <ion-tab-button
+      class="study-tab-button"
+      *ngFor="let tab of taskTabs; trackBy: trackByTask"
+      [tab]="tab.key"
+      [selected]="facade.activeTask === tab.key"
+      [attr.aria-label]="tab.label"
+      [title]="tab.label"
+      (click)="onTaskSelect(tab.key, $event)"
+    >
+      <ion-icon [icon]="tab.icon" aria-hidden="true"></ion-icon>
+    </ion-tab-button>
+  </ion-tab-bar>
 </ion-footer>

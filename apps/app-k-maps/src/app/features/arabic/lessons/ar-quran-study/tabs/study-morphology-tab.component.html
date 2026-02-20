@@ -1,0 +1,41 @@
+<section class="study-tab study-tab--morphology">
+  <ion-accordion-group class="study-accordion" expand="inset">
+    <ion-accordion class="study-accordion-item" value="nouns">
+      <ion-item slot="header" class="study-accordion-header">
+        <ion-label>Nouns</ion-label>
+        <ion-note slot="end">{{ nouns.length }}</ion-note>
+      </ion-item>
+      <div slot="content" class="study-accordion-content">
+        <p class="study-empty" *ngIf="!nouns.length">No noun morphology entries found.</p>
+        <div class="study-chip-cloud" *ngIf="nouns.length">
+          <ion-chip class="study-chip" *ngFor="let item of nouns">
+            <ion-label>
+              <strong class="arabic">{{ item.word }}</strong>
+              <small *ngIf="item.root">Root: {{ item.root }}</small>
+              <small *ngIf="item.gloss">{{ item.gloss }}</small>
+            </ion-label>
+          </ion-chip>
+        </div>
+      </div>
+    </ion-accordion>
+
+    <ion-accordion class="study-accordion-item" value="verbs">
+      <ion-item slot="header" class="study-accordion-header">
+        <ion-label>Verbs</ion-label>
+        <ion-note slot="end">{{ verbs.length }}</ion-note>
+      </ion-item>
+      <div slot="content" class="study-accordion-content">
+        <p class="study-empty" *ngIf="!verbs.length">No verb morphology entries found.</p>
+        <div class="study-chip-cloud" *ngIf="verbs.length">
+          <ion-chip class="study-chip" *ngFor="let item of verbs">
+            <ion-label>
+              <strong class="arabic">{{ item.word }}</strong>
+              <small *ngIf="item.root">Root: {{ item.root }}</small>
+              <small *ngIf="item.gloss">{{ item.gloss }}</small>
+            </ion-label>
+          </ion-chip>
+        </div>
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
+</section>
