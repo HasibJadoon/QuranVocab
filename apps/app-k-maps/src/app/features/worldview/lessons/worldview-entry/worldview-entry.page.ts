@@ -12,7 +12,6 @@ type Mode = 'view' | 'edit' | 'capture';
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule],
   templateUrl: './worldview-entry.page.html',
-  styleUrls: ['./worldview-entry.page.scss'],
 })
 export class WorldviewEntryPage implements OnInit {
   entry: WorldviewEntry | null = null;

@@ -6,7 +6,6 @@ import { IonicModule } from '@ionic/angular';
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.page.html',
-  styleUrls: ['./settings.page.scss'],
   standalone: true,
   imports: [CommonModule, FormsModule, IonicModule],
 })

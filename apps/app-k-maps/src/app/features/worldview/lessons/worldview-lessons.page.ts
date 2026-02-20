@@ -5,7 +5,6 @@ import { worldviewEntries, worldviewKinds } from './worldview-mock';
 @Component({
   selector: 'app-worldview-lessons',
   templateUrl: './worldview-lessons.page.html',
-  styleUrls: ['./worldview-lessons.page.scss'],
   standalone: false,
 })
 export class WorldviewLessonsPage {

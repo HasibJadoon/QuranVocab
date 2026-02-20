@@ -8,7 +8,6 @@ import { IonicModule } from '@ionic/angular';
   standalone: true,
   imports: [CommonModule, IonicModule],
   templateUrl: './discourse-placeholder.page.html',
-  styleUrls: ['./discourse-placeholder.page.scss'],
 })
 export class DiscoursePlaceholderPage {
   private readonly route = inject(ActivatedRoute);

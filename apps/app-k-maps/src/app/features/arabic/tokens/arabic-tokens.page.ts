@@ -12,7 +12,6 @@ import { TokenRow } from '../../../shared/models/token.model';
   imports: [IonicModule, FormsModule, CommonModule, TitleCasePipe],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './arabic-tokens.page.html',
-  styleUrls: ['./arabic-tokens.page.scss'],
 })
 export class ArabicTokensPage implements OnInit {
   readonly posOptions = ['verb', 'noun', 'adj', 'particle', 'phrase'];

@@ -4,7 +4,6 @@ import { ArLessonsService, ArLesson } from '../../../shared/services/ar-lessons.
 @Component({
   selector: 'app-arabic-lessons',
   templateUrl: './arabic-lessons.page.html',
-  styleUrls: ['./arabic-lessons.page.scss'],
   standalone: false,
 })
 export class ArabicLessonsPage implements OnInit {

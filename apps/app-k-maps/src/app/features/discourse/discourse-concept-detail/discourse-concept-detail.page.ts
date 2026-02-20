@@ -9,7 +9,6 @@ import { discourseConcepts, DiscourseConcept } from '../discourse-mock';
   standalone: true,
   imports: [CommonModule, IonicModule],
   templateUrl: './discourse-concept-detail.page.html',
-  styleUrls: ['./discourse-concept-detail.page.scss'],
 })
 export class DiscourseConceptDetailPage {
   private readonly route = inject(ActivatedRoute);

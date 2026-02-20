@@ -9,7 +9,6 @@ import { discourseRelations } from '../discourse-mock';
   standalone: true,
   imports: [CommonModule, IonicModule],
   templateUrl: './discourse-relation-detail.page.html',
-  styleUrls: ['./discourse-relation-detail.page.scss'],
 })
 export class DiscourseRelationDetailPage {
   private readonly route = inject(ActivatedRoute);

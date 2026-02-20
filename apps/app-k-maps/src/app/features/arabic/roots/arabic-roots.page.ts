@@ -9,7 +9,6 @@ type RootCard = { front: string; back: string; tag?: string };
 @Component({
   selector: 'app-arabic-roots',
   templateUrl: './arabic-roots.page.html',
-  styleUrls: ['./arabic-roots.page.scss'],
   standalone: false,
 })
 export class ArabicRootsPage implements OnInit {

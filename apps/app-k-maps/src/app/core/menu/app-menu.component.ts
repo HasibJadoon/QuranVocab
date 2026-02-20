@@ -7,7 +7,6 @@ import { chevronForwardOutline } from 'ionicons/icons';
 @Component({
   selector: 'app-menu',
   templateUrl: './app-menu.component.html',
-  styleUrls: ['./app-menu.component.scss'],
   standalone: true,
   imports: [CommonModule, IonicModule, RouterModule],
 })

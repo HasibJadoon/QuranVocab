@@ -13,7 +13,6 @@ export type RootCard = {
   standalone: true,
   imports: [CommonModule, IonicModule],
   templateUrl: './root-cards.component.html',
-  styleUrls: ['./root-cards.component.scss'],
 })
 export class RootCardsComponent {
   @Input() root = '';

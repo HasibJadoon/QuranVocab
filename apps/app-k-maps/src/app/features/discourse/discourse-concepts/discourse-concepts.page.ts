@@ -14,7 +14,6 @@ type CategoryFilter = {
   standalone: true,
   imports: [CommonModule, IonicModule],
   templateUrl: './discourse-concepts.page.html',
-  styleUrls: ['./discourse-concepts.page.scss'],
 })
 export class DiscourseConceptsPage {
   query = '';

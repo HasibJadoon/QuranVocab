@@ -31,7 +31,6 @@ type StudyTab = 'reading' | 'memory' | 'mcq' | 'passage';
   standalone: true,
   imports: [CommonModule, IonicModule],
   templateUrl: './ar-lesson-study.page.html',
-  styleUrls: ['./ar-lesson-study.page.scss'],
 })
 export class ArLessonStudyPage implements OnInit {
   id: number | null = null;

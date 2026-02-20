@@ -24,7 +24,6 @@ type StudyTab = 'study' | 'mcq' | 'passage';
   standalone: true,
   imports: [CommonModule, IonicModule],
   templateUrl: './ar-quran-study.page.html',
-  styleUrls: ['./ar-quran-study.page.scss'],
 })
 export class ArQuranStudyPage implements OnInit {
   private readonly defaultText: QuranLesson['text'] = { arabic_full: [], mode: 'original' };
