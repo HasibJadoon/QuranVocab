@@ -2,3 +2,20 @@
   display: block;
   height: 100%;
 }
+
+.notes-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.5rem;
+}
+
+.notes-search-row ion-searchbar {
+  flex: 1;
+  --box-shadow: none;
+}
+
+.notes-add-search-button {
+  --border-radius: 0.7rem;
+  min-width: 2.35rem;
+}

@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -689,11 +689,9 @@ export class ArQuranStudyFacade {
   }
 
   private async loadTaskPayloads(lessonId: number): Promise<Partial<Record<StudyTask, unknown>>> {
-    const headers = this.buildHeaders();
-
     try {
       const response = await firstValueFrom(
-        this.http.get<any>(`${environment.apiBase}/ar/quran/lessons/${lessonId}/tasks`, { headers })
+        this.http.get<any>(`${environment.apiBase}/ar/quran/lessons/${lessonId}/tasks`)
       );
 
       const taskRows =
@@ -812,19 +810,6 @@ export class ArQuranStudyFacade {
   private get passageStructurePayload(): Record<string, unknown> {
     const payload = this.recordFromUnknown(this.taskPayloads['passage_structure']);
     return payload ?? {};
-  }
-
-  private buildHeaders(): HttpHeaders {
-    const headers: Record<string, string> = {
-      'content-type': 'application/json',
-    };
-
-    if (typeof window !== 'undefined') {
-      const token = window.localStorage.getItem('auth_token');
-      if (token) headers['authorization'] = `Bearer ${token}`;
-    }
-
-    return new HttpHeaders(headers);
   }
 
   private isStudyTask(value: string): value is StudyTask {

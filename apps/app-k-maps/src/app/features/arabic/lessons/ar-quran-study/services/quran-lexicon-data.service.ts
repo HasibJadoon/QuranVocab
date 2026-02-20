@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../../../../environments/environment';
 
@@ -110,6 +112,7 @@ export interface QuranLexiconBundle {
 
 @Injectable({ providedIn: 'root' })
 export class QuranLexiconDataService {
+  private readonly http = inject(HttpClient);
   private readonly cache = new Map<string, Promise<QuranLexiconBundle>>();
 
   getLexiconBundle(lexiconId: string, options: { refresh?: boolean } = {}): Promise<QuranLexiconBundle> {
@@ -280,27 +283,20 @@ export class QuranLexiconDataService {
   }
 
   private async fetchJson<T>(url: string): Promise<T> {
-    const headers: Record<string, string> = {
-      'content-type': 'application/json',
-    };
+    try {
+      return await firstValueFrom(this.http.get<T>(url));
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) {
+        const body = error.error;
+        const bodyMessage =
+          typeof body === 'string'
+            ? body
+            : (typeof body?.error === 'string' ? body.error : (typeof body?.message === 'string' ? body.message : ''));
+        throw new Error(bodyMessage || `Request failed (${error.status})`);
+      }
 
-    if (typeof window !== 'undefined') {
-      const token = window.localStorage.getItem('auth_token');
-      if (token) headers['authorization'] = `Bearer ${token}`;
+      throw error instanceof Error ? error : new Error('Request failed');
     }
-
-    const response = await fetch(url, { headers });
-
-    const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!response.ok) {
-      const errorMessage =
-        (typeof payload['error'] === 'string' && payload['error']) ||
-        (typeof payload['message'] === 'string' && payload['message']) ||
-        `Request failed (${response.status})`;
-      throw new Error(errorMessage);
-    }
-
-    return payload as T;
   }
 
   private parseSynonymTopics(value: unknown): QuranLexiconSynonymTopic[] {

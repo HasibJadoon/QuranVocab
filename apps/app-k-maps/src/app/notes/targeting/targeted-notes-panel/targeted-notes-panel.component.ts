@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges, SimpleChanges, signal } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { finalize, take } from 'rxjs';
@@ -27,8 +27,7 @@ export class TargetedNotesPanelComponent implements OnChanges {
   bodyMd = '';
 
   private lastTargetKey = '';
-
-  constructor(private readonly targetedNotesApi: TargetedNotesApiService) {}
+  private readonly targetedNotesApi = inject(TargetedNotesApiService);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['collapsed']) {

@@ -4,25 +4,26 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title>Notes</ion-title>
-    <ion-buttons slot="end">
+  </ion-toolbar>
+  <ion-toolbar class="notes-shell-search">
+    <div class="notes-search-row">
+      <ion-searchbar
+        [formControl]="searchControl"
+        placeholder="Search notes"
+        show-clear-button="focus"
+        [debounce]="0"
+      ></ion-searchbar>
       <ion-button
-        class="notes-add-button"
-        fill="clear"
+        class="notes-add-search-button"
+        fill="solid"
+        size="small"
         (click)="createNote()"
         [disabled]="creating()"
         aria-label="Create note"
       >
         <ion-icon slot="icon-only" name="add-outline"></ion-icon>
       </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-  <ion-toolbar class="notes-shell-search">
-    <ion-searchbar
-      [formControl]="searchControl"
-      placeholder="Search notes"
-      show-clear-button="focus"
-      [debounce]="0"
-    ></ion-searchbar>
+    </div>
   </ion-toolbar>
 </ion-header>
 

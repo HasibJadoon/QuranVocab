@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { TokenListResponse } from '../models/token.model';
@@ -7,7 +7,6 @@ import { TokenListResponse } from '../models/token.model';
 export class TokensService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBase}/tokens`;
-  private readonly tokenKey = 'auth_token';
 
   list(filters: { q?: string; pos?: string; page?: number; pageSize?: number }) {
     let params = new HttpParams();
@@ -25,17 +24,7 @@ export class TokensService {
     }
 
     return this.http.get<TokenListResponse>(this.baseUrl, {
-      headers: this.headers(),
       params,
     });
-  }
-
-  private headers() {
-    const token = localStorage.getItem(this.tokenKey);
-    const headers: Record<string, string> = { 'content-type': 'application/json' };
-    if (token) {
-      headers['authorization'] = `Bearer ${token}`;
-    }
-    return new HttpHeaders(headers);
   }
 }

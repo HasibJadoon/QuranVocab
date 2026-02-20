@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, Input, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
 import { IonicModule, RefresherCustomEvent } from '@ionic/angular';
 import { Observable, catchError, distinctUntilChanged, finalize, forkJoin, map, of, switchMap, take, tap } from 'rxjs';
 import { NotesApiService } from '../notes-api.service';
@@ -122,10 +121,24 @@ export class NotesTabListComponent implements OnInit {
   }
 
   private toErrorMessage(error: unknown): string {
-    if (error instanceof HttpErrorResponse && error.status === 401) {
-      return 'Unauthorized. Please log in again.';
+    const status = this.readStatus(error);
+    if (status === 401) {
+      return 'Session expired. Please log in again.';
     }
 
     return 'Could not load notes.';
+  }
+
+  private readStatus(error: unknown): number | null {
+    if (!error || typeof error !== 'object') {
+      return null;
+    }
+
+    const candidate = (error as Record<string, unknown>)['status'];
+    if (typeof candidate === 'number') {
+      return candidate;
+    }
+
+    return null;
   }
 }

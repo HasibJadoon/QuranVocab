@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { map } from 'rxjs/operators';
 
@@ -35,12 +35,9 @@ type LessonResponse = { ok: boolean; result: RawQuranLesson };
 export class QuranLessonService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBase}/arabic/lessons/quran`;
-  private readonly tokenKey = 'auth_token';
 
   getLesson(id: number | string) {
-    return this.http.get<LessonResponse>(`${this.baseUrl}/${id}`, {
-      headers: this.buildHeaders(),
-    }).pipe(
+    return this.http.get<LessonResponse>(`${this.baseUrl}/${id}`).pipe(
       map((res) => {
         const base = res.result;
         const payload = base.lesson_json ?? {};
@@ -62,16 +59,5 @@ export class QuranLessonService {
         } as QuranLesson;
       })
     );
-  }
-
-  private buildHeaders() {
-    const token = localStorage.getItem(this.tokenKey);
-    const headers: Record<string, string> = {
-      'content-type': 'application/json',
-    };
-    if (token) {
-      headers['authorization'] = `Bearer ${token}`;
-    }
-    return new HttpHeaders(headers);
   }
 }
