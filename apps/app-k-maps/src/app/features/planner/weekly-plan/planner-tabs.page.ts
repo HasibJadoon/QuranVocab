@@ -1,6 +1,12 @@
 import { Component } from '@angular/core';
-import { albumsOutline, bookOutline, listOutline, micOutline, statsChartOutline } from 'ionicons/icons';
-import { IconTabItem } from '../../../shared/components/icon-tabs/icon-tabs.component';
+import { albumsOutline, listOutline, micOutline, statsChartOutline } from 'ionicons/icons';
+
+type PlannerTabItem = {
+  key: string;
+  icon: string;
+  label: string;
+  href: string;
+};
 
 @Component({
   selector: 'app-planner-tabs-page',
@@ -9,11 +15,10 @@ import { IconTabItem } from '../../../shared/components/icon-tabs/icon-tabs.comp
   styleUrl: './planner-tabs.page.scss',
 })
 export class PlannerTabsPage {
-  readonly plannerTabs: IconTabItem[] = [
-    { key: 'week', icon: listOutline, label: 'Week' },
-    { key: 'inbox', icon: albumsOutline, label: 'Inbox' },
-    { key: 'lessons', icon: bookOutline, label: 'Lessons' },
-    { key: 'podcast', icon: micOutline, label: 'Podcast' },
-    { key: 'review', icon: statsChartOutline, label: 'Review' },
+  readonly plannerTabs: PlannerTabItem[] = [
+    { key: 'week', icon: listOutline, label: 'Week', href: '/planner/week' },
+    { key: 'inbox', icon: albumsOutline, label: 'Inbox', href: '/planner/inbox' },
+    { key: 'podcast', icon: micOutline, label: 'Podcast', href: '/planner/podcast' },
+    { key: 'review', icon: statsChartOutline, label: 'Review', href: '/planner/review' },
   ];
 }

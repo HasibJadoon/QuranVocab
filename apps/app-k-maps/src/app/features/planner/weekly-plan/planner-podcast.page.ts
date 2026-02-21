@@ -28,8 +28,8 @@ export class PlannerPodcastPage {
     event.target.complete();
   }
 
-  openEpisode(item: PodcastEpisode): void {
-    void this.router.navigate(['/podcast', item.id]);
+  openEpisode(_item: PodcastEpisode): void {
+    void this.router.navigate(['/podcast']);
   }
 
   private async load(): Promise<void> {

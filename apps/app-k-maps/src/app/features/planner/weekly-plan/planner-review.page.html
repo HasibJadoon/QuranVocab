@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar class="km-week-toolbar">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
@@ -7,7 +7,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="planner-review-content km-shell km-content-with-bottom-tabs">
+<ion-content [fullscreen]="true">
   @if (loading()) {
     <ion-list>
       @for (row of [1,2,3,4]; track row) {
@@ -20,32 +20,54 @@
       }
     </ion-list>
   } @else {
-    <section class="review-card km-glass">
-      <p class="review-week">{{ weekStart() }}</p>
-      <div class="review-metrics">
-        <span>{{ metrics.tasks_done }}/{{ metrics.tasks_total }} tasks</span>
-        <span>{{ metrics.minutes_spent }} min</span>
-        <span>{{ metrics.capture_notes }} captures</span>
-        <span>{{ metrics.promoted_notes }} promoted</span>
-      </div>
-    </section>
+    <ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>{{ weekStart() }}</ion-card-subtitle>
+        <ion-card-title>Week Metrics</ion-card-title>
+      </ion-card-header>
+      <ion-list lines="full">
+        <ion-item>
+          <ion-label>Tasks</ion-label>
+          <ion-note slot="end">{{ metrics.tasks_done }}/{{ metrics.tasks_total }}</ion-note>
+        </ion-item>
+        <ion-item>
+          <ion-label>Minutes</ion-label>
+          <ion-note slot="end">{{ metrics.minutes_spent }}</ion-note>
+        </ion-item>
+        <ion-item>
+          <ion-label>Capture Notes</ion-label>
+          <ion-note slot="end">{{ metrics.capture_notes }}</ion-note>
+        </ion-item>
+        <ion-item>
+          <ion-label>Promoted Notes</ion-label>
+          <ion-note slot="end">{{ metrics.promoted_notes }}</ion-note>
+        </ion-item>
+      </ion-list>
+    </ion-card>
 
-    <section class="review-card km-glass">
-      <ion-item lines="none">
-        <ion-label position="stacked">What worked</ion-label>
-        <ion-textarea [(ngModel)]="whatWorkedText" rows="4" placeholder="One bullet per line"></ion-textarea>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-label position="stacked">What blocked</ion-label>
-        <ion-textarea [(ngModel)]="whatBlockedText" rows="4" placeholder="One bullet per line"></ion-textarea>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-label position="stacked">Next week focus</ion-label>
-        <ion-textarea [(ngModel)]="nextFocusText" rows="4" placeholder="One bullet per line"></ion-textarea>
-      </ion-item>
-      <ion-button expand="block" class="km-btn save-btn" (click)="save()" [disabled]="saving()">
-        {{ saving() ? 'Saving...' : 'Save Review' }}
-      </ion-button>
-    </section>
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Reflection</ion-card-title>
+      </ion-card-header>
+      <ion-list lines="none">
+        <ion-item>
+          <ion-label position="stacked">What worked</ion-label>
+          <ion-textarea [(ngModel)]="whatWorkedText" rows="4" autoGrow="true" placeholder="One bullet per line"></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">What blocked</ion-label>
+          <ion-textarea [(ngModel)]="whatBlockedText" rows="4" autoGrow="true" placeholder="One bullet per line"></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Next week focus</ion-label>
+          <ion-textarea [(ngModel)]="nextFocusText" rows="4" autoGrow="true" placeholder="One bullet per line"></ion-textarea>
+        </ion-item>
+      </ion-list>
+      <ion-card-content>
+        <ion-button expand="block" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save Review' }}
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
   }
 </ion-content>

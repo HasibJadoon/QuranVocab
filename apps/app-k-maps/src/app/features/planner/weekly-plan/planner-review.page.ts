@@ -4,6 +4,7 @@ import { ToastController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { PlannerService } from '../../sprint/services/planner.service';
 import { SprintReview } from '../../sprint/models/sprint.models';
+import { computeWeekStartSydney } from '../../sprint/utils/week-start.util';
 
 @Component({
   selector: 'app-planner-review-page',
@@ -18,7 +19,7 @@ export class PlannerReviewPage {
 
   readonly loading = signal(true);
   readonly saving = signal(false);
-  readonly weekStart = signal(this.planner.currentWeekStart());
+  readonly weekStart = signal(computeWeekStartSydney(this.planner.currentWeekStart()));
 
   metrics = {
     tasks_done: 0,
@@ -34,7 +35,7 @@ export class PlannerReviewPage {
 
   constructor() {
     this.route.paramMap.subscribe((params) => {
-      const weekStart = params.get('weekStart') ?? this.planner.currentWeekStart();
+      const weekStart = computeWeekStartSydney(params.get('weekStart') ?? this.planner.currentWeekStart());
       this.weekStart.set(weekStart);
       void this.load();
     });
@@ -78,6 +79,8 @@ export class PlannerReviewPage {
       this.whatWorkedText = Array.isArray(review?.what_worked) ? review.what_worked.join('\n') : '';
       this.whatBlockedText = Array.isArray(review?.what_blocked) ? review.what_blocked.join('\n') : '';
       this.nextFocusText = Array.isArray(review?.next_week_focus) ? review.next_week_focus.join('\n') : '';
+    } catch {
+      await this.presentToast('Could not load review.');
     } finally {
       this.loading.set(false);
     }

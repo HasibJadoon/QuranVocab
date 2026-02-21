@@ -56,7 +56,7 @@ export class WeeklyPlanPage {
   });
 
   readonly captureControl = new FormControl('', { nonNullable: true });
-  readonly activeStatus = signal<BoardStatus>('planned');
+  activeStatus: BoardStatus = 'planned';
   readonly expandedLanes = signal<Array<PlannerLane>>(['lesson', 'podcast', 'notes', 'admin']);
 
   readonly lanes: PlannerLane[] = ['lesson', 'podcast', 'notes', 'admin'];
@@ -111,7 +111,7 @@ export class WeeklyPlanPage {
 
   tasksForLane(lane: PlannerLane): PlannerTaskRow[] {
     return this.tasks()
-      .filter((task) => task.item_json.lane === lane && this.toBoardStatus(task.item_json.status) === this.activeStatus())
+      .filter((task) => task.item_json.lane === lane && this.toBoardStatus(task.item_json.status) === this.activeStatus)
       .sort((a, b) => {
         const orderA = typeof a.item_json.order_index === 'number' ? a.item_json.order_index : Number.MAX_SAFE_INTEGER;
         const orderB = typeof b.item_json.order_index === 'number' ? b.item_json.order_index : Number.MAX_SAFE_INTEGER;
@@ -135,7 +135,7 @@ export class WeeklyPlanPage {
 
   onStatusChanged(value: string | number | null | undefined): void {
     if (value === 'planned' || value === 'doing' || value === 'done') {
-      this.activeStatus.set(value);
+      this.activeStatus = value;
     }
   }
 

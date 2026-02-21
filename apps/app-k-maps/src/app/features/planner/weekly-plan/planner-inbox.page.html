@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar class="km-week-toolbar">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
@@ -7,19 +7,21 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="planner-inbox-content km-shell km-content-with-bottom-tabs">
+<ion-content [fullscreen]="true">
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <section class="inbox-capture km-glass">
-    <ion-input
-      [formControl]="captureControl"
-      placeholder="Take quick note..."
-      (keyup.enter)="capture()"
-    ></ion-input>
-    <ion-button class="km-btn" size="small" (click)="capture()" [disabled]="saving()">Save</ion-button>
-  </section>
+  <ion-card>
+    <ion-item>
+      <ion-input
+        [formControl]="captureControl"
+        placeholder="Take quick note..."
+        (keyup.enter)="capture()"
+      ></ion-input>
+      <ion-button slot="end" (click)="capture()" [disabled]="saving()">Save</ion-button>
+    </ion-item>
+  </ion-card>
 
   @if (loading()) {
     <ion-list>
@@ -33,16 +35,18 @@
       }
     </ion-list>
   } @else {
-    <ion-list class="inbox-list">
+    <ion-list>
       @for (note of items(); track note.id) {
         <ion-item-sliding #sliding>
-          <ion-item lines="none" class="inbox-card">
+          <ion-item button="true" detail="true" lines="none">
             <ion-label>
               <h3>{{ note.title || 'Capture note' }}</h3>
               <p>{{ note.text }}</p>
-              <p class="inbox-time">{{ note.updated_at | date:'EEE h:mm a' }}</p>
+              <p>
+                <ion-note>{{ note.updated_at | date:'EEE h:mm a' }}</ion-note>
+              </p>
             </ion-label>
-            <ion-button slot="end" size="small" fill="outline" class="km-btn" (click)="openPromoteModal(note, sliding)">Promote</ion-button>
+            <ion-button slot="end" size="small" fill="outline" (click)="openPromoteModal(note, sliding)">Promote</ion-button>
           </ion-item>
 
           <ion-item-options side="end">
@@ -53,7 +57,7 @@
 
       @if (items().length === 0) {
         <ion-item lines="none">
-          <ion-label class="inbox-empty">
+          <ion-label class="ion-text-center">
             <h3>No capture notes</h3>
             <p>Capture now and promote later.</p>
           </ion-label>

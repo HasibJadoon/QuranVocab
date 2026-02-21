@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar class="km-week-toolbar">
+  <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
@@ -7,7 +7,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="planner-podcast-content km-shell km-content-with-bottom-tabs">
+<ion-content [fullscreen]="true">
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -24,12 +24,14 @@
       }
     </ion-list>
   } @else {
-    <ion-list class="km-quick-list">
+    <ion-list>
       @for (item of items(); track item.id) {
-        <ion-item button="true" detail="false" lines="none" class="km-quick-card" (click)="openEpisode(item)">
+        <ion-item button="true" detail="true" (click)="openEpisode(item)">
           <ion-label>
             <h3>{{ item.title }}</h3>
-            <p>{{ item.status | titlecase }}</p>
+            <p>
+              <ion-note>{{ item.status | titlecase }}</ion-note>
+            </p>
           </ion-label>
         </ion-item>
       }
