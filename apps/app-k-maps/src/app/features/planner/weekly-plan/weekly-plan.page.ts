@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
-  IonItemSliding,
   ModalController,
   RefresherCustomEvent,
   ToastController,
@@ -57,7 +56,6 @@ export class WeeklyPlanPage {
 
   readonly captureControl = new FormControl('', { nonNullable: true });
   activeStatus: BoardStatus = 'planned';
-  readonly expandedLanes = signal<Array<PlannerLane>>(['lesson', 'podcast', 'notes', 'admin']);
 
   readonly lanes: PlannerLane[] = ['lesson', 'podcast', 'notes', 'admin'];
 
@@ -207,60 +205,65 @@ export class WeeklyPlanPage {
     }
   }
 
-  async openEditModal(task: PlannerTaskRow, sliding?: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
-    await sliding?.close();
+  async openEditModal(task: PlannerTaskRow): Promise<void> {
+    try {
+      const modal = await this.modalController.create({
+        component: TaskEditModalComponent,
+        componentProps: {
+          initialTask: task.item_json,
+          relatedType: task.related_type,
+          relatedId: task.related_id,
+          weekStart: this.weekStart(),
+        },
+        breakpoints: [0, 0.6, 0.92],
+        initialBreakpoint: 0.92,
+      });
 
-    const modal = await this.modalController.create({
-      component: TaskEditModalComponent,
-      componentProps: {
-        initialTask: task.item_json,
-        relatedType: task.related_type,
-        relatedId: task.related_id,
-        weekStart: this.weekStart(),
-      },
-      breakpoints: [0, 0.6, 0.92],
-      initialBreakpoint: 0.92,
-    });
+      await modal.present();
+      const result = await modal.onDidDismiss<{ item_json: PlannerTask; related_type: string | null; related_id: string | null }>();
+      if (result.role !== 'save' || !result.data) {
+        return;
+      }
 
-    await modal.present();
-    const result = await modal.onDidDismiss<{ item_json: PlannerTask; related_type: string | null; related_id: string | null }>();
-    if (result.role !== 'save' || !result.data) {
-      return;
+      await this.updateTask(task, result.data.item_json, result.data.related_type, result.data.related_id);
+    } catch {
+      await this.presentToast('Could not open task editor.');
     }
-
-    await this.updateTask(task, result.data.item_json, result.data.related_type, result.data.related_id);
   }
 
   async openDetailModal(task: PlannerTaskRow): Promise<void> {
-    const modal = await this.modalController.create({
-      component: TaskDetailModalComponent,
-      componentProps: {
-        task,
-        weekStart: this.weekStart(),
-      },
-      breakpoints: [0, 0.72, 0.96],
-      initialBreakpoint: 0.96,
-    });
+    try {
+      const modal = await this.modalController.create({
+        component: TaskDetailModalComponent,
+        componentProps: {
+          task,
+          weekStart: this.weekStart(),
+        },
+        breakpoints: [0, 0.72, 0.96],
+        initialBreakpoint: 0.96,
+      });
 
-    await modal.present();
-    const result = await modal.onDidDismiss<{ item_json?: PlannerTask; actual_min?: number; capture_text?: string }>();
-    if (result.role === 'save' && result.data?.item_json) {
-      await this.updateTask(task, result.data.item_json, task.related_type, task.related_id);
-      return;
-    }
+      await modal.present();
+      const result = await modal.onDidDismiss<{ item_json?: PlannerTask; actual_min?: number; capture_text?: string }>();
+      if (result.role === 'save' && result.data?.item_json) {
+        await this.updateTask(task, result.data.item_json, task.related_type, task.related_id);
+        return;
+      }
 
-    if (result.role === 'complete') {
-      await this.completeTask(task, result.data?.actual_min);
-      return;
-    }
+      if (result.role === 'complete') {
+        await this.completeTask(task, result.data?.actual_min);
+        return;
+      }
 
-    if (result.role === 'capture' && result.data?.capture_text) {
-      await this.createTaskCapture(task, result.data.capture_text);
+      if (result.role === 'capture' && result.data?.capture_text) {
+        await this.createTaskCapture(task, result.data.capture_text);
+      }
+    } catch {
+      await this.presentToast('Could not open task details.');
     }
   }
 
-  async moveToDoing(task: PlannerTaskRow, sliding: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
-    await sliding?.close();
+  async moveToDoing(task: PlannerTaskRow): Promise<void> {
     const nextTask: PlannerTask = {
       ...task.item_json,
       status: 'doing',
@@ -268,8 +271,7 @@ export class WeeklyPlanPage {
     await this.updateTask(task, nextTask, task.related_type, task.related_id);
   }
 
-  async markBlocked(task: PlannerTaskRow, sliding: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
-    await sliding?.close();
+  async markBlocked(task: PlannerTaskRow): Promise<void> {
     const nextTask: PlannerTask = {
       ...task.item_json,
       status: 'blocked',
@@ -277,8 +279,7 @@ export class WeeklyPlanPage {
     await this.updateTask(task, nextTask, task.related_type, task.related_id);
   }
 
-  async completeFromSwipe(task: PlannerTaskRow, sliding: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
-    await sliding?.close();
+  async completeFromSwipe(task: PlannerTaskRow): Promise<void> {
     await this.completeTask(task, task.item_json.actual_min ?? task.item_json.estimate_min);
   }
 
@@ -294,10 +295,6 @@ export class WeeklyPlanPage {
       this.tasks.set(week.tasks);
       this.summary.set(week.summary);
       this.recomputeSummary();
-
-      if (this.shouldPromptPlanning()) {
-        await this.openPlanWeekModal(true);
-      }
     } catch {
       await this.presentToast('Could not load weekly sprint.');
     } finally {
