@@ -1,9 +1,8 @@
-import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { FormControl } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
-  IonicModule,
+  IonItemSliding,
   ModalController,
   RefresherCustomEvent,
   ToastController,
@@ -22,16 +21,21 @@ import {
 import { computeWeekStartSydney, formatWeekRangeLabel } from '../../sprint/utils/week-start.util';
 import { TaskDetailModalComponent } from './modals/task-detail.modal';
 import { TaskEditModalComponent } from './modals/task-edit.modal';
+import { PlanWeekModalComponent, PlanWeekModalResult } from './modals/plan-week.modal';
+
+type BoardStatus = 'planned' | 'doing' | 'done';
 
 @Component({
   selector: 'app-weekly-plan',
   standalone: false,
   templateUrl: './weekly-plan.page.html',
+  styleUrl: './weekly-plan.page.scss',
 })
 export class WeeklyPlanPage {
   private readonly planner = inject(PlannerService);
   private readonly captureNotes = inject(CaptureNotesService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly modalController = inject(ModalController);
   private readonly toastController = inject(ToastController);
 
@@ -52,31 +56,87 @@ export class WeeklyPlanPage {
   });
 
   readonly captureControl = new FormControl('', { nonNullable: true });
+  readonly activeStatus = signal<BoardStatus>('planned');
+  readonly expandedLanes = signal<Array<PlannerLane>>(['lesson', 'podcast', 'notes', 'admin']);
 
   readonly lanes: PlannerLane[] = ['lesson', 'podcast', 'notes', 'admin'];
 
-  readonly visibleTasks = computed(() => {
-    return this.tasks()
-      .sort((a, b) => {
-        const updatedA = new Date(a.updated_at ?? a.created_at).getTime();
-        const updatedB = new Date(b.updated_at ?? b.created_at).getTime();
-        return updatedB - updatedA;
-      });
+  readonly shouldPromptPlanning = computed(() => {
+    const plan = this.weekPlan();
+    if (!plan) {
+      return false;
+    }
+    const planning = plan.planning_state;
+    if (planning.is_planned) {
+      return false;
+    }
+
+    if (!planning.defer_until) {
+      return true;
+    }
+
+    const deferAt = new Date(planning.defer_until).getTime();
+    if (Number.isNaN(deferAt)) {
+      return true;
+    }
+
+    return Date.now() >= deferAt;
+  });
+
+  readonly lessonDone = computed(() => this.countAnchorDone('lesson'));
+  readonly podcastDone = computed(() => this.countAnchorDone('podcast'));
+  readonly minuteTarget = computed(() => {
+    const budget = this.weekPlan()?.time_budget;
+    if (!budget) {
+      return 450;
+    }
+    return budget.lesson_min + budget.podcast_min + budget.review_min;
+  });
+
+  readonly progressPct = computed(() => {
+    const total = this.summary().tasks_total;
+    if (!total) {
+      return 0;
+    }
+    return Math.min(100, Math.round((this.summary().tasks_done / total) * 100));
   });
 
   constructor() {
-    this.route.paramMap.subscribe(() => {
-      const fromCurrent = this.route.snapshot.paramMap.get('weekStart');
-      const fromParent = this.route.parent?.snapshot.paramMap.get('weekStart');
-      const weekStart = computeWeekStartSydney(fromCurrent ?? fromParent ?? computeWeekStartSydney());
+    this.route.paramMap.subscribe((params) => {
+      const weekStart = computeWeekStartSydney(params.get('weekStart') ?? this.planner.currentWeekStart());
       this.weekStart.set(weekStart);
       void this.loadWeek(weekStart);
     });
   }
 
+  tasksForLane(lane: PlannerLane): PlannerTaskRow[] {
+    return this.tasks()
+      .filter((task) => task.item_json.lane === lane && this.toBoardStatus(task.item_json.status) === this.activeStatus())
+      .sort((a, b) => {
+        const orderA = typeof a.item_json.order_index === 'number' ? a.item_json.order_index : Number.MAX_SAFE_INTEGER;
+        const orderB = typeof b.item_json.order_index === 'number' ? b.item_json.order_index : Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        const updatedA = new Date(a.updated_at ?? a.created_at).getTime();
+        const updatedB = new Date(b.updated_at ?? b.created_at).getTime();
+        return updatedB - updatedA;
+      });
+  }
+
+  laneCount(lane: PlannerLane): number {
+    return this.tasksForLane(lane).length;
+  }
+
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     await this.loadWeek(this.weekStart());
     event.target.complete();
+  }
+
+  onStatusChanged(value: string | number | null | undefined): void {
+    if (value === 'planned' || value === 'doing' || value === 'done') {
+      this.activeStatus.set(value);
+    }
   }
 
   async captureQuickNote(): Promise<void> {
@@ -92,7 +152,7 @@ export class WeeklyPlanPage {
         kind: 'capture',
         week_start: this.weekStart(),
         source: 'weekly',
-        related_type: 'sp_planner',
+        related_type: 'sp_weekly_plans',
         related_id: this.weekStart(),
       };
 
@@ -116,9 +176,10 @@ export class WeeklyPlanPage {
       component: TaskEditModalComponent,
       componentProps: {
         initialTask: null,
+        weekStart: this.weekStart(),
       },
-      breakpoints: [0, 0.6, 0.9],
-      initialBreakpoint: 0.9,
+      breakpoints: [0, 0.6, 0.92],
+      initialBreakpoint: 0.92,
     });
 
     await modal.present();
@@ -146,7 +207,7 @@ export class WeeklyPlanPage {
     }
   }
 
-  async openEditModal(task: PlannerTaskRow, sliding?: { close: () => Promise<void> } | null): Promise<void> {
+  async openEditModal(task: PlannerTaskRow, sliding?: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
     await sliding?.close();
 
     const modal = await this.modalController.create({
@@ -155,9 +216,10 @@ export class WeeklyPlanPage {
         initialTask: task.item_json,
         relatedType: task.related_type,
         relatedId: task.related_id,
+        weekStart: this.weekStart(),
       },
-      breakpoints: [0, 0.6, 0.9],
-      initialBreakpoint: 0.9,
+      breakpoints: [0, 0.6, 0.92],
+      initialBreakpoint: 0.92,
     });
 
     await modal.present();
@@ -174,13 +236,14 @@ export class WeeklyPlanPage {
       component: TaskDetailModalComponent,
       componentProps: {
         task,
+        weekStart: this.weekStart(),
       },
-      breakpoints: [0, 0.65, 0.95],
-      initialBreakpoint: 0.95,
+      breakpoints: [0, 0.72, 0.96],
+      initialBreakpoint: 0.96,
     });
 
     await modal.present();
-    const result = await modal.onDidDismiss<{ item_json?: PlannerTask; actual_min?: number }>();
+    const result = await modal.onDidDismiss<{ item_json?: PlannerTask; actual_min?: number; capture_text?: string }>();
     if (result.role === 'save' && result.data?.item_json) {
       await this.updateTask(task, result.data.item_json, task.related_type, task.related_id);
       return;
@@ -188,43 +251,124 @@ export class WeeklyPlanPage {
 
     if (result.role === 'complete') {
       await this.completeTask(task, result.data?.actual_min);
+      return;
+    }
+
+    if (result.role === 'capture' && result.data?.capture_text) {
+      await this.createTaskCapture(task, result.data.capture_text);
     }
   }
 
-  async completeFromSwipe(task: PlannerTaskRow, event: Event): Promise<void> {
-    const sliding = event.target as HTMLIonItemSlidingElement | null;
+  async moveToDoing(task: PlannerTaskRow, sliding: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
+    await sliding?.close();
+    const nextTask: PlannerTask = {
+      ...task.item_json,
+      status: 'doing',
+    };
+    await this.updateTask(task, nextTask, task.related_type, task.related_id);
+  }
+
+  async markBlocked(task: PlannerTaskRow, sliding: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
+    await sliding?.close();
+    const nextTask: PlannerTask = {
+      ...task.item_json,
+      status: 'blocked',
+    };
+    await this.updateTask(task, nextTask, task.related_type, task.related_id);
+  }
+
+  async completeFromSwipe(task: PlannerTaskRow, sliding: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
     await sliding?.close();
     await this.completeTask(task, task.item_json.actual_min ?? task.item_json.estimate_min);
   }
 
-  async moveLane(task: PlannerTaskRow, event: Event): Promise<void> {
-    const sliding = event.target as HTMLIonItemSlidingElement | null;
-    await sliding?.close();
-
-    const index = this.lanes.indexOf(task.item_json.lane);
-    const nextLane = this.lanes[(index + 1) % this.lanes.length];
-    const nextTask: PlannerTask = {
-      ...task.item_json,
-      lane: nextLane,
-    };
-    await this.updateTask(task, nextTask, task.related_type, task.related_id);
+  openKanbanView(): void {
+    void this.router.navigate(['/planner/kanban']);
   }
 
   private async loadWeek(weekStart: string): Promise<void> {
     this.loading.set(true);
     try {
-      let week = await firstValueFrom(this.planner.loadWeek(weekStart));
-      if (!week.weekPlan) {
-        week = await firstValueFrom(this.planner.ensureWeek(weekStart));
-      }
-
+      const week = await firstValueFrom(this.planner.ensureWeekAnchors(weekStart));
       this.weekPlan.set(week.weekPlan?.item_json ?? null);
       this.tasks.set(week.tasks);
       this.summary.set(week.summary);
+      this.recomputeSummary();
+
+      if (this.shouldPromptPlanning()) {
+        await this.openPlanWeekModal(true);
+      }
     } catch {
       await this.presentToast('Could not load weekly sprint.');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async openPlanWeekModal(blocking = false): Promise<void> {
+    const modal = await this.modalController.create({
+      component: PlanWeekModalComponent,
+      componentProps: {
+        weekStart: this.weekStart(),
+        weekPlan: this.weekPlan(),
+        tasks: this.tasks(),
+      },
+      backdropDismiss: !blocking,
+      breakpoints: [0, 0.72, 0.98],
+      initialBreakpoint: 0.98,
+    });
+
+    await modal.present();
+    const result = await modal.onDidDismiss<PlanWeekModalResult>();
+    if (!result.data) {
+      return;
+    }
+
+    if (result.data.mode === 'later') {
+      await this.deferPlanning();
+      return;
+    }
+
+    if (result.data.mode === 'save') {
+      await this.savePlanning(result.data.assignments);
+    }
+  }
+
+  private async savePlanning(assignments: Record<string, unknown>): Promise<void> {
+    this.saving.set(true);
+    try {
+      const response = await firstValueFrom(this.planner.planWeek({
+        week_start: this.weekStart(),
+        planning_state: { is_planned: true },
+        assignments,
+      }));
+      this.weekPlan.set(response.weekPlan?.item_json ?? null);
+      this.tasks.set(response.tasks);
+      this.summary.set(response.summary);
+      this.recomputeSummary();
+    } catch {
+      await this.presentToast('Could not save plan.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private async deferPlanning(): Promise<void> {
+    this.saving.set(true);
+    try {
+      const response = await firstValueFrom(this.planner.planWeek({
+        week_start: this.weekStart(),
+        later_today: true,
+        planning_state: { is_planned: false },
+      }));
+      this.weekPlan.set(response.weekPlan?.item_json ?? null);
+      this.tasks.set(response.tasks);
+      this.summary.set(response.summary);
+      this.recomputeSummary();
+    } catch {
+      await this.presentToast('Could not defer planning.');
+    } finally {
+      this.saving.set(false);
     }
   }
 
@@ -268,6 +412,37 @@ export class WeeklyPlanPage {
     }
   }
 
+  private async createTaskCapture(task: PlannerTaskRow, text: string): Promise<void> {
+    const normalized = text.trim();
+    if (!normalized) {
+      return;
+    }
+
+    this.saving.set(true);
+    try {
+      const meta: CaptureNoteMeta = {
+        schema_version: 1,
+        kind: 'capture',
+        week_start: this.weekStart(),
+        source: task.item_json.lane === 'podcast' ? 'podcast' : 'lesson',
+        related_type: task.related_type ?? 'sp_weekly_tasks',
+        related_id: task.related_id ?? task.id,
+        task_type: 'task',
+      };
+
+      await firstValueFrom(this.captureNotes.create({
+        text: normalized,
+        title: summarizeTitle(normalized),
+        meta,
+      }));
+      await this.presentToast('Note captured.');
+    } catch {
+      await this.presentToast('Could not capture note.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
   private replaceTask(updated: PlannerTaskRow): void {
     this.tasks.update((items) => {
       const index = items.findIndex((item) => item.id === updated.id);
@@ -286,7 +461,7 @@ export class WeeklyPlanPage {
     let minutes = 0;
 
     for (const task of tasks) {
-      if (task.item_json.status === 'done') {
+      if (this.toBoardStatus(task.item_json.status) === 'done') {
         done += 1;
       }
       if (typeof task.item_json.actual_min === 'number' && Number.isFinite(task.item_json.actual_min)) {
@@ -300,6 +475,38 @@ export class WeeklyPlanPage {
       tasks_total: tasks.length,
       minutes_spent: minutes,
     }));
+  }
+
+  private countAnchorDone(lane: 'lesson' | 'podcast'): number {
+    return this.tasks().filter((task) => task.item_json.anchor && task.item_json.lane === lane && this.toBoardStatus(task.item_json.status) === 'done').length;
+  }
+
+  assignmentSummary(task: PlannerTaskRow): string {
+    if (task.item_json.lane === 'lesson') {
+      if (task.item_json.assignment.ar_lesson_id) {
+        return `Lesson #${task.item_json.assignment.ar_lesson_id} · ${task.item_json.estimate_min} min`;
+      }
+      return `${task.item_json.estimate_min} min · Not assigned`;
+    }
+
+    if (task.item_json.lane === 'podcast') {
+      if (task.item_json.assignment.topic) {
+        return `${task.item_json.estimate_min} min · ${task.item_json.assignment.topic}`;
+      }
+      return `${task.item_json.estimate_min} min · Topic pending`;
+    }
+
+    return `${task.item_json.estimate_min} min`;
+  }
+
+  private toBoardStatus(status: string): BoardStatus {
+    if (status === 'done') {
+      return 'done';
+    }
+    if (status === 'doing' || status === 'blocked') {
+      return 'doing';
+    }
+    return 'planned';
   }
 
   private async presentToast(message: string): Promise<void> {

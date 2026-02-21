@@ -3,11 +3,20 @@ import { PlannerTask, PlannerWeekPlan, SprintReview } from '../models/sprint.mod
 export const WEEK_PLAN_SEED: PlannerWeekPlan = {
   schema_version: 1,
   title: 'Week Sprint — Surah Yusuf Focus',
+  fixed_rhythm: { lessons: 2, podcasts: 3 },
+  planning_state: { is_planned: false, planned_at: null, defer_until: null },
   intent: 'Learn + produce',
   weekly_goals: [
     { id: 'g1', label: 'Finish Lesson: Yusuf 12:1-3', done: false },
   ],
-  time_budget: { study_minutes: 420, podcast_minutes: 180, review_minutes: 60 },
+  time_budget: {
+    lesson_min: 120,
+    podcast_min: 135,
+    review_min: 30,
+    study_minutes: 120,
+    podcast_minutes: 135,
+    review_minutes: 30,
+  },
   lanes: [
     { key: 'lesson', label: 'Lesson' },
     { key: 'podcast', label: 'Podcast' },
@@ -25,11 +34,20 @@ export const WEEK_PLAN_SEED: PlannerWeekPlan = {
 export const TASK_SEED: PlannerTask = {
   schema_version: 1,
   lane: 'lesson',
+  anchor: false,
   title: 'Read and annotate 12:1-3',
   priority: 'P1',
-  status: 'todo',
+  status: 'planned',
   estimate_min: 30,
   actual_min: null,
+  assignment: {
+    kind: 'lesson',
+    ar_lesson_id: null,
+    unit_id: null,
+    topic: null,
+    episode_no: null,
+    recording_at: null,
+  },
   tags: ['quran', 'yusuf'],
   checklist: [
     { id: 'c1', label: 'Read + highlight tokens', done: false },
@@ -42,6 +60,10 @@ export const TASK_SEED: PlannerTask = {
   capture_on_done: {
     create_capture_note: true,
     template: 'What did I learn? What confused me? One next step.',
+  },
+  meta: {
+    anchor_key: null,
+    week_start: '2026-02-16',
   },
 };
 

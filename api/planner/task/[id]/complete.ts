@@ -6,12 +6,16 @@ import {
   computeWeekStartSydney,
   insertActivityLog,
   json,
-  mapPlannerRow,
+  mapWeeklyTaskToPlannerTaskRow,
   normalizeTaskJson,
   parseBody,
   parseJsonObject,
+  plannerPriorityToWeeklyPriority,
+  plannerStatusToWeeklyKanban,
+  plannerStatusToWeeklyStatus,
   readInteger,
   readString,
+  readTrimmed,
 } from '../../../_utils/sprint';
 
 interface Env {
@@ -50,6 +54,59 @@ function firstLinkContext(taskJson: Record<string, unknown>): {
   };
 }
 
+function deriveRelatedTarget(row: Record<string, unknown>, taskId: number): {
+  relatedType: string;
+  relatedId: string;
+} {
+  const lessonId = readInteger(row['ar_lesson_id']);
+  if (lessonId !== null) {
+    return {
+      relatedType: 'ar_lesson',
+      relatedId: String(lessonId),
+    };
+  }
+
+  const contentId = readTrimmed(row['wv_content_item_id']);
+  if (contentId) {
+    return {
+      relatedType: 'wv_content_item',
+      relatedId: contentId,
+    };
+  }
+
+  const claimId = readTrimmed(row['wv_claim_id']);
+  if (claimId) {
+    return {
+      relatedType: 'wv_claim',
+      relatedId: claimId,
+    };
+  }
+
+  return {
+    relatedType: 'sp_weekly_tasks',
+    relatedId: String(taskId),
+  };
+}
+
+async function loadWeeklyTask(
+  db: D1Database,
+  taskId: number,
+  userId: number
+): Promise<Record<string, unknown> | null> {
+  return db
+    .prepare(
+      `
+      SELECT *
+      FROM sp_weekly_tasks
+      WHERE id = ?1
+        AND user_id = ?2
+      LIMIT 1
+      `
+    )
+    .bind(taskId, userId)
+    .first<Record<string, unknown>>();
+}
+
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   try {
     const user = await requireAuth(ctx);
@@ -57,33 +114,20 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       return json({ ok: false, error: 'Unauthorized' }, 401);
     }
 
-    const taskId = readParam(ctx.params, 'id');
-    if (!taskId) {
+    const taskIdText = readParam(ctx.params, 'id');
+    const taskId = Number(taskIdText);
+    if (!Number.isInteger(taskId) || taskId <= 0) {
       return json({ ok: false, error: 'Task id is required.' }, 400);
     }
 
-    const existingRaw = await ctx.env.DB
-      .prepare(
-        `
-        SELECT *
-        FROM sp_planner
-        WHERE id = ?1
-          AND user_id = ?2
-          AND item_type = 'task'
-        LIMIT 1
-        `
-      )
-      .bind(taskId, user.id)
-      .first<Record<string, unknown>>();
-
-    const existingRow = existingRaw ? mapPlannerRow(existingRaw) : null;
-    if (!existingRow) {
+    const existingRaw = await loadWeeklyTask(ctx.env.DB, taskId, user.id);
+    if (!existingRaw) {
       return json({ ok: false, error: 'Task not found.' }, 404);
     }
 
     const body = await parseBody(ctx.request);
     const actualMin = readInteger(body?.['actual_min']);
-    const existingJson = parseJsonObject(existingRow.item_json) ?? {};
+    const existingJson = parseJsonObject(existingRaw['task_json']) ?? {};
     const nextJson = normalizeTaskJson(
       {
         ...existingJson,
@@ -93,26 +137,47 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       typeof existingJson['title'] === 'string' ? existingJson['title'] : 'Task'
     );
 
+    const persisted = {
+      ...existingJson,
+      ...nextJson,
+    };
+
     await ctx.env.DB
       .prepare(
         `
-        UPDATE sp_planner
-        SET item_json = ?1,
+        UPDATE sp_weekly_tasks
+        SET title = ?1,
+            kanban_state = ?2,
+            status = ?3,
+            priority = ?4,
+            order_index = ?5,
+            task_json = ?6,
             updated_at = datetime('now')
-        WHERE id = ?2
-          AND user_id = ?3
+        WHERE id = ?7
+          AND user_id = ?8
         `
       )
-      .bind(JSON.stringify(nextJson), taskId, user.id)
+      .bind(
+        nextJson.title,
+        plannerStatusToWeeklyKanban(nextJson.status),
+        plannerStatusToWeeklyStatus(nextJson.status),
+        plannerPriorityToWeeklyPriority(nextJson.priority),
+        nextJson.order_index ?? 0,
+        JSON.stringify(persisted),
+        taskId,
+        user.id
+      )
       .run();
+
+    const weekStart = readString(existingRaw['week_start']) ?? computeWeekStartSydney();
 
     await insertActivityLog({
       db: ctx.env.DB,
       userId: user.id,
       eventType: 'planner_task_complete',
-      targetType: 'sp_planner',
-      targetId: taskId,
-      ref: existingRow.week_start,
+      targetType: 'sp_weekly_tasks',
+      targetId: String(taskId),
+      ref: weekStart,
       eventJson: {
         status: 'done',
         actual_min: nextJson.actual_min,
@@ -125,15 +190,15 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
 
     let captureNote: Record<string, unknown> | null = null;
     if (captureFlag) {
-      const weekStart = existingRow.week_start ?? computeWeekStartSydney();
-      const link = firstLinkContext(existingJson);
+      const link = firstLinkContext(nextJson as unknown as Record<string, unknown>);
+      const related = deriveRelatedTarget(existingRaw, taskId);
       const meta: CaptureNoteMeta = {
         schema_version: 1,
         kind: 'capture',
         week_start: weekStart,
         source: 'weekly',
-        related_type: existingRow.related_type ?? 'sp_planner',
-        related_id: existingRow.related_id ?? taskId,
+        related_type: related.relatedType,
+        related_id: related.relatedId,
         container_id: link.container_id,
         unit_id: link.unit_id,
         ref: link.ref,
@@ -180,31 +245,15 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       });
     }
 
-    const updatedRaw = await ctx.env.DB
-      .prepare(
-        `
-        SELECT *
-        FROM sp_planner
-        WHERE id = ?1
-          AND user_id = ?2
-          AND item_type = 'task'
-        LIMIT 1
-        `
-      )
-      .bind(taskId, user.id)
-      .first<Record<string, unknown>>();
-
-    const updated = updatedRaw ? mapPlannerRow(updatedRaw) : null;
+    const updatedRaw = await loadWeeklyTask(ctx.env.DB, taskId, user.id);
+    const updated = updatedRaw ? mapWeeklyTaskToPlannerTaskRow(updatedRaw) : null;
     if (!updated) {
       return json({ ok: false, error: 'Task not found after completion.' }, 404);
     }
 
     return json({
       ok: true,
-      task: {
-        ...updated,
-        item_json: parseJsonObject(updated.item_json) ?? {},
-      },
+      task: updated,
       capture_note: captureNote,
     });
   } catch (error: unknown) {

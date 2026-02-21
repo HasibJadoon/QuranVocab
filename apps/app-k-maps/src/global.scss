@@ -2255,6 +2255,44 @@ app-notes-tab-list .notes-empty-state p {
   --padding-bottom: calc(5.2rem + env(safe-area-inset-bottom));
 }
 
+/* Shared planner/list primitives */
+.km-quick-list {
+  background: transparent;
+  padding: 0.55rem;
+}
+
+.km-quick-card {
+  --background: linear-gradient(165deg, rgba(18, 30, 52, 0.86), rgba(11, 18, 33, 0.9));
+  border: 1px solid rgba(149, 182, 228, 0.24);
+  border-radius: 0.78rem;
+  margin-bottom: 0.45rem;
+}
+
+.km-quick-card h3 {
+  margin: 0;
+  color: var(--km-text, #e6edf8);
+  font-size: 0.98rem;
+}
+
+.km-quick-card p {
+  margin: 0.26rem 0 0;
+  color: var(--km-text-dim, #9eb2ce);
+  font-size: 0.82rem;
+}
+
+.km-status-segment {
+  margin: 0.55rem;
+  border-radius: 0.75rem;
+  padding: 0.32rem;
+}
+
+.km-status-segment ion-segment-button {
+  --color: rgba(116, 198, 255, 0.78);
+  --color-checked: #ff5d75;
+  --background-checked: rgba(255, 255, 255, 0.04);
+  --indicator-color: transparent;
+}
+
 /* Shared icon-only bottom tabs for Ionic */
 :root {
   --app-icon-tabs-bg: rgba(9, 13, 18, 0.97);

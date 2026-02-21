@@ -2,9 +2,10 @@ import type { D1Database } from '@cloudflare/workers-types';
 
 export type PlannerLane = 'lesson' | 'podcast' | 'notes' | 'admin';
 export type PlannerPriority = 'P1' | 'P2' | 'P3';
-export type PlannerTaskStatus = 'todo' | 'doing' | 'done' | 'blocked';
+export type PlannerTaskStatus = 'planned' | 'doing' | 'done' | 'blocked' | 'skipped' | 'todo';
 export type FocusMode = 'planning' | 'studying' | 'producing' | 'reviewing';
 export type CaptureSource = 'weekly' | 'lesson' | 'podcast';
+export type AnchorKey = 'lesson_1' | 'lesson_2' | 'podcast_1' | 'podcast_2' | 'podcast_3';
 
 const JSON_HEADERS: HeadersInit = {
   'content-type': 'application/json; charset=utf-8',
@@ -54,13 +55,25 @@ export interface ParsedCaptureBody {
 export interface PlannerWeekPlanJson {
   schema_version: 1;
   title: string;
-  intent: string;
-  weekly_goals: Array<{ id: string; label: string; done: boolean }>;
+  fixed_rhythm: {
+    lessons: number;
+    podcasts: number;
+  };
+  planning_state: {
+    is_planned: boolean;
+    planned_at: string | null;
+    defer_until: string | null;
+  };
   time_budget: {
+    lesson_min: number;
+    podcast_min: number;
+    review_min: number;
     study_minutes: number;
     podcast_minutes: number;
     review_minutes: number;
   };
+  intent: string;
+  weekly_goals: Array<{ id: string; label: string; done: boolean }>;
   lanes: Array<{ key: PlannerLane; label: string }>;
   definition_of_done: string[];
   metrics: {
@@ -72,11 +85,20 @@ export interface PlannerWeekPlanJson {
 export interface PlannerTaskJson {
   schema_version: 1;
   lane: PlannerLane;
+  anchor: boolean;
   title: string;
   priority: PlannerPriority;
   status: PlannerTaskStatus;
   estimate_min: number;
   actual_min: number | null;
+  assignment: {
+    kind: 'lesson' | 'podcast' | 'none';
+    ar_lesson_id: number | null;
+    unit_id: string | null;
+    topic: string | null;
+    episode_no: number | null;
+    recording_at: string | null;
+  };
   tags: string[];
   checklist: Array<{ id: string; label: string; done: boolean }>;
   note: string;
@@ -89,6 +111,10 @@ export interface PlannerTaskJson {
   capture_on_done: {
     create_capture_note: boolean;
     template: string;
+  };
+  meta: {
+    anchor_key: AnchorKey | null;
+    week_start: string | null;
   };
   order_index?: number;
 }
@@ -124,6 +150,95 @@ export interface PlannerRow {
   status: string;
   created_at: string;
   updated_at: string | null;
+}
+
+export interface PlannerTaskApiRow {
+  id: string;
+  canonical_input: string;
+  user_id: number;
+  item_type: 'task';
+  week_start: string;
+  period_start: null;
+  period_end: null;
+  related_type: string | null;
+  related_id: string | null;
+  item_json: Record<string, unknown>;
+  status: string;
+  created_at: string;
+  updated_at: string | null;
+}
+
+type WeeklyKanbanState = 'backlog' | 'planned' | 'doing' | 'blocked' | 'done';
+type WeeklyTaskStatus = 'planned' | 'active' | 'done' | 'skipped' | 'blocked';
+
+export type AnchorDefinition = {
+  key: AnchorKey;
+  lane: Extract<PlannerLane, 'lesson' | 'podcast'>;
+  title: string;
+  estimateMin: number;
+  priority: PlannerPriority;
+  assignmentKind: 'lesson' | 'podcast';
+};
+
+export const WEEKLY_ANCHOR_DEFINITIONS: ReadonlyArray<AnchorDefinition> = [
+  {
+    key: 'lesson_1',
+    lane: 'lesson',
+    title: 'Lesson Session 1 (with kid)',
+    estimateMin: 60,
+    priority: 'P1',
+    assignmentKind: 'lesson',
+  },
+  {
+    key: 'lesson_2',
+    lane: 'lesson',
+    title: 'Lesson Session 2 (with kid)',
+    estimateMin: 60,
+    priority: 'P1',
+    assignmentKind: 'lesson',
+  },
+  {
+    key: 'podcast_1',
+    lane: 'podcast',
+    title: 'Podcast Session 1 (with friend)',
+    estimateMin: 45,
+    priority: 'P2',
+    assignmentKind: 'podcast',
+  },
+  {
+    key: 'podcast_2',
+    lane: 'podcast',
+    title: 'Podcast Session 2 (with friend)',
+    estimateMin: 45,
+    priority: 'P2',
+    assignmentKind: 'podcast',
+  },
+  {
+    key: 'podcast_3',
+    lane: 'podcast',
+    title: 'Podcast Session 3 (with friend)',
+    estimateMin: 45,
+    priority: 'P2',
+    assignmentKind: 'podcast',
+  },
+];
+
+export interface WeeklySprintTaskLinkContext {
+  containerId?: string | null;
+  unitId: string;
+  ref?: string | null;
+}
+
+export interface EnsureLessonWeeklyTaskArgs {
+  db: D1Database;
+  userId: number;
+  lessonId: number;
+  taskId: string;
+  taskName: string;
+  taskType: string;
+  unitId: string;
+  taskJson: unknown;
+  linkContext?: WeeklySprintTaskLinkContext;
 }
 
 type JsonObject = Record<string, unknown>;
@@ -297,14 +412,33 @@ export async function sha256Hex(value: string): Promise<string> {
 }
 
 export function createDefaultWeekPlanJson(weekStart: string, title?: string | null): PlannerWeekPlanJson {
+  const lessonMin = 120;
+  const podcastMin = 135;
+  const reviewMin = 30;
   return {
     schema_version: 1,
     title: title?.trim() || `Week Sprint — ${weekStart}`,
+    fixed_rhythm: {
+      lessons: 2,
+      podcasts: 3,
+    },
+    planning_state: {
+      is_planned: false,
+      planned_at: null,
+      defer_until: null,
+    },
+    time_budget: {
+      lesson_min: lessonMin,
+      podcast_min: podcastMin,
+      review_min: reviewMin,
+      study_minutes: lessonMin,
+      podcast_minutes: podcastMin,
+      review_minutes: reviewMin,
+    },
     intent: 'Learn + produce',
     weekly_goals: [
       { id: 'g1', label: 'Finish Lesson: Quran study focus', done: false },
     ],
-    time_budget: { study_minutes: 420, podcast_minutes: 180, review_minutes: 60 },
     lanes: [
       { key: 'lesson', label: 'Lesson' },
       { key: 'podcast', label: 'Podcast' },
@@ -316,7 +450,7 @@ export function createDefaultWeekPlanJson(weekStart: string, title?: string | nu
       'Key notes captured + promoted',
       'Podcast outline + recording draft stored',
     ],
-    metrics: { tasks_done_target: 12, minutes_target: 600 },
+    metrics: { tasks_done_target: 5, minutes_target: lessonMin + podcastMin + reviewMin },
   };
 }
 
@@ -339,11 +473,46 @@ export function normalizeWeekPlanJson(
     ? record['definition_of_done'].filter((item): item is string => typeof item === 'string')
     : fallback.definition_of_done;
   const timeBudgetSource = asRecord(record['time_budget']);
+  const fixedRhythmSource = asRecord(record['fixed_rhythm']);
+  const planningStateSource = asRecord(record['planning_state']);
   const metricsSource = asRecord(record['metrics']);
+
+  const lessonMin =
+    readInteger(timeBudgetSource?.['lesson_min']) ??
+    readInteger(timeBudgetSource?.['study_minutes']) ??
+    fallback.time_budget.lesson_min;
+  const podcastMin =
+    readInteger(timeBudgetSource?.['podcast_min']) ??
+    readInteger(timeBudgetSource?.['podcast_minutes']) ??
+    fallback.time_budget.podcast_min;
+  const reviewMin =
+    readInteger(timeBudgetSource?.['review_min']) ??
+    readInteger(timeBudgetSource?.['review_minutes']) ??
+    fallback.time_budget.review_min;
+
+  const plannedAt = readTrimmed(planningStateSource?.['planned_at']);
+  const deferUntil = readTrimmed(planningStateSource?.['defer_until']);
 
   return {
     schema_version: 1,
     title: mergedTitle,
+    fixed_rhythm: {
+      lessons: readInteger(fixedRhythmSource?.['lessons']) ?? fallback.fixed_rhythm.lessons,
+      podcasts: readInteger(fixedRhythmSource?.['podcasts']) ?? fallback.fixed_rhythm.podcasts,
+    },
+    planning_state: {
+      is_planned: Boolean(planningStateSource?.['is_planned']),
+      planned_at: plannedAt ?? null,
+      defer_until: deferUntil ?? null,
+    },
+    time_budget: {
+      lesson_min: lessonMin,
+      podcast_min: podcastMin,
+      review_min: reviewMin,
+      study_minutes: lessonMin,
+      podcast_minutes: podcastMin,
+      review_minutes: reviewMin,
+    },
     intent: mergedIntent,
     weekly_goals: goals
       .map((goal, index) => {
@@ -362,11 +531,6 @@ export function normalizeWeekPlanJson(
         };
       })
       .filter((goal): goal is { id: string; label: string; done: boolean } => goal !== null),
-    time_budget: {
-      study_minutes: readInteger(timeBudgetSource?.['study_minutes']) ?? fallback.time_budget.study_minutes,
-      podcast_minutes: readInteger(timeBudgetSource?.['podcast_minutes']) ?? fallback.time_budget.podcast_minutes,
-      review_minutes: readInteger(timeBudgetSource?.['review_minutes']) ?? fallback.time_budget.review_minutes,
-    },
     lanes: lanes
       .map((lane) => {
         const laneRecord = asRecord(lane);
@@ -388,7 +552,9 @@ export function normalizeWeekPlanJson(
     metrics: {
       tasks_done_target:
         readInteger(metricsSource?.['tasks_done_target']) ?? fallback.metrics.tasks_done_target,
-      minutes_target: readInteger(metricsSource?.['minutes_target']) ?? fallback.metrics.minutes_target,
+      minutes_target:
+        readInteger(metricsSource?.['minutes_target']) ??
+        lessonMin + podcastMin + reviewMin,
     },
   };
 }
@@ -397,11 +563,20 @@ export function createDefaultTaskJson(title = 'New task'): PlannerTaskJson {
   return {
     schema_version: 1,
     lane: 'lesson',
+    anchor: false,
     title,
     priority: 'P2',
-    status: 'todo',
+    status: 'planned',
     estimate_min: 30,
     actual_min: null,
+    assignment: {
+      kind: 'none',
+      ar_lesson_id: null,
+      unit_id: null,
+      topic: null,
+      episode_no: null,
+      recording_at: null,
+    },
     tags: [],
     checklist: [],
     note: '',
@@ -410,8 +585,45 @@ export function createDefaultTaskJson(title = 'New task'): PlannerTaskJson {
       create_capture_note: true,
       template: 'What did I learn? What confused me? One next step.',
     },
+    meta: {
+      anchor_key: null,
+      week_start: computeWeekStartSydney(),
+    },
     order_index: Date.now(),
   };
+}
+
+function normalizeTaskStatus(raw: unknown, fallback: PlannerTaskStatus): PlannerTaskStatus {
+  const status = readTrimmed(raw)?.toLowerCase();
+  switch (status) {
+    case 'planned':
+    case 'todo':
+      return 'planned';
+    case 'doing':
+      return 'doing';
+    case 'done':
+      return 'done';
+    case 'blocked':
+      return 'blocked';
+    case 'skipped':
+      return 'skipped';
+    default:
+      return fallback === 'todo' ? 'planned' : fallback;
+  }
+}
+
+function normalizeAnchorKey(raw: unknown): AnchorKey | null {
+  const value = readTrimmed(raw);
+  if (
+    value === 'lesson_1' ||
+    value === 'lesson_2' ||
+    value === 'podcast_1' ||
+    value === 'podcast_2' ||
+    value === 'podcast_3'
+  ) {
+    return value;
+  }
+  return null;
 }
 
 export function normalizeTaskJson(input: unknown, titleFallback = 'New task'): PlannerTaskJson {
@@ -423,17 +635,33 @@ export function normalizeTaskJson(input: unknown, titleFallback = 'New task'): P
 
   const lane = readTrimmed(record['lane']);
   const priority = readTrimmed(record['priority']);
-  const status = readTrimmed(record['status']);
+  const assignment = asRecord(record['assignment']);
+  const meta = asRecord(record['meta']);
   const captureConfig = asRecord(record['capture_on_done']);
 
   return {
     schema_version: 1,
     lane: lane && isLane(lane) ? lane : fallback.lane,
+    anchor: Boolean(record['anchor']),
     title: readTrimmed(record['title']) ?? fallback.title,
     priority: priority && isPriority(priority) ? priority : fallback.priority,
-    status: status && isTaskStatus(status) ? status : fallback.status,
+    status: normalizeTaskStatus(record['status'], fallback.status),
     estimate_min: readInteger(record['estimate_min']) ?? fallback.estimate_min,
     actual_min: readNumber(record['actual_min']),
+    assignment: {
+      kind: (() => {
+        const kind = readTrimmed(assignment?.['kind']);
+        if (kind === 'lesson' || kind === 'podcast' || kind === 'none') {
+          return kind;
+        }
+        return fallback.assignment.kind;
+      })(),
+      ar_lesson_id: readInteger(assignment?.['ar_lesson_id']),
+      unit_id: readTrimmed(assignment?.['unit_id']),
+      topic: readTrimmed(assignment?.['topic']),
+      episode_no: readInteger(assignment?.['episode_no']),
+      recording_at: readTrimmed(assignment?.['recording_at']),
+    },
     tags: Array.isArray(record['tags'])
       ? record['tags'].filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0)
       : [],
@@ -482,6 +710,10 @@ export function normalizeTaskJson(input: unknown, titleFallback = 'New task'): P
         captureConfig?.['create_capture_note'] ?? fallback.capture_on_done.create_capture_note
       ),
       template: readTrimmed(captureConfig?.['template']) ?? fallback.capture_on_done.template,
+    },
+    meta: {
+      anchor_key: normalizeAnchorKey(meta?.['anchor_key']),
+      week_start: normalizeIsoDate(readString(meta?.['week_start'])) ?? fallback.meta.week_start,
     },
     order_index: readInteger(record['order_index']) ?? fallback.order_index,
   };
@@ -619,6 +851,619 @@ export function buildReviewCanonicalInput(userId: number, weekStart: string): st
   return `PLANNER|sprint_review|user:${userId}|week:${weekStart}`;
 }
 
+export function plannerPriorityToWeeklyPriority(priority: PlannerPriority): number {
+  switch (priority) {
+    case 'P1':
+      return 1;
+    case 'P2':
+      return 3;
+    case 'P3':
+    default:
+      return 5;
+  }
+}
+
+export function weeklyPriorityToPlannerPriority(value: unknown): PlannerPriority {
+  const priority = readInteger(value) ?? 3;
+  if (priority <= 2) {
+    return 'P1';
+  }
+  if (priority <= 4) {
+    return 'P2';
+  }
+  return 'P3';
+}
+
+export function plannerStatusToWeeklyKanban(status: PlannerTaskStatus): WeeklyKanbanState {
+  switch (status) {
+    case 'doing':
+      return 'doing';
+    case 'done':
+      return 'done';
+    case 'blocked':
+      return 'blocked';
+    case 'skipped':
+      return 'blocked';
+    case 'planned':
+    case 'todo':
+    default:
+      return 'backlog';
+  }
+}
+
+export function plannerStatusToWeeklyStatus(status: PlannerTaskStatus): WeeklyTaskStatus {
+  switch (status) {
+    case 'doing':
+      return 'active';
+    case 'done':
+      return 'done';
+    case 'blocked':
+      return 'blocked';
+    case 'skipped':
+      return 'skipped';
+    case 'planned':
+    case 'todo':
+    default:
+      return 'planned';
+  }
+}
+
+export function weeklyToPlannerStatus(
+  weeklyStatus: string | null | undefined,
+  kanbanState: string | null | undefined
+): PlannerTaskStatus {
+  const status = (weeklyStatus ?? '').trim().toLowerCase();
+  const kanban = (kanbanState ?? '').trim().toLowerCase();
+
+  if (status === 'done' || kanban === 'done') {
+    return 'done';
+  }
+  if (status === 'blocked' || status === 'skipped' || kanban === 'blocked') {
+    return 'blocked';
+  }
+  if (status === 'active' || kanban === 'doing') {
+    return 'doing';
+  }
+  return 'planned';
+}
+
+function deriveTaskTitle(raw: Record<string, unknown>, fallback = 'Task'): string {
+  const explicit = readTrimmed(raw['title']);
+  if (explicit) {
+    return explicit;
+  }
+  const fromJson = readTrimmed(asRecord(parseJsonObject(raw['task_json']))?.['title']);
+  return fromJson ?? fallback;
+}
+
+export function mapWeeklyTaskToPlannerTaskRow(raw: Record<string, unknown>): PlannerTaskApiRow | null {
+  const id = readInteger(raw['id']);
+  const userId = readInteger(raw['user_id']);
+  const weekStart = normalizeIsoDate(readString(raw['week_start']));
+  const createdAt = readString(raw['created_at']);
+  if (id === null || userId === null || !weekStart || !createdAt) {
+    return null;
+  }
+
+  const storedTaskJson = parseJsonObject(raw['task_json']) ?? {};
+  const title = deriveTaskTitle(raw, 'Task');
+  const normalized = normalizeTaskJson(
+    {
+      ...storedTaskJson,
+      title,
+      priority:
+        readTrimmed(asRecord(storedTaskJson)?.['priority']) ??
+        weeklyPriorityToPlannerPriority(raw['priority']),
+      status:
+        readTrimmed(asRecord(storedTaskJson)?.['status']) ??
+        weeklyToPlannerStatus(readString(raw['status']), readString(raw['kanban_state'])),
+    },
+    title
+  );
+
+  const relatedLessonId = readInteger(raw['ar_lesson_id']);
+  const relatedContentId = readTrimmed(raw['wv_content_item_id']);
+  const relatedClaimId = readTrimmed(raw['wv_claim_id']);
+
+  let relatedType: string | null = null;
+  let relatedId: string | null = null;
+
+  if (relatedLessonId !== null) {
+    relatedType = 'ar_lesson';
+    relatedId = String(relatedLessonId);
+  } else if (relatedContentId) {
+    relatedType = 'wv_content_item';
+    relatedId = relatedContentId;
+  } else if (relatedClaimId) {
+    relatedType = 'wv_claim';
+    relatedId = relatedClaimId;
+  }
+
+  const sourceTaskId = readTrimmed(raw['source_task_id']);
+  const canonicalInput = sourceTaskId
+    ? `SP_WEEKLY_TASK|source:${sourceTaskId}|week:${weekStart}`
+    : `SP_WEEKLY_TASK|id:${id}`;
+
+  return {
+    id: String(id),
+    canonical_input: canonicalInput,
+    user_id: userId,
+    item_type: 'task',
+    week_start: weekStart,
+    period_start: null,
+    period_end: null,
+    related_type: relatedType,
+    related_id: relatedId,
+    item_json: normalized as unknown as Record<string, unknown>,
+    status: readTrimmed(raw['status']) ?? 'planned',
+    created_at: createdAt,
+    updated_at: readString(raw['updated_at']),
+  };
+}
+
+async function weeklySprintTablesExist(db: D1Database): Promise<boolean> {
+  const weeklyPlans = await db
+    .prepare(
+      `
+      SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name = 'sp_weekly_plans'
+      LIMIT 1
+      `
+    )
+    .first<Record<string, unknown>>();
+  const weeklyTasks = await db
+    .prepare(
+      `
+      SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name = 'sp_weekly_tasks'
+      LIMIT 1
+      `
+    )
+    .first<Record<string, unknown>>();
+  return Boolean(weeklyPlans && weeklyTasks);
+}
+
+export async function ensureWeeklyPlanExists(args: {
+  db: D1Database;
+  userId: number;
+  weekStart: string;
+  title?: string | null;
+}): Promise<void> {
+  const normalized = normalizeIsoDate(args.weekStart);
+  const weekStart = computeWeekStartSydney(normalized ?? args.weekStart);
+  const weekJson = createDefaultWeekPlanJson(weekStart, args.title);
+
+  await args.db
+    .prepare(
+      `
+      INSERT OR IGNORE INTO sp_weekly_plans
+        (week_start, user_id, notes, planned_count, done_count, week_json, created_at, updated_at)
+      VALUES
+        (?1, ?2, NULL, 0, 0, ?3, datetime('now'), datetime('now'))
+      `
+    )
+    .bind(weekStart, args.userId, JSON.stringify(weekJson))
+    .run();
+}
+
+function anchorOrderIndex(anchorKey: AnchorKey): number {
+  const index = WEEKLY_ANCHOR_DEFINITIONS.findIndex((item) => item.key === anchorKey);
+  return index >= 0 ? (index + 1) * 100 : 900;
+}
+
+function createAnchorTaskJson(args: {
+  weekStart: string;
+  anchor: AnchorDefinition;
+  title?: string;
+  assignment?: Partial<PlannerTaskJson['assignment']> | null;
+}): PlannerTaskJson {
+  const base = createDefaultTaskJson(args.title ?? args.anchor.title);
+  const assignmentBase: PlannerTaskJson['assignment'] =
+    args.anchor.assignmentKind === 'lesson'
+      ? {
+          kind: 'lesson',
+          ar_lesson_id: null,
+          unit_id: null,
+          topic: null,
+          episode_no: null,
+          recording_at: null,
+        }
+      : {
+          kind: 'podcast',
+          ar_lesson_id: null,
+          unit_id: null,
+          topic: `Topic ${args.anchor.key.endsWith('_1') ? '1' : args.anchor.key.endsWith('_2') ? '2' : '3'}`,
+          episode_no: Number(args.anchor.key.split('_')[1]),
+          recording_at: null,
+        };
+
+  return normalizeTaskJson(
+    {
+      ...base,
+      lane: args.anchor.lane,
+      anchor: true,
+      title: readTrimmed(args.title) ?? args.anchor.title,
+      priority: args.anchor.priority,
+      status: 'planned',
+      estimate_min: args.anchor.estimateMin,
+      assignment: {
+        ...assignmentBase,
+        ...(args.assignment ?? {}),
+      },
+      tags: Array.from(new Set([...(base.tags ?? []), 'anchor', args.anchor.lane])),
+      meta: {
+        anchor_key: args.anchor.key,
+        week_start: args.weekStart,
+      },
+      order_index: anchorOrderIndex(args.anchor.key),
+    },
+    args.anchor.title
+  );
+}
+
+function createPodcastContentJson(args: {
+  weekStart: string;
+  anchorKey: AnchorKey;
+  title: string;
+  assignment: PlannerTaskJson['assignment'];
+}): Record<string, unknown> {
+  return {
+    schema_version: 1,
+    source: 'weekly_anchor',
+    week_start: args.weekStart,
+    anchor_key: args.anchorKey,
+    episode_no: args.assignment.episode_no,
+    topic: args.assignment.topic,
+    recording_at: args.assignment.recording_at,
+    outline: [],
+    script: '',
+    checklist: [],
+  };
+}
+
+async function hasTable(db: D1Database, tableName: string): Promise<boolean> {
+  const row = await db
+    .prepare(
+      `
+      SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name = ?1
+      LIMIT 1
+      `
+    )
+    .bind(tableName)
+    .first<Record<string, unknown>>();
+  return Boolean(row);
+}
+
+function podcastCanonicalInput(userId: number, weekStart: string, anchorKey: AnchorKey): string {
+  return `PODCAST|anchor|user:${userId}|week:${weekStart}|key:${anchorKey}`;
+}
+
+export async function ensurePodcastEpisodeForAnchor(args: {
+  db: D1Database;
+  userId: number;
+  weekStart: string;
+  anchorKey: AnchorKey;
+  title: string;
+  assignment: PlannerTaskJson['assignment'];
+}): Promise<string | null> {
+  if (!(await hasTable(args.db, 'wv_content_items'))) {
+    return null;
+  }
+
+  const canonicalInput = podcastCanonicalInput(args.userId, args.weekStart, args.anchorKey);
+  const id = await sha256Hex(canonicalInput);
+  const contentJson = createPodcastContentJson({
+    weekStart: args.weekStart,
+    anchorKey: args.anchorKey,
+    title: args.title,
+    assignment: args.assignment,
+  });
+
+  await args.db
+    .prepare(
+      `
+      INSERT OR IGNORE INTO wv_content_items
+        (id, canonical_input, user_id, title, content_type, status, related_type, related_id, refs_json, content_json, created_at, updated_at)
+      VALUES
+        (?1, ?2, ?3, ?4, 'podcast_episode', 'draft', 'sp_weekly_plans', ?5, json('{}'), ?6, datetime('now'), datetime('now'))
+      `
+    )
+    .bind(
+      id,
+      canonicalInput,
+      args.userId,
+      args.title,
+      `${args.weekStart}:${args.anchorKey}`,
+      JSON.stringify(contentJson)
+    )
+    .run();
+
+  await args.db
+    .prepare(
+      `
+      UPDATE wv_content_items
+      SET title = ?1,
+          content_json = ?2,
+          updated_at = datetime('now')
+      WHERE id = ?3
+        AND user_id = ?4
+      `
+    )
+    .bind(args.title, JSON.stringify(contentJson), id, args.userId)
+    .run();
+
+  return id;
+}
+
+export async function ensureWeekAnchors(args: {
+  db: D1Database;
+  userId: number;
+  weekStart: string;
+}): Promise<void> {
+  if (!(await weeklySprintTablesExist(args.db))) {
+    return;
+  }
+
+  await ensureWeeklyPlanExists({
+    db: args.db,
+    userId: args.userId,
+    weekStart: args.weekStart,
+  });
+
+  const taskRows = await args.db
+    .prepare(
+      `
+      SELECT id, task_json, wv_content_item_id
+      FROM sp_weekly_tasks
+      WHERE user_id = ?1
+        AND week_start = ?2
+      `
+    )
+    .bind(args.userId, args.weekStart)
+    .all<Record<string, unknown>>();
+
+  const existingByAnchor = new Map<AnchorKey, Record<string, unknown>>();
+  for (const row of taskRows.results ?? []) {
+    const taskJson = normalizeTaskJson(parseJsonObject(row['task_json']) ?? {}, 'Task');
+    const key = taskJson.meta.anchor_key;
+    if (!key) {
+      continue;
+    }
+    existingByAnchor.set(key, row);
+  }
+
+  for (const anchor of WEEKLY_ANCHOR_DEFINITIONS) {
+    const existing = existingByAnchor.get(anchor.key);
+    if (existing) {
+      if (anchor.lane === 'podcast' && !readTrimmed(existing['wv_content_item_id'])) {
+        const currentJson = normalizeTaskJson(parseJsonObject(existing['task_json']) ?? {}, anchor.title);
+        const existingId = readInteger(existing['id']);
+        if (existingId === null) {
+          continue;
+        }
+        const podcastId = await ensurePodcastEpisodeForAnchor({
+          db: args.db,
+          userId: args.userId,
+          weekStart: args.weekStart,
+          anchorKey: anchor.key,
+          title: currentJson.title,
+          assignment: currentJson.assignment,
+        });
+        if (podcastId) {
+          await args.db
+            .prepare(
+              `
+              UPDATE sp_weekly_tasks
+              SET wv_content_item_id = ?1,
+                  task_json = ?2,
+                  updated_at = datetime('now')
+              WHERE id = ?3
+                AND user_id = ?4
+              `
+            )
+            .bind(podcastId, JSON.stringify(currentJson), existingId, args.userId)
+            .run();
+        }
+      }
+      continue;
+    }
+
+    const itemJson = createAnchorTaskJson({
+      weekStart: args.weekStart,
+      anchor,
+    });
+    let podcastContentId: string | null = null;
+    if (anchor.lane === 'podcast') {
+      const podcastId = await ensurePodcastEpisodeForAnchor({
+        db: args.db,
+        userId: args.userId,
+        weekStart: args.weekStart,
+        anchorKey: anchor.key,
+        title: itemJson.title,
+        assignment: itemJson.assignment,
+      });
+      podcastContentId = podcastId;
+    }
+
+    await args.db
+      .prepare(
+        `
+        INSERT INTO sp_weekly_tasks
+          (user_id, week_start, title, task_type, kanban_state, status, priority, points, due_date, order_index, task_json, ar_lesson_id, wv_claim_id, wv_content_item_id, source_task_id, created_at, updated_at)
+        VALUES
+          (?1, ?2, ?3, ?4, 'backlog', 'planned', ?5, NULL, NULL, ?6, ?7, NULL, NULL, ?8, ?9, datetime('now'), datetime('now'))
+        `
+      )
+      .bind(
+        args.userId,
+        args.weekStart,
+        itemJson.title,
+        anchor.lane === 'lesson' ? 'lesson_unit_task' : 'podcast',
+        plannerPriorityToWeeklyPriority(itemJson.priority),
+        itemJson.order_index ?? anchorOrderIndex(anchor.key),
+        JSON.stringify(itemJson),
+        podcastContentId,
+        `ANCHOR:${anchor.key}:${args.weekStart}`
+      )
+      .run();
+  }
+}
+
+function coerceWeeklyPriority(input: unknown, fallback: PlannerPriority): number {
+  if (typeof input === 'string') {
+    const normalized = input.trim().toUpperCase();
+    if (normalized === 'P1' || normalized === 'P2' || normalized === 'P3') {
+      return plannerPriorityToWeeklyPriority(normalized);
+    }
+  }
+  const numeric = readInteger(input);
+  if (numeric !== null) {
+    return Math.max(1, Math.min(5, numeric));
+  }
+  return plannerPriorityToWeeklyPriority(fallback);
+}
+
+function buildLessonPlannerTaskJson(args: {
+  title: string;
+  taskType: string;
+  rawTaskJson: Record<string, unknown> | null;
+  linkContext?: WeeklySprintTaskLinkContext;
+}): PlannerTaskJson {
+  const links: Array<{ kind: string; container_id?: string; unit_id?: string; ref?: string }> = [];
+  if (args.linkContext?.unitId) {
+    links.push({
+      kind: 'unit',
+      container_id: args.linkContext.containerId ?? undefined,
+      unit_id: args.linkContext.unitId,
+      ref: args.linkContext.ref ?? undefined,
+    });
+  }
+  if (args.linkContext?.ref) {
+    links.push({
+      kind: 'ayah',
+      ref: args.linkContext.ref,
+    });
+  }
+
+  const source = args.rawTaskJson ?? {};
+  const merged = normalizeTaskJson(
+    {
+      ...source,
+      lane: 'lesson',
+      title: readTrimmed(source['title']) ?? args.title,
+      status:
+        (readTrimmed(source['status']) &&
+        isTaskStatus(readTrimmed(source['status']) as PlannerTaskStatus)
+          ? readTrimmed(source['status'])
+          : 'planned') ?? 'planned',
+      priority:
+        (readTrimmed(source['priority']) &&
+        isPriority(readTrimmed(source['priority']) as PlannerPriority)
+          ? readTrimmed(source['priority'])
+          : 'P2') ?? 'P2',
+      links: links.length ? links : source['links'],
+      note: readString(source['note']) ?? '',
+      capture_on_done: asRecord(source['capture_on_done']) ?? {
+        create_capture_note: true,
+        template: 'What did I learn? What confused me? One next step.',
+      },
+    },
+    args.title
+  );
+
+  return {
+    ...merged,
+    tags: Array.from(new Set([...(merged.tags ?? []), 'lesson', args.taskType])),
+  };
+}
+
+export async function ensureLessonWeeklyTask(args: EnsureLessonWeeklyTaskArgs): Promise<void> {
+  if (!(await weeklySprintTablesExist(args.db))) {
+    return;
+  }
+
+  const record = asRecord(args.taskJson);
+  const requestedWeekStart = normalizeIsoDate(readString(record?.['week_start']));
+  const weekStart = computeWeekStartSydney(requestedWeekStart);
+  const plannerTask = buildLessonPlannerTaskJson({
+    title: args.taskName,
+    taskType: args.taskType,
+    rawTaskJson: record,
+    linkContext: args.linkContext,
+  });
+
+  const priority = coerceWeeklyPriority(record?.['priority'], plannerTask.priority);
+  const dueDate = normalizeIsoDate(readString(record?.['due_date']));
+  const points = readNumber(record?.['points']);
+  const orderIndex = readInteger(record?.['order_index']) ?? readInteger(plannerTask.order_index) ?? 0;
+  const sourceJson = {
+    ...plannerTask,
+    source_meta: {
+      source: 'ar_container_unit_task',
+      task_id: args.taskId,
+      unit_id: args.unitId,
+      task_type: args.taskType,
+      lesson_id: args.lessonId,
+      container_id: args.linkContext?.containerId ?? null,
+      ref: args.linkContext?.ref ?? null,
+      raw_task_json: args.taskJson,
+    },
+  };
+
+  await ensureWeeklyPlanExists({
+    db: args.db,
+    userId: args.userId,
+    weekStart,
+  });
+
+  await args.db
+    .prepare(
+      `
+      INSERT OR IGNORE INTO sp_weekly_tasks (
+        user_id,
+        week_start,
+        title,
+        task_type,
+        kanban_state,
+        status,
+        priority,
+        points,
+        due_date,
+        order_index,
+        task_json,
+        ar_lesson_id,
+        source_task_id,
+        created_at,
+        updated_at
+      ) VALUES (
+        ?1, ?2, ?3, 'lesson_unit_task', ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, datetime('now'), datetime('now')
+      )
+      `
+    )
+    .bind(
+      args.userId,
+      weekStart,
+      plannerTask.title,
+      plannerStatusToWeeklyKanban(plannerTask.status),
+      plannerStatusToWeeklyStatus(plannerTask.status),
+      priority,
+      points,
+      dueDate,
+      orderIndex,
+      JSON.stringify(sourceJson),
+      args.lessonId,
+      args.taskId
+    )
+    .run();
+}
+
 export async function insertActivityLog(args: {
   db: D1Database;
   userId: number;
@@ -695,7 +1540,14 @@ export function isPriority(value: string): value is PlannerPriority {
 }
 
 export function isTaskStatus(value: string): value is PlannerTaskStatus {
-  return value === 'todo' || value === 'doing' || value === 'done' || value === 'blocked';
+  return (
+    value === 'planned' ||
+    value === 'todo' ||
+    value === 'doing' ||
+    value === 'done' ||
+    value === 'blocked' ||
+    value === 'skipped'
+  );
 }
 
 export function isCaptureSource(value: string): value is CaptureSource {

@@ -1,19 +1,32 @@
 export type PlannerLane = 'lesson' | 'podcast' | 'notes' | 'admin';
 export type PlannerPriority = 'P1' | 'P2' | 'P3';
-export type PlannerTaskStatus = 'todo' | 'doing' | 'done' | 'blocked';
+export type PlannerTaskStatus = 'planned' | 'doing' | 'done' | 'blocked' | 'skipped' | 'todo';
 export type FocusMode = 'planning' | 'studying' | 'producing' | 'reviewing';
 export type CaptureSource = 'weekly' | 'lesson' | 'podcast';
+export type AnchorKey = 'lesson_1' | 'lesson_2' | 'podcast_1' | 'podcast_2' | 'podcast_3';
 
 export interface PlannerWeekPlan {
   schema_version: 1;
   title: string;
-  intent: string;
-  weekly_goals: Array<{ id: string; label: string; done: boolean }>;
+  fixed_rhythm: {
+    lessons: number;
+    podcasts: number;
+  };
+  planning_state: {
+    is_planned: boolean;
+    planned_at: string | null;
+    defer_until: string | null;
+  };
   time_budget: {
+    lesson_min: number;
+    podcast_min: number;
+    review_min: number;
     study_minutes: number;
     podcast_minutes: number;
     review_minutes: number;
   };
+  intent: string;
+  weekly_goals: Array<{ id: string; label: string; done: boolean }>;
   lanes: Array<{ key: PlannerLane; label: string }>;
   definition_of_done: string[];
   metrics: {
@@ -25,11 +38,20 @@ export interface PlannerWeekPlan {
 export interface PlannerTask {
   schema_version: 1;
   lane: PlannerLane;
+  anchor: boolean;
   title: string;
   priority: PlannerPriority;
   status: PlannerTaskStatus;
   estimate_min: number;
   actual_min: number | null;
+  assignment: {
+    kind: 'lesson' | 'podcast' | 'none';
+    ar_lesson_id: number | null;
+    unit_id: string | null;
+    topic: string | null;
+    episode_no: number | null;
+    recording_at: string | null;
+  };
   tags: string[];
   checklist: Array<{ id: string; label: string; done: boolean }>;
   note: string;
@@ -42,6 +64,10 @@ export interface PlannerTask {
   capture_on_done: {
     create_capture_note: boolean;
     template: string;
+  };
+  meta: {
+    anchor_key: AnchorKey | null;
+    week_start: string | null;
   };
   order_index?: number;
 }

@@ -1,4 +1,11 @@
 import { requireAuth } from '../../../../_utils/auth';
+import {
+  asRecord,
+  computeWeekStartSydney,
+  ensureLessonWeeklyTask,
+  normalizeIsoDate,
+  readString,
+} from '../../../../_utils/sprint';
 
 interface Env {
   DB: D1Database;
@@ -60,7 +67,7 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     const lessonRow = await ctx.env.DB
       .prepare(
         `
-        SELECT id, user_id, unit_id
+        SELECT id, user_id, container_id, unit_id
         FROM ar_lessons
         WHERE id = ?1 AND user_id = ?2 AND lesson_type = 'quran'
         LIMIT 1
@@ -173,7 +180,7 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
     const lessonRow = await ctx.env.DB
       .prepare(
         `
-        SELECT id, user_id, unit_id
+        SELECT id, user_id, container_id, unit_id
         FROM ar_lessons
         WHERE id = ?1 AND user_id = ?2 AND lesson_type = 'quran'
         LIMIT 1
@@ -198,7 +205,18 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
     }
 
     const taskId = `UT:${unitId}:${taskType}`;
-    const taskJsonText = JSON.stringify(taskJson);
+    const taskRecord = asRecord(taskJson);
+    const weekStart = computeWeekStartSydney(normalizeIsoDate(readString(taskRecord?.['week_start'])));
+    const taskJsonForStorage = taskRecord
+      ? {
+          ...taskRecord,
+          auto_weekly: true,
+          user_id: user.id,
+          week_start: weekStart,
+          ar_lesson_id: id,
+        }
+      : taskJson;
+    const taskJsonText = JSON.stringify(taskJsonForStorage);
 
     const row = await ctx.env.DB
       .prepare(
@@ -223,6 +241,24 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
         headers: jsonHeaders,
       });
     }
+
+    const storedTaskJson = safeJsonParse(row.task_json) ?? taskJsonForStorage;
+    const storedTaskRecord = asRecord(storedTaskJson);
+    await ensureLessonWeeklyTask({
+      db: ctx.env.DB,
+      userId: user.id,
+      lessonId: id,
+      taskId,
+      taskName,
+      taskType,
+      unitId,
+      taskJson: storedTaskJson,
+      linkContext: {
+        containerId: lessonRow.container_id ?? null,
+        unitId,
+        ref: readString(storedTaskRecord?.['ref']),
+      },
+    });
 
     return new Response(
       JSON.stringify({

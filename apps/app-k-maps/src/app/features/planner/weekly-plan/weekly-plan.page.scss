@@ -2,30 +2,80 @@
   display: block;
 }
 
-ion-content.weekly-plan-content {
-  --padding-bottom: calc(8.4rem + env(safe-area-inset-bottom));
+.weekly-plan-content {
+  --padding-bottom: calc(8.8rem + env(safe-area-inset-bottom));
 }
 
-.weekly-list {
-  padding: 0.45rem 0.56rem 0;
+.week-summary {
+  margin: 0.55rem;
+  border-radius: 0.8rem;
+  padding: 0.55rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.summary-chips {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.summary-progress {
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(116, 150, 201, 0.22);
+  overflow: hidden;
+}
+
+.summary-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5bd2ca 0%, #8fe3b0 100%);
+}
+
+.plan-banner {
+  margin: 0 0.55rem 0.45rem;
+  width: calc(100% - 1.1rem);
+  border: 1px solid rgba(150, 186, 236, 0.36);
+  border-radius: 0.74rem;
+  background: rgba(15, 29, 53, 0.85);
+  color: var(--km-text, #e6edf8);
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+}
+
+.lane-accordion {
+  margin: 0 0.55rem;
   background: transparent;
+}
+
+.lane-header-item {
+  --background: rgba(11, 20, 38, 0.86);
+  --min-height: 2.65rem;
+  border: 1px solid rgba(148, 180, 228, 0.24);
+  border-radius: 0.74rem;
+  margin-bottom: 0.38rem;
+}
+
+.lane-content {
+  padding: 0 0 0.44rem;
 }
 
 .weekly-card {
   --background: linear-gradient(165deg, rgba(18, 30, 52, 0.86), rgba(11, 18, 33, 0.9));
-  --min-height: 5.25rem;
+  --min-height: 4.85rem;
   --inner-padding-end: 0.4rem;
   --inner-padding-top: 0.44rem;
   --inner-padding-bottom: 0.44rem;
   border: 1px solid rgba(149, 182, 229, 0.24);
   border-radius: 0.84rem;
-  margin-bottom: 0.48rem;
-  box-shadow: 0 10px 22px rgba(6, 12, 25, 0.28);
+  margin-bottom: 0.44rem;
 }
 
 .weekly-card h2 {
-  margin: 0 0 0.3rem;
-  font-size: 1.05rem;
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--km-text, #e6edf8);
 }
@@ -33,23 +83,24 @@ ion-content.weekly-plan-content {
 .task-meta {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   margin: 0;
 }
 
-.task-priority {
-  border-color: rgba(232, 190, 91, 0.45);
-  background: rgba(226, 184, 84, 0.2);
-}
-
 .task-related {
+  margin-top: 0.28rem;
   color: var(--km-text-dim, #9eb2ce);
   font-size: 0.78rem;
-  margin-top: 0.3rem;
+}
+
+.lane-empty {
+  margin: 0.2rem 0.15rem 0.42rem;
+  color: var(--km-text-dim, #9eb2ce);
+  font-size: 0.81rem;
 }
 
 .weekly-empty-state {
-  padding: 2rem 1rem;
+  padding: 1.4rem 1rem;
   text-align: center;
   color: var(--km-text-dim, #9eb2ce);
 }
@@ -65,29 +116,26 @@ ion-content.weekly-plan-content {
 
 .weekly-composer {
   position: fixed;
-  inset-inline: 0.68rem;
+  inset-inline: 0.64rem;
   bottom: calc(3.45rem + env(safe-area-inset-bottom));
   border-radius: 0.85rem;
-  padding: 0.28rem;
+  padding: 0.35rem;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.35rem;
-  z-index: 20;
-}
-
-.composer-add {
-  --color: var(--km-text, #e6edf8);
-  --background: rgba(30, 52, 88, 0.72);
-  --border-radius: 0.65rem;
-  font-size: 1.45rem;
-  min-width: 2.1rem;
+  z-index: 21;
 }
 
 .composer-input {
+  min-width: 0;
   --background: rgba(7, 14, 27, 0.9);
   --padding-start: 0.7rem;
   --padding-end: 0.7rem;
   border: 1px solid rgba(149, 182, 229, 0.3);
   border-radius: 0.62rem;
+}
+
+.weekly-fab {
+  bottom: calc(7rem + env(safe-area-inset-bottom));
 }

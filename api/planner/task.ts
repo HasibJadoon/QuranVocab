@@ -1,16 +1,20 @@
 import type { D1Database, PagesFunction } from '@cloudflare/workers-types';
 import { requireAuth } from '../_utils/auth';
 import {
-  buildTaskCanonicalInput,
   computeWeekStartSydney,
   createDefaultTaskJson,
+  ensureWeeklyPlanExists,
   insertActivityLog,
   json,
-  mapPlannerRow,
+  mapWeeklyTaskToPlannerTaskRow,
   normalizeIsoDate,
   normalizeTaskJson,
   parseBody,
   parseJsonObject,
+  PlannerTaskJson,
+  plannerPriorityToWeeklyPriority,
+  plannerStatusToWeeklyKanban,
+  plannerStatusToWeeklyStatus,
   readInteger,
   readString,
   readTrimmed,
@@ -41,6 +45,101 @@ function parseTaskInput(body: Record<string, unknown>) {
   return normalizeTaskJson(merged, fallback.title);
 }
 
+function resolveTaskType(relatedType: string | null): string {
+  if (relatedType === 'ar_lesson') {
+    return 'lesson_unit_task';
+  }
+  if (relatedType === 'wv_content_item') {
+    return 'podcast';
+  }
+  if (relatedType === 'wv_claim') {
+    return 'worldview';
+  }
+  return 'planner_task';
+}
+
+async function readLatestTaskRow(
+  db: D1Database,
+  userId: number,
+  weekStart: string
+): Promise<Record<string, unknown> | null> {
+  return db
+    .prepare(
+      `
+      SELECT *
+      FROM sp_weekly_tasks
+      WHERE user_id = ?1
+        AND week_start = ?2
+      ORDER BY id DESC
+      LIMIT 1
+      `
+    )
+    .bind(userId, weekStart)
+    .first<Record<string, unknown>>();
+}
+
+async function ensurePodcastEpisodeForTask(args: {
+  db: D1Database;
+  userId: number;
+  weekStart: string;
+  taskId: string;
+  title: string;
+  taskJson: PlannerTaskJson;
+  existingId?: string | null;
+}): Promise<string> {
+  const canonicalInput =
+    args.existingId ? null : `PODCAST|task|user:${args.userId}|week:${args.weekStart}|task:${args.taskId}`;
+  const episodeId = args.existingId ?? (await sha256Hex(canonicalInput as string));
+
+  const contentJson = {
+    schema_version: 1,
+    source: 'task',
+    week_start: args.weekStart,
+    task_id: args.taskId,
+    topic: args.taskJson.assignment.topic,
+    episode_no: args.taskJson.assignment.episode_no,
+    recording_at: args.taskJson.assignment.recording_at,
+    outline: [],
+    script: '',
+    checklist: [],
+  };
+
+  await args.db
+    .prepare(
+      `
+      INSERT OR IGNORE INTO wv_content_items
+        (id, canonical_input, user_id, title, content_type, status, related_type, related_id, refs_json, content_json, created_at, updated_at)
+      VALUES
+        (?1, ?2, ?3, ?4, 'podcast_episode', 'draft', 'sp_weekly_tasks', ?5, json('{}'), ?6, datetime('now'), datetime('now'))
+      `
+    )
+    .bind(
+      episodeId,
+      canonicalInput ?? `PODCAST|task|user:${args.userId}|week:${args.weekStart}|task:${args.taskId}`,
+      args.userId,
+      args.title,
+      args.taskId,
+      JSON.stringify(contentJson)
+    )
+    .run();
+
+  await args.db
+    .prepare(
+      `
+      UPDATE wv_content_items
+      SET title = ?1,
+          content_json = ?2,
+          updated_at = datetime('now')
+      WHERE id = ?3
+        AND user_id = ?4
+      `
+    )
+    .bind(args.title, JSON.stringify(contentJson), episodeId, args.userId)
+    .run();
+
+  return episodeId;
+}
+
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   try {
     const user = await requireAuth(ctx);
@@ -64,41 +163,105 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     const relatedId = readTrimmed(body['related_id']);
     const taskJson = parseTaskInput(body);
     const title = taskJson.title.trim() || 'New task';
-    const nonce = crypto.randomUUID();
-    const canonicalInput = buildTaskCanonicalInput({
+
+    const taskType = readTrimmed(body['task_type']) ?? resolveTaskType(relatedType);
+    const taskStatus = plannerStatusToWeeklyStatus(taskJson.status);
+    const kanbanState = plannerStatusToWeeklyKanban(taskJson.status);
+    const taskPriority = plannerPriorityToWeeklyPriority(taskJson.priority);
+
+    const arLessonId = relatedType === 'ar_lesson' ? readInteger(relatedId) : null;
+    const wvClaimId = relatedType === 'wv_claim' ? relatedId : null;
+    const wvContentItemId = relatedType === 'wv_content_item' ? relatedId : null;
+
+    await ensureWeeklyPlanExists({
+      db: ctx.env.DB,
       userId: user.id,
       weekStart,
-      title,
-      nonce,
     });
-    const plannerId = await sha256Hex(canonicalInput);
 
     await ctx.env.DB
       .prepare(
         `
-        INSERT INTO sp_planner
-          (id, canonical_input, user_id, item_type, week_start, related_type, related_id, item_json, status, created_at)
+        INSERT INTO sp_weekly_tasks
+          (user_id, week_start, title, task_type, kanban_state, status, priority, points, due_date, order_index, task_json, ar_lesson_id, wv_claim_id, wv_content_item_id, created_at, updated_at)
         VALUES
-          (?1, ?2, ?3, 'task', ?4, ?5, ?6, ?7, 'active', datetime('now'))
+          (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL, ?8, ?9, ?10, ?11, ?12, datetime('now'), datetime('now'))
         `
       )
       .bind(
-        plannerId,
-        canonicalInput,
         user.id,
         weekStart,
-        relatedType ?? null,
-        relatedId ?? null,
-        JSON.stringify(taskJson)
+        title,
+        taskType,
+        kanbanState,
+        taskStatus,
+        taskPriority,
+        taskJson.order_index ?? Date.now(),
+        JSON.stringify(taskJson),
+        arLessonId,
+        wvClaimId,
+        wvContentItemId
       )
       .run();
+
+    const rowRaw = await readLatestTaskRow(ctx.env.DB, user.id, weekStart);
+    const createdRow = rowRaw ? mapWeeklyTaskToPlannerTaskRow(rowRaw) : null;
+    if (!createdRow) {
+      return json({ ok: false, error: 'Failed to create task.' }, 500);
+    }
+
+    let row = createdRow;
+    if ((taskJson.assignment.kind === 'podcast' || taskJson.lane === 'podcast') && !row.related_id) {
+      const topicLabel = taskJson.assignment.topic ?? taskJson.title;
+      const titleForEpisode = taskJson.assignment.episode_no
+        ? `Episode ${taskJson.assignment.episode_no} — ${topicLabel}`
+        : topicLabel;
+      const podcastId = await ensurePodcastEpisodeForTask({
+        db: ctx.env.DB,
+        userId: user.id,
+        weekStart,
+        taskId: row.id,
+        title: titleForEpisode,
+        taskJson,
+      });
+
+      await ctx.env.DB
+        .prepare(
+          `
+          UPDATE sp_weekly_tasks
+          SET wv_content_item_id = ?1,
+              updated_at = datetime('now')
+          WHERE id = ?2
+            AND user_id = ?3
+          `
+        )
+        .bind(podcastId, Number(row.id), user.id)
+        .run();
+
+      const refreshedRaw = await ctx.env.DB
+        .prepare(
+          `
+          SELECT *
+          FROM sp_weekly_tasks
+          WHERE id = ?1
+            AND user_id = ?2
+          LIMIT 1
+          `
+        )
+        .bind(Number(row.id), user.id)
+        .first<Record<string, unknown>>();
+      const refreshed = refreshedRaw ? mapWeeklyTaskToPlannerTaskRow(refreshedRaw) : null;
+      if (refreshed) {
+        row = refreshed;
+      }
+    }
 
     await insertActivityLog({
       db: ctx.env.DB,
       userId: user.id,
       eventType: 'planner_task_create',
-      targetType: 'sp_planner',
-      targetId: plannerId,
+      targetType: 'sp_weekly_tasks',
+      targetId: row.id,
       ref: weekStart,
       eventJson: {
         title: taskJson.title,
@@ -107,32 +270,10 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       },
     });
 
-    const rowRaw = await ctx.env.DB
-      .prepare(
-        `
-        SELECT *
-        FROM sp_planner
-        WHERE id = ?1
-          AND user_id = ?2
-          AND item_type = 'task'
-        LIMIT 1
-        `
-      )
-      .bind(plannerId, user.id)
-      .first<Record<string, unknown>>();
-
-    const row = rowRaw ? mapPlannerRow(rowRaw) : null;
-    if (!row) {
-      return json({ ok: false, error: 'Failed to create task.' }, 500);
-    }
-
     return json(
       {
         ok: true,
-        task: {
-          ...row,
-          item_json: parseJsonObject(row.item_json) ?? {},
-        },
+        task: row,
       },
       201
     );

@@ -3,18 +3,47 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>{{ weekPlan()?.title || ('Week Sprint — ' + weekLabel()) }}</ion-title>
+    <ion-title>{{ weekLabel() }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button class="km-btn" fill="outline" [routerLink]="['/planner/kanban']">Kanban</ion-button>
-      <ion-button class="km-btn" fill="outline" [routerLink]="['/planner/review']">Review</ion-button>
+      <ion-button fill="clear" (click)="openKanbanView()" aria-label="Kanban cards">
+        <ion-icon name="grid-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button fill="clear" (click)="openCreateModal()" aria-label="Add task">
+        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="weekly-plan-content km-shell">
+<ion-content [fullscreen]="true" class="weekly-plan-content km-shell km-content-with-bottom-tabs">
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
+
+  <section class="week-summary km-glass">
+    <div class="summary-chips">
+      <span class="km-chip">Lessons {{ lessonDone() }}/2</span>
+      <span class="km-chip">Podcasts {{ podcastDone() }}/3</span>
+      <span class="km-chip">Minutes {{ summary().minutes_spent }}/{{ minuteTarget() }}</span>
+    </div>
+    <div class="summary-progress">
+      <span [style.width.%]="progressPct()"></span>
+    </div>
+  </section>
+
+  @if (shouldPromptPlanning()) {
+    <button class="plan-banner" type="button" (click)="openPlanWeekModal()">
+      New week ready: Plan now
+    </button>
+  }
+
+  <section class="km-status-segment km-glass">
+    <ion-segment [value]="activeStatus()" (ionChange)="onStatusChanged($event.detail.value)">
+      <ion-segment-button value="planned">To Do</ion-segment-button>
+      <ion-segment-button value="doing">Doing</ion-segment-button>
+      <ion-segment-button value="done">Done</ion-segment-button>
+    </ion-segment>
+  </section>
 
   @if (loading()) {
     <ion-list class="weekly-list">
@@ -28,33 +57,49 @@
       }
     </ion-list>
   } @else {
-    <ion-list class="weekly-list">
-      @for (task of visibleTasks(); track task.id) {
-        <ion-item-sliding #sliding>
-          <ion-item button="true" detail="false" class="weekly-card" (click)="openDetailModal(task)">
-            <ion-label>
-              <h2>{{ task.item_json.title }}</h2>
-              <p class="task-meta">
-                <span class="km-chip">{{ task.item_json.status | titlecase }} - {{ task.item_json.estimate_min }} min</span>
-                <span class="km-chip task-priority">{{ task.item_json.priority }}</span>
-                <span class="km-chip">{{ task.item_json.lane | titlecase }}</span>
-              </p>
-              @if (task.related_type && task.related_id) {
-                <p class="task-related">{{ task.related_type }} {{ task.related_id }}</p>
-              }
-            </ion-label>
+    <ion-accordion-group [multiple]="true" [value]="expandedLanes()" class="lane-accordion">
+      @for (lane of lanes; track lane) {
+        <ion-accordion [value]="lane">
+          <ion-item slot="header" lines="none" class="lane-header-item">
+            <ion-label>{{ lane | titlecase }}</ion-label>
+            <ion-badge color="medium">{{ laneCount(lane) }}</ion-badge>
           </ion-item>
 
-          <ion-item-options side="end">
-            <ion-item-option color="success" (click)="completeFromSwipe(task, $event)">Complete</ion-item-option>
-            <ion-item-option color="medium" (click)="openEditModal(task, sliding)">Edit</ion-item-option>
-            <ion-item-option color="warning" (click)="moveLane(task, $event)">Move</ion-item-option>
-          </ion-item-options>
-        </ion-item-sliding>
-      }
-    </ion-list>
+          <div slot="content" class="lane-content">
+            @for (task of tasksForLane(lane); track task.id) {
+              <ion-item-sliding #sliding>
+                <ion-item button="true" detail="false" class="weekly-card" (click)="openDetailModal(task)">
+                  <ion-label>
+                    <h2>{{ task.item_json.title }}</h2>
+                    <p class="task-meta">
+                      <span class="km-chip">{{ task.item_json.priority }}</span>
+                      <span class="km-chip">{{ task.item_json.status | titlecase }}</span>
+                    </p>
+                    <p class="task-related">{{ assignmentSummary(task) }}</p>
+                  </ion-label>
+                </ion-item>
 
-    @if (visibleTasks().length === 0) {
+                <ion-item-options side="start">
+                  <ion-item-option color="primary" (click)="moveToDoing(task, sliding)">Doing</ion-item-option>
+                </ion-item-options>
+
+                <ion-item-options side="end">
+                  <ion-item-option color="success" (click)="completeFromSwipe(task, sliding)">Done</ion-item-option>
+                  <ion-item-option color="warning" (click)="markBlocked(task, sliding)">Blocked</ion-item-option>
+                  <ion-item-option color="medium" (click)="openEditModal(task, sliding)">Edit</ion-item-option>
+                </ion-item-options>
+              </ion-item-sliding>
+            }
+
+            @if (tasksForLane(lane).length === 0) {
+              <p class="lane-empty">No {{ lane }} tasks in {{ activeStatus() === 'planned' ? 'To Do' : (activeStatus() | titlecase) }}.</p>
+            }
+          </div>
+        </ion-accordion>
+      }
+    </ion-accordion-group>
+
+    @if (tasks().length === 0) {
       <div class="weekly-empty-state">
         <h3>No tasks this week</h3>
         <p>Add one with the button below.</p>
@@ -63,13 +108,18 @@
   }
 
   <section class="weekly-composer km-glass">
-    <ion-button fill="clear" class="composer-add" (click)="openCreateModal()" aria-label="Add task">+</ion-button>
     <ion-input
       class="composer-input"
       [formControl]="captureControl"
-      placeholder="Take quick note..."
+      placeholder="Quick capture..."
       (keyup.enter)="captureQuickNote()"
     ></ion-input>
-    <ion-button class="km-btn" size="small" (click)="captureQuickNote()" [disabled]="saving()">Save</ion-button>
+    <ion-button class="km-btn" size="small" (click)="captureQuickNote()" [disabled]="saving()">Add</ion-button>
   </section>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end" class="weekly-fab">
+    <ion-fab-button size="small" (click)="openCreateModal()">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>

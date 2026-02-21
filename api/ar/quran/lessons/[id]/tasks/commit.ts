@@ -8,6 +8,7 @@ import {
   upsertArUSentence,
   upsertArUToken,
 } from '../../../../../_utils/universal';
+import { computeWeekStartSydney, ensureLessonWeeklyTask, normalizeIsoDate } from '../../../../../_utils/sprint';
 
 interface Env {
   DB: D1Database;
@@ -117,6 +118,21 @@ type GrammarRef = {
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
+}
+
+function withWeeklyMeta(
+  taskJson: Record<string, unknown>,
+  userId: number,
+  lessonId: number
+): Record<string, unknown> {
+  const weekStart = computeWeekStartSydney(normalizeIsoDate(asString(taskJson['week_start'])));
+  return {
+    ...taskJson,
+    auto_weekly: true,
+    user_id: userId,
+    week_start: weekStart,
+    ar_lesson_id: lessonId,
+  };
 }
 
 function asString(value: unknown): string | null {
@@ -982,7 +998,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       };
 
       const taskId = `UT:${unitId}:${taskType}`;
-      const taskJsonText = JSON.stringify(enriched);
+      const enrichedForStorage = withWeeklyMeta(enriched, user.id, id);
+      const taskJsonText = JSON.stringify(enrichedForStorage);
       const taskName = TASK_LABELS[taskType] ?? taskType;
 
       await ctx.env.DB
@@ -1000,6 +1017,22 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         )
         .bind(taskId, unitId, taskType, taskName, taskJsonText)
         .run();
+
+      await ensureLessonWeeklyTask({
+        db: ctx.env.DB,
+        userId: user.id,
+        lessonId: id,
+        taskId,
+        taskName,
+        taskType,
+        unitId,
+        taskJson: enrichedForStorage,
+        linkContext: {
+          containerId,
+          unitId,
+          ref: asString(taskRecord?.['ref']),
+        },
+      });
 
       return new Response(
         JSON.stringify({
@@ -1675,7 +1708,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       };
 
       const taskId = `UT:${unitId}:${taskType}`;
-      const taskJsonText = JSON.stringify(enriched);
+      const enrichedForStorage = withWeeklyMeta(enriched, user.id, id);
+      const taskJsonText = JSON.stringify(enrichedForStorage);
       const taskName = TASK_LABELS[taskType] ?? taskType;
 
       await ctx.env.DB
@@ -1693,6 +1727,22 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
         )
         .bind(taskId, unitId, taskType, taskName, taskJsonText)
         .run();
+
+      await ensureLessonWeeklyTask({
+        db: ctx.env.DB,
+        userId: user.id,
+        lessonId: id,
+        taskId,
+        taskName,
+        taskType,
+        unitId,
+        taskJson: enrichedForStorage,
+        linkContext: {
+          containerId,
+          unitId,
+          ref: asString(taskJson['ref']),
+        },
+      });
 
       return new Response(
         JSON.stringify({
@@ -1995,7 +2045,8 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
     };
 
     const taskId = `UT:${unitId}:${taskType}`;
-    const taskJsonText = JSON.stringify(enriched);
+    const enrichedForStorage = withWeeklyMeta(enriched, user.id, id);
+    const taskJsonText = JSON.stringify(enrichedForStorage);
     const taskName = TASK_LABELS[taskType] ?? taskType;
 
     await ctx.env.DB
@@ -2013,6 +2064,22 @@ export const onRequestPost: PagesFunction<Env> = async (ctx) => {
       )
       .bind(taskId, unitId, taskType, taskName, taskJsonText)
       .run();
+
+    await ensureLessonWeeklyTask({
+      db: ctx.env.DB,
+      userId: user.id,
+      lessonId: id,
+      taskId,
+      taskName,
+      taskType,
+      unitId,
+      taskJson: enrichedForStorage,
+      linkContext: {
+        containerId,
+        unitId,
+        ref: asString(taskJson['ref']),
+      },
+    });
 
     return new Response(
       JSON.stringify({

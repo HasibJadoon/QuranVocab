@@ -54,6 +54,11 @@
   gap: 0.3rem;
 }
 
+.task-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
 .lane-empty {
   margin: 0;
   color: var(--km-text-dim, #9eb2ce);

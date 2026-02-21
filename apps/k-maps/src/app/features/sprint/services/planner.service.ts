@@ -37,6 +37,27 @@ export class PlannerService {
     );
   }
 
+  ensureWeekAnchors(weekStart: string): Observable<PlannerWeekResponse> {
+    const params = new HttpParams().set('week_start', weekStart);
+    return this.http.post<WeekApiResponse>(`${this.apiRoot}/week/ensure`, {}, { params }).pipe(
+      map((response) => this.normalizeWeekResponse(response, weekStart))
+    );
+  }
+
+  planWeek(payload: {
+    week_start: string;
+    planning_state?: {
+      is_planned?: boolean;
+      defer_until?: string | null;
+    };
+    later_today?: boolean;
+    assignments?: Record<string, unknown>;
+  }): Observable<PlannerWeekResponse> {
+    return this.http.put<WeekApiResponse>(`${this.apiRoot}/week/plan`, payload).pipe(
+      map((response) => this.normalizeWeekResponse(response, payload.week_start))
+    );
+  }
+
   createTask(payload: {
     week_start: string;
     related_type?: string | null;
@@ -102,9 +123,18 @@ export class PlannerService {
     const fallbackWeekPlan: PlannerWeekPlan = {
       schema_version: 1,
       title: `Week Sprint — ${weekStart}`,
+      fixed_rhythm: { lessons: 2, podcasts: 3 },
+      planning_state: { is_planned: false, planned_at: null, defer_until: null },
+      time_budget: {
+        lesson_min: 120,
+        podcast_min: 135,
+        review_min: 30,
+        study_minutes: 120,
+        podcast_minutes: 135,
+        review_minutes: 30,
+      },
       intent: 'Learn + produce',
       weekly_goals: [],
-      time_budget: { study_minutes: 420, podcast_minutes: 180, review_minutes: 60 },
       lanes: [
         { key: 'lesson', label: 'Lesson' },
         { key: 'podcast', label: 'Podcast' },
@@ -112,7 +142,7 @@ export class PlannerService {
         { key: 'admin', label: 'Admin' },
       ],
       definition_of_done: [],
-      metrics: { tasks_done_target: 12, minutes_target: 600 },
+      metrics: { tasks_done_target: 5, minutes_target: 285 },
     };
 
     return {

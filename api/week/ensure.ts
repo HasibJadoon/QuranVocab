@@ -4,14 +4,11 @@ import {
   addDays,
   computeWeekStartSydney,
   ensureWeekAnchors,
-  ensureWeeklyPlanExists,
-  insertActivityLog,
   json,
   mapWeeklyTaskToPlannerTaskRow,
   normalizeIsoDate,
   normalizeSprintReviewJson,
   normalizeWeekPlanJson,
-  parseBody,
   parseJsonObject,
   readInteger,
   readString,
@@ -47,9 +44,6 @@ function mapWeekPlanRow(
   }
 
   const itemJson = normalizeWeekPlanJson(parseJsonObject(row['week_json']), weekStart);
-  const createdAt = readString(row['created_at']) ?? '';
-  const updatedAt = readString(row['updated_at']);
-
   return {
     id: `SP_WEEKLY_PLAN|${userId}|${weekStart}`,
     canonical_input: `SP_WEEKLY_PLAN|user:${userId}|week:${weekStart}`,
@@ -62,8 +56,8 @@ function mapWeekPlanRow(
     related_id: null,
     item_json: itemJson,
     status: 'active',
-    created_at: createdAt,
-    updated_at: updatedAt,
+    created_at: readString(row['created_at']) ?? '',
+    updated_at: readString(row['updated_at']),
   };
 }
 
@@ -81,28 +75,24 @@ function mapReviewRow(
     return null;
   }
 
-  const periodStart = readString(row['period_start']) ?? weekStart;
-  const periodEnd = readString(row['period_end']) ?? addDays(weekStart, 6);
-  const itemJson = normalizeSprintReviewJson(parseJsonObject(row['review_json']), weekStart);
-
   return {
     id: String(reviewId),
     canonical_input: `SP_SPRINT_REVIEW|user:${userId}|week:${weekStart}`,
     user_id: userId,
     item_type: 'sprint_review',
     week_start: weekStart,
-    period_start: periodStart,
-    period_end: periodEnd,
+    period_start: readString(row['period_start']) ?? weekStart,
+    period_end: readString(row['period_end']) ?? addDays(weekStart, 6),
     related_type: null,
     related_id: null,
-    item_json: itemJson,
+    item_json: normalizeSprintReviewJson(parseJsonObject(row['review_json']), weekStart),
     status: readTrimmed(row['status']) ?? 'draft',
     created_at: readString(row['created_at']) ?? '',
     updated_at: readString(row['updated_at']),
   };
 }
 
-async function loadWeekData(db: D1Database, userId: number, weekStart: string): Promise<WeekPayload> {
+export async function loadWeekData(db: D1Database, userId: number, weekStart: string): Promise<WeekPayload> {
   const weekPlanRaw = await db
     .prepare(
       `
@@ -219,109 +209,48 @@ async function loadWeekData(db: D1Database, userId: number, weekStart: string): 
   };
 }
 
+async function handleEnsure(ctx: Parameters<PagesFunction<Env>>[0]): Promise<Response> {
+  const user = await requireAuth(ctx);
+  if (!user) {
+    return json({ ok: false, error: 'Unauthorized' }, 401);
+  }
+
+  const url = new URL(ctx.request.url);
+  const queryWeek = normalizeIsoDate(url.searchParams.get('week_start'));
+  const body = ctx.request.method === 'POST' ? await ctx.request.json().catch(() => null) : null;
+  const bodyWeek = normalizeIsoDate(
+    body && typeof body === 'object' && body !== null ? readString((body as Record<string, unknown>)['week_start']) : null
+  );
+
+  const weekStart = computeWeekStartSydney(queryWeek ?? bodyWeek);
+  await ensureWeekAnchors({
+    db: ctx.env.DB,
+    userId: user.id,
+    weekStart,
+  });
+
+  const payload = await loadWeekData(ctx.env.DB, user.id, weekStart);
+  return json({
+    ok: true,
+    week_start: weekStart,
+    ...payload,
+  });
+}
+
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   try {
-    const user = await requireAuth(ctx);
-    if (!user) {
-      return json({ ok: false, error: 'Unauthorized' }, 401);
-    }
-
-    const url = new URL(ctx.request.url);
-    const weekStartRaw = url.searchParams.get('week_start');
-    const normalized = normalizeIsoDate(weekStartRaw);
-    if (weekStartRaw && !normalized) {
-      return json({ ok: false, error: 'week_start must be YYYY-MM-DD.' }, 400);
-    }
-
-    const weekStart = computeWeekStartSydney(normalized);
-    await ensureWeekAnchors({
-      db: ctx.env.DB,
-      userId: user.id,
-      weekStart,
-    });
-    const payload = await loadWeekData(ctx.env.DB, user.id, weekStart);
-
-    return json({
-      ok: true,
-      week_start: weekStart,
-      ...payload,
-    });
+    return await handleEnsure(ctx);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to load planner week.';
+    const message = error instanceof Error ? error.message : 'Failed to ensure week.';
     return json({ ok: false, error: message }, 500);
   }
 };
 
 export const onRequestPost: PagesFunction<Env> = async (ctx) => {
   try {
-    const user = await requireAuth(ctx);
-    if (!user) {
-      return json({ ok: false, error: 'Unauthorized' }, 401);
-    }
-
-    const body = await parseBody(ctx.request);
-    if (!body) {
-      return json({ ok: false, error: 'Invalid JSON payload.' }, 400);
-    }
-
-    const weekInput = readString(body['week_start']);
-    const weekDate = normalizeIsoDate(weekInput);
-    if (weekInput !== null && !weekDate) {
-      return json({ ok: false, error: 'week_start must be YYYY-MM-DD.' }, 400);
-    }
-
-    const weekStart = computeWeekStartSydney(weekDate);
-    const title = readTrimmed(body['title']) ?? null;
-    const customJson = parseJsonObject(body['item_json']);
-    const itemJson = normalizeWeekPlanJson(customJson, weekStart, title);
-
-    const insertResult = await ctx.env.DB
-      .prepare(
-        `
-        INSERT OR IGNORE INTO sp_weekly_plans
-          (week_start, user_id, notes, planned_count, done_count, week_json, created_at, updated_at)
-        VALUES
-          (?1, ?2, NULL, 0, 0, ?3, datetime('now'), datetime('now'))
-        `
-      )
-      .bind(weekStart, user.id, JSON.stringify(itemJson))
-      .run();
-
-    await ensureWeeklyPlanExists({
-      db: ctx.env.DB,
-      userId: user.id,
-      weekStart,
-      title,
-    });
-    await ensureWeekAnchors({
-      db: ctx.env.DB,
-      userId: user.id,
-      weekStart,
-    });
-
-    if ((insertResult.meta?.changes ?? 0) > 0) {
-      await insertActivityLog({
-        db: ctx.env.DB,
-        userId: user.id,
-        eventType: 'planner_week_create',
-        targetType: 'sp_weekly_plans',
-        targetId: `${weekStart}:${user.id}`,
-        ref: weekStart,
-        eventJson: { week_start: weekStart },
-      });
-    }
-
-    const payload = await loadWeekData(ctx.env.DB, user.id, weekStart);
-    return json(
-      {
-        ok: true,
-        week_start: weekStart,
-        ...payload,
-      },
-      (insertResult.meta?.changes ?? 0) > 0 ? 201 : 200
-    );
+    return await handleEnsure(ctx);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to create week plan.';
+    const message = error instanceof Error ? error.message : 'Failed to ensure week.';
     return json({ ok: false, error: message }, 500);
   }
 };

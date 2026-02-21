@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { albumsOutline, gridOutline, listOutline, statsChartOutline } from 'ionicons/icons';
+import { albumsOutline, bookOutline, listOutline, micOutline, statsChartOutline } from 'ionicons/icons';
 import { IconTabItem } from '../../../shared/components/icon-tabs/icon-tabs.component';
 
 @Component({
@@ -11,8 +11,9 @@ import { IconTabItem } from '../../../shared/components/icon-tabs/icon-tabs.comp
 export class PlannerTabsPage {
   readonly plannerTabs: IconTabItem[] = [
     { key: 'week', icon: listOutline, label: 'Week' },
-    { key: 'kanban', icon: gridOutline, label: 'Kanban' },
     { key: 'inbox', icon: albumsOutline, label: 'Inbox' },
+    { key: 'lessons', icon: bookOutline, label: 'Lessons' },
+    { key: 'podcast', icon: micOutline, label: 'Podcast' },
     { key: 'review', icon: statsChartOutline, label: 'Review' },
   ];
 }

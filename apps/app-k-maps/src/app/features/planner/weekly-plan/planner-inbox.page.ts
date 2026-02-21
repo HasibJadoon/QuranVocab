@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { RefresherCustomEvent, ToastController } from '@ionic/angular';
+import { IonItemSliding, ModalController, RefresherCustomEvent, ToastController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
-import { CaptureNote, CaptureNoteMeta } from '../../sprint/models/sprint.models';
+import { CaptureNote, CaptureNoteMeta, PromotionRequest } from '../../sprint/models/sprint.models';
 import { CaptureNotesService } from '../../sprint/services/capture-notes.service';
 import { PlannerService } from '../../sprint/services/planner.service';
+import { PromoteNoteModalComponent } from './modals/promote-note.modal';
 
 @Component({
   selector: 'app-planner-inbox-page',
@@ -16,6 +17,7 @@ export class PlannerInboxPage {
   private readonly notes = inject(CaptureNotesService);
   private readonly planner = inject(PlannerService);
   private readonly toastController = inject(ToastController);
+  private readonly modalController = inject(ModalController);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -43,7 +45,7 @@ export class PlannerInboxPage {
         kind: 'capture',
         week_start: this.weekStart(),
         source: 'weekly',
-        related_type: 'sp_planner',
+        related_type: 'sp_weekly_plans',
         related_id: this.weekStart(),
       };
 
@@ -61,13 +63,44 @@ export class PlannerInboxPage {
     }
   }
 
-  async promote(note: CaptureNote): Promise<void> {
+  async openPromoteModal(note: CaptureNote, sliding?: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
+    await sliding?.close();
+    const modal = await this.modalController.create({
+      component: PromoteNoteModalComponent,
+      componentProps: {
+        note,
+      },
+      breakpoints: [0, 0.62, 0.9],
+      initialBreakpoint: 0.9,
+    });
+
+    await modal.present();
+    const result = await modal.onDidDismiss<PromotionRequest>();
+    if (result.role !== 'promote' || !result.data) {
+      return;
+    }
+
     this.saving.set(true);
     try {
-      await firstValueFrom(this.notes.promote(note.id, { note_type: 'reflection' }));
+      await firstValueFrom(this.notes.promote(note.id, result.data));
       await this.load();
+      await this.presentToast('Note promoted.');
     } catch {
       await this.presentToast('Could not promote note.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  async archive(note: CaptureNote, sliding?: IonItemSliding | HTMLIonItemSlidingElement | null): Promise<void> {
+    await sliding?.close();
+    this.saving.set(true);
+    try {
+      await firstValueFrom(this.notes.archive(note.id));
+      await this.load();
+      await this.presentToast('Archived.');
+    } catch {
+      await this.presentToast('Could not archive note.');
     } finally {
       this.saving.set(false);
     }

@@ -7,14 +7,12 @@ import {
   createDefaultSprintReviewJson,
   insertActivityLog,
   json,
-  mapPlannerRow,
   normalizeIsoDate,
   normalizeSprintReviewJson,
   parseBody,
   parseJsonObject,
   readInteger,
   readString,
-  sha256Hex,
 } from '../_utils/sprint';
 
 interface Env {
@@ -28,10 +26,9 @@ async function computeWeekMetrics(db: D1Database, userId: number, weekStart: str
   const taskRows = await db
     .prepare(
       `
-      SELECT item_json
-      FROM sp_planner
+      SELECT task_json, status, kanban_state
+      FROM sp_weekly_tasks
       WHERE user_id = ?1
-        AND item_type = 'task'
         AND week_start = ?2
       `
     )
@@ -42,8 +39,10 @@ async function computeWeekMetrics(db: D1Database, userId: number, weekStart: str
   let minutesSpent = 0;
   const tasksTotal = (taskRows.results ?? []).length;
   for (const row of taskRows.results ?? []) {
-    const item = parseJsonObject(row['item_json']) ?? {};
-    if ((readString(item['status']) ?? '').trim() === 'done') {
+    const item = parseJsonObject(row['task_json']) ?? {};
+    const status = (readString(item['status']) ?? readString(row['status']) ?? '').trim();
+    const kanban = (readString(row['kanban_state']) ?? '').trim();
+    if (status === 'done' || kanban === 'done') {
       tasksDone += 1;
     }
     const actualMin = readInteger(item['actual_min']);
@@ -95,49 +94,97 @@ async function upsertReview(
   weekStart: string,
   itemJson: Record<string, unknown>
 ) {
-  const canonicalInput = buildReviewCanonicalInput(userId, weekStart);
-  const plannerId = await sha256Hex(canonicalInput);
   const periodStart = weekStart;
   const periodEnd = addDays(weekStart, 6);
 
-  await db
+  const existing = await db
     .prepare(
       `
-      INSERT OR REPLACE INTO sp_planner
-        (id, canonical_input, user_id, item_type, week_start, period_start, period_end, item_json, status, updated_at)
-      VALUES
-        (?1, ?2, ?3, 'sprint_review', ?4, ?5, ?6, ?7, 'active', datetime('now'))
+      SELECT id
+      FROM sp_sprint_reviews
+      WHERE user_id = ?1
+        AND period_start = ?2
+        AND period_end = ?3
+      ORDER BY id DESC
+      LIMIT 1
       `
     )
-    .bind(plannerId, canonicalInput, userId, weekStart, periodStart, periodEnd, JSON.stringify(itemJson))
+    .bind(userId, periodStart, periodEnd)
+    .first<Record<string, unknown>>();
+
+  const existingId = readInteger(existing?.['id']);
+  if (existingId !== null) {
+    await db
+      .prepare(
+        `
+        UPDATE sp_sprint_reviews
+        SET review_json = ?1,
+            status = 'draft',
+            updated_at = datetime('now')
+        WHERE id = ?2
+          AND user_id = ?3
+        `
+      )
+      .bind(JSON.stringify(itemJson), existingId, userId)
+      .run();
+    return existingId;
+  }
+
+  const result = await db
+    .prepare(
+      `
+      INSERT INTO sp_sprint_reviews
+        (user_id, period_start, period_end, status, review_json, created_at, updated_at)
+      VALUES
+        (?1, ?2, ?3, 'draft', ?4, datetime('now'), datetime('now'))
+      `
+    )
+    .bind(userId, periodStart, periodEnd, JSON.stringify(itemJson))
     .run();
 
-  return plannerId;
+  return readInteger(result.meta?.last_row_id) ?? null;
 }
 
-async function readReviewRow(db: D1Database, userId: number, reviewId: string) {
+async function readReviewRow(db: D1Database, userId: number, weekStart: string) {
+  const periodEnd = addDays(weekStart, 6);
   const raw = await db
     .prepare(
       `
       SELECT *
-      FROM sp_planner
-      WHERE id = ?1
-        AND user_id = ?2
-        AND item_type = 'sprint_review'
+      FROM sp_sprint_reviews
+      WHERE user_id = ?1
+        AND period_start = ?2
+        AND period_end = ?3
+      ORDER BY id DESC
       LIMIT 1
       `
     )
-    .bind(reviewId, userId)
+    .bind(userId, weekStart, periodEnd)
     .first<Record<string, unknown>>();
 
-  const row = raw ? mapPlannerRow(raw) : null;
-  if (!row) {
+  if (!raw) {
+    return null;
+  }
+
+  const reviewId = readInteger(raw['id']);
+  if (reviewId === null) {
     return null;
   }
 
   return {
-    ...row,
-    item_json: parseJsonObject(row.item_json) ?? {},
+    id: String(reviewId),
+    canonical_input: buildReviewCanonicalInput(userId, weekStart),
+    user_id: userId,
+    item_type: 'sprint_review',
+    week_start: weekStart,
+    period_start: readString(raw['period_start']) ?? weekStart,
+    period_end: readString(raw['period_end']) ?? addDays(weekStart, 6),
+    related_type: null,
+    related_id: null,
+    item_json: normalizeSprintReviewJson(parseJsonObject(raw['review_json']), weekStart),
+    status: readString(raw['status']) ?? 'draft',
+    created_at: readString(raw['created_at']) ?? '',
+    updated_at: readString(raw['updated_at']),
   };
 }
 
@@ -165,18 +212,21 @@ async function handleUpsert(ctx: Parameters<PagesFunction<Env>>[0]) {
   normalized.metrics = metrics;
 
   const reviewId = await upsertReview(ctx.env.DB, user.id, weekStart, normalized);
+  if (reviewId === null) {
+    return json({ ok: false, error: 'Failed to save sprint review.' }, 500);
+  }
 
   await insertActivityLog({
     db: ctx.env.DB,
     userId: user.id,
     eventType: 'planner_review_upsert',
-    targetType: 'sp_planner',
-    targetId: reviewId,
+    targetType: 'sp_sprint_reviews',
+    targetId: String(reviewId),
     ref: weekStart,
     eventJson: metrics,
   });
 
-  const review = await readReviewRow(ctx.env.DB, user.id, reviewId);
+  const review = await readReviewRow(ctx.env.DB, user.id, weekStart);
   if (!review) {
     return json({ ok: false, error: 'Failed to save sprint review.' }, 500);
   }
@@ -221,24 +271,24 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
     }
 
     const weekStart = computeWeekStartSydney(weekDate);
-    const canonical = buildReviewCanonicalInput(user.id, weekStart);
-    const reviewId = await sha256Hex(canonical);
-    let review = await readReviewRow(ctx.env.DB, user.id, reviewId);
+    let review = await readReviewRow(ctx.env.DB, user.id, weekStart);
 
     if (!review) {
       const metrics = await computeWeekMetrics(ctx.env.DB, user.id, weekStart);
       const fallback = createDefaultSprintReviewJson(weekStart);
       fallback.metrics = metrics;
       review = {
-        id: reviewId,
-        canonical_input: canonical,
+        id: `draft:${weekStart}`,
+        canonical_input: buildReviewCanonicalInput(user.id, weekStart),
         user_id: user.id,
         item_type: 'sprint_review',
         week_start: weekStart,
         period_start: weekStart,
         period_end: addDays(weekStart, 6),
+        related_type: null,
+        related_id: null,
         item_json: fallback,
-        status: 'active',
+        status: 'draft',
         created_at: '',
         updated_at: null,
       };

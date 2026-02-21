@@ -1,12 +1,22 @@
 import type { D1Database, PagesFunction } from '@cloudflare/workers-types';
 import { requireAuth } from '../../_utils/auth';
 import {
+  AnchorKey,
+  computeWeekStartSydney,
+  ensurePodcastEpisodeForAnchor,
   insertActivityLog,
   json,
-  mapPlannerRow,
+  mapWeeklyTaskToPlannerTaskRow,
+  normalizeIsoDate,
   normalizeTaskJson,
   parseBody,
   parseJsonObject,
+  plannerPriorityToWeeklyPriority,
+  plannerStatusToWeeklyKanban,
+  plannerStatusToWeeklyStatus,
+  readInteger,
+  readNumber,
+  sha256Hex,
   readString,
   readTrimmed,
 } from '../../_utils/sprint';
@@ -25,6 +35,19 @@ function readParam(params: Record<string, unknown> | undefined, key: string): st
     return value[0].trim();
   }
   return '';
+}
+
+function asAnchorKey(value: string | null): AnchorKey | null {
+  if (
+    value === 'lesson_1' ||
+    value === 'lesson_2' ||
+    value === 'podcast_1' ||
+    value === 'podcast_2' ||
+    value === 'podcast_3'
+  ) {
+    return value;
+  }
+  return null;
 }
 
 function mergeTaskPatch(
@@ -56,6 +79,47 @@ function mergeTaskPatch(
   return next;
 }
 
+function deriveRelationFromWeeklyTask(row: Record<string, unknown>): {
+  relatedType: string | null;
+  relatedId: string | null;
+} {
+  const lessonId = readInteger(row['ar_lesson_id']);
+  if (lessonId !== null) {
+    return { relatedType: 'ar_lesson', relatedId: String(lessonId) };
+  }
+
+  const contentId = readTrimmed(row['wv_content_item_id']);
+  if (contentId) {
+    return { relatedType: 'wv_content_item', relatedId: contentId };
+  }
+
+  const claimId = readTrimmed(row['wv_claim_id']);
+  if (claimId) {
+    return { relatedType: 'wv_claim', relatedId: claimId };
+  }
+
+  return { relatedType: null, relatedId: null };
+}
+
+async function loadWeeklyTask(
+  db: D1Database,
+  taskId: number,
+  userId: number
+): Promise<Record<string, unknown> | null> {
+  return db
+    .prepare(
+      `
+      SELECT *
+      FROM sp_weekly_tasks
+      WHERE id = ?1
+        AND user_id = ?2
+      LIMIT 1
+      `
+    )
+    .bind(taskId, userId)
+    .first<Record<string, unknown>>();
+}
+
 export const onRequestGet: PagesFunction<Env> = async (ctx) => {
   try {
     const user = await requireAuth(ctx);
@@ -63,36 +127,21 @@ export const onRequestGet: PagesFunction<Env> = async (ctx) => {
       return json({ ok: false, error: 'Unauthorized' }, 401);
     }
 
-    const taskId = readParam(ctx.params, 'id');
-    if (!taskId) {
+    const taskIdText = readParam(ctx.params, 'id');
+    const taskId = Number(taskIdText);
+    if (!Number.isInteger(taskId) || taskId <= 0) {
       return json({ ok: false, error: 'Task id is required.' }, 400);
     }
 
-    const rowRaw = await ctx.env.DB
-      .prepare(
-        `
-        SELECT *
-        FROM sp_planner
-        WHERE id = ?1
-          AND user_id = ?2
-          AND item_type = 'task'
-        LIMIT 1
-        `
-      )
-      .bind(taskId, user.id)
-      .first<Record<string, unknown>>();
-
-    const row = rowRaw ? mapPlannerRow(rowRaw) : null;
+    const rowRaw = await loadWeeklyTask(ctx.env.DB, taskId, user.id);
+    const row = rowRaw ? mapWeeklyTaskToPlannerTaskRow(rowRaw) : null;
     if (!row) {
       return json({ ok: false, error: 'Task not found.' }, 404);
     }
 
     return json({
       ok: true,
-      task: {
-        ...row,
-        item_json: parseJsonObject(row.item_json) ?? {},
-      },
+      task: row,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to load task.';
@@ -107,27 +156,14 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       return json({ ok: false, error: 'Unauthorized' }, 401);
     }
 
-    const taskId = readParam(ctx.params, 'id');
-    if (!taskId) {
+    const taskIdText = readParam(ctx.params, 'id');
+    const taskId = Number(taskIdText);
+    if (!Number.isInteger(taskId) || taskId <= 0) {
       return json({ ok: false, error: 'Task id is required.' }, 400);
     }
 
-    const existingRaw = await ctx.env.DB
-      .prepare(
-        `
-        SELECT *
-        FROM sp_planner
-        WHERE id = ?1
-          AND user_id = ?2
-          AND item_type = 'task'
-        LIMIT 1
-        `
-      )
-      .bind(taskId, user.id)
-      .first<Record<string, unknown>>();
-
-    const existingRow = existingRaw ? mapPlannerRow(existingRaw) : null;
-    if (!existingRow) {
+    const existingRaw = await loadWeeklyTask(ctx.env.DB, taskId, user.id);
+    if (!existingRaw) {
       return json({ ok: false, error: 'Task not found.' }, 404);
     }
 
@@ -136,40 +172,191 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       return json({ ok: false, error: 'Invalid JSON payload.' }, 400);
     }
 
-    const existingJson = parseJsonObject(existingRow.item_json) ?? {};
+    const existingRow = mapWeeklyTaskToPlannerTaskRow(existingRaw);
+    if (!existingRow) {
+      return json({ ok: false, error: 'Task payload is invalid.' }, 500);
+    }
+
+    const existingJson = parseJsonObject(existingRaw['task_json']) ?? {};
+    const existingTaskJson = normalizeTaskJson(existingJson, readTrimmed(existingJson['title']) ?? 'Task');
     const incomingItemJson = parseJsonObject(body['item_json']);
-    const mergedJson = incomingItemJson
+    let mergedJson = incomingItemJson
       ? normalizeTaskJson(incomingItemJson, readTrimmed(incomingItemJson['title']) ?? 'Task')
       : normalizeTaskJson(mergeTaskPatch(existingJson, body), readTrimmed(existingJson['title']) ?? 'Task');
 
-    const relatedType = Object.prototype.hasOwnProperty.call(body, 'related_type')
+    // Anchor tasks keep their lane and anchor metadata stable.
+    if (existingTaskJson.anchor) {
+      mergedJson = {
+        ...mergedJson,
+        lane: existingTaskJson.lane,
+        anchor: true,
+        meta: {
+          anchor_key: existingTaskJson.meta.anchor_key,
+          week_start: existingTaskJson.meta.week_start,
+        },
+      };
+    }
+
+    const derivedRelation = deriveRelationFromWeeklyTask(existingRaw);
+    let relatedType = Object.prototype.hasOwnProperty.call(body, 'related_type')
       ? readTrimmed(body['related_type'])
-      : readString(existingRow.related_type);
-    const relatedId = Object.prototype.hasOwnProperty.call(body, 'related_id')
+      : derivedRelation.relatedType;
+    let relatedId = Object.prototype.hasOwnProperty.call(body, 'related_id')
       ? readTrimmed(body['related_id'])
-      : readString(existingRow.related_id);
+      : derivedRelation.relatedId;
+
+    const effectiveWeekStart =
+      normalizeIsoDate(existingRow.week_start) ??
+      normalizeIsoDate(mergedJson.meta.week_start) ??
+      computeWeekStartSydney();
+
+    if (mergedJson.assignment.kind === 'lesson' && mergedJson.assignment.ar_lesson_id) {
+      relatedType = 'ar_lesson';
+      relatedId = String(mergedJson.assignment.ar_lesson_id);
+    }
+
+    if (mergedJson.assignment.kind === 'podcast' || mergedJson.lane === 'podcast') {
+      const anchorKey = asAnchorKey(mergedJson.meta.anchor_key);
+      let podcastId = relatedType === 'wv_content_item' ? relatedId : null;
+      const topicLabel = mergedJson.assignment.topic ?? mergedJson.title;
+      const episodeNo = mergedJson.assignment.episode_no ?? null;
+      const podcastTitle = episodeNo ? `Episode ${episodeNo} — ${topicLabel}` : topicLabel;
+
+      if (anchorKey) {
+        podcastId = await ensurePodcastEpisodeForAnchor({
+          db: ctx.env.DB,
+          userId: user.id,
+          weekStart: effectiveWeekStart,
+          anchorKey,
+          title: podcastTitle,
+          assignment: mergedJson.assignment,
+        });
+      } else {
+        const canonicalInput =
+          podcastId
+            ? null
+            : `PODCAST|task|user:${user.id}|week:${effectiveWeekStart}|task:${taskId}`;
+        const episodeId = podcastId ?? (await sha256Hex(canonicalInput as string));
+        const contentJson = {
+          schema_version: 1,
+          source: 'task',
+          week_start: effectiveWeekStart,
+          task_id: String(taskId),
+          topic: mergedJson.assignment.topic,
+          episode_no: mergedJson.assignment.episode_no,
+          recording_at: mergedJson.assignment.recording_at,
+          outline: [],
+          script: '',
+          checklist: [],
+        };
+
+        await ctx.env.DB
+          .prepare(
+            `
+            INSERT OR IGNORE INTO wv_content_items
+              (id, canonical_input, user_id, title, content_type, status, related_type, related_id, refs_json, content_json, created_at, updated_at)
+            VALUES
+              (?1, ?2, ?3, ?4, 'podcast_episode', 'draft', 'sp_weekly_tasks', ?5, json('{}'), ?6, datetime('now'), datetime('now'))
+            `
+          )
+          .bind(
+            episodeId,
+            canonicalInput ?? `PODCAST|task|user:${user.id}|week:${effectiveWeekStart}|task:${taskId}`,
+            user.id,
+            podcastTitle,
+            String(taskId),
+            JSON.stringify(contentJson)
+          )
+          .run();
+
+        await ctx.env.DB
+          .prepare(
+            `
+            UPDATE wv_content_items
+            SET title = ?1,
+                content_json = ?2,
+                updated_at = datetime('now')
+            WHERE id = ?3
+              AND user_id = ?4
+            `
+          )
+          .bind(podcastTitle, JSON.stringify(contentJson), episodeId, user.id)
+          .run();
+
+        podcastId = episodeId;
+      }
+
+      if (podcastId) {
+        relatedType = 'wv_content_item';
+        relatedId = podcastId;
+      }
+    }
+
+    const arLessonId = relatedType === 'ar_lesson' ? readInteger(relatedId) : null;
+    const wvClaimId = relatedType === 'wv_claim' ? relatedId : null;
+    const wvContentItemId = relatedType === 'wv_content_item' ? relatedId : null;
+
+    const taskType = readTrimmed(body['task_type']) ?? readTrimmed(existingRaw['task_type']) ?? 'planner_task';
+    const persisted: Record<string, unknown> = {
+      ...existingJson,
+      ...(mergedJson as unknown as Record<string, unknown>),
+    };
+
+    if (Object.prototype.hasOwnProperty.call(body, 'due_date')) {
+      persisted['due_date'] = normalizeIsoDate(readString(body['due_date']));
+    }
+    if (Object.prototype.hasOwnProperty.call(body, 'points')) {
+      persisted['points'] = readNumber(body['points']);
+    }
+
+    const dueDate = normalizeIsoDate(readString(persisted['due_date']));
+    const points = readNumber(persisted['points']);
 
     await ctx.env.DB
       .prepare(
         `
-        UPDATE sp_planner
-        SET related_type = ?1,
-            related_id = ?2,
-            item_json = ?3,
+        UPDATE sp_weekly_tasks
+        SET title = ?1,
+            task_type = ?2,
+            kanban_state = ?3,
+            status = ?4,
+            priority = ?5,
+            points = ?6,
+            due_date = ?7,
+            order_index = ?8,
+            task_json = ?9,
+            ar_lesson_id = ?10,
+            wv_claim_id = ?11,
+            wv_content_item_id = ?12,
             updated_at = datetime('now')
-        WHERE id = ?4
-          AND user_id = ?5
+        WHERE id = ?13
+          AND user_id = ?14
         `
       )
-      .bind(relatedType ?? null, relatedId ?? null, JSON.stringify(mergedJson), taskId, user.id)
+      .bind(
+        mergedJson.title,
+        taskType,
+        plannerStatusToWeeklyKanban(mergedJson.status),
+        plannerStatusToWeeklyStatus(mergedJson.status),
+        plannerPriorityToWeeklyPriority(mergedJson.priority),
+        points,
+        dueDate,
+        mergedJson.order_index ?? 0,
+        JSON.stringify(persisted),
+        arLessonId,
+        wvClaimId,
+        wvContentItemId,
+        taskId,
+        user.id
+      )
       .run();
 
     await insertActivityLog({
       db: ctx.env.DB,
       userId: user.id,
       eventType: 'planner_task_update',
-      targetType: 'sp_planner',
-      targetId: taskId,
+      targetType: 'sp_weekly_tasks',
+      targetId: String(taskId),
       ref: existingRow.week_start,
       eventJson: {
         lane: mergedJson.lane,
@@ -178,31 +365,15 @@ export const onRequestPut: PagesFunction<Env> = async (ctx) => {
       },
     });
 
-    const updatedRaw = await ctx.env.DB
-      .prepare(
-        `
-        SELECT *
-        FROM sp_planner
-        WHERE id = ?1
-          AND user_id = ?2
-          AND item_type = 'task'
-        LIMIT 1
-        `
-      )
-      .bind(taskId, user.id)
-      .first<Record<string, unknown>>();
-
-    const updated = updatedRaw ? mapPlannerRow(updatedRaw) : null;
+    const updatedRaw = await loadWeeklyTask(ctx.env.DB, taskId, user.id);
+    const updated = updatedRaw ? mapWeeklyTaskToPlannerTaskRow(updatedRaw) : null;
     if (!updated) {
       return json({ ok: false, error: 'Task not found after update.' }, 404);
     }
 
     return json({
       ok: true,
-      task: {
-        ...updated,
-        item_json: parseJsonObject(updated.item_json) ?? {},
-      },
+      task: updated,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to update task.';

@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { PlannerService } from '../../sprint/services/planner.service';
@@ -13,6 +14,7 @@ import { SprintReview } from '../../sprint/models/sprint.models';
 export class PlannerReviewPage {
   private readonly planner = inject(PlannerService);
   private readonly toastController = inject(ToastController);
+  private readonly route = inject(ActivatedRoute);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -31,7 +33,11 @@ export class PlannerReviewPage {
   nextFocusText = '';
 
   constructor() {
-    void this.load();
+    this.route.paramMap.subscribe((params) => {
+      const weekStart = params.get('weekStart') ?? this.planner.currentWeekStart();
+      this.weekStart.set(weekStart);
+      void this.load();
+    });
   }
 
   async save(): Promise<void> {
@@ -59,7 +65,7 @@ export class PlannerReviewPage {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const week = await firstValueFrom(this.planner.loadWeek(this.weekStart()));
+      const week = await firstValueFrom(this.planner.ensureWeekAnchors(this.weekStart()));
       this.metrics = {
         tasks_done: week.summary.tasks_done,
         tasks_total: week.summary.tasks_total,

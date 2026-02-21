@@ -70,3 +70,10 @@ ion-accordion ion-item[slot="header"] ion-icon {
   width: 32px;
   border: 1px solid rgba(255, 92, 122, 0.35);
 }
+
+@media (max-width: 768px) {
+  .global-home-button,
+  .global-settings-button {
+    display: none;
+  }
+}

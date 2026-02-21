@@ -1,0 +1,38 @@
+<ion-header>
+  <ion-toolbar class="km-week-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Podcast</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="planner-podcast-content km-shell km-content-with-bottom-tabs">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  @if (loading()) {
+    <ion-list>
+      @for (row of [1,2,3,4,5]; track row) {
+        <ion-item lines="none">
+          <ion-label>
+            <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
+            <p><ion-skeleton-text animated style="width: 82%"></ion-skeleton-text></p>
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  } @else {
+    <ion-list class="km-quick-list">
+      @for (item of items(); track item.id) {
+        <ion-item button="true" detail="false" lines="none" class="km-quick-card" (click)="openEpisode(item)">
+          <ion-label>
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.status | titlecase }}</p>
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>
