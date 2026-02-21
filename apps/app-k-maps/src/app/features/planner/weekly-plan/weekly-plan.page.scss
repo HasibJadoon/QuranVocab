@@ -2,34 +2,6 @@
   display: block;
 }
 
-.weekly-progress-toolbar,
-.weekly-lane-toolbar {
-  --background: rgba(10, 18, 34, 0.88);
-  --border-color: rgba(145, 176, 224, 0.18);
-  --color: var(--km-text, #e6edf8);
-}
-
-.weekly-progress-wrap {
-  padding: 0.35rem 0.8rem;
-}
-
-.weekly-progress-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--km-text-dim, #9eb2ce);
-  font-size: 0.84rem;
-  margin-bottom: 0.3rem;
-}
-
-.weekly-progress-wrap ion-progress-bar {
-  --background: rgba(104, 132, 176, 0.3);
-  --progress-background: linear-gradient(90deg, #4ad1bd 0%, #4b84ff 100%);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
 ion-content.weekly-plan-content {
   --padding-bottom: calc(8.4rem + env(safe-area-inset-bottom));
 }

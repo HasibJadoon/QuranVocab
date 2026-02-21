@@ -37,7 +37,6 @@ export class WeeklyPlanPage {
 
   readonly loading = signal(true);
   readonly saving = signal(false);
-  readonly selectedLane = signal<PlannerLane>('lesson');
   readonly weekStart = signal(computeWeekStartSydney());
   readonly weekLabel = computed(() => formatWeekRangeLabel(this.weekStart()));
 
@@ -56,23 +55,13 @@ export class WeeklyPlanPage {
 
   readonly lanes: PlannerLane[] = ['lesson', 'podcast', 'notes', 'admin'];
 
-  readonly laneTasks = computed(() => {
-    const lane = this.selectedLane();
+  readonly visibleTasks = computed(() => {
     return this.tasks()
-      .filter((task) => task.item_json.lane === lane)
       .sort((a, b) => {
         const updatedA = new Date(a.updated_at ?? a.created_at).getTime();
         const updatedB = new Date(b.updated_at ?? b.created_at).getTime();
         return updatedB - updatedA;
       });
-  });
-
-  readonly progressPct = computed(() => {
-    const state = this.summary();
-    if (!state.tasks_total) {
-      return 0;
-    }
-    return Math.round((state.tasks_done / state.tasks_total) * 100);
   });
 
   constructor() {
@@ -83,13 +72,6 @@ export class WeeklyPlanPage {
       this.weekStart.set(weekStart);
       void this.loadWeek(weekStart);
     });
-  }
-
-  onLaneChanged(event: CustomEvent): void {
-    const value = String(event.detail?.value ?? 'lesson') as PlannerLane;
-    if (this.lanes.includes(value)) {
-      this.selectedLane.set(value);
-    }
   }
 
   async onRefresh(event: RefresherCustomEvent): Promise<void> {

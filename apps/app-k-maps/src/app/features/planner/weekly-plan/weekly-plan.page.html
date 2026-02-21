@@ -9,33 +9,6 @@
       <ion-button class="km-btn" fill="outline" [routerLink]="['/planner/review']">Review</ion-button>
     </ion-buttons>
   </ion-toolbar>
-
-  <ion-toolbar class="weekly-progress-toolbar">
-    <div class="weekly-progress-wrap">
-      <div class="weekly-progress-head">
-        <span>{{ summary().tasks_done }} / {{ summary().tasks_total }} Tasks Done.</span>
-        <span>{{ summary().minutes_spent }} / {{ weekPlan()?.metrics?.minutes_target || 0 }} min</span>
-      </div>
-      <ion-progress-bar [value]="progressPct() / 100"></ion-progress-bar>
-    </div>
-  </ion-toolbar>
-
-  <ion-toolbar class="weekly-lane-toolbar">
-    <ion-segment [value]="selectedLane()" (ionChange)="onLaneChanged($event)">
-      <ion-segment-button value="lesson">
-        <ion-label>Lesson</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="podcast">
-        <ion-label>Podcast</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="notes">
-        <ion-label>Notes</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="admin">
-        <ion-label>Admin</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="weekly-plan-content km-shell">
@@ -56,7 +29,7 @@
     </ion-list>
   } @else {
     <ion-list class="weekly-list">
-      @for (task of laneTasks(); track task.id) {
+      @for (task of visibleTasks(); track task.id) {
         <ion-item-sliding #sliding>
           <ion-item button="true" detail="false" class="weekly-card" (click)="openDetailModal(task)">
             <ion-label>
@@ -64,6 +37,7 @@
               <p class="task-meta">
                 <span class="km-chip">{{ task.item_json.status | titlecase }} - {{ task.item_json.estimate_min }} min</span>
                 <span class="km-chip task-priority">{{ task.item_json.priority }}</span>
+                <span class="km-chip">{{ task.item_json.lane | titlecase }}</span>
               </p>
               @if (task.related_type && task.related_id) {
                 <p class="task-related">{{ task.related_type }} {{ task.related_id }}</p>
@@ -80,9 +54,9 @@
       }
     </ion-list>
 
-    @if (laneTasks().length === 0) {
+    @if (visibleTasks().length === 0) {
       <div class="weekly-empty-state">
-        <h3>No tasks in {{ selectedLane() | titlecase }}</h3>
+        <h3>No tasks this week</h3>
         <p>Add one with the button below.</p>
       </div>
     }
