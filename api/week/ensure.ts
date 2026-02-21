@@ -20,6 +20,23 @@ interface Env {
   JWT_SECRET: string;
 }
 
+async function tableExists(db: D1Database, tableName: string): Promise<boolean> {
+  const row = await db
+    .prepare(
+      `
+      SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name = ?1
+      LIMIT 1
+      `
+    )
+    .bind(tableName)
+    .first<Record<string, unknown>>();
+
+  return Boolean(row);
+}
+
 type WeekPayload = {
   weekPlan: Record<string, unknown> | null;
   tasks: Array<Record<string, unknown>>;
@@ -93,6 +110,28 @@ function mapReviewRow(
 }
 
 export async function loadWeekData(db: D1Database, userId: number, weekStart: string): Promise<WeekPayload> {
+  const hasWeeklyPlans = await tableExists(db, 'sp_weekly_plans');
+  const hasWeeklyTasks = await tableExists(db, 'sp_weekly_tasks');
+  const hasSprintReviews = await tableExists(db, 'sp_sprint_reviews');
+  const hasCaptureNotes = await tableExists(db, 'ar_capture_notes');
+  const hasNotes = await tableExists(db, 'ar_notes');
+
+  if (!hasWeeklyPlans || !hasWeeklyTasks) {
+    return {
+      weekPlan: null,
+      tasks: [],
+      review: null,
+      summary: {
+        tasks_done: 0,
+        tasks_total: 0,
+        minutes_spent: 0,
+        inbox_count: 0,
+        capture_notes: 0,
+        promoted_notes: 0,
+      },
+    };
+  }
+
   const weekPlanRaw = await db
     .prepare(
       `
@@ -120,20 +159,22 @@ export async function loadWeekData(db: D1Database, userId: number, weekStart: st
     .all<Record<string, unknown>>();
 
   const weekEnd = addDays(weekStart, 6);
-  const reviewRaw = await db
-    .prepare(
-      `
-      SELECT *
-      FROM sp_sprint_reviews
-      WHERE user_id = ?1
-        AND period_start = ?2
-        AND period_end = ?3
-      ORDER BY id DESC
-      LIMIT 1
-      `
-    )
-    .bind(userId, weekStart, weekEnd)
-    .first<Record<string, unknown>>();
+  const reviewRaw = hasSprintReviews
+    ? await db
+        .prepare(
+          `
+          SELECT *
+          FROM sp_sprint_reviews
+          WHERE user_id = ?1
+            AND period_start = ?2
+            AND period_end = ?3
+          ORDER BY id DESC
+          LIMIT 1
+          `
+        )
+        .bind(userId, weekStart, weekEnd)
+        .first<Record<string, unknown>>()
+    : null;
 
   const tasks = (taskResult.results ?? [])
     .map((row) => mapWeeklyTaskToPlannerTaskRow(row))
@@ -153,45 +194,51 @@ export async function loadWeekData(db: D1Database, userId: number, weekStart: st
     }
   }
 
-  const inboxCountRow = await db
-    .prepare(
-      `
-      SELECT COUNT(*) AS count
-      FROM ar_capture_notes
-      WHERE user_id = ?1
-        AND status = 'inbox'
-      `
-    )
-    .bind(userId)
-    .first<Record<string, unknown>>();
+  const inboxCountRow = hasCaptureNotes
+    ? await db
+        .prepare(
+          `
+          SELECT COUNT(*) AS count
+          FROM ar_capture_notes
+          WHERE user_id = ?1
+            AND status = 'inbox'
+          `
+        )
+        .bind(userId)
+        .first<Record<string, unknown>>()
+    : null;
   const inboxCount = readInteger(inboxCountRow?.['count']) ?? 0;
 
-  const captureCountRow = await db
-    .prepare(
-      `
-      SELECT COUNT(*) AS count
-      FROM ar_capture_notes
-      WHERE user_id = ?1
-        AND date(created_at) >= ?2
-        AND date(created_at) <= ?3
-      `
-    )
-    .bind(userId, weekStart, weekEnd)
-    .first<Record<string, unknown>>();
+  const captureCountRow = hasCaptureNotes
+    ? await db
+        .prepare(
+          `
+          SELECT COUNT(*) AS count
+          FROM ar_capture_notes
+          WHERE user_id = ?1
+            AND date(created_at) >= ?2
+            AND date(created_at) <= ?3
+          `
+        )
+        .bind(userId, weekStart, weekEnd)
+        .first<Record<string, unknown>>()
+    : null;
   const captureNotes = readInteger(captureCountRow?.['count']) ?? 0;
 
-  const promotedCountRow = await db
-    .prepare(
-      `
-      SELECT COUNT(*) AS count
-      FROM ar_notes
-      WHERE user_id = ?1
-        AND date(created_at) >= ?2
-        AND date(created_at) <= ?3
-      `
-    )
-    .bind(userId, weekStart, weekEnd)
-    .first<Record<string, unknown>>();
+  const promotedCountRow = hasNotes
+    ? await db
+        .prepare(
+          `
+          SELECT COUNT(*) AS count
+          FROM ar_notes
+          WHERE user_id = ?1
+            AND date(created_at) >= ?2
+            AND date(created_at) <= ?3
+          `
+        )
+        .bind(userId, weekStart, weekEnd)
+        .first<Record<string, unknown>>()
+    : null;
   const promotedNotes = readInteger(promotedCountRow?.['count']) ?? 0;
 
   return {

@@ -3,7 +3,23 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { chevronForwardOutline } from 'ionicons/icons';
+import {
+  bookOutline,
+  calendarOutline,
+  chatbubblesOutline,
+  chevronForwardOutline,
+  documentTextOutline,
+  gitCompareOutline,
+  globeOutline,
+  leafOutline,
+  libraryOutline,
+  micOutline,
+  pricetagsOutline,
+  settingsOutline,
+  shuffleOutline,
+  sparklesOutline,
+  swapHorizontalOutline,
+} from 'ionicons/icons';
 @Component({
   selector: 'app-menu',
   templateUrl: './app-menu.component.html',
@@ -14,7 +30,23 @@ export class AppMenuComponent {
   private openSections = new Set<string>(['arabic']);
 
   constructor() {
-    addIcons({ chevronForwardOutline });
+    addIcons({
+      chevronForwardOutline,
+      bookOutline,
+      leafOutline,
+      libraryOutline,
+      swapHorizontalOutline,
+      sparklesOutline,
+      globeOutline,
+      chatbubblesOutline,
+      pricetagsOutline,
+      shuffleOutline,
+      gitCompareOutline,
+      micOutline,
+      calendarOutline,
+      documentTextOutline,
+      settingsOutline,
+    });
   }
 
   toggle(section: string) {

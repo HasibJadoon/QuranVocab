@@ -21,6 +21,7 @@ import { computeWeekStartSydney, formatWeekRangeLabel } from '../../sprint/utils
 import { TaskDetailModalComponent } from './modals/task-detail.modal';
 import { TaskEditModalComponent } from './modals/task-edit.modal';
 import { PlanWeekModalComponent, PlanWeekModalResult } from './modals/plan-week.modal';
+import { addOutline, gridOutline, sparklesOutline } from 'ionicons/icons';
 
 type BoardStatus = 'planned' | 'doing' | 'done';
 
@@ -98,6 +99,10 @@ export class WeeklyPlanPage {
     }
     return Math.min(100, Math.round((this.summary().tasks_done / total) * 100));
   });
+
+  readonly gridIcon = gridOutline;
+  readonly addIcon = addOutline;
+  readonly sparklesIcon = sparklesOutline;
 
   constructor() {
     this.route.paramMap.subscribe((params) => {

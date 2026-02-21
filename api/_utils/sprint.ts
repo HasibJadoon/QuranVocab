@@ -1027,6 +1027,23 @@ async function weeklySprintTablesExist(db: D1Database): Promise<boolean> {
   return Boolean(weeklyPlans && weeklyTasks);
 }
 
+async function weeklyTasksHasSourceTaskIdColumn(db: D1Database): Promise<boolean> {
+  const info = await db
+    .prepare(
+      `
+      PRAGMA table_info(sp_weekly_tasks)
+      `
+    )
+    .all<Record<string, unknown>>();
+
+  for (const row of info.results ?? []) {
+    if (readTrimmed(row['name']) === 'source_task_id') {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function ensureWeeklyPlanExists(args: {
   db: D1Database;
   userId: number;
@@ -1230,6 +1247,7 @@ export async function ensureWeekAnchors(args: {
     .all<Record<string, unknown>>();
 
   const existingByAnchor = new Map<AnchorKey, Record<string, unknown>>();
+  const hasSourceTaskIdColumn = await weeklyTasksHasSourceTaskIdColumn(args.db);
   for (const row of taskRows.results ?? []) {
     const taskJson = normalizeTaskJson(parseJsonObject(row['task_json']) ?? {}, 'Task');
     const key = taskJson.meta.anchor_key;
@@ -1292,27 +1310,50 @@ export async function ensureWeekAnchors(args: {
       podcastContentId = podcastId;
     }
 
-    await args.db
-      .prepare(
-        `
-        INSERT INTO sp_weekly_tasks
-          (user_id, week_start, title, task_type, kanban_state, status, priority, points, due_date, order_index, task_json, ar_lesson_id, wv_claim_id, wv_content_item_id, source_task_id, created_at, updated_at)
-        VALUES
-          (?1, ?2, ?3, ?4, 'backlog', 'planned', ?5, NULL, NULL, ?6, ?7, NULL, NULL, ?8, ?9, datetime('now'), datetime('now'))
-        `
-      )
-      .bind(
-        args.userId,
-        args.weekStart,
-        itemJson.title,
-        anchor.lane === 'lesson' ? 'lesson_unit_task' : 'podcast',
-        plannerPriorityToWeeklyPriority(itemJson.priority),
-        itemJson.order_index ?? anchorOrderIndex(anchor.key),
-        JSON.stringify(itemJson),
-        podcastContentId,
-        `ANCHOR:${anchor.key}:${args.weekStart}`
-      )
-      .run();
+    if (hasSourceTaskIdColumn) {
+      await args.db
+        .prepare(
+          `
+          INSERT INTO sp_weekly_tasks
+            (user_id, week_start, title, task_type, kanban_state, status, priority, points, due_date, order_index, task_json, ar_lesson_id, wv_claim_id, wv_content_item_id, source_task_id, created_at, updated_at)
+          VALUES
+            (?1, ?2, ?3, ?4, 'backlog', 'planned', ?5, NULL, NULL, ?6, ?7, NULL, NULL, ?8, ?9, datetime('now'), datetime('now'))
+          `
+        )
+        .bind(
+          args.userId,
+          args.weekStart,
+          itemJson.title,
+          anchor.lane === 'lesson' ? 'lesson_unit_task' : 'podcast',
+          plannerPriorityToWeeklyPriority(itemJson.priority),
+          itemJson.order_index ?? anchorOrderIndex(anchor.key),
+          JSON.stringify(itemJson),
+          podcastContentId,
+          `ANCHOR:${anchor.key}:${args.weekStart}`
+        )
+        .run();
+    } else {
+      await args.db
+        .prepare(
+          `
+          INSERT INTO sp_weekly_tasks
+            (user_id, week_start, title, task_type, kanban_state, status, priority, points, due_date, order_index, task_json, ar_lesson_id, wv_claim_id, wv_content_item_id, created_at, updated_at)
+          VALUES
+            (?1, ?2, ?3, ?4, 'backlog', 'planned', ?5, NULL, NULL, ?6, ?7, NULL, NULL, ?8, datetime('now'), datetime('now'))
+          `
+        )
+        .bind(
+          args.userId,
+          args.weekStart,
+          itemJson.title,
+          anchor.lane === 'lesson' ? 'lesson_unit_task' : 'podcast',
+          plannerPriorityToWeeklyPriority(itemJson.priority),
+          itemJson.order_index ?? anchorOrderIndex(anchor.key),
+          JSON.stringify(itemJson),
+          podcastContentId
+        )
+        .run();
+    }
   }
 }
 
@@ -1423,45 +1464,86 @@ export async function ensureLessonWeeklyTask(args: EnsureLessonWeeklyTaskArgs): 
     weekStart,
   });
 
-  await args.db
-    .prepare(
-      `
-      INSERT OR IGNORE INTO sp_weekly_tasks (
-        user_id,
-        week_start,
-        title,
-        task_type,
-        kanban_state,
-        status,
+  const hasSourceTaskIdColumn = await weeklyTasksHasSourceTaskIdColumn(args.db);
+  if (hasSourceTaskIdColumn) {
+    await args.db
+      .prepare(
+        `
+        INSERT OR IGNORE INTO sp_weekly_tasks (
+          user_id,
+          week_start,
+          title,
+          task_type,
+          kanban_state,
+          status,
+          priority,
+          points,
+          due_date,
+          order_index,
+          task_json,
+          ar_lesson_id,
+          source_task_id,
+          created_at,
+          updated_at
+        ) VALUES (
+          ?1, ?2, ?3, 'lesson_unit_task', ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, datetime('now'), datetime('now')
+        )
+        `
+      )
+      .bind(
+        args.userId,
+        weekStart,
+        plannerTask.title,
+        plannerStatusToWeeklyKanban(plannerTask.status),
+        plannerStatusToWeeklyStatus(plannerTask.status),
         priority,
         points,
-        due_date,
-        order_index,
-        task_json,
-        ar_lesson_id,
-        source_task_id,
-        created_at,
-        updated_at
-      ) VALUES (
-        ?1, ?2, ?3, 'lesson_unit_task', ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, datetime('now'), datetime('now')
+        dueDate,
+        orderIndex,
+        JSON.stringify(sourceJson),
+        args.lessonId,
+        args.taskId
       )
-      `
-    )
-    .bind(
-      args.userId,
-      weekStart,
-      plannerTask.title,
-      plannerStatusToWeeklyKanban(plannerTask.status),
-      plannerStatusToWeeklyStatus(plannerTask.status),
-      priority,
-      points,
-      dueDate,
-      orderIndex,
-      JSON.stringify(sourceJson),
-      args.lessonId,
-      args.taskId
-    )
-    .run();
+      .run();
+  } else {
+    await args.db
+      .prepare(
+        `
+        INSERT OR IGNORE INTO sp_weekly_tasks (
+          user_id,
+          week_start,
+          title,
+          task_type,
+          kanban_state,
+          status,
+          priority,
+          points,
+          due_date,
+          order_index,
+          task_json,
+          ar_lesson_id,
+          created_at,
+          updated_at
+        ) VALUES (
+          ?1, ?2, ?3, 'lesson_unit_task', ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, datetime('now'), datetime('now')
+        )
+        `
+      )
+      .bind(
+        args.userId,
+        weekStart,
+        plannerTask.title,
+        plannerStatusToWeeklyKanban(plannerTask.status),
+        plannerStatusToWeeklyStatus(plannerTask.status),
+        priority,
+        points,
+        dueDate,
+        orderIndex,
+        JSON.stringify(sourceJson),
+        args.lessonId
+      )
+      .run();
+  }
 }
 
 export async function insertActivityLog(args: {

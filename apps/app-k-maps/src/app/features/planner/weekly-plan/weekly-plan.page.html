@@ -6,10 +6,10 @@
     <ion-title>{{ weekLabel() }}</ion-title>
     <ion-buttons slot="end">
       <ion-button fill="clear" (click)="openKanbanView()" aria-label="Kanban cards">
-        <ion-icon name="grid-outline" slot="icon-only"></ion-icon>
+        <ion-icon [icon]="gridIcon" slot="icon-only"></ion-icon>
       </ion-button>
       <ion-button fill="clear" (click)="openCreateModal()" aria-label="Add task">
-        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
+        <ion-icon [icon]="addIcon" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -45,7 +45,7 @@
 
   @if (shouldPromptPlanning()) {
     <ion-item button detail="true" (click)="openPlanWeekModal()">
-      <ion-icon slot="start" name="sparkles-outline"></ion-icon>
+      <ion-icon slot="start" [icon]="sparklesIcon"></ion-icon>
       <ion-label>New week ready. Plan now.</ion-label>
     </ion-item>
   }
