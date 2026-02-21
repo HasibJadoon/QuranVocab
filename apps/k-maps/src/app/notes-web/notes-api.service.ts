@@ -1,8 +1,7 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { API_BASE } from '../shared/api-base';
-import { AuthService } from '../shared/services/AuthService';
 import {
   NoteComment,
   Note,
@@ -39,67 +38,62 @@ interface CreateCommentPayload {
 @Injectable({ providedIn: 'root' })
 export class NotesApiService {
   private readonly http = inject(HttpClient);
-  private readonly auth = inject(AuthService);
   private readonly apiRoot = resolveApiRoot(API_BASE);
 
   listNotes(status: NoteStatus = 'inbox', q = ''): Observable<Note[]> {
-    let params = new HttpParams().set('status', status);
-    if (q.trim()) {
-      params = params.set('q', q.trim());
-    }
+    const params = new HttpParams()
+      .set('status', status)
+      .set('limit', '400');
 
-    return this.http.get<unknown>(`${this.apiRoot}/notes`, {
+    return this.http.get<unknown>(`${this.apiRoot}/notes/capture`, {
       params,
-      headers: this.authHeaders(),
     }).pipe(
-      map((response) => this.pickList<Note>(response, ['notes', 'results', 'items', 'data']))
+      map((response) => {
+        const notes = this.pickList<Note>(response, ['notes', 'results', 'items', 'data']);
+        const query = q.trim().toLowerCase();
+        if (!query) {
+          return notes;
+        }
+        return notes.filter((note) => {
+          const haystack = `${note.title ?? ''}\n${note.body_md}`.toLowerCase();
+          return haystack.includes(query);
+        });
+      })
     );
   }
 
   createNote(payload: CreateNotePayload): Observable<Note> {
-    return this.http.post<unknown>(`${this.apiRoot}/notes`, payload, {
-      headers: this.authHeaders(),
-    }).pipe(
+    return this.http.post<unknown>(`${this.apiRoot}/notes/capture`, payload).pipe(
       map((response) => this.pickItem<Note>(response, ['note', 'result', 'item', 'data']) ?? (response as Note))
     );
   }
 
   getNote(noteId: string): Observable<NoteDetail> {
-    return this.http.get<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}`, {
-      headers: this.authHeaders(),
-    }).pipe(
+    return this.http.get<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}`).pipe(
       map((response) => this.normalizeNoteDetail(response))
     );
   }
 
   updateNote(noteId: string, payload: UpdateNotePayload): Observable<Note> {
-    return this.http.patch<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}`, payload, {
-      headers: this.authHeaders(),
-    }).pipe(
+    return this.http.patch<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}`, payload).pipe(
       map((response) => this.pickItem<Note>(response, ['note', 'result', 'item', 'data']) ?? (response as Note))
     );
   }
 
   archiveNote(noteId: string): Observable<Note | null> {
-    return this.http.post<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}/archive`, {}, {
-      headers: this.authHeaders(),
-    }).pipe(
+    return this.http.post<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}/archive`, {}).pipe(
       map((response) => this.pickItem<Note>(response, ['note', 'result', 'item', 'data']))
     );
   }
 
   unarchiveNote(noteId: string): Observable<Note | null> {
-    return this.http.post<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}/unarchive`, {}, {
-      headers: this.authHeaders(),
-    }).pipe(
+    return this.http.post<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}/unarchive`, {}).pipe(
       map((response) => this.pickItem<Note>(response, ['note', 'result', 'item', 'data']))
     );
   }
 
   addLink(noteId: string, payload: CreateLinkPayload): Observable<NoteLink> {
-    return this.http.post<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}/links`, payload, {
-      headers: this.authHeaders(),
-    }).pipe(
+    return this.http.post<unknown>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}/links`, payload).pipe(
       map((response) => {
         const picked = this.pickItem<NoteLink>(response, ['link', 'note_link', 'result', 'item', 'data']);
         if (picked) {
@@ -125,7 +119,6 @@ export class NotesApiService {
 
     return this.http.delete<void>(`${this.apiRoot}/notes/${encodeURIComponent(noteId)}/links`, {
       params,
-      headers: this.authHeaders(),
     });
   }
 
@@ -136,26 +129,17 @@ export class NotesApiService {
 
     return this.http.get<unknown>(`${this.apiRoot}/comments`, {
       params,
-      headers: this.authHeaders(),
     }).pipe(
       map((response) => this.pickList<NoteComment>(response, ['comments', 'results', 'items', 'data']))
     );
   }
 
   createComment(payload: CreateCommentPayload): Observable<NoteComment> {
-    return this.http.post<unknown>(`${this.apiRoot}/comments`, payload, {
-      headers: this.authHeaders(),
-    }).pipe(
+    return this.http.post<unknown>(`${this.apiRoot}/comments`, payload).pipe(
       map((response) =>
         this.pickItem<NoteComment>(response, ['comment', 'result', 'item', 'data']) ?? (response as NoteComment)
       )
     );
-  }
-
-  private authHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      ...this.auth.authHeaders(),
-    });
   }
 
   private normalizeNoteDetail(response: unknown): NoteDetail {

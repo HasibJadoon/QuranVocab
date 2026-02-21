@@ -3,19 +3,35 @@
   height: 100%;
 }
 
+.notes-shell-toolbar,
+.notes-shell-search {
+  --background: rgba(10, 18, 34, 0.9);
+  --color: var(--km-text, #e6edf8);
+}
+
+.notes-shell-search {
+  --min-height: 58px;
+}
+
 .notes-search-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   padding-inline: 0.5rem;
 }
 
 .notes-search-row ion-searchbar {
   flex: 1;
   --box-shadow: none;
+  --background: rgba(15, 25, 44, 0.86);
+  --border-radius: 13px;
+  --color: var(--km-text, #e6edf8);
+  --placeholder-color: var(--km-text-dim, #9eb2ce);
 }
 
 .notes-add-search-button {
-  --border-radius: 0.7rem;
+  --border-radius: 0.72rem;
+  --padding-start: 0.45rem;
+  --padding-end: 0.45rem;
   min-width: 2.35rem;
 }

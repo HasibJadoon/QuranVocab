@@ -68,6 +68,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'review/:weekStart',
+    loadComponent: () => import('./features/planner/sprint-review/sprint-review.page').then((m) => m.SprintReviewPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'notes',
     loadChildren: () => import('./notes/notes.routes').then((m) => m.NOTES_ROUTES),
     canActivate: [AuthGuard]

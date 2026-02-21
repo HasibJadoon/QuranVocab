@@ -1,0 +1,241 @@
+<section class="sprint-week-page sp-shell">
+  <header class="week-header sp-glass">
+    <div>
+      <p class="kicker">Weekly Sprint</p>
+      <h1>{{ weekPlan()?.title || ('Week Sprint — ' + weekRangeLabel()) }}</h1>
+      <p class="subline">{{ weekRangeLabel() }}</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="sp-btn" (click)="goToReview()">Sprint Review</button>
+      <button type="button" class="sp-btn" [routerLink]="['/week', weekStart()]">Reload</button>
+    </div>
+  </header>
+
+  <section class="week-metrics sp-glass">
+    <div class="metrics-line">
+      <strong>{{ summary().tasks_done }} / {{ summary().tasks_total }} Tasks Done</strong>
+      <strong>{{ summary().minutes_spent }} / {{ weekPlan()?.metrics?.minutes_target || 0 }} Minutes</strong>
+    </div>
+    <div class="meter meter-track">
+      <span class="meter-done" [style.width.%]="progressPct()"></span>
+      <span class="meter-time" [style.width.%]="timePct()"></span>
+    </div>
+  </section>
+
+  <section class="capture-strip sp-glass">
+    <label class="capture-field">
+      <span>Quick Capture</span>
+      <input
+        [formControl]="quickCaptureControl"
+        placeholder="Take quick note..."
+        (keydown.enter)="captureQuickNote()"
+      />
+    </label>
+    <button class="sp-btn sp-btn-primary" type="button" (click)="captureQuickNote()" [disabled]="saving()">Add</button>
+
+    <label class="task-field">
+      <span>Quick Task</span>
+      <input [formControl]="quickTaskControl" placeholder="Task title" (keydown.enter)="startCreateTask()" />
+    </label>
+    <button class="sp-btn" type="button" (click)="startCreateTask()">+ Add Task</button>
+  </section>
+
+  @if (error()) {
+    <p class="error-msg">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <div class="loading">Loading weekly sprint...</div>
+  } @else {
+    <section class="board-layout">
+      <main class="kanban-grid">
+        @for (lane of lanes; track lane) {
+          <article class="lane sp-glass" (dragover)="onLaneDragOver($event)" (drop)="onLaneDrop($event, lane)">
+            <header class="lane-header">
+              <h3>{{ lane | titlecase }}</h3>
+              <span>{{ tasksForLane(lane).length }}</span>
+            </header>
+
+            <div class="lane-body">
+              @for (task of tasksForLane(lane); track task.id) {
+                <section class="task-card" draggable="true" (dragstart)="onDragStart($event, task.id)">
+                  <div class="task-top">
+                    <button type="button" class="task-title" (click)="openTask(task)">
+                      {{ task.item_json.title }}
+                    </button>
+                    <button type="button" class="mini-complete" (click)="markDone(task)" [disabled]="task.item_json.status === 'done'">
+                      ✓
+                    </button>
+                  </div>
+
+                  <div class="task-meta-row">
+                    <span class="sp-chip">{{ task.item_json.status | titlecase }} - {{ task.item_json.estimate_min }} min</span>
+                    <span class="sp-chip sp-chip-priority">{{ task.item_json.priority }}</span>
+                  </div>
+
+                  <div class="task-links">
+                    @if (task.related_type && task.related_id) {
+                      <span class="related">{{ task.related_type }} {{ task.related_id }}</span>
+                      <button type="button" class="link-btn" (click)="openRelated(task)">Open</button>
+                    }
+                  </div>
+
+                  <footer class="task-card-actions">
+                    <button type="button" class="mini-btn" (click)="openTask(task)">Edit</button>
+                    <button type="button" class="mini-btn" (click)="setFocusFromTask(task)">Focus</button>
+                  </footer>
+                </section>
+              }
+
+              @if (tasksForLane(lane).length === 0) {
+                <p class="lane-empty">Drop or add a task here.</p>
+              }
+            </div>
+          </article>
+        }
+      </main>
+
+      <aside class="right-panel">
+        <section class="panel-card sp-glass">
+          <h3>Today's Focus</h3>
+          <p class="focus-line">{{ focusState()?.focus_mode || 'planning' }}</p>
+          <p class="mini">
+            {{ focusState()?.current_type || 'No active target' }}
+            @if (focusState()?.current_id) {
+              • {{ focusState()?.current_id }}
+            }
+          </p>
+        </section>
+
+        <section class="panel-card sp-glass">
+          <h3>Inbox</h3>
+          @for (note of inboxNotes(); track note.id) {
+            <article class="inbox-item">
+              <h4>{{ note.title || 'Capture note' }}</h4>
+              <p>{{ note.text }}</p>
+              <p class="mini">{{ note.updated_at | date:'EEE h:mm a' }}</p>
+              <div class="inbox-actions">
+                <button type="button" class="mini-btn" (click)="promoteNote(note)">Promote</button>
+                <button type="button" class="mini-btn" (click)="archiveNote(note)">Archive</button>
+              </div>
+            </article>
+          }
+
+          @if (inboxNotes().length === 0) {
+            <p class="mini">No inbox notes.</p>
+          }
+
+          <button type="button" class="sp-btn panel-view-all" [routerLink]="['/notes']">View All</button>
+        </section>
+      </aside>
+    </section>
+  }
+
+  <footer class="week-footer sp-glass">
+    <button type="button" class="sp-btn" (click)="startCreateTask()">+ Add Task</button>
+    <span class="mini">Sprint Review · {{ summary().minutes_spent }} min today</span>
+    <span class="mini">{{ weekPlan()?.metrics?.minutes_target || 0 }} min target</span>
+  </footer>
+</section>
+
+@if (drawerOpen()) {
+  <aside class="task-drawer-backdrop" (click)="closeDrawer()">
+    <section class="task-drawer sp-panel" (click)="$event.stopPropagation()">
+      <header class="drawer-head">
+        <h3>{{ taskSource ? 'Task Detail' : 'New Task' }}</h3>
+        <button type="button" class="sp-btn" (click)="closeDrawer()">Close</button>
+      </header>
+
+      @if (taskDraft) {
+        <div class="drawer-body">
+          <label>
+            <span>Title</span>
+            <input [(ngModel)]="taskDraft.title" name="task-title" />
+          </label>
+
+          <div class="row-3">
+            <label>
+              <span>Lane</span>
+              <select [(ngModel)]="taskDraft.lane" name="task-lane">
+                @for (lane of lanes; track lane) {
+                  <option [value]="lane">{{ lane | titlecase }}</option>
+                }
+              </select>
+            </label>
+
+            <label>
+              <span>Priority</span>
+              <select [(ngModel)]="taskDraft.priority" name="task-priority">
+                @for (priority of priorities; track priority) {
+                  <option [value]="priority">{{ priority }}</option>
+                }
+              </select>
+            </label>
+
+            <label>
+              <span>Status</span>
+              <select [(ngModel)]="taskDraft.status" name="task-status">
+                @for (status of statuses; track status) {
+                  <option [value]="status">{{ status }}</option>
+                }
+              </select>
+            </label>
+          </div>
+
+          <div class="row-2">
+            <label>
+              <span>Estimate (min)</span>
+              <input type="number" [(ngModel)]="taskDraft.estimate_min" name="task-estimate" />
+            </label>
+
+            <label>
+              <span>Actual (min)</span>
+              <input type="number" [(ngModel)]="taskDraft.actual_min" name="task-actual" />
+            </label>
+          </div>
+
+          <div class="row-2">
+            <label>
+              <span>Related Type</span>
+              <input [(ngModel)]="taskRelatedType" name="task-related-type" placeholder="ar_lesson | wv_content_item" />
+            </label>
+
+            <label>
+              <span>Related Id</span>
+              <input [(ngModel)]="taskRelatedId" name="task-related-id" />
+            </label>
+          </div>
+
+          <label>
+            <span>Task Note</span>
+            <textarea [(ngModel)]="taskDraft.note" name="task-note" rows="3"></textarea>
+          </label>
+
+          <div class="checklist-block">
+            <h4>Checklist</h4>
+            <div class="checklist-add-row">
+              <input [formControl]="checklistInputControl" placeholder="Add checklist item" (keydown.enter)="addChecklistItem()" />
+              <button type="button" class="mini-btn" (click)="addChecklistItem()">Add</button>
+            </div>
+
+            @for (item of taskDraft.checklist; track item.id) {
+              <label class="check-item">
+                <input type="checkbox" [(ngModel)]="item.done" [name]="'check-' + item.id" />
+                <span>{{ item.label }}</span>
+                <button type="button" class="mini-btn" (click)="removeChecklistItem(item.id)">Remove</button>
+              </label>
+            }
+          </div>
+
+          <footer class="drawer-footer">
+            <button type="button" class="sp-btn" (click)="saveDraft()" [disabled]="saving()">Save</button>
+            @if (taskSource) {
+              <button type="button" class="sp-btn sp-btn-primary" (click)="markDone(taskSource)" [disabled]="saving()">Mark Done</button>
+            }
+          </footer>
+        </div>
+      }
+    </section>
+  </aside>
+}

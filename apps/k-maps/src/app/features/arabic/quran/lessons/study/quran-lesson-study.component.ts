@@ -18,6 +18,7 @@ import {
   AppTabsComponent,
   type AppTabItem,
 } from '../../../../../shared/components';
+import { LessonCaptureBarComponent } from '../../../../sprint/components/lesson-capture-bar/lesson-capture-bar.component';
 import { QuranAyah } from '../../../../../shared/models/arabic/quran-data.model';
 import { PageHeaderTabsConfig } from '../../../../../shared/models/core/page-header.model';
 import { PageHeaderService } from '../../../../../shared/services/page-header.service';
@@ -185,6 +186,7 @@ type ExpressionStudyCard = {
     AppTabsComponent,
     AppPillsComponent,
     AppFontSizeControlsComponent,
+    LessonCaptureBarComponent,
     QuranWordInspectorComponent,
     QuranSentenceStructureComponent,
   ],

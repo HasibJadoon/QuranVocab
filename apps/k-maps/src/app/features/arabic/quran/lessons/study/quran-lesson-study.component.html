@@ -24,6 +24,15 @@
     </div>
   </header>
 
+  <app-lesson-capture-bar
+    *ngIf="state.lessonId as lessonId"
+    [lessonId]="lessonId"
+    [containerId]="state.containerId"
+    [unitId]="state.passageUnitId"
+    [ref]="state.selectedSurah && state.rangeStart ? (state.selectedSurah + ':' + state.rangeStart) : null"
+    [taskType]="studyActiveTaskTab"
+  ></app-lesson-capture-bar>
+
   <div class="edit-grid">
     <main class="edit-panel">
       <div class="panel-head">

@@ -1,0 +1,13 @@
+<ion-tab-bar slot="bottom" class="app-icon-tab-bar">
+  <ion-tab-button
+    class="app-icon-tab-button"
+    *ngFor="let tab of tabs"
+    [tab]="tab.key"
+    [selected]="manual ? activeKey === tab.key : undefined"
+    [attr.aria-label]="tab.label"
+    [title]="tab.label"
+    (click)="onSelect(tab.key, $event)"
+  >
+    <ion-icon [icon]="tab.icon" aria-hidden="true"></ion-icon>
+  </ion-tab-button>
+</ion-tab-bar>

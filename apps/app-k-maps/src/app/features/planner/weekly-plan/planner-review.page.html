@@ -1,0 +1,51 @@
+<ion-header>
+  <ion-toolbar class="km-week-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Sprint Review</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="planner-review-content km-shell km-content-with-bottom-tabs">
+  @if (loading()) {
+    <ion-list>
+      @for (row of [1,2,3,4]; track row) {
+        <ion-item lines="none">
+          <ion-label>
+            <h3><ion-skeleton-text animated style="width: 60%"></ion-skeleton-text></h3>
+            <p><ion-skeleton-text animated style="width: 90%"></ion-skeleton-text></p>
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  } @else {
+    <section class="review-card km-glass">
+      <p class="review-week">{{ weekStart() }}</p>
+      <div class="review-metrics">
+        <span>{{ metrics.tasks_done }}/{{ metrics.tasks_total }} tasks</span>
+        <span>{{ metrics.minutes_spent }} min</span>
+        <span>{{ metrics.capture_notes }} captures</span>
+        <span>{{ metrics.promoted_notes }} promoted</span>
+      </div>
+    </section>
+
+    <section class="review-card km-glass">
+      <ion-item lines="none">
+        <ion-label position="stacked">What worked</ion-label>
+        <ion-textarea [(ngModel)]="whatWorkedText" rows="4" placeholder="One bullet per line"></ion-textarea>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label position="stacked">What blocked</ion-label>
+        <ion-textarea [(ngModel)]="whatBlockedText" rows="4" placeholder="One bullet per line"></ion-textarea>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label position="stacked">Next week focus</ion-label>
+        <ion-textarea [(ngModel)]="nextFocusText" rows="4" placeholder="One bullet per line"></ion-textarea>
+      </ion-item>
+      <ion-button expand="block" class="km-btn save-btn" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Saving...' : 'Save Review' }}
+      </ion-button>
+    </section>
+  }
+</ion-content>

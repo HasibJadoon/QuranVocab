@@ -21,7 +21,7 @@
         [disabled]="creating()"
         aria-label="Create note"
       >
-        <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+        <ion-icon slot="icon-only" [icon]="addOutline"></ion-icon>
       </ion-button>
     </div>
   </ion-toolbar>
@@ -30,17 +30,5 @@
 <ion-tabs>
   <ion-router-outlet></ion-router-outlet>
 
-  <ion-tab-bar slot="bottom" class="notes-bottom-tabs">
-    <ion-tab-button tab="draft" aria-label="Draft">
-      <ion-icon name="create-outline"></ion-icon>
-    </ion-tab-button>
-
-    <ion-tab-button tab="flag" aria-label="Flag">
-      <ion-icon name="flag-outline"></ion-icon>
-    </ion-tab-button>
-
-    <ion-tab-button tab="published" aria-label="Published">
-      <ion-icon name="checkmark-done-outline"></ion-icon>
-    </ion-tab-button>
-  </ion-tab-bar>
+  <app-icon-tabs [tabs]="noteTabs"></app-icon-tabs>
 </ion-tabs>

@@ -27,6 +27,10 @@ export class NotesShellComponent {
 
   private readonly status$ = new BehaviorSubject<NoteStatus>('inbox');
   private readonly query$ = new BehaviorSubject<string>('');
+  private readonly routeStatusAlias: Record<string, NoteStatus> = {
+    inbox: 'inbox',
+    published: 'archived',
+  };
 
   readonly notes = signal<Note[]>([]);
   readonly loading = signal(true);
@@ -37,10 +41,20 @@ export class NotesShellComponent {
   readonly listError = signal<string | null>(null);
   readonly captureOpen = signal(false);
   readonly captureError = signal<string | null>(null);
+  readonly routeAlias = signal<string>('');
 
   readonly captureBodyControl = new FormControl('', { nonNullable: true });
 
   constructor() {
+    this.route.url.pipe(
+      tap((segments) => {
+        const alias = segments[0]?.path ?? '';
+        this.routeAlias.set(alias);
+        this.applyStatusFromAlias(alias);
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
     this.route.paramMap.pipe(
       tap((params) => {
         const noteId = params.get('id');
@@ -67,7 +81,7 @@ export class NotesShellComponent {
       this.notes.set(items);
 
       const selected = this.selectedId();
-      if (!selected && items.length > 0) {
+      if (!selected && items.length > 0 && !this.isStatusAliasRoute(this.routeAlias())) {
         void this.router.navigate(['/notes', items[0].id], { replaceUrl: true });
       }
     });
@@ -165,6 +179,13 @@ export class NotesShellComponent {
   onStatusChanged(status: NoteStatus): void {
     this.status.set(status);
     this.status$.next(status);
+
+    if (!this.selectedId()) {
+      const alias = status === 'archived' ? 'published' : 'inbox';
+      if (this.routeAlias() !== alias) {
+        void this.router.navigate(['/notes', alias], { replaceUrl: true });
+      }
+    }
   }
 
   onQueryChanged(query: string): void {
@@ -237,5 +258,19 @@ export class NotesShellComponent {
     }
 
     return fallback;
+  }
+
+  private applyStatusFromAlias(alias: string): void {
+    const mapped = this.routeStatusAlias[alias];
+    if (!mapped || mapped === this.status()) {
+      return;
+    }
+
+    this.status.set(mapped);
+    this.status$.next(mapped);
+  }
+
+  private isStatusAliasRoute(alias: string): boolean {
+    return alias in this.routeStatusAlias;
   }
 }

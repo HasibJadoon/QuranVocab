@@ -41,18 +41,27 @@ export class NotesApiService {
   private readonly apiRoot = resolveApiRoot(environment.apiBase);
 
   listNotes(status: NoteStatus = 'inbox', q = ''): Observable<Note[]> {
-    let params = new HttpParams().set('status', status);
-    if (q.trim()) {
-      params = params.set('q', q.trim());
-    }
+    const params = new HttpParams()
+      .set('status', status)
+      .set('limit', '400');
 
-    return this.http.get<unknown>(`${this.apiRoot}/notes`, { params }).pipe(
-      map((response) => this.pickList<Note>(response, ['notes', 'results', 'items', 'data']))
+    return this.http.get<unknown>(`${this.apiRoot}/notes/capture`, { params }).pipe(
+      map((response) => {
+        const notes = this.pickList<Note>(response, ['notes', 'results', 'items', 'data']);
+        const query = q.trim().toLowerCase();
+        if (!query) {
+          return notes;
+        }
+        return notes.filter((note) => {
+          const haystack = `${note.title ?? ''}\n${note.body_md}`.toLowerCase();
+          return haystack.includes(query);
+        });
+      })
     );
   }
 
   createNote(payload: CreateNotePayload): Observable<Note> {
-    return this.http.post<unknown>(`${this.apiRoot}/notes`, payload).pipe(
+    return this.http.post<unknown>(`${this.apiRoot}/notes/capture`, payload).pipe(
       map((response) => this.pickItem<Note>(response, ['note', 'result', 'item', 'data']) ?? (response as Note))
     );
   }

@@ -58,6 +58,13 @@ export const routes: Routes = [
           import('./features/admin/routes').then(m => m.routes),
       },
       {
+        path: 'podcast/:id',
+        loadComponent: () =>
+          import('./features/sprint/pages/podcast-editor/sprint-podcast-editor.page').then(
+            (m) => m.SprintPodcastEditorPageComponent
+          ),
+      },
+      {
         path: 'podcast',
         loadChildren: () =>
           import('./features/podcast/routes').then(m => m.routes),
@@ -66,6 +73,41 @@ export const routes: Routes = [
         path: 'planner',
         loadChildren: () =>
           import('./features/planner/routes').then(m => m.routes),
+      },
+      {
+        path: 'week',
+        loadComponent: () =>
+          import('./features/sprint/pages/week-board/sprint-week-board.page').then(
+            (m) => m.SprintWeekBoardPageComponent
+          ),
+      },
+      {
+        path: 'week/:weekStart',
+        loadComponent: () =>
+          import('./features/sprint/pages/week-board/sprint-week-board.page').then(
+            (m) => m.SprintWeekBoardPageComponent
+          ),
+      },
+      {
+        path: 'task/:taskId',
+        loadComponent: () =>
+          import('./features/sprint/pages/week-board/sprint-week-board.page').then(
+            (m) => m.SprintWeekBoardPageComponent
+          ),
+      },
+      {
+        path: 'review/:weekStart',
+        loadComponent: () =>
+          import('./features/sprint/pages/review/sprint-review.page').then(
+            (m) => m.SprintReviewPageComponent
+          ),
+      },
+      {
+        path: 'lesson/:id',
+        loadComponent: () =>
+          import('./features/arabic/quran/lessons/study/quran-lesson-study.component').then(
+            (m) => m.QuranLessonStudyComponent
+          ),
       },
       {
         path: 'notes',

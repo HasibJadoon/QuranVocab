@@ -1453,33 +1453,6 @@ app-ar-quran-study .study-footer {
   background: rgba(9, 13, 18, 0.97);
 }
 
-app-ar-quran-study .study-tab-bar {
-  --background: rgba(9, 13, 18, 0.97);
-  --border: 0;
-  --color: #67c4ff;
-  --color-selected: #ff4d66;
-  padding: 0.08rem 0 calc(env(safe-area-inset-bottom) * 0.45);
-}
-
-app-ar-quran-study .study-tab-button {
-  --color: #67c4ff;
-  --color-selected: #ff4d66;
-  --ripple-color: rgba(103, 196, 255, 0.24);
-  min-height: 50px;
-}
-
-app-ar-quran-study .study-tab-button ion-icon {
-  color: currentColor;
-  font-size: 1.25rem;
-  filter: drop-shadow(0 0 8px rgba(103, 196, 255, 0.55));
-  transition: color 0.2s ease, filter 0.2s ease, transform 0.2s ease;
-}
-
-app-ar-quran-study .study-tab-button.tab-selected ion-icon {
-  filter: drop-shadow(0 0 10px rgba(255, 77, 102, 0.62));
-  transform: translateY(-1px);
-}
-
 app-ar-quran-study .study-tab {
   display: block;
 }
@@ -2186,27 +2159,6 @@ app-notes-inbox-page .notes-shell-search ion-searchbar {
   padding-inline: 0.6rem;
 }
 
-app-notes-inbox-page .notes-bottom-tabs {
-  --background: color-mix(in srgb, var(--ion-background-color) 90%, var(--ion-color-step-200) 10%);
-  border-top: 1px solid var(--ion-color-step-200);
-  padding-top: 0.2rem;
-  padding-bottom: calc(0.24rem + env(safe-area-inset-bottom));
-}
-
-app-notes-inbox-page .notes-bottom-tabs ion-tab-button {
-  --color: var(--ion-color-medium);
-  --color-selected: var(--ion-color-primary);
-  min-height: 46px;
-}
-
-app-notes-inbox-page .notes-bottom-tabs ion-tab-button ion-icon {
-  font-size: 1.26rem;
-}
-
-app-notes-inbox-page .notes-bottom-tabs ion-tab-button.tab-selected ion-icon {
-  transform: translateY(-1px);
-}
-
 app-notes-tab-list .notes-tab-content {
   --padding-bottom: calc(4.8rem + env(safe-area-inset-bottom));
 }
@@ -2249,4 +2201,95 @@ app-notes-tab-list .notes-empty-state h3 {
 app-notes-tab-list .notes-empty-state p {
   margin: 0;
   color: var(--ion-color-medium);
+}
+
+/* Sprint/mobile reusable glass tokens */
+:root {
+  --km-shell-bg:
+    radial-gradient(95% 60% at 18% -8%, rgba(64, 112, 191, 0.18), transparent 62%),
+    radial-gradient(78% 52% at 100% 0%, rgba(49, 135, 215, 0.15), transparent 56%),
+    linear-gradient(165deg, #071022 0%, #0d1830 62%, #111c34 100%);
+  --km-surface: linear-gradient(165deg, rgba(18, 30, 52, 0.86), rgba(11, 18, 33, 0.88));
+  --km-surface-soft: rgba(21, 32, 54, 0.75);
+  --km-border: rgba(151, 181, 227, 0.27);
+  --km-border-strong: rgba(157, 189, 235, 0.42);
+  --km-text: #e6edf8;
+  --km-text-dim: #9eb2ce;
+}
+
+.km-shell {
+  --background: var(--km-shell-bg);
+}
+
+.km-glass {
+  background: var(--km-surface);
+  border: 1px solid var(--km-border);
+  box-shadow: 0 14px 28px rgba(5, 10, 22, 0.34);
+  backdrop-filter: blur(6px);
+}
+
+.km-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(155, 187, 232, 0.36);
+  padding: 0.09rem 0.5rem;
+  font-size: 0.71rem;
+  color: var(--km-text);
+}
+
+.km-btn {
+  --border-radius: 11px;
+  --background: rgba(29, 53, 88, 0.9);
+  --background-activated: rgba(47, 81, 129, 0.94);
+  --background-focused: rgba(47, 81, 129, 0.94);
+  --color: var(--km-text);
+  --border-color: var(--km-border-strong);
+}
+
+.km-week-toolbar {
+  --background: rgba(10, 18, 34, 0.88);
+  --border-color: rgba(145, 176, 224, 0.18);
+  --color: var(--km-text, #e6edf8);
+}
+
+.km-content-with-bottom-tabs {
+  --padding-bottom: calc(5.2rem + env(safe-area-inset-bottom));
+}
+
+/* Shared icon-only bottom tabs for Ionic */
+:root {
+  --app-icon-tabs-bg: rgba(9, 13, 18, 0.97);
+  --app-icon-tabs-color: #67c4ff;
+  --app-icon-tabs-selected: #ff4d66;
+  --app-icon-tabs-border-color: rgba(148, 180, 228, 0.2);
+  --app-icon-tabs-padding: 0.08rem 0 calc(env(safe-area-inset-bottom) * 0.45);
+  --app-icon-tabs-min-height: 50px;
+  --app-icon-tabs-icon-size: 1.25rem;
+}
+
+app-icon-tabs .app-icon-tab-bar {
+  --background: var(--app-icon-tabs-bg);
+  --border: 0;
+  --color: var(--app-icon-tabs-color);
+  --color-selected: var(--app-icon-tabs-selected);
+  border-top: 1px solid var(--app-icon-tabs-border-color);
+  padding: var(--app-icon-tabs-padding);
+}
+
+app-icon-tabs .app-icon-tab-button {
+  --color: var(--app-icon-tabs-color);
+  --color-selected: var(--app-icon-tabs-selected);
+  --ripple-color: color-mix(in srgb, var(--app-icon-tabs-color) 35%, transparent);
+  min-height: var(--app-icon-tabs-min-height);
+}
+
+app-icon-tabs .app-icon-tab-button ion-icon {
+  color: currentColor;
+  font-size: var(--app-icon-tabs-icon-size);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--app-icon-tabs-color) 72%, transparent));
+  transition: color 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+}
+
+app-icon-tabs .app-icon-tab-button.tab-selected ion-icon {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--app-icon-tabs-selected) 68%, transparent));
+  transform: translateY(-1px);
 }

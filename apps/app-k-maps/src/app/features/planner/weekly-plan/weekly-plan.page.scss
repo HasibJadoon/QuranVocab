@@ -1,4 +1,121 @@
-ion-text p {
-  margin-top: 1rem;
+:host {
+  display: block;
+}
+
+.weekly-progress-toolbar,
+.weekly-lane-toolbar {
+  --background: rgba(10, 18, 34, 0.88);
+  --border-color: rgba(145, 176, 224, 0.18);
+  --color: var(--km-text, #e6edf8);
+}
+
+.weekly-progress-wrap {
+  padding: 0.35rem 0.8rem;
+}
+
+.weekly-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--km-text-dim, #9eb2ce);
+  font-size: 0.84rem;
+  margin-bottom: 0.3rem;
+}
+
+.weekly-progress-wrap ion-progress-bar {
+  --background: rgba(104, 132, 176, 0.3);
+  --progress-background: linear-gradient(90deg, #4ad1bd 0%, #4b84ff 100%);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+ion-content.weekly-plan-content {
+  --padding-bottom: calc(8.4rem + env(safe-area-inset-bottom));
+}
+
+.weekly-list {
+  padding: 0.45rem 0.56rem 0;
+  background: transparent;
+}
+
+.weekly-card {
+  --background: linear-gradient(165deg, rgba(18, 30, 52, 0.86), rgba(11, 18, 33, 0.9));
+  --min-height: 5.25rem;
+  --inner-padding-end: 0.4rem;
+  --inner-padding-top: 0.44rem;
+  --inner-padding-bottom: 0.44rem;
+  border: 1px solid rgba(149, 182, 229, 0.24);
+  border-radius: 0.84rem;
+  margin-bottom: 0.48rem;
+  box-shadow: 0 10px 22px rgba(6, 12, 25, 0.28);
+}
+
+.weekly-card h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--km-text, #e6edf8);
+}
+
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.task-priority {
+  border-color: rgba(232, 190, 91, 0.45);
+  background: rgba(226, 184, 84, 0.2);
+}
+
+.task-related {
+  color: var(--km-text-dim, #9eb2ce);
+  font-size: 0.78rem;
+  margin-top: 0.3rem;
+}
+
+.weekly-empty-state {
+  padding: 2rem 1rem;
   text-align: center;
+  color: var(--km-text-dim, #9eb2ce);
+}
+
+.weekly-empty-state h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.weekly-empty-state p {
+  margin: 0.35rem 0 0;
+}
+
+.weekly-composer {
+  position: fixed;
+  inset-inline: 0.68rem;
+  bottom: calc(3.45rem + env(safe-area-inset-bottom));
+  border-radius: 0.85rem;
+  padding: 0.28rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 20;
+}
+
+.composer-add {
+  --color: var(--km-text, #e6edf8);
+  --background: rgba(30, 52, 88, 0.72);
+  --border-radius: 0.65rem;
+  font-size: 1.45rem;
+  min-width: 2.1rem;
+}
+
+.composer-input {
+  --background: rgba(7, 14, 27, 0.9);
+  --padding-start: 0.7rem;
+  --padding-end: 0.7rem;
+  border: 1px solid rgba(149, 182, 229, 0.3);
+  border-radius: 0.62rem;
 }

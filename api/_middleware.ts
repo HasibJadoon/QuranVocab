@@ -6,6 +6,8 @@ interface Env {
   JWT_SECRET: string;
 }
 
+const staticAssetPattern = /\.(?:css|js|mjs|map|ico|png|jpg|jpeg|svg|webp|woff2?|ttf|eot)$/i;
+
 const allowedOrigins = new Set([
   'https://k-maps.com',
   'https://api.k-maps.com',
@@ -46,6 +48,30 @@ const withCors = (response: Response, origin: string | null) => {
   });
 };
 
+const maybeConvertMissingAssetFallback = (
+  pathname: string,
+  response: Response
+) => {
+  // If an asset request is rewritten to HTML (SPA fallback), return 404.
+  // This avoids module-script MIME failures from HTML responses.
+  if (!staticAssetPattern.test(pathname)) {
+    return response;
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (response.status === 200 && contentType.includes('text/html')) {
+    return new Response('Asset not found', {
+      status: 404,
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+        'cache-control': 'no-store',
+      },
+    });
+  }
+
+  return response;
+};
+
 export const onRequest: PagesFunction<Env> = async (ctx) => {
   const { request, env } = ctx;
   const url = new URL(request.url);
@@ -57,11 +83,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
   }
 
   // ✅ Public routes
-  const isStaticAsset =
-    request.method === 'GET' &&
-    /\.(?:css|js|map|ico|png|jpg|jpeg|svg|webp|woff2?|ttf|eot)$/.test(
-      url.pathname
-    );
+  const isStaticAsset = request.method === 'GET' && staticAssetPattern.test(url.pathname);
 
   if (
     url.pathname === '/' ||
@@ -72,7 +94,9 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     url.pathname.startsWith('/favicon') ||
     isStaticAsset
   ) {
-    return withCors(await ctx.next(), origin);
+    const response = await ctx.next();
+    const hardened = maybeConvertMissingAssetFallback(url.pathname, response);
+    return withCors(hardened, origin);
   }
 
   // ✅ Require Authorization header
@@ -84,12 +108,15 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
     );
   }
 
-  const token = auth.slice(7);
-
-  // ✅ VERIFY TOKEN (ASYNC!)
+  const token = auth.slice(7).trim();
   const payload = await verifyToken(token, env.JWT_SECRET);
+  const rawExp = payload && typeof payload === 'object' ? (payload as Record<string, unknown>)['exp'] : null;
+  const exp =
+    typeof rawExp === 'number'
+      ? rawExp
+      : (typeof rawExp === 'string' && rawExp.trim() ? Number(rawExp) : NaN);
 
-  if (!payload || Date.now() > Date.parse(payload.exp)) {
+  if (!payload || !Number.isFinite(exp) || Date.now() >= exp * 1000) {
     return withCors(
       Response.json({ error: 'Invalid or expired token' }, { status: 401 }),
       origin
@@ -99,5 +126,7 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
   // ✅ Attach user to request context
   ctx.data.user = payload;
 
-  return withCors(await ctx.next(), origin);
+  const response = await ctx.next();
+  const hardened = maybeConvertMissingAssetFallback(url.pathname, response);
+  return withCors(hardened, origin);
 };

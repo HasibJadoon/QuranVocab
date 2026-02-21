@@ -20,6 +20,7 @@ import { StudyMorphologyTabComponent } from './tabs/study-morphology-tab.compone
 import { StudyPassageStructureTabComponent } from './tabs/study-passage-structure-tab.component';
 import { StudyReadingTabComponent } from './tabs/study-reading-tab.component';
 import { StudySentenceStructureTabComponent } from './tabs/study-sentence-structure-tab.component';
+import { AppIconTabsComponent, IconTabItem } from '../../../../shared/components/icon-tabs/icon-tabs.component';
 
 const LEGACY_STUDY_TAB_MAP: Record<string, StudyTask> = {
   study: 'reading',
@@ -45,6 +46,7 @@ const LEGACY_STUDY_TAB_MAP: Record<string, StudyTask> = {
     StudyExpressionsTabComponent,
     StudyComprehensionTabComponent,
     StudyPassageStructureTabComponent,
+    AppIconTabsComponent,
   ],
   templateUrl: './ar-quran-study.page.html',
   providers: [ArQuranStudyFacade],
@@ -56,7 +58,7 @@ export class ArQuranStudyPage implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly subs = new Subscription();
 
-  readonly taskTabs: Array<{ key: StudyTask; label: string; icon: string }> = [
+  readonly taskTabs: IconTabItem[] = [
     { key: 'reading', label: 'Reading', icon: bookOutline },
     { key: 'morphology', label: 'Morphology', icon: constructOutline },
     { key: 'sentence_structure', label: 'Sentence Structure', icon: gitMergeOutline },
@@ -95,16 +97,11 @@ export class ArQuranStudyPage implements OnInit, OnDestroy {
     this.router.navigate(['/arabic/lessons']);
   }
 
-  onTaskSelect(task: StudyTask, event?: Event): void {
-    event?.preventDefault();
-    if (!this.isStudyTask(task)) return;
-    if (task === this.facade.activeTask) return;
-    this.facade.setActiveTask(task);
-    this.syncQueryTask(task);
-  }
-
-  trackByTask(_: number, tab: { key: StudyTask }): string {
-    return tab.key;
+  onTaskTabSelected(tabKey: string): void {
+    if (!this.isStudyTask(tabKey)) return;
+    if (tabKey === this.facade.activeTask) return;
+    this.facade.setActiveTask(tabKey);
+    this.syncQueryTask(tabKey);
   }
 
   private applyRouteTask(params: ParamMap): void {

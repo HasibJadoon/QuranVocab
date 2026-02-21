@@ -4,13 +4,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule, ToastController } from '@ionic/angular';
+import { addOutline, checkmarkDoneOutline, createOutline, flagOutline } from 'ionicons/icons';
 import { debounceTime, distinctUntilChanged, finalize, map, take } from 'rxjs';
 import { NotesApiService } from './notes-api.service';
+import { AppIconTabsComponent, IconTabItem } from '../shared/components/icon-tabs/icon-tabs.component';
 
 @Component({
   selector: 'app-notes-inbox-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, IonicModule],
+  imports: [CommonModule, ReactiveFormsModule, IonicModule, AppIconTabsComponent],
   templateUrl: './inbox.page.html',
   styleUrls: ['./inbox.page.scss'],
 })
@@ -23,6 +25,12 @@ export class InboxPage {
 
   readonly searchControl = new FormControl(this.route.snapshot.queryParamMap.get('q') ?? '', { nonNullable: true });
   readonly creating = signal(false);
+  readonly addOutline = addOutline;
+  readonly noteTabs: IconTabItem[] = [
+    { key: 'draft', icon: createOutline, label: 'Draft' },
+    { key: 'flag', icon: flagOutline, label: 'Flag' },
+    { key: 'published', icon: checkmarkDoneOutline, label: 'Published' },
+  ];
 
   constructor() {
     this.searchControl.valueChanges.pipe(
@@ -46,7 +54,7 @@ export class InboxPage {
     }
 
     this.creating.set(true);
-    this.notesApi.createNote({ body_md: '' }).pipe(
+    this.notesApi.createNote({ body_md: 'New note' }).pipe(
       take(1),
       finalize(() => this.creating.set(false))
     ).subscribe({

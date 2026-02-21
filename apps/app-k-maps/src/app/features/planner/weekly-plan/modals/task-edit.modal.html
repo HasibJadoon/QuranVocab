@@ -1,0 +1,50 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Task Editor</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">Close</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list lines="none">
+    <ion-item>
+      <ion-input label="Title" [(ngModel)]="draft.title"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-select label="Lane" [(ngModel)]="draft.lane">
+        @for (lane of lanes; track lane) {
+          <ion-select-option [value]="lane">{{ lane | titlecase }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-select label="Priority" [(ngModel)]="draft.priority">
+        @for (priority of priorities; track priority) {
+          <ion-select-option [value]="priority">{{ priority }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-input type="number" label="Estimate (min)" [(ngModel)]="draft.estimate_min"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-input label="Related type" [(ngModel)]="draftRelatedType"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-input label="Related id" [(ngModel)]="draftRelatedId"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-textarea label="Note" [(ngModel)]="draft.note" autoGrow="true"></ion-textarea>
+    </ion-item>
+  </ion-list>
+
+  <ion-button expand="block" (click)="save()">Save</ion-button>
+</ion-content>

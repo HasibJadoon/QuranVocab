@@ -1,0 +1,67 @@
+<ion-header>
+  <ion-toolbar class="km-week-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Kanban</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="planner-kanban-content km-shell km-content-with-bottom-tabs">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  @if (loading()) {
+    <ion-list>
+      @for (row of [1,2,3,4]; track row) {
+        <ion-item lines="none">
+          <ion-label>
+            <h3><ion-skeleton-text animated style="width: 65%"></ion-skeleton-text></h3>
+            <p><ion-skeleton-text animated style="width: 90%"></ion-skeleton-text></p>
+          </ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  } @else {
+    <section class="kanban-shell">
+      @for (bucket of grouped(); track bucket.lane) {
+        <article class="kanban-lane km-glass">
+          <header class="lane-header">
+            <h3>{{ bucket.lane | titlecase }}</h3>
+            <span>{{ bucket.tasks.length }}</span>
+          </header>
+
+          <div class="lane-body">
+            @for (task of bucket.tasks; track task.id) {
+              <ion-card class="task-card">
+                <ion-card-header>
+                  <ion-card-title>{{ task.item_json.title }}</ion-card-title>
+                </ion-card-header>
+                <ion-card-content>
+                  <p class="task-meta">
+                    <span class="km-chip">{{ task.item_json.status | titlecase }} - {{ task.item_json.estimate_min }} min</span>
+                    <span class="km-chip">{{ task.item_json.priority }}</span>
+                  </p>
+                  <ion-button
+                    size="small"
+                    fill="outline"
+                    class="km-btn"
+                    (click)="complete(task)"
+                    [disabled]="saving() || task.item_json.status === 'done'"
+                  >
+                    Complete
+                  </ion-button>
+                </ion-card-content>
+              </ion-card>
+            }
+
+            @if (bucket.tasks.length === 0) {
+              <p class="lane-empty">No tasks.</p>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
+</ion-content>

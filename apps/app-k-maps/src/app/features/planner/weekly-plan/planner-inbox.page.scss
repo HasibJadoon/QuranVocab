@@ -1,0 +1,54 @@
+:host {
+  display: block;
+}
+
+.inbox-capture {
+  margin: 0.56rem;
+  border-radius: 0.78rem;
+  padding: 0.35rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.inbox-capture ion-input {
+  --background: rgba(9, 15, 28, 0.92);
+  border: 1px solid rgba(149, 182, 228, 0.3);
+  border-radius: 0.62rem;
+  --padding-start: 0.64rem;
+  --padding-end: 0.64rem;
+}
+
+.inbox-list {
+  background: transparent;
+  padding: 0 0.56rem;
+}
+
+.inbox-card {
+  --background: linear-gradient(165deg, rgba(18, 30, 52, 0.86), rgba(11, 18, 33, 0.9));
+  border: 1px solid rgba(149, 182, 228, 0.26);
+  border-radius: 0.74rem;
+  margin: 0 0 0.44rem;
+}
+
+.inbox-card h3 {
+  margin: 0;
+  color: var(--km-text, #e6edf8);
+  font-size: 0.98rem;
+}
+
+.inbox-card p {
+  margin: 0.24rem 0 0;
+  color: var(--km-text-dim, #9eb2ce);
+  font-size: 0.84rem;
+}
+
+.inbox-time {
+  font-size: 0.74rem;
+}
+
+.inbox-empty {
+  text-align: center;
+  padding: 1.8rem 0.4rem;
+}

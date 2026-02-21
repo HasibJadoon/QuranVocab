@@ -35,6 +35,9 @@
 // Global styles for source chunks continuous reader.
 @use "source-chunks-reader";
 
+// Reusable sprint/notes glass theme primitives.
+@use "sprint-ui";
+
 // Examples
 // We use those styles to show code examples, you should remove them in your application.
 @use "examples";

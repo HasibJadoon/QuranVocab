@@ -70,17 +70,10 @@
 </ion-content>
 
 <ion-footer class="study-footer">
-  <ion-tab-bar class="study-tab-bar" slot="bottom">
-    <ion-tab-button
-      class="study-tab-button"
-      *ngFor="let tab of taskTabs; trackBy: trackByTask"
-      [tab]="tab.key"
-      [selected]="facade.activeTask === tab.key"
-      [attr.aria-label]="tab.label"
-      [title]="tab.label"
-      (click)="onTaskSelect(tab.key, $event)"
-    >
-      <ion-icon [icon]="tab.icon" aria-hidden="true"></ion-icon>
-    </ion-tab-button>
-  </ion-tab-bar>
+  <app-icon-tabs
+    [tabs]="taskTabs"
+    [activeKey]="facade.activeTask"
+    [manual]="true"
+    (tabSelected)="onTaskTabSelected($event)"
+  ></app-icon-tabs>
 </ion-footer>

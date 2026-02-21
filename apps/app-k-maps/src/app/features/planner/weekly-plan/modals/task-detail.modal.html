@@ -1,0 +1,43 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Task Detail</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">Close</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item lines="none">
+    <ion-label>
+      <h2>{{ draft.title }}</h2>
+      <p>{{ draft.lane | titlecase }} • {{ draft.priority }} • {{ draft.status }}</p>
+    </ion-label>
+  </ion-item>
+
+  <ion-item>
+    <ion-input type="number" label="Actual min" [(ngModel)]="draft.actual_min"></ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-textarea label="Note" [(ngModel)]="draft.note" autoGrow="true"></ion-textarea>
+  </ion-item>
+
+  <ion-list>
+    @for (item of draft.checklist; track item.id) {
+      <ion-item lines="full">
+        <ion-checkbox slot="start" [(ngModel)]="item.done"></ion-checkbox>
+        <ion-label>{{ item.label }}</ion-label>
+        <ion-button fill="clear" size="small" (click)="removeChecklistItem(item.id)">Remove</ion-button>
+      </ion-item>
+    }
+  </ion-list>
+
+  <ion-item>
+    <ion-input [(ngModel)]="checklistInput" label="Checklist item" (keyup.enter)="addChecklistItem()"></ion-input>
+    <ion-button slot="end" fill="outline" (click)="addChecklistItem()">Add</ion-button>
+  </ion-item>
+
+  <ion-button expand="block" (click)="save()">Save</ion-button>
+  <ion-button expand="block" color="success" (click)="complete()">Complete</ion-button>
+</ion-content>
